@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="nl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Portal - Stage Connectie App</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+    <script>if (!localStorage.getItem('stageconnect_admin_session')) { window.location.href = 'admin-login.html'; }</script>
+</head>
+
+<body class="bg-gray-50">
+    <header class="bg-white shadow-sm border-b border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
+            <div>
+                <h1 class="text-2xl font-bold text-gray-800">Admin Portal</h1>
+                <p class="text-sm text-gray-600">Groene Hart Pro College</p>
+            </div>
+            <div class="flex gap-4"><a href="admin-students.html"
+                    class="px-4 py-2 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-lg transition font-medium">Studenten
+                    Beheer</a><a href="admin-companies.html"
+                    class="px-4 py-2 bg-purple-50 text-purple-600 hover:bg-purple-100 rounded-lg transition font-medium">Bedrijven
+                    Beheer</a><a href="admin-supervisors.html"
+                    class="px-4 py-2 bg-green-50 text-green-600 hover:bg-green-100 rounded-lg transition font-medium">Begeleiders
+                    Beheer</a><button onclick="logout()"
+                    class="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition">Uitloggen</button>
+            </div>
+        </div>
+    </header>
+    <main class="max-w-7xl mx-auto px-4 py-8">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                <h3 class="text-gray-500 text-sm font-medium">Aanwezig Vandaag</h3>
+                <p class="text-3xl font-bold text-green-600 mt-2" id="stat-present">-</p>
+            </div>
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                <h3 class="text-gray-500 text-sm font-medium">Afwezig</h3>
+                <p class="text-3xl font-bold text-red-600 mt-2" id="stat-absent">-</p>
+            </div>
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                <h3 class="text-gray-500 text-sm font-medium">Ziek</h3>
+                <p class="text-3xl font-bold text-orange-500 mt-2" id="stat-sick">-</p>
+            </div>
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                <h3 class="text-gray-500 text-sm font-medium">Te Laat</h3>
+                <p class="text-3xl font-bold text-yellow-500 mt-2" id="stat-late">-</p>
+            </div>
+        </div>
+        <div class="bg-white p-4 rounded-lg shadow-sm mb-6 flex flex-wrap gap-4 items-end">
+            <div><label class="block text-sm font-medium text-gray-700 mb-1">Datum</label><input type="date"
+                    id="filter-date" class="px-3 py-2 border rounded-lg text-sm"></div>
+            <div><label class="block text-sm font-medium text-gray-700 mb-1">Bedrijf</label><select id="filter-company"
+                    class="px-3 py-2 border rounded-lg text-sm min-w-[200px]">
+                    <option value="">Alle bedrijven</option>
+                </select></div>
+            <div><label class="block text-sm font-medium text-gray-700 mb-1">Status</label><select id="filter-status"
+                    class="px-3 py-2 border rounded-lg text-sm">
+                    <option value="">Alle status</option>
+                    <option value="present">Aanwezig</option>
+                    <option value="absent">Afwezig</option>
+                    <option value="sick">Ziek</option>
+                    <option value="late">Te laat</option>
+                </select></div>
+        </div>
+        <div class="bg-white rounded-lg shadow-sm overflow-hidden">
+            <table class="w-full">
+                <thead class="bg-gray-50 border-b border-gray-200">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Student</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Bedrijf</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Datum
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Status</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Details</th>
+                    </tr>
+                </thead>
+                <tbody id="attendance-table-body" class="divide-y divide-gray-200"></tbody>
+            </table>
+        </div>
+    </main>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="./static/js/admin-auth.js"></script>
+    <script src="./static/js/admin.js"></script>
+</body>
+
+</html>

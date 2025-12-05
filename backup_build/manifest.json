@@ -1,0 +1,20 @@
+{
+  "short_name": "StageConnect",
+  "name": "Groene Hart StageConnect",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/2997/2997295.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/2997/2997295.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#009FE3",
+  "background_color": "#ffffff"
+}
