@@ -948,12 +948,6 @@ const MainApp: React.FC = () => {
       }
     }
   }, []);
-        }
-      } catch (e) {
-        console.error('Error restoring session', e);
-      }
-    }
-  }, []);
 
   const doLogin = (e: React.FormEvent) => {
     e.preventDefault();
