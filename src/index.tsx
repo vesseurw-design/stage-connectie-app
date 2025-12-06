@@ -537,9 +537,17 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
 // --- EMPLOYER COMPONENT ---
 
 const EmployerPortal: React.FC<{ onLogout: () => void, loggedInEmployerId: string | null }> = ({ onLogout, loggedInEmployerId }) => {
-  const { employers, getInternshipByEmployer, getInternshipStudent, getInternshipSupervisor, addAttendanceRecord, getAttendanceForInternship, getMessagesForInternship, sendMessage } = useApp();
-  const [selectedEmployerId, setSelectedEmployerId] = useState<string>(loggedInEmployerId || employers[0]?.id || '');
-  const [selectedInternshipId, setSelectedInternshipId] = useState<string | null>(null);
+  const { employers, employerContacts, internships, students, getInternshipStudent, getInternshipSupervisor, addAttendanceRecord, getAttendanceForInternship, getMessagesForInternship, sendMessage } = useApp();
+  
+  // loggedInEmployerId is actually the contact ID now
+  const contact = employerContacts.find(c => c.id === loggedInEmployerId);
+  const employer = contact ? employers.find(e => e.id === contact.employerId) : null;
+  
+  // Get internships assigned to this contact
+  const assignedInternships = contact?.assignedInternships || [];
+  const contactInternships = internships.filter(i => assignedInternships.includes(i.id));
+  
+  const [selectedInternshipId, setSelectedInternshipId] = useState<string | null>(contactInternships[0]?.id || null);
   const [view, setView] = useState<'schedule' | 'history' | 'chat'>('schedule');
   const [weekOffset, setWeekOffset] = useState(0); 
   const [aiReport, setAiReport] = useState<string | null>(null);
