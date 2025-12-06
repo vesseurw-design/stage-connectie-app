@@ -1055,7 +1055,7 @@ const MainApp: React.FC = () => {
                     </>
                  )}
                  {login.role === Role.ADMIN && (
-                    <input type="password" placeholder="Wachtwoord (admin)" className="w-full border p-3 rounded-xl" value={login.pass} onChange={e => setLogin({...login, pass: e.target.value})} />
+                    <input type="password" placeholder="Wachtwoord" className="w-full border p-3 rounded-xl" value={login.pass} onChange={e => setLogin({...login, pass: e.target.value})} />
                  )}
                  {login.error && <p className="text-red-500 text-sm">{login.error}</p>}
                  <button type="submit" className="w-full bg-[#009FE3] text-white p-3 rounded-xl font-bold">Inloggen</button>
