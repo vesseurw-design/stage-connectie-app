@@ -34,13 +34,19 @@ export interface Student {
   studentNumber: string;
 }
 
+export interface EmployerContact {
+  id: string;
+  employerId: string;
+  name: string;
+  email: string;
+  accessCode: string;
+  assignedInternships?: string[]; // IDs van stages deze contact mag zien
+}
+
 export interface Employer {
   id: string;
   companyName: string;
-  contactPerson: string;
-  email: string;
   phoneNumber: string;
-  accessCode?: string;
 }
 
 export interface Supervisor {
@@ -89,8 +95,13 @@ const INITIAL_STUDENTS: Student[] = [
 ];
 
 const INITIAL_EMPLOYERS: Employer[] = [
-  { id: 'e1', companyName: 'TechSolutions BV', contactPerson: 'Jan Klaassen', email: 'jan@techsolutions.nl', phoneNumber: '06-12345678', accessCode: '12345' },
-  { id: 'e2', companyName: 'ZorgCentrum Oost', contactPerson: 'Els Visser', email: 'els@zorg.nl', phoneNumber: '06-87654321', accessCode: '12345' },
+  { id: 'e1', companyName: 'TechSolutions BV', phoneNumber: '06-12345678' },
+  { id: 'e2', companyName: 'ZorgCentrum Oost', phoneNumber: '06-87654321' },
+];
+
+const INITIAL_EMPLOYER_CONTACTS: EmployerContact[] = [
+  { id: 'ec1', employerId: 'e1', name: 'Jan Klaassen', email: 'jan@techsolutions.nl', accessCode: '12345' },
+  { id: 'ec2', employerId: 'e2', name: 'Els Visser', email: 'els@zorg.nl', accessCode: '12345' },
 ];
 
 const INITIAL_SUPERVISORS: Supervisor[] = [
@@ -146,6 +157,7 @@ const generateAbsenceEmail = async (student: Student, lastRecord: AttendanceReco
 interface AppContextType {
   students: Student[];
   employers: Employer[];
+  employerContacts: EmployerContact[];
   supervisors: Supervisor[];
   internships: Internship[];
   attendance: AttendanceRecord[];
@@ -185,6 +197,7 @@ const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
 
   const [students, setStudents] = useState<Student[]>(() => loadSafe('sc_students', INITIAL_STUDENTS));
   const [employers, setEmployers] = useState<Employer[]>(() => loadSafe('sc_employers', INITIAL_EMPLOYERS));
+  const [employerContacts, setEmployerContacts] = useState<EmployerContact[]>(() => loadSafe('sc_employer_contacts', INITIAL_EMPLOYER_CONTACTS));
   const [supervisors, setSupervisors] = useState<Supervisor[]>(() => loadSafe('sc_supervisors', INITIAL_SUPERVISORS));
   const [internships, setInternships] = useState<Internship[]>(() => loadSafe('sc_internships', INITIAL_INTERNSHIPS));
   const [attendance, setAttendance] = useState<AttendanceRecord[]>(() => loadSafe('sc_attendance', INITIAL_ATTENDANCE));
@@ -223,7 +236,7 @@ const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
 
   return (
     <AppContext.Provider value={{
-      students, employers, supervisors, internships, attendance, messages,
+      students, employers, employerContacts, supervisors, internships, attendance, messages,
       addStudent, removeStudent,
       addEmployer, removeEmployer,
       addSupervisor, removeSupervisor,
@@ -923,7 +936,7 @@ const SupervisorDashboard: React.FC<{ onLogout: () => void, loggedInSupervisorId
 // --- MAIN APP COMPONENT ---
 
 const MainApp: React.FC = () => {
-  const { employers, supervisors } = useApp();
+  const { employers, employerContacts, supervisors } = useApp();
   const [role, setRole] = useState<Role | null>(null);
   const [login, setLogin] = useState({ open: false, role: null as Role|null, email: '', pass: '', empId: '', error: '' });
   const [loggedInEmp, setLoggedInEmp] = useState<string|null>(null);
@@ -957,11 +970,11 @@ const MainApp: React.FC = () => {
       setLogin({open:false, role:null, email:'', pass:'', empId:'', error:''}); 
     }
     else if(login.role === Role.EMPLOYER) {
-       const emp = employers.find(x => x.email === login.email);
-       if(emp && emp.accessCode === login.pass) { 
-         setLoggedInEmp(emp.id); 
+       const contact = employerContacts.find(x => x.email === login.email);
+       if(contact && contact.accessCode === login.pass) { 
+         setLoggedInEmp(contact.id); 
          setRole(Role.EMPLOYER); 
-         localStorage.setItem('stageconnect_session', JSON.stringify({ role: Role.EMPLOYER, empId: emp.id }));
+         localStorage.setItem('stageconnect_session', JSON.stringify({ role: Role.EMPLOYER, empId: contact.id }));
          setLogin({open:false, role:null, email:'', pass:'', empId:'', error:''}); 
        }
        else setLogin({...login, error: 'Fout'});

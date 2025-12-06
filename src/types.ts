@@ -20,13 +20,19 @@ export interface Student {
   studentNumber: string;
 }
 
+export interface EmployerContact {
+  id: string;
+  employerId: string;
+  name: string;
+  email: string;
+  accessCode: string;
+  assignedInternships?: string[]; // IDs van stages deze contact mag zien
+}
+
 export interface Employer {
   id: string;
   companyName: string;
-  contactPerson: string;
-  email: string;
   phoneNumber: string;
-  accessCode?: string; // Nieuw: Toegangscode voor inloggen
 }
 
 export interface Supervisor {

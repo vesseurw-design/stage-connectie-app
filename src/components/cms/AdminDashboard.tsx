@@ -189,6 +189,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                 <thead className="bg-slate-50 border-b border-slate-200">
                   <tr>
                     <th className="p-4 font-medium text-slate-600">Bedrijf</th>
+                    <th className="p-4 font-medium text-slate-600">Email</th>
                     <th className="p-4 font-medium text-slate-600">Contact</th>
                     <th className="p-4 font-medium text-slate-600">Code</th>
                   </tr>
@@ -196,10 +197,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                 <tbody className="divide-y divide-slate-100">
                   {employers.map(e => (
                     <tr key={e.id} className="hover:bg-slate-50">
-                      <td className="p-4 font-medium text-slate-900">
-                        {e.companyName}
-                        <span className="block text-xs text-slate-400 font-normal">{e.email}</span>
-                      </td>
+                      <td className="p-4 font-medium text-slate-900">{e.companyName}</td>
+                      <td className="p-4 text-slate-600">{e.email}</td>
                       <td className="p-4 text-slate-500">
                         {e.contactPerson}
                         <span className="block text-xs text-slate-400">{e.phoneNumber}</span>
