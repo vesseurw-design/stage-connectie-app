@@ -34,6 +34,8 @@ export interface Supervisor {
   name: string;
   email: string;
   phoneNumber: string;
+  accessCode?: string; // Wachtwoord voor inloggen
+  assignedStudents?: string[]; // Array van student IDs
 }
 
 export interface Internship {

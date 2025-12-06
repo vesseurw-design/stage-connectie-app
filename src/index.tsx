@@ -14,7 +14,8 @@ import {
 
 export enum Role {
   ADMIN = 'ADMIN',
-  EMPLOYER = 'EMPLOYER'
+  EMPLOYER = 'EMPLOYER',
+  SUPERVISOR = 'SUPERVISOR'
 }
 
 export enum AttendanceStatus {
@@ -47,6 +48,8 @@ export interface Supervisor {
   name: string;
   email: string;
   phoneNumber: string;
+  accessCode?: string; // Wachtwoord voor inloggen
+  assignedStudents?: string[]; // Array van student IDs
 }
 
 export interface Internship {
@@ -91,8 +94,8 @@ const INITIAL_EMPLOYERS: Employer[] = [
 ];
 
 const INITIAL_SUPERVISORS: Supervisor[] = [
-  { id: 'sup1', name: 'Mevr. K. Dijkstra', email: 'k.dijkstra@school.nl', phoneNumber: '030-1239988' },
-  { id: 'sup2', name: 'Dhr. P. de Jong', email: 'p.dejong@school.nl', phoneNumber: '030-5554433' },
+  { id: 'sup1', name: 'Mevr. K. Dijkstra', email: 'k.dijkstra@school.nl', phoneNumber: '030-1239988', accessCode: 'sup1234', assignedStudents: ['s1', 's3'] },
+  { id: 'sup2', name: 'Dhr. P. de Jong', email: 'p.dejong@school.nl', phoneNumber: '030-5554433', accessCode: 'sup1234', assignedStudents: ['s2'] },
 ];
 
 const INITIAL_INTERNSHIPS: Internship[] = [
@@ -852,10 +855,75 @@ const EmployerPortal: React.FC<{ onLogout: () => void, loggedInEmployerId: strin
   );
 };
 
+// --- SUPERVISOR DASHBOARD ---
+const SupervisorDashboard: React.FC<{ onLogout: () => void, loggedInSupervisorId: string | null }> = ({ onLogout, loggedInSupervisorId }) => {
+  const { supervisors, students, internships, getAttendanceForInternship } = useApp();
+  const supervisor = supervisors.find(s => s.id === loggedInSupervisorId);
+  const assignedStudents = students.filter(s => supervisor?.assignedStudents?.includes(s.id));
+
+  if (!supervisor) return <div>Supervisor niet gevonden</div>;
+
+  return (
+    <div className="min-h-screen bg-slate-50 p-6">
+      <div className="max-w-6xl mx-auto">
+        <div className="flex justify-between items-center mb-8">
+          <div>
+            <h1 className="text-4xl font-bold text-slate-800">Stagebegeleiding</h1>
+            <p className="text-slate-600">Welkom, {supervisor.name}</p>
+          </div>
+          <button onClick={onLogout} className="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg">
+            <LogOut size={18} /> Uitloggen
+          </button>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {assignedStudents.map(student => {
+            const internship = internships.find(i => i.studentId === student.id);
+            const attendance = internship ? getAttendanceForInternship(internship.id) : [];
+            const todayAttendance = attendance.find(a => a.date === new Date().toISOString().split('T')[0]);
+
+            return (
+              <div key={student.id} className="bg-white p-6 rounded-xl shadow-sm border border-slate-200 hover:shadow-md transition">
+                <h3 className="font-bold text-lg text-slate-800">{student.name}</h3>
+                <p className="text-slate-600 text-sm">{student.email}</p>
+                <p className="text-slate-600 text-sm">Studentnummer: {student.studentNumber}</p>
+                
+                {todayAttendance ? (
+                  <div className="mt-4 p-3 rounded-lg bg-slate-50">
+                    <p className="text-sm text-slate-600">Vandaag:</p>
+                    <p className={`font-semibold ${
+                      todayAttendance.status === 'Aanwezig' ? 'text-green-600' :
+                      todayAttendance.status === 'Afwezig' ? 'text-red-600' :
+                      todayAttendance.status === 'Ziek' ? 'text-orange-600' :
+                      'text-yellow-600'
+                    }`}>
+                      {todayAttendance.status}
+                    </p>
+                  </div>
+                ) : (
+                  <div className="mt-4 p-3 rounded-lg bg-slate-50">
+                    <p className="text-sm text-slate-600">Geen aanwezigheid geregistreerd vandaag</p>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+
+        {assignedStudents.length === 0 && (
+          <div className="text-center py-12">
+            <p className="text-slate-600 text-lg">Je hebt nog geen leerlingen toegewezen gekregen.</p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
 // --- MAIN APP COMPONENT ---
 
 const MainApp: React.FC = () => {
-  const { employers } = useApp();
+  const { employers, supervisors } = useApp();
   const [role, setRole] = useState<Role | null>(null);
   const [login, setLogin] = useState({ open: false, role: null as Role|null, email: '', pass: '', empId: '', error: '' });
   const [loggedInEmp, setLoggedInEmp] = useState<string|null>(null);
@@ -871,6 +939,15 @@ const MainApp: React.FC = () => {
         } else if (session.role === Role.EMPLOYER && session.empId) {
           setRole(Role.EMPLOYER);
           setLoggedInEmp(session.empId);
+        } else if (session.role === Role.SUPERVISOR && session.supId) {
+          setRole(Role.SUPERVISOR);
+          setLoggedInEmp(session.supId);
+        }
+      } catch (e) {
+        console.error('Error restoring session', e);
+      }
+    }
+  }, []);
         }
       } catch (e) {
         console.error('Error restoring session', e);
@@ -894,7 +971,19 @@ const MainApp: React.FC = () => {
          setLogin({open:false, role:null, email:'', pass:'', empId:'', error:''}); 
        }
        else setLogin({...login, error: 'Fout'});
-    } else setLogin({...login, error: 'Fout'});
+    }
+    else if(login.role === Role.SUPERVISOR) {
+       const { supervisors } = useApp();
+       const sup = supervisors.find(x => x.email === login.email);
+       if(sup && sup.accessCode === login.pass) { 
+         setLoggedInEmp(sup.id); 
+         setRole(Role.SUPERVISOR); 
+         localStorage.setItem('stageconnect_session', JSON.stringify({ role: Role.SUPERVISOR, supId: sup.id }));
+         setLogin({open:false, role:null, email:'', pass:'', empId:'', error:''}); 
+       }
+       else setLogin({...login, error: 'Fout'});
+    }
+    else setLogin({...login, error: 'Fout'});
   };
 
   const handleLogout = () => {
@@ -905,6 +994,7 @@ const MainApp: React.FC = () => {
 
   if(role === Role.ADMIN) return <AdminDashboard onLogout={handleLogout} />;
   if(role === Role.EMPLOYER) return <EmployerPortal onLogout={handleLogout} loggedInEmployerId={loggedInEmp} />;
+  if(role === Role.SUPERVISOR) return <SupervisorDashboard onLogout={handleLogout} loggedInSupervisorId={loggedInEmp} />;
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6 relative overflow-hidden">
@@ -918,6 +1008,11 @@ const MainApp: React.FC = () => {
            <button onClick={() => setLogin({open:true, role:Role.EMPLOYER, email:'', pass:'', empId:'', error:''})} className="w-full p-4 border rounded-xl flex items-center gap-4 hover:bg-slate-50">
              <div className="bg-green-100 text-green-600 p-3 rounded-xl"><Briefcase/></div>
              <div className="text-left flex-1"><h3 className="font-bold">Werkgever</h3></div>
+             <ChevronRight className="text-slate-300"/>
+           </button>
+           <button onClick={() => setLogin({open:true, role:Role.SUPERVISOR, email:'', pass:'', empId:'', error:''})} className="w-full p-4 border rounded-xl flex items-center gap-4 hover:bg-slate-50">
+             <div className="bg-purple-100 text-purple-600 p-3 rounded-xl"><Users/></div>
+             <div className="text-left flex-1"><h3 className="font-bold">Stagebegeleider</h3></div>
              <ChevronRight className="text-slate-300"/>
            </button>
            <button onClick={() => setLogin({open:true, role:Role.ADMIN, pass:'', empId:'', error:''})} className="w-full p-4 border rounded-xl flex items-center gap-4 hover:bg-slate-50">

@@ -38,3 +38,5 @@ lerna-debug.log*
 .AppleDouble
 .AppleBottom
 ._*
+.vercel
+.env*.local
