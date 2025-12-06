@@ -860,18 +860,51 @@ const MainApp: React.FC = () => {
   const [login, setLogin] = useState({ open: false, role: null as Role|null, email: '', pass: '', empId: '', error: '' });
   const [loggedInEmp, setLoggedInEmp] = useState<string|null>(null);
 
+  // Restore session from localStorage on mount
+  useEffect(() => {
+    const savedSession = localStorage.getItem('stageconnect_session');
+    if (savedSession) {
+      try {
+        const session = JSON.parse(savedSession);
+        if (session.role === Role.ADMIN) {
+          setRole(Role.ADMIN);
+        } else if (session.role === Role.EMPLOYER && session.empId) {
+          setRole(Role.EMPLOYER);
+          setLoggedInEmp(session.empId);
+        }
+      } catch (e) {
+        console.error('Error restoring session', e);
+      }
+    }
+  }, []);
+
   const doLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    if(login.role === Role.ADMIN && login.pass === 'admin') { setRole(Role.ADMIN); setLogin({open:false, role:null, email:'', pass:'', empId:'', error:''}); }
+    if(login.role === Role.ADMIN && login.pass === 'admin') { 
+      setRole(Role.ADMIN); 
+      localStorage.setItem('stageconnect_session', JSON.stringify({ role: Role.ADMIN }));
+      setLogin({open:false, role:null, email:'', pass:'', empId:'', error:''}); 
+    }
     else if(login.role === Role.EMPLOYER) {
        const emp = employers.find(x => x.email === login.email);
-       if(emp && emp.accessCode === login.pass) { setLoggedInEmp(emp.id); setRole(Role.EMPLOYER); setLogin({open:false, role:null, email:'', pass:'', empId:'', error:''}); }
+       if(emp && emp.accessCode === login.pass) { 
+         setLoggedInEmp(emp.id); 
+         setRole(Role.EMPLOYER); 
+         localStorage.setItem('stageconnect_session', JSON.stringify({ role: Role.EMPLOYER, empId: emp.id }));
+         setLogin({open:false, role:null, email:'', pass:'', empId:'', error:''}); 
+       }
        else setLogin({...login, error: 'Fout'});
     } else setLogin({...login, error: 'Fout'});
   };
 
-  if(role === Role.ADMIN) return <AdminDashboard onLogout={() => setRole(null)} />;
-  if(role === Role.EMPLOYER) return <EmployerPortal onLogout={() => setRole(null)} loggedInEmployerId={loggedInEmp} />;
+  const handleLogout = () => {
+    setRole(null);
+    setLoggedInEmp(null);
+    localStorage.removeItem('stageconnect_session');
+  };
+
+  if(role === Role.ADMIN) return <AdminDashboard onLogout={handleLogout} />;
+  if(role === Role.EMPLOYER) return <EmployerPortal onLogout={handleLogout} loggedInEmployerId={loggedInEmp} />;
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6 relative overflow-hidden">
