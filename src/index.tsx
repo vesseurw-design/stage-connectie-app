@@ -973,7 +973,6 @@ const MainApp: React.FC = () => {
        else setLogin({...login, error: 'Fout'});
     }
     else if(login.role === Role.SUPERVISOR) {
-       const { supervisors } = useApp();
        const sup = supervisors.find(x => x.email === login.email);
        if(sup && sup.accessCode === login.pass) { 
          setLoggedInEmp(sup.id); 
