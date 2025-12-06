@@ -857,16 +857,15 @@ const EmployerPortal: React.FC<{ onLogout: () => void, loggedInEmployerId: strin
 const MainApp: React.FC = () => {
   const { employers } = useApp();
   const [role, setRole] = useState<Role | null>(null);
-  const [login, setLogin] = useState({ open: false, role: null as Role|null, pass: '', empId: '', error: '' });
+  const [login, setLogin] = useState({ open: false, role: null as Role|null, email: '', pass: '', empId: '', error: '' });
   const [loggedInEmp, setLoggedInEmp] = useState<string|null>(null);
 
   const doLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    if(login.role === Role.ADMIN && login.pass === 'admin') { setRole(Role.ADMIN); setLogin({open:false, role:null, pass:'', empId:'', error:''}); }
+    if(login.role === Role.ADMIN && login.pass === 'admin') { setRole(Role.ADMIN); setLogin({open:false, role:null, email:'', pass:'', empId:'', error:''}); }
     else if(login.role === Role.EMPLOYER) {
-       const empId = login.empId || employers[0]?.id || '';
-       const emp = employers.find(x => x.id === empId);
-       if(emp && emp.accessCode === login.pass) { setLoggedInEmp(emp.id); setRole(Role.EMPLOYER); setLogin({open:false, role:null, pass:'', empId:'', error:''}); }
+       const emp = employers.find(x => x.email === login.email);
+       if(emp && emp.accessCode === login.pass) { setLoggedInEmp(emp.id); setRole(Role.EMPLOYER); setLogin({open:false, role:null, email:'', pass:'', empId:'', error:''}); }
        else setLogin({...login, error: 'Fout'});
     } else setLogin({...login, error: 'Fout'});
   };
@@ -883,7 +882,7 @@ const MainApp: React.FC = () => {
         
         <div className="bg-white rounded-3xl shadow-xl p-6 space-y-4">
            <h2 className="text-center font-bold text-slate-800">Inloggen</h2>
-           <button onClick={() => setLogin({open:true, role:Role.EMPLOYER, pass:'', empId:'', error:''})} className="w-full p-4 border rounded-xl flex items-center gap-4 hover:bg-slate-50">
+           <button onClick={() => setLogin({open:true, role:Role.EMPLOYER, email:'', pass:'', empId:'', error:''})} className="w-full p-4 border rounded-xl flex items-center gap-4 hover:bg-slate-50">
              <div className="bg-green-100 text-green-600 p-3 rounded-xl"><Briefcase/></div>
              <div className="text-left flex-1"><h3 className="font-bold">Werkgever</h3></div>
              <ChevronRight className="text-slate-300"/>
@@ -901,10 +900,15 @@ const MainApp: React.FC = () => {
            <div className="bg-white p-6 rounded-2xl w-full max-w-sm">
               <div className="flex justify-between mb-4"><h3 className="font-bold">Inloggen {login.role}</h3><button onClick={() => setLogin({...login, open:false})}><X/></button></div>
               <form onSubmit={doLogin} className="space-y-4">
-                 {login.role === Role.EMPLOYER && employers.length > 0 && (
-                    <input type="hidden" value={login.empId || employers[0]?.id || ''} onChange={e => setLogin({...login, empId: e.target.value})} />
+                 {login.role === Role.EMPLOYER && (
+                    <>
+                       <input type="email" placeholder="Email" className="w-full border p-3 rounded-xl" value={login.email} onChange={e => setLogin({...login, email: e.target.value})} />
+                       <input type="password" placeholder="Wachtwoord" className="w-full border p-3 rounded-xl" value={login.pass} onChange={e => setLogin({...login, pass: e.target.value})} />
+                    </>
                  )}
-                 <input type="password" placeholder={login.role === Role.ADMIN ? "Wachtwoord (admin)" : "Bedrijfscode"} className="w-full border p-3 rounded-xl" value={login.pass} onChange={e => setLogin({...login, pass: e.target.value})} />
+                 {login.role === Role.ADMIN && (
+                    <input type="password" placeholder="Wachtwoord (admin)" className="w-full border p-3 rounded-xl" value={login.pass} onChange={e => setLogin({...login, pass: e.target.value})} />
+                 )}
                  {login.error && <p className="text-red-500 text-sm">{login.error}</p>}
                  <button type="submit" className="w-full bg-[#009FE3] text-white p-3 rounded-xl font-bold">Inloggen</button>
               </form>
