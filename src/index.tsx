@@ -2,6 +2,7 @@
 import React, { createContext, useContext, useState, useEffect, useRef, useMemo, ReactNode } from 'react';
 import ReactDOM from 'react-dom/client';
 import { GoogleGenAI } from "@google/genai";
+import { fetchEmployers, fetchEmployerContacts, fetchSupervisorContacts, testSupabaseConnection } from './supabaseClient.ts';
 import { 
   Users, Briefcase, GraduationCap, Plus, Link as LinkIcon, 
   UserCheck, LogOut, CalendarDays, MessageCircle, Send, 
@@ -201,6 +202,71 @@ const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [internships, setInternships] = useState<Internship[]>(() => loadSafe('sc_internships', INITIAL_INTERNSHIPS));
   const [attendance, setAttendance] = useState<AttendanceRecord[]>(() => loadSafe('sc_attendance', INITIAL_ATTENDANCE));
   const [messages, setMessages] = useState<ChatMessage[]>(() => loadSafe('sc_messages', INITIAL_MESSAGES));
+
+  // Load data from Supabase on mount
+  useEffect(() => {
+    const loadSupabaseData = async () => {
+      try {
+        console.log('🔄 Loading data from Supabase...');
+        
+        // Test connection first
+        const connected = await testSupabaseConnection();
+        if (!connected) {
+          console.warn('⚠️ Supabase not available, using local data');
+          return;
+        }
+
+        // Fetch all data from Supabase
+        const [supabaseEmployers, supabaseContacts, supabaseSupervisors] = await Promise.all([
+          fetchEmployers(),
+          fetchEmployerContacts(),
+          fetchSupervisorContacts()
+        ]);
+
+        // Map Supabase data to app format
+        if (supabaseEmployers.length > 0) {
+          const mappedEmployers: Employer[] = supabaseEmployers.map(e => ({
+            id: e.id,
+            companyName: e.company_name,
+            phoneNumber: e.phone_number || ''
+          }));
+          setEmployers(mappedEmployers);
+          console.log(`✅ Loaded ${mappedEmployers.length} employers from Supabase`);
+        }
+
+        if (supabaseContacts.length > 0) {
+          const mappedContacts: EmployerContact[] = supabaseContacts.map(c => ({
+            id: c.id,
+            employerId: c.employer_id,
+            name: c.name,
+            email: c.email,
+            accessCode: c.access_code,
+            assignedInternships: c.assigned_internships || []
+          }));
+          setEmployerContacts(mappedContacts);
+          console.log(`✅ Loaded ${mappedContacts.length} employer contacts from Supabase`);
+        }
+
+        if (supabaseSupervisors.length > 0) {
+          const mappedSupervisors: Supervisor[] = supabaseSupervisors.map(s => ({
+            id: s.id,
+            name: s.name,
+            email: s.email,
+            phoneNumber: s.phone_number || '',
+            accessCode: s.access_code,
+            assignedStudents: s.assigned_students || []
+          }));
+          setSupervisors(mappedSupervisors);
+          console.log(`✅ Loaded ${mappedSupervisors.length} supervisors from Supabase`);
+        }
+      } catch (err) {
+        console.error('❌ Error loading Supabase data:', err);
+        // Fall back to local data (already loaded from localStorage)
+      }
+    };
+
+    loadSupabaseData();
+  }, []);
 
   useEffect(() => { localStorage.setItem('sc_students', JSON.stringify(students)); }, [students]);
   useEffect(() => { localStorage.setItem('sc_employers', JSON.stringify(employers)); }, [employers]);
