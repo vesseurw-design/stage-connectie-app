@@ -1,1 +1,1 @@
-console.log('✅ Post-build script disabled - using fresh build files');
+console.log('✅ Post-build: using fresh React build output only (no backup restore)');
