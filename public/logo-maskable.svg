@@ -1,0 +1,30 @@
+<svg viewBox="0 0 192 192" xmlns="http://www.w3.org/2000/svg">
+  <!-- Safe zone for maskable icons (inner 60%) -->
+  <defs>
+    <mask id="safezone">
+      <rect width="192" height="192" fill="white"/>
+      <circle cx="96" cy="96" r="115" fill="black"/>
+    </mask>
+  </defs>
+  
+  <!-- Circle border -->
+  <circle cx="96" cy="96" r="70" fill="none" stroke="#1a3a52" stroke-width="10" stroke-linecap="round"/>
+  
+  <!-- Left arrow (green) -->
+  <g stroke="#7ec850" stroke-width="10" stroke-linecap="round" stroke-linejoin="round" fill="none">
+    <path d="M 40 100 Q 30 90 40 80"/>
+    <path d="M 60 96 L 40 80 L 50 112"/>
+  </g>
+  
+  <!-- S letter -->
+  <text x="62" y="120" font-size="70" font-weight="bold" fill="#1a3a52" font-family="Arial, sans-serif" text-anchor="middle">S</text>
+  
+  <!-- C letter -->
+  <text x="110" y="120" font-size="70" font-weight="bold" fill="#1a3a52" font-family="Arial, sans-serif" text-anchor="middle">C</text>
+  
+  <!-- Right arrow (green) -->
+  <g stroke="#7ec850" stroke-width="10" stroke-linecap="round" stroke-linejoin="round" fill="none">
+    <path d="M 152 80 Q 162 90 152 100"/>
+    <path d="M 132 96 L 152 80 L 142 112"/>
+  </g>
+</svg>

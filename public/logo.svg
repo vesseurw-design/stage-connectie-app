@@ -1,0 +1,28 @@
+<svg viewBox="0 0 768 768" xmlns="http://www.w3.org/2000/svg">
+  <!-- Light blue background -->
+  <rect width="768" height="768" fill="#E8F4F8"/>
+  
+  <!-- Circle border -->
+  <circle cx="384" cy="300" r="180" fill="none" stroke="#1a3a52" stroke-width="24" stroke-linecap="round"/>
+  
+  <!-- Left arrow (green) -->
+  <g stroke="#7ec850" stroke-width="28" stroke-linecap="round" stroke-linejoin="round" fill="none">
+    <path d="M 160 320 Q 140 300 160 280"/>
+    <path d="M 220 310 L 160 280 L 180 340"/>
+  </g>
+  
+  <!-- S letter -->
+  <text x="280" y="340" font-size="180" font-weight="bold" fill="#1a3a52" font-family="Arial, sans-serif">S</text>
+  
+  <!-- C letter -->
+  <text x="380" y="340" font-size="180" font-weight="bold" fill="#1a3a52" font-family="Arial, sans-serif">C</text>
+  
+  <!-- Right arrow (green) -->
+  <g stroke="#7ec850" stroke-width="28" stroke-linecap="round" stroke-linejoin="round" fill="none">
+    <path d="M 608 280 Q 628 300 608 320"/>
+    <path d="M 548 310 L 608 280 L 588 340"/>
+  </g>
+  
+  <!-- Text: StageConnectie -->
+  <text x="384" y="520" font-size="64" font-weight="bold" fill="#1a3a52" font-family="Arial, sans-serif" text-anchor="middle">StageConnectie</text>
+</svg>

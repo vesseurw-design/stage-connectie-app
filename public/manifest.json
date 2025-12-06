@@ -1,20 +1,28 @@
 {
   "short_name": "StageConnect",
-  "name": "Groene Hart StageConnect",
+  "name": "StageConnectie",
   "icons": [
     {
-      "src": "https://cdn-icons-png.flaticon.com/512/2997/2997295.png",
-      "type": "image/png",
-      "sizes": "192x192"
+      "src": "/logo.svg",
+      "type": "image/svg+xml",
+      "sizes": "192x192",
+      "purpose": "any"
     },
     {
-      "src": "https://cdn-icons-png.flaticon.com/512/2997/2997295.png",
-      "type": "image/png",
-      "sizes": "512x512"
+      "src": "/logo.svg",
+      "type": "image/svg+xml",
+      "sizes": "512x512",
+      "purpose": "any"
+    },
+    {
+      "src": "/logo-maskable.svg",
+      "type": "image/svg+xml",
+      "sizes": "192x192",
+      "purpose": "maskable"
     }
   ],
   "start_url": ".",
   "display": "standalone",
   "theme_color": "#009FE3",
-  "background_color": "#ffffff"
+  "background_color": "#E8F4F8"
 }
