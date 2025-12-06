@@ -864,7 +864,8 @@ const MainApp: React.FC = () => {
     e.preventDefault();
     if(login.role === Role.ADMIN && login.pass === 'admin') { setRole(Role.ADMIN); setLogin({open:false, role:null, pass:'', empId:'', error:''}); }
     else if(login.role === Role.EMPLOYER) {
-       const emp = employers.find(x => x.id === login.empId);
+       const empId = login.empId || employers[0]?.id || '';
+       const emp = employers.find(x => x.id === empId);
        if(emp && emp.accessCode === login.pass) { setLoggedInEmp(emp.id); setRole(Role.EMPLOYER); setLogin({open:false, role:null, pass:'', empId:'', error:''}); }
        else setLogin({...login, error: 'Fout'});
     } else setLogin({...login, error: 'Fout'});
@@ -900,11 +901,8 @@ const MainApp: React.FC = () => {
            <div className="bg-white p-6 rounded-2xl w-full max-w-sm">
               <div className="flex justify-between mb-4"><h3 className="font-bold">Inloggen {login.role}</h3><button onClick={() => setLogin({...login, open:false})}><X/></button></div>
               <form onSubmit={doLogin} className="space-y-4">
-                 {login.role === Role.EMPLOYER && (
-                    <select className="w-full border p-3 rounded-xl" value={login.empId} onChange={e => setLogin({...login, empId: e.target.value})}>
-                       <option value="">Kies bedrijf...</option>
-                       {employers.map(e => <option key={e.id} value={e.id}>{e.companyName}</option>)}
-                    </select>
+                 {login.role === Role.EMPLOYER && employers.length > 0 && (
+                    <input type="hidden" value={login.empId || employers[0]?.id || ''} onChange={e => setLogin({...login, empId: e.target.value})} />
                  )}
                  <input type="password" placeholder={login.role === Role.ADMIN ? "Wachtwoord (admin)" : "Bedrijfscode"} className="w-full border p-3 rounded-xl" value={login.pass} onChange={e => setLogin({...login, pass: e.target.value})} />
                  {login.error && <p className="text-red-500 text-sm">{login.error}</p>}
