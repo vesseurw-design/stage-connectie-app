@@ -1,24 +1,24 @@
-# Supabase Setup Instructions for Stage Connect
+# Supabase Instellingen voor Stage Connect
 
-## Overview
-This document provides step-by-step instructions to set up the Supabase database for the Stage Connect hybrid architecture.
+## Overzicht
+Dit document biedt stap-voor-stap instructies om de Supabase database in te stellen voor de Stage Connect hybride architectuur.
 
-## Architecture
-- **Supabase (Cloud)**: Employers, Employer Contacts, Supervisor Contacts
-- **localStorage (Client)**: Internships, Students, Attendance, Messages
+## Architectuur
+- **Supabase (Cloud)**: Werkgevers, Werkgever Contacten, Begeleider Contacten
+- **localStorage (Browser)**: Stages, Leerlingen, Aanwezigheid, Berichten
 
-## Step 1: Access Supabase Dashboard
+## Stap 1: Open Supabase Dashboard
 
-1. Go to [https://app.supabase.com](https://app.supabase.com)
-2. Sign in with your Supabase account
-3. Select your project: `stageconnectie-app`
+1. Ga naar [https://app.supabase.com](https://app.supabase.com)
+2. Log in met uw Supabase account
+3. Selecteer uw project: `stageconnectie-app`
 
-## Step 2: Create Tables
+## Stap 2: Maak de Tabellen aan
 
-Navigate to the **SQL Editor** section and run the following SQL script:
+Ga naar de **SQL Editor** en voer het volgende SQL script uit:
 
 ```sql
--- Create employers table
+-- Werkgevers tabel aanmaken
 CREATE TABLE IF NOT EXISTS employers (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   company_name TEXT NOT NULL,
@@ -27,7 +27,7 @@ CREATE TABLE IF NOT EXISTS employers (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now())
 );
 
--- Create employer_contacts table
+-- Werkgever contacten tabel aanmaken
 CREATE TABLE IF NOT EXISTS employer_contacts (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   employer_id UUID NOT NULL REFERENCES employers(id) ON DELETE CASCADE,
@@ -39,7 +39,7 @@ CREATE TABLE IF NOT EXISTS employer_contacts (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now())
 );
 
--- Create supervisor_contacts table
+-- Begeleider contacten tabel aanmaken
 CREATE TABLE IF NOT EXISTS supervisor_contacts (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   name TEXT NOT NULL,
@@ -51,101 +51,101 @@ CREATE TABLE IF NOT EXISTS supervisor_contacts (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now())
 );
 
--- Create indexes for performance
+-- Indexen aanmaken voor prestaties
 CREATE INDEX IF NOT EXISTS idx_employer_contacts_email ON employer_contacts(email);
 CREATE INDEX IF NOT EXISTS idx_employer_contacts_employer_id ON employer_contacts(employer_id);
 CREATE INDEX IF NOT EXISTS idx_supervisor_contacts_email ON supervisor_contacts(email);
 ```
 
-## Step 3: Add Sample Data (Optional)
+## Stap 3: Voorbeeldgegevens toevoegen (Optioneel)
 
-To test the application, you can add sample data:
+Om de applicatie te testen, kunt u voorbeeldgegevens toevoegen:
 
 ```sql
--- Add sample employers
+-- Voorbeeldwerkgevers toevoegen
 INSERT INTO employers (company_name, phone_number) VALUES
   ('Techno Solutions', '030-1234567'),
   ('Design Studio', '020-9876543')
 ON CONFLICT DO NOTHING;
 
--- Add sample employer contacts
+-- Voorbeeldwerkgever contacten toevoegen
 INSERT INTO employer_contacts (employer_id, name, email, access_code, assigned_internships) VALUES
   ((SELECT id FROM employers WHERE company_name = 'Techno Solutions' LIMIT 1), 'Jan Jansen', 'jan@technosolutions.nl', 'SECRET123', ARRAY[]::text[]),
   ((SELECT id FROM employers WHERE company_name = 'Design Studio' LIMIT 1), 'Marie Dupont', 'marie@designstudio.nl', 'SECRET456', ARRAY[]::text[])
 ON CONFLICT (email) DO NOTHING;
 
--- Add sample supervisors
+-- Voorbeeldbegeleiders toevoegen
 INSERT INTO supervisor_contacts (name, email, phone_number, access_code, assigned_students) VALUES
   ('Drs. Peter van Dijk', 'peter.vandijk@ghpc.nl', '030-5555555', 'SUPERVISOR1', ARRAY[]::text[]),
   ('Ir. Sarah de Wit', 'sarah.dewit@ghpc.nl', '030-6666666', 'SUPERVISOR2', ARRAY[]::text[])
 ON CONFLICT (email) DO NOTHING;
 ```
 
-## Step 4: Enable Row Level Security (RLS) - Optional
+## Stap 4: Row Level Security (RLS) inschakelen - Optioneel
 
-For production, you may want to enable RLS. However, since we're using the anon key, we need to allow public read access:
+Voor productie kunt u RLS inschakelen. Aangezien we de anon key gebruiken, moeten we openbare leestoegang toestaan:
 
 ```sql
 ALTER TABLE employers ENABLE ROW LEVEL SECURITY;
 ALTER TABLE employer_contacts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE supervisor_contacts ENABLE ROW LEVEL SECURITY;
 
--- Create policies to allow public read
-CREATE POLICY "Enable read access for all users" ON employers
+-- Beleidsregels maken voor publieke leestoegang
+CREATE POLICY "Leestoegang voor alle gebruikers inschakelen" ON employers
   FOR SELECT USING (true);
 
-CREATE POLICY "Enable read access for all users" ON employer_contacts
+CREATE POLICY "Leestoegang voor alle gebruikers inschakelen" ON employer_contacts
   FOR SELECT USING (true);
 
-CREATE POLICY "Enable read access for all users" ON supervisor_contacts
+CREATE POLICY "Leestoegang voor alle gebruikers inschakelen" ON supervisor_contacts
   FOR SELECT USING (true);
 ```
 
-## Step 5: Verify Environment Variables
+## Stap 5: Controleer omgevingsvariabelen
 
-Make sure your `.env.local` file has the correct Supabase credentials:
+Zorg ervoor dat uw `.env.local` bestand de juiste Supabase-referenties bevat:
 
 ```
 REACT_APP_SUPABASE_URL=https://ninkkvffhvkxrrxddgrz.supabase.co
-REACT_APP_SUPABASE_ANON_KEY=your-anon-key-here
+REACT_APP_SUPABASE_ANON_KEY=uw-anon-key-hier
 ```
 
-## Step 6: Test the Connection
+## Stap 6: Test de Verbinding
 
-1. Start the development server: `npm start`
-2. Open the browser console (F12)
-3. Look for the message: `✅ Supabase connection successful`
-4. Log in with one of the test accounts (e.g., jan@technosolutions.nl / SECRET123)
+1. Start de ontwikkelingserver: `npm start`
+2. Open de browserconsole (F12)
+3. Zoek naar het bericht: `✅ Supabase verbinding succesvol`
+4. Log in met een van de testaccounts (bijvoorbeeld jan@technosolutions.nl / SECRET123)
 
-## Troubleshooting
+## Probleemoplossing
 
-### Issue: "Supabase connection test failed"
-- Check that Supabase URL and ANON_KEY are correct in .env.local
-- Verify that the tables exist in Supabase
-- Check browser console for detailed error messages
+### Probleem: "Supabase verbinding mislukt"
+- Controleer of de Supabase URL en ANON_KEY correct zijn in .env.local
+- Controleer of de tabellen bestaan in Supabase
+- Controleer de browserconsole op gedetailleerde foutmeldingen
 
-### Issue: "Email not found" on login
-- Verify that your test email exists in the employer_contacts or supervisor_contacts table
-- Make sure the access_code matches exactly
+### Probleem: "E-mail niet gevonden" bij inloggen
+- Controleer of uw test-e-mailadres bestaat in de employer_contacts of supervisor_contacts tabel
+- Zorg ervoor dat de access_code exact overeenkomt
 
-### Issue: Data not loading from Supabase
-- Check if Supabase is enabled in the browser console
-- Verify network tab in DevTools to see if API calls are being made
-- Check Supabase dashboard for any access errors
+### Probleem: Gegevens laden niet van Supabase
+- Controleer of Supabase is ingeschakeld in de browserconsole
+- Controleer het Network-tabblad in DevTools om te zien of API-aanroepen worden gedaan
+- Controleer het Supabase-dashboard op eventuele toegangsfouten
 
-## Next Steps
+## Volgende stappen
 
-Once tables are created and verified:
-1. Add your actual employer and supervisor data to Supabase
-2. Test all three login flows (employer, supervisor)
-3. Deploy to Vercel
-4. Monitor logs for any errors
+Zodra de tabellen zijn aangemaakt en geverifieerd:
+1. Voeg uw daadwerkelijke werkgever- en begeleidergegevens toe aan Supabase
+2. Test alle drie de inlogstromen (werkgever, begeleider)
+3. Implementeer op Vercel
+4. Monitor de logs op eventuele fouten
 
-## Data Migration from localStorage
+## Gegevensmigratie van localStorage
 
-The app still maintains full localStorage functionality as a fallback. When you want to permanently migrate to Supabase:
-1. Export your current data from localStorage
-2. Insert it into Supabase tables
-3. Update login functions to require Supabase data
+De app behoudt volledige localStorage-functionaliteit als terugvaloptie. Wanneer u permanent naar Supabase wilt migreren:
+1. Exporteer uw huidige gegevens uit localStorage
+2. Voeg deze in Supabase-tabellen in
+3. Update de inlogfuncties zodat Supabase-gegevens nodig zijn
 
-For now, the hybrid approach allows both data sources to coexist.
+Voor nu maakt de hybride benadering het mogelijk dat beide gegevensbronnen naast elkaar bestaan.
