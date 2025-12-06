@@ -13,7 +13,6 @@ import {
 // --- 1. TYPES & ENUMS ---
 
 export enum Role {
-  ADMIN = 'ADMIN',
   EMPLOYER = 'EMPLOYER',
   SUPERVISOR = 'SUPERVISOR'
 }
@@ -282,257 +281,7 @@ const Logo: React.FC<{ className?: string, showText?: boolean }> = ({ className 
   );
 };
 
-// --- ADMIN COMPONENT ---
-const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
-  const { 
-    students, employers, supervisors, internships, messages, 
-    addStudent, removeStudent,
-    addEmployer, removeEmployer,
-    addSupervisor, removeSupervisor,
-    addInternship, removeInternship,
-    sendMessage 
-  } = useApp();
-  const [tab, setTab] = useState<'students' | 'employers' | 'supervisors' | 'internships' | 'messages'>('students');
-  
-  // Forms
-  const [ns, setNs] = useState({ name: '', email: '', studentNumber: '' });
-  const [ne, setNe] = useState({ companyName: '', contactPerson: '', email: '', phoneNumber: '', accessCode: '' });
-  const [nSup, setNSup] = useState({ name: '', email: '', phoneNumber: '' });
-  const [ni, setNi] = useState<any>({ studentId: '', employerId: '', supervisorId: '', startDate: '', endDate: '', scheduledDays: [] });
-  const [selectedInternshipIdForChat, setSelectedInternshipIdForChat] = useState<string | null>(null);
-  const [adminReply, setAdminReply] = useState('');
-  const chatEndRef = useRef<HTMLDivElement>(null);
 
-  const handleDelete = (type: 'student'|'employer'|'supervisor'|'internship', id: string, name: string) => {
-    if(window.confirm(`Weet u zeker dat u "${name}" wilt verwijderen?`)) {
-      if(type === 'student') removeStudent(id);
-      if(type === 'employer') removeEmployer(id);
-      if(type === 'supervisor') removeSupervisor(id);
-      if(type === 'internship') removeInternship(id);
-    }
-  }
-
-  // Group messages by internship for the Messages tab
-  const internshipsWithMessages = internships.filter(i => messages.some(m => m.internshipId === i.id));
-
-  useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [selectedInternshipIdForChat, messages]);
-
-  const handleSendAdminMessage = (e: React.FormEvent) => {
-    e.preventDefault();
-    if(!selectedInternshipIdForChat || !adminReply.trim()) return;
-    sendMessage(selectedInternshipIdForChat, adminReply, 'SCHOOL');
-    setAdminReply('');
-  };
-
-  return (
-    <div className="p-6 max-w-7xl mx-auto">
-      <header className="mb-8 flex flex-col md:flex-row justify-between gap-4">
-        <div><h1 className="text-3xl font-bold text-slate-800">School CMS</h1></div>
-        <div className="flex items-center gap-4">
-          <button onClick={onLogout} className="text-red-600 flex gap-2"><LogOut size={20}/> Uitloggen</button>
-          <Logo className="h-10" />
-        </div>
-      </header>
-
-      <div className="flex space-x-4 mb-6 border-b overflow-x-auto">
-        {['students', 'employers', 'supervisors', 'internships', 'messages'].map(t => (
-          <button key={t} onClick={() => setTab(t as any)} className={`pb-3 px-4 font-medium capitalize ${tab === t ? 'text-blue-600 border-b-2 border-blue-600' : 'text-slate-500'}`}>{t}</button>
-        ))}
-      </div>
-
-      {tab === 'students' && (
-        <div className="grid md:grid-cols-3 gap-8">
-          <div className="md:col-span-2">
-            <h2 className="text-xl font-bold mb-4">Leerlingen</h2>
-            {students.map(s => (
-              <div key={s.id} className="p-3 border-b flex justify-between items-center hover:bg-slate-50">
-                <span>{s.name} ({s.studentNumber})</span>
-                <button onClick={() => handleDelete('student', s.id, s.name)} className="text-slate-400 hover:text-red-600 p-2"><Trash2 size={18}/></button>
-              </div>
-            ))}
-          </div>
-          <div className="bg-white p-6 rounded shadow">
-            <h3 className="font-bold mb-4">Nieuw</h3>
-            <input className="w-full border p-2 mb-2 rounded" placeholder="Naam" value={ns.name} onChange={e => setNs({...ns, name: e.target.value})} />
-            <input className="w-full border p-2 mb-2 rounded" placeholder="Studentnr" value={ns.studentNumber} onChange={e => setNs({...ns, studentNumber: e.target.value})} />
-            <input className="w-full border p-2 mb-2 rounded" placeholder="Email" value={ns.email} onChange={e => setNs({...ns, email: e.target.value})} />
-            <button onClick={() => { addStudent({...ns, id: `s${Date.now()}`}); setNs({name:'',email:'',studentNumber:''}); }} className="w-full bg-blue-600 text-white p-2 rounded">Toevoegen</button>
-          </div>
-        </div>
-      )}
-
-      {tab === 'employers' && (
-        <div className="grid md:grid-cols-3 gap-8">
-           <div className="md:col-span-2">
-            <h2 className="text-xl font-bold mb-4">Werkgevers</h2>
-            {employers.map(e => (
-              <div key={e.id} className="p-3 border-b flex justify-between items-center hover:bg-slate-50">
-                <div className="flex-1">
-                  <span className="font-bold">{e.companyName}</span>
-                  <span className="font-mono bg-slate-100 text-xs p-1 ml-2 rounded">{e.accessCode}</span>
-                </div>
-                <button onClick={() => handleDelete('employer', e.id, e.companyName)} className="text-slate-400 hover:text-red-600 p-2"><Trash2 size={18}/></button>
-              </div>
-            ))}
-          </div>
-          <div className="bg-white p-6 rounded shadow">
-            <h3 className="font-bold mb-4">Nieuw</h3>
-            <input className="w-full border p-2 mb-2 rounded" placeholder="Bedrijf" value={ne.companyName} onChange={e => setNe({...ne, companyName: e.target.value})} />
-            <input className="w-full border p-2 mb-2 rounded" placeholder="Contact" value={ne.contactPerson} onChange={e => setNe({...ne, contactPerson: e.target.value})} />
-            <input className="w-full border p-2 mb-2 rounded" placeholder="Email" value={ne.email} onChange={e => setNe({...ne, email: e.target.value})} />
-            <input className="w-full border p-2 mb-2 rounded" placeholder="Telefoon" value={ne.phoneNumber} onChange={e => setNe({...ne, phoneNumber: e.target.value})} />
-            <input className="w-full border p-2 mb-2 rounded" placeholder="Toegangscode" value={ne.accessCode} onChange={e => setNe({...ne, accessCode: e.target.value})} />
-            <button onClick={() => { addEmployer({...ne, id: `e${Date.now()}`}); setNe({companyName:'',contactPerson:'',email:'',phoneNumber:'',accessCode:''}); }} className="w-full bg-blue-600 text-white p-2 rounded">Toevoegen</button>
-          </div>
-        </div>
-      )}
-
-      {tab === 'supervisors' && (
-        <div className="grid md:grid-cols-3 gap-8">
-          <div className="md:col-span-2">
-            <h2 className="text-xl font-bold mb-4">Begeleiders</h2>
-            {supervisors.map(s => (
-              <div key={s.id} className="p-3 border-b flex justify-between items-center hover:bg-slate-50">
-                <span>{s.name}</span>
-                <button onClick={() => handleDelete('supervisor', s.id, s.name)} className="text-slate-400 hover:text-red-600 p-2"><Trash2 size={18}/></button>
-              </div>
-            ))}
-          </div>
-          <div className="bg-white p-6 rounded shadow">
-            <h3 className="font-bold mb-4">Nieuw</h3>
-            <input className="w-full border p-2 mb-2 rounded" placeholder="Naam" value={nSup.name} onChange={e => setNSup({...nSup, name: e.target.value})} />
-            <input className="w-full border p-2 mb-2 rounded" placeholder="Email" value={nSup.email} onChange={e => setNSup({...nSup, email: e.target.value})} />
-            <input className="w-full border p-2 mb-2 rounded" placeholder="Telefoon" value={nSup.phoneNumber} onChange={e => setNSup({...nSup, phoneNumber: e.target.value})} />
-            <button onClick={() => { addSupervisor({...nSup, id: `sup${Date.now()}`}); setNSup({name:'', email:'', phoneNumber:''}); }} className="w-full bg-blue-600 text-white p-2 rounded">Toevoegen</button>
-          </div>
-        </div>
-      )}
-
-      {tab === 'internships' && (
-         <div className="grid md:grid-cols-3 gap-8">
-           <div className="md:col-span-2">
-             <h2 className="text-xl font-bold mb-4">Stages</h2>
-             {internships.map(i => {
-               const s = students.find(x => x.id === i.studentId);
-               const e = employers.find(x => x.id === i.employerId);
-               return (
-                 <div key={i.id} className="p-3 border-b flex justify-between items-center hover:bg-slate-50">
-                   <span>{s?.name} @ {e?.companyName}</span>
-                   <button onClick={() => handleDelete('internship', i.id, `${s?.name} bij ${e?.companyName}`)} className="text-slate-400 hover:text-red-600 p-2"><Trash2 size={18}/></button>
-                 </div>
-               )
-             })}
-           </div>
-           <div className="bg-white p-6 rounded shadow">
-             <h3 className="font-bold mb-4">Koppelen</h3>
-             <select className="w-full border p-2 mb-2" value={ni.studentId} onChange={e => setNi({...ni, studentId: e.target.value})}>
-               <option value="">Leerling...</option>
-               {students.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-             </select>
-             <select className="w-full border p-2 mb-2" value={ni.employerId} onChange={e => setNi({...ni, employerId: e.target.value})}>
-               <option value="">Werkgever...</option>
-               {employers.map(e => <option key={e.id} value={e.id}>{e.companyName}</option>)}
-             </select>
-             <select className="w-full border p-2 mb-2" value={ni.supervisorId} onChange={e => setNi({...ni, supervisorId: e.target.value})}>
-               <option value="">Begeleider...</option>
-               {supervisors.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-             </select>
-             <div className="flex gap-2 mb-2">
-               <input type="date" className="w-full border p-2" value={ni.startDate} onChange={e => setNi({...ni, startDate: e.target.value})} />
-               <input type="date" className="w-full border p-2" value={ni.endDate} onChange={e => setNi({...ni, endDate: e.target.value})} />
-             </div>
-             <div className="flex gap-1 mb-4">
-               {['Ma','Di','Wo','Do','Vr'].map(d => (
-                 <button key={d} onClick={() => setNi((p:any) => p.scheduledDays.includes(d) ? {...p, scheduledDays: p.scheduledDays.filter((x:string) => x!==d)} : {...p, scheduledDays: [...p.scheduledDays, d]})} className={`p-1 border text-xs ${ni.scheduledDays.includes(d) ? 'bg-blue-600 text-white' : ''}`}>{d}</button>
-               ))}
-             </div>
-             <button onClick={() => { addInternship({...ni, id: `i${Date.now()}`}); }} className="w-full bg-blue-600 text-white p-2 rounded">Koppelen</button>
-           </div>
-         </div>
-      )}
-
-      {tab === 'messages' && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 h-[600px]">
-           <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-y-auto">
-              <div className="p-4 border-b border-slate-100 bg-slate-50">
-                 <h3 className="font-semibold text-slate-700">Actieve Gesprekken</h3>
-              </div>
-              <div>
-                 {internshipsWithMessages.length === 0 ? (
-                    <p className="p-4 text-slate-400 text-sm">Nog geen berichten.</p>
-                 ) : (
-                   internshipsWithMessages.map(int => {
-                     const s = students.find(x => x.id === int.studentId);
-                     const e = employers.find(x => x.id === int.employerId);
-                     const isSelected = selectedInternshipIdForChat === int.id;
-                     
-                     return (
-                        <button 
-                          key={int.id} 
-                          onClick={() => setSelectedInternshipIdForChat(int.id)}
-                          className={`w-full text-left p-4 border-b border-slate-100 hover:bg-slate-50 transition-colors ${isSelected ? 'bg-blue-50 border-l-4 border-l-blue-600' : ''}`}
-                        >
-                           <p className="font-bold text-slate-800 text-sm">{s?.name}</p>
-                           <p className="text-xs text-slate-500">{e?.companyName}</p>
-                        </button>
-                     )
-                   })
-                 )}
-              </div>
-           </div>
-
-           <div className="md:col-span-2 bg-white rounded-xl shadow-sm border border-slate-200 flex flex-col overflow-hidden">
-              {!selectedInternshipIdForChat ? (
-                 <div className="flex-1 flex items-center justify-center text-slate-400 flex-col gap-3">
-                    <MessageCircle size={48} className="opacity-20" />
-                    <p>Selecteer een gesprek om te lezen</p>
-                 </div>
-              ) : (
-                 <>
-                   <div className="p-4 border-b border-slate-100 bg-slate-50 flex justify-between items-center">
-                      <h3 className="font-bold text-slate-700">
-                        Chat over {students.find(s => s.id === internships.find(i => i.id === selectedInternshipIdForChat)?.studentId)?.name}
-                      </h3>
-                   </div>
-                   <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-[#f8fafc]">
-                      {messages.filter(m => m.internshipId === selectedInternshipIdForChat).sort((a,b) => a.timestamp - b.timestamp).map(msg => {
-                         const isSchool = msg.senderRole === 'SCHOOL';
-                         return (
-                           <div key={msg.id} className={`flex ${isSchool ? 'justify-end' : 'justify-start'}`}>
-                              <div className={`max-w-[80%] p-3 rounded-2xl text-sm shadow-sm ${isSchool ? 'bg-[#009FE3] text-white rounded-tr-none' : 'bg-white text-slate-700 rounded-tl-none border border-slate-200'}`}>
-                                 <p>{msg.text}</p>
-                                 <span className={`text-[10px] block mt-1 ${isSchool ? 'text-blue-100' : 'text-slate-400'}`}>
-                                    {new Date(msg.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
-                                 </span>
-                              </div>
-                           </div>
-                         );
-                      })}
-                      <div ref={chatEndRef} />
-                   </div>
-                   <div className="p-4 bg-white border-t border-slate-100">
-                      <form onSubmit={handleSendAdminMessage} className="flex gap-2">
-                         <input 
-                            value={adminReply}
-                            onChange={(e) => setAdminReply(e.target.value)}
-                            placeholder="Typ een reactie..."
-                            className="flex-1 border border-slate-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                         />
-                         <button type="submit" disabled={!adminReply.trim()} className="bg-blue-600 text-white p-2 rounded-lg hover:bg-blue-700 transition disabled:opacity-50">
-                            <Send size={20} />
-                         </button>
-                      </form>
-                   </div>
-                 </>
-              )}
-           </div>
-        </div>
-      )}
-    </div>
-  );
-};
 
 // --- EMPLOYER COMPONENT ---
 
@@ -955,9 +704,7 @@ const MainApp: React.FC = () => {
     if (savedSession) {
       try {
         const session = JSON.parse(savedSession);
-        if (session.role === Role.ADMIN) {
-          setRole(Role.ADMIN);
-        } else if (session.role === Role.EMPLOYER && session.empId) {
+        if (session.role === Role.EMPLOYER && session.empId) {
           setRole(Role.EMPLOYER);
           setLoggedInEmp(session.empId);
         } else if (session.role === Role.SUPERVISOR && session.supId) {
@@ -972,12 +719,7 @@ const MainApp: React.FC = () => {
 
   const doLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    if(login.role === Role.ADMIN && login.pass === 'admin') { 
-      setRole(Role.ADMIN); 
-      localStorage.setItem('stageconnect_session', JSON.stringify({ role: Role.ADMIN }));
-      setLogin({open:false, role:null, email:'', pass:'', empId:'', error:''}); 
-    }
-    else if(login.role === Role.EMPLOYER) {
+    if(login.role === Role.EMPLOYER) {
        const contact = employerContacts.find(x => x.email === login.email);
        if(contact && contact.accessCode === login.pass) { 
          setLoggedInEmp(contact.id); 
@@ -1006,7 +748,6 @@ const MainApp: React.FC = () => {
     localStorage.removeItem('stageconnect_session');
   };
 
-  if(role === Role.ADMIN) return <AdminDashboard onLogout={handleLogout} />;
   if(role === Role.EMPLOYER) return <EmployerPortal onLogout={handleLogout} loggedInEmployerId={loggedInEmp} />;
   if(role === Role.SUPERVISOR) return <SupervisorDashboard onLogout={handleLogout} loggedInSupervisorId={loggedInEmp} />;
 
@@ -1029,11 +770,6 @@ const MainApp: React.FC = () => {
              <div className="text-left flex-1"><h3 className="font-bold">Stagebegeleider</h3></div>
              <ChevronRight className="text-slate-300"/>
            </button>
-           <button onClick={() => setLogin({open:true, role:Role.ADMIN, pass:'', empId:'', error:''})} className="w-full p-4 border rounded-xl flex items-center gap-4 hover:bg-slate-50">
-             <div className="bg-blue-100 text-blue-600 p-3 rounded-xl"><ShieldCheck/></div>
-             <div className="text-left flex-1"><h3 className="font-bold">School Admin</h3></div>
-             <ChevronRight className="text-slate-300"/>
-           </button>
         </div>
       </div>
 
@@ -1053,9 +789,6 @@ const MainApp: React.FC = () => {
                        <input type="email" placeholder="Email" className="w-full border p-3 rounded-xl" value={login.email} onChange={e => setLogin({...login, email: e.target.value})} />
                        <input type="password" placeholder="Wachtwoord" className="w-full border p-3 rounded-xl" value={login.pass} onChange={e => setLogin({...login, pass: e.target.value})} />
                     </>
-                 )}
-                 {login.role === Role.ADMIN && (
-                    <input type="password" placeholder="Wachtwoord" className="w-full border p-3 rounded-xl" value={login.pass} onChange={e => setLogin({...login, pass: e.target.value})} />
                  )}
                  {login.error && <p className="text-red-500 text-sm">{login.error}</p>}
                  <button type="submit" className="w-full bg-[#009FE3] text-white p-3 rounded-xl font-bold">Inloggen</button>
