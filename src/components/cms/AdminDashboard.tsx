@@ -10,8 +10,8 @@ interface AdminDashboardProps {
 }
 
 export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
-  const { students, employers, supervisors, internships, messages, addStudent, addEmployer, addSupervisor, addInternship, sendMessage } = useApp();
-  const [activeTab, setActiveTab] = useState<'students' | 'employers' | 'supervisors' | 'internships' | 'messages'>('students');
+  const { students, employers, employerContacts, supervisors, internships, messages, addStudent, addEmployer, addSupervisor, addInternship, sendMessage } = useApp();
+  const [activeTab, setActiveTab] = useState<'students' | 'employers' | 'employer-contacts' | 'supervisors' | 'internships' | 'messages'>('students');
 
   // Form States
   const [newStudent, setNewStudent] = useState({ name: '', email: '', studentNumber: '' });
@@ -118,6 +118,12 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
           className={`pb-3 px-4 font-medium flex items-center gap-2 whitespace-nowrap ${activeTab === 'employers' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-slate-500 hover:text-slate-700'}`}
         >
           <Briefcase size={20} /> Werkgevers
+        </button>
+        <button 
+          onClick={() => setActiveTab('employer-contacts')}
+          className={`pb-3 px-4 font-medium flex items-center gap-2 whitespace-nowrap ${activeTab === 'employer-contacts' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-slate-500 hover:text-slate-700'}`}
+        >
+          <Briefcase size={20} /> Contactpersonen
         </button>
         <button 
           onClick={() => setActiveTab('supervisors')}
@@ -443,6 +449,55 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                  </>
               )}
            </div>
+        </div>
+      )}
+
+      {/* Employer Contacts Tab */}
+      {activeTab === 'employer-contacts' && (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="md:col-span-2 space-y-4">
+            <h2 className="text-xl font-semibold text-slate-800">Werkgever Contactpersonen</h2>
+            <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+               <table className="w-full text-left">
+                <thead className="bg-slate-50 border-b border-slate-200">
+                  <tr>
+                    <th className="p-4 font-medium text-slate-600">Bedrijf</th>
+                    <th className="p-4 font-medium text-slate-600">Naam</th>
+                    <th className="p-4 font-medium text-slate-600">Email</th>
+                    <th className="p-4 font-medium text-slate-600">Code</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {(employers as any).map((emp: any) => {
+                    const contacts = (employerContacts as any).filter((c: any) => c.employerId === emp.id);
+                    return contacts.map((contact: any) => (
+                      <tr key={contact.id} className="hover:bg-slate-50">
+                        <td className="p-4 font-medium text-slate-900">{emp.companyName}</td>
+                        <td className="p-4 text-slate-600">{contact.name}</td>
+                        <td className="p-4 text-slate-600">{contact.email}</td>
+                        <td className="p-4 text-slate-600 font-mono bg-slate-50">{contact.accessCode}</td>
+                      </tr>
+                    ));
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <div>
+             <form onSubmit={() => {}} className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+              <h3 className="text-lg font-semibold mb-4 flex items-center gap-2"><Plus size={18} /> Nieuwe Contactpersoon</h3>
+              <div className="space-y-4">
+                <select required className="w-full border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                  <option value="">Kies bedrijf...</option>
+                  {(employers as any).map((e: any) => <option key={e.id} value={e.id}>{e.companyName}</option>)}
+                </select>
+                <input required placeholder="Naam" className="w-full border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:outline-none" />
+                <input required type="email" placeholder="Email" className="w-full border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:outline-none" />
+                <input required placeholder="Toegangscode" className="w-full border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:outline-none font-mono" />
+                <button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 rounded-lg transition">Toevoegen</button>
+              </div>
+            </form>
+          </div>
         </div>
       )}
     </div>
