@@ -1027,6 +1027,12 @@ const MainApp: React.FC = () => {
                        <input type="password" placeholder="Wachtwoord" className="w-full border p-3 rounded-xl" value={login.pass} onChange={e => setLogin({...login, pass: e.target.value})} />
                     </>
                  )}
+                 {login.role === Role.SUPERVISOR && (
+                    <>
+                       <input type="email" placeholder="Email" className="w-full border p-3 rounded-xl" value={login.email} onChange={e => setLogin({...login, email: e.target.value})} />
+                       <input type="password" placeholder="Wachtwoord" className="w-full border p-3 rounded-xl" value={login.pass} onChange={e => setLogin({...login, pass: e.target.value})} />
+                    </>
+                 )}
                  {login.role === Role.ADMIN && (
                     <input type="password" placeholder="Wachtwoord (admin)" className="w-full border p-3 rounded-xl" value={login.pass} onChange={e => setLogin({...login, pass: e.target.value})} />
                  )}
