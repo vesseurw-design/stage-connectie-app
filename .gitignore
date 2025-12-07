@@ -8,7 +8,7 @@ node_modules 2/
 /coverage
 
 # Production
-/build
+#/build
 /dist
 
 # Misc
