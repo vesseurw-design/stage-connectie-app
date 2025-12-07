@@ -1,15 +1,6 @@
 {
-  "buildCommand": "npm run build",
+  "buildCommand": "echo 'Using pre-built files'",
   "outputDirectory": "build",
-  "headers": [
-    {
-      "source": "/(.*)",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "public, max-age=3600, s-maxage=3600"
-        }
-      ]
-    }
-  ]
+  "installCommand": "echo 'No install needed'",
+  "framework": null
 }
