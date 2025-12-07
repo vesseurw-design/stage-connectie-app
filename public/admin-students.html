@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="nl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Studenten Beheer - StageConnect Admin</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">display=swap" rel="stylesheet">
+<link rel="icon" type="image/png" href="app-icon.png">
+    <style>body { font-family: 'Inter', sans-serif; }</style>
+</head>
+
+<body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen">
+    <nav class="bg-white/80 backdrop-blur-md shadow-sm border-b border-white/20 sticky top-0 z-10 transition-all duration-300">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <h1 class="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600">Studenten Beheer</h1>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <a href="admin.html" class="text-sm font-medium text-gray-500 hover:text-blue-600 transition">Terug naar Dashboard</a>
+                    <button onclick="logout()" class="text-sm font-medium text-red-500 hover:text-red-700 bg-red-50 hover:bg-red-100 px-3 py-1.5 rounded-lg transition">Uitloggen</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="max-w-7xl mx-auto py-8 sm:px-6 lg:px-8">
+        <div class="px-4 py-2 sm:px-0">
+            <div class="flex justify-between items-center mb-8">
+                <div>
+                    <h2 class="text-3xl font-bold text-gray-800">Overzicht Studenten</h2>
+                    <p class="text-gray-500 mt-1">Beheer koppelingen met bedrijven en begeleiders</p>
+                </div>
+                <button onclick="openModal()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-xl shadow-lg hover:shadow-xl transition transform hover:-translate-y-0.5 flex items-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                    Nieuwe Student
+                </button>
+            </div>
+
+            <div class="bg-white/70 backdrop-blur rounded-2xl shadow-xl border border-white/50 overflow-hidden">
+                <table class="min-w-full divide-y divide-gray-200/60">
+                    <thead class="bg-gray-50/50">
+                        <tr>
+                            <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Naam</th>
+                            <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Bedrijf</th>
+                            <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Begeleider</th>
+                            <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Dagen</th>
+                            <th class="px-6 py-4 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Acties</th>
+                        </tr>
+                    </thead>
+                    <tbody id="students-table-body" class="bg-white/40 divide-y divide-gray-100">
+                        <!-- Items injected here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div id="student-modal" class="hidden fixed inset-0 bg-gray-900/40 backdrop-blur-sm overflow-y-auto h-full w-full z-50 flex items-center justify-center transition-opacity">
+        <div class="relative p-8 border w-full max-w-lg shadow-2xl rounded-2xl bg-white transform transition-all scale-100">
+            <div class="mb-6">
+                <h3 class="text-2xl font-bold text-gray-800" id="modal-title">Student Toevoegen</h3>
+                <p class="text-gray-500 text-sm mt-1">Vul de gegevens in</p>
+            </div>
+            
+            <form id="student-form" class="space-y-5">
+                <input type="hidden" id="original-name">
+                
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="col-span-2">
+                        <label class="block text-sm font-semibold text-gray-700 mb-1">Naam</label>
+                        <input type="text" id="name" required class="block w-full border border-gray-200 rounded-lg shadow-sm p-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-1">Student Nummer</label>
+                        <input type="text" id="student_number" class="block w-full border border-gray-200 rounded-lg shadow-sm p-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-1">Bedrijf</label>
+                        <select id="company_id" class="block w-full border border-gray-200 rounded-lg shadow-sm p-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition bg-white">
+                            <option value="">Geen bedrijf</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-1">Begeleider</label>
+                        <select id="supervisor_id" class="block w-full border border-gray-200 rounded-lg shadow-sm p-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition bg-white">
+                            <option value="">Geen begeleider</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Stagedagen</label>
+                    <div class="flex flex-wrap gap-2">
+                        <label class="cursor-pointer inline-flex items-center px-3 py-2 rounded-lg border border-gray-200 hover:bg-gray-50 has-[:checked]:bg-blue-50 has-[:checked]:border-blue-200 has-[:checked]:text-blue-700 transition">
+                            <input type="checkbox" name="days" value="Ma" class="hidden"> 
+                            <span class="text-sm font-medium">Ma</span>
+                        </label>
+                        <label class="cursor-pointer inline-flex items-center px-3 py-2 rounded-lg border border-gray-200 hover:bg-gray-50 has-[:checked]:bg-blue-50 has-[:checked]:border-blue-200 has-[:checked]:text-blue-700 transition">
+                            <input type="checkbox" name="days" value="Di" class="hidden"> 
+                            <span class="text-sm font-medium">Di</span>
+                        </label>
+                        <label class="cursor-pointer inline-flex items-center px-3 py-2 rounded-lg border border-gray-200 hover:bg-gray-50 has-[:checked]:bg-blue-50 has-[:checked]:border-blue-200 has-[:checked]:text-blue-700 transition">
+                            <input type="checkbox" name="days" value="Wo" class="hidden"> 
+                            <span class="text-sm font-medium">Wo</span>
+                        </label>
+                        <label class="cursor-pointer inline-flex items-center px-3 py-2 rounded-lg border border-gray-200 hover:bg-gray-50 has-[:checked]:bg-blue-50 has-[:checked]:border-blue-200 has-[:checked]:text-blue-700 transition">
+                            <input type="checkbox" name="days" value="Do" class="hidden"> 
+                            <span class="text-sm font-medium">Do</span>
+                        </label>
+                        <label class="cursor-pointer inline-flex items-center px-3 py-2 rounded-lg border border-gray-200 hover:bg-gray-50 has-[:checked]:bg-blue-50 has-[:checked]:border-blue-200 has-[:checked]:text-blue-700 transition">
+                            <input type="checkbox" name="days" value="Vr" class="hidden"> 
+                            <span class="text-sm font-medium">Vr</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="flex justify-end gap-3 pt-4 border-t border-gray-100">
+                    <button type="button" onclick="closeModal()" class="bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 font-semibold py-2.5 px-5 rounded-xl transition">Annuleren</button>
+                    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 px-6 rounded-xl shadow-lg hover:shadow-xl transition">Opslaan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="./static/js/admin-auth.js"></script>
+    <script>
+        // Keep Existing Logic
+        if (!localStorage.getItem('stageconnect_admin_session')) {
+            window.location.href = 'admin-login.html';
+        }
+
+        let companies = [];
+        let supervisors = [];
+
+        async function loadData() {
+            try {
+                // Load relations first
+                const { data: c } = await supabase.from('Bedrijven').select('*');
+                companies = c || [];
+                const { data: s } = await supabase.from('stagebegeleiders').select('*');
+                supervisors = s || [];
+
+                // Populate selects
+                const companySelect = document.getElementById('company_id');
+                companySelect.innerHTML = '<option value="">Geen bedrijf</option>';
+                companies.forEach(c => {
+                    companySelect.innerHTML += `<option value="${c.id}">${c.company_name}</option>`;
+                });
+
+                const supervisorSelect = document.getElementById('supervisor_id');
+                supervisorSelect.innerHTML = '<option value="">Geen begeleider</option>';
+                supervisors.forEach(s => {
+                    supervisorSelect.innerHTML += `<option value="${s.id}">${s.name}</option>`;
+                });
+
+                // Load students
+                const { data: students, error } = await supabase
+                    .from('Students')
+                    .select('*')
+                    .order('name');
+
+                if (error) {
+                    console.error('Error loading students:', error);
+                    // Silent fail for nicer UX or show toast
+                    return;
+                }
+
+                renderStudents(students || []);
+
+            } catch (err) {
+                console.error('Unexpected error loading data:', err);
+            }
+        }
+
+        function renderStudents(studentsList) {
+            const tbody = document.getElementById('students-table-body');
+            tbody.innerHTML = '';
+
+            studentsList.forEach(student => {
+                const company = companies.find(c => c.id === student.company_id);
+                const supervisor = supervisors.find(s => s.id === student.supervisor_id);
+                const days = (student.scheduled_days || []).join(', ');
+                
+                // DATA PREP FOR EDIT
+                const safeStudent = JSON.stringify(student).replace(/'/g, "&#39;");
+                const safeName = student.name.replace(/'/g, "\\'"); 
+
+                tbody.innerHTML += `
+                <tr class="hover:bg-blue-50/50 transition duration-150">
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">${student.name}</td>
+                    <!-- td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${student.student_number || '-'}</td -->
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                        ${company ? `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">${company.company_name}</span>` : '<span class="text-gray-400">-</span>'}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">${supervisor?.name || '-'}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 space-x-1">
+                        ${(student.scheduled_days || []).length > 0 ? (student.scheduled_days || []).map(d => `<span class="bg-gray-100 text-gray-600 text-xs font-medium px-2 py-1 rounded">${d}</span>`).join('') : '<span class="text-gray-300 italic">Geen dagen</span>'}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <button onclick='editStudent(${safeStudent})' class="text-indigo-600 hover:text-indigo-900 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-lg transition mr-2">
+                            Bewerk
+                        </button>
+                        <button onclick="deleteStudent('${safeName}')" class="text-red-600 hover:text-red-900 bg-red-50 hover:bg-red-100 px-3 py-1.5 rounded-lg transition">
+                            Verwijder
+                        </button>
+                    </td>
+                </tr>
+            `;
+            });
+        }
+
+        function openModal(student = null) { 
+            const modal = document.getElementById("student-modal"); 
+            const title = document.getElementById("modal-title"); 
+            const form = document.getElementById("student-form"); 
+            modal.classList.remove("hidden"); 
+            
+            if (student) { 
+                title.textContent = "Student Bewerken"; 
+                document.getElementById("original-name").value = student.name; 
+                document.getElementById("name").value = student.name; 
+                document.getElementById("student_number").value = student.student_number || ""; 
+                document.getElementById("company_id").value = student.company_id || ""; 
+                document.getElementById("supervisor_id").value = student.supervisor_id || ""; 
+                document.querySelectorAll('input[name="days"]').forEach(cb => cb.checked = false); 
+                (student.scheduled_days || []).forEach(day => { 
+                    const checkbox = document.querySelector(`input[name="days"][value="${day}"]`); 
+                    if (checkbox) checkbox.checked = true 
+                }) 
+            } else { 
+                title.textContent = "Student Toevoegen"; 
+                form.reset(); 
+                document.getElementById("original-name").value = ""; 
+            } 
+        } 
+        
+        function closeModal() { document.getElementById("student-modal").classList.add("hidden") } 
+        window.editStudent = function (student) { openModal(student) }; 
+        
+        window.deleteStudent = async function (name) {
+            if (!confirm("Weet je zeker dat je " + name + " wilt verwijderen?")) return;
+            
+            const { error } = await supabase.from("Students").delete().eq("name", name);
+            
+            if (error) { 
+                console.error('Delete error:', error);
+                alert("Fout bij verwijderen: " + error.message);
+            } else { 
+                loadData();
+            }
+        };
+
+        document.getElementById("student-form").addEventListener("submit", async (e) => {
+            e.preventDefault(); 
+            const originalName = document.getElementById("original-name").value; 
+            const name = document.getElementById("name").value; 
+            const student_number = document.getElementById("student_number").value; 
+            const company_id = document.getElementById("company_id").value || null; 
+            const supervisor_id = document.getElementById("supervisor_id").value || null; 
+            const scheduled_days = Array.from(document.querySelectorAll('input[name="days"]:checked')).map(cb => cb.value); 
+            const studentData = { name, student_number, company_id, supervisor_id, scheduled_days };
+            
+            let error = null;
+            
+            if (originalName) {
+                // Update based on Name
+                const { error: updateError } = await supabase.from("Students").update(studentData).eq("name", originalName);
+                error = updateError;
+            } else {
+                // Insert
+                const { error: insertError } = await supabase.from("Students").insert([studentData]);
+                error = insertError;
+            }
+            
+            if (error) { 
+                console.error('Save error:', error);
+                alert("Fout bij opslaan: " + error.message);
+            } else { 
+                closeModal(); 
+                loadData();
+            }
+        });
+        function logout() { localStorage.removeItem("stageconnect_admin_session"); window.location.href = "admin-login.html" } 
+        
+        loadData();
+    </script>
+</body>
+</html>

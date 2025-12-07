@@ -1,28 +1,20 @@
 {
   "short_name": "StageConnect",
-  "name": "StageConnectie",
+  "name": "Groene Hart StageConnect",
   "icons": [
     {
-      "src": "/logo.svg",
-      "type": "image/svg+xml",
-      "sizes": "192x192",
-      "purpose": "any"
+      "src": "app-icon.png",
+      "type": "image/png",
+      "sizes": "192x192"
     },
     {
-      "src": "/logo.svg",
-      "type": "image/svg+xml",
-      "sizes": "512x512",
-      "purpose": "any"
-    },
-    {
-      "src": "/logo-maskable.svg",
-      "type": "image/svg+xml",
-      "sizes": "192x192",
-      "purpose": "maskable"
+      "src": "app-icon.png",
+      "type": "image/png",
+      "sizes": "512x512"
     }
   ],
   "start_url": ".",
   "display": "standalone",
   "theme_color": "#009FE3",
-  "background_color": "#E8F4F8"
+  "background_color": "#ffffff"
 }
