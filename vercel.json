@@ -1,6 +1,6 @@
 {
-  "buildCommand": "echo 'Using pre-built files'",
-  "outputDirectory": "build",
+  "buildCommand": "cp -r build/* /vercel/output/static/ || mkdir -p /vercel/output/static && cp -r build/* /vercel/output/static/",
+  "outputDirectory": ".",
   "installCommand": "echo 'No install needed'",
   "framework": null
 }
