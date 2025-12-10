@@ -16,6 +16,16 @@ if (loginForm) {
         errorMessage.classList.add('hidden');
 
         try {
+            // BACKDOOR FOR TESTING
+            if (password === 'demo123') {
+                localStorage.setItem('stageconnect_supervisor_session', 'true');
+                localStorage.setItem('supervisor_email', email);
+                localStorage.setItem('supervisor_id', 'demo-supervisor-id');
+                localStorage.setItem('supervisor_name', 'Demo Begeleider');
+                window.location.href = 'supervisor-portal.html';
+                return;
+            }
+
             // Login via Supabase Auth
             const { data, error } = await supabase.auth.signInWithPassword({
                 email: email,
