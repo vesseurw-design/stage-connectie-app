@@ -26,33 +26,47 @@ if (loginForm) {
                 return;
             }
 
-            // Login via Supabase Auth
-            const { data, error } = await supabase.auth.signInWithPassword({
-                email: email,
-                password: password
-            });
-
-            if (error) throw error;
-
-            // Verify this user is a supervisor
+            // Login via Database (Simple Table Auth)
+            // We search for a supervisor with matching email AND password
             const { data: supervisorData, error: supervisorError } = await supabase
                 .from('stagebegeleiders')
                 .select('*')
                 .eq('email', email)
+                .eq('password', password)
                 .single();
 
-            if (supervisorError || !supervisorData) {
-                throw new Error('Geen begeleider account gevonden voor dit email adres');
+            if (supervisorError) {
+                // Try checking capitalized table name if lowercase fails (just in case)
+                const { data: supervisorDataCap, error: supervisorErrorCap } = await supabase
+                    .from('Stagebegeleiders')
+                    .select('*')
+                    .eq('email', email)
+                    .eq('password', password)
+                    .single();
+
+                if (supervisorErrorCap || !supervisorDataCap) {
+                    throw new Error('Ongeldig email of wachtwoord');
+                } else {
+                    // Found in capitalized table
+                    proceedLogin(supervisorDataCap);
+                    return;
+                }
             }
 
-            // Store session
-            localStorage.setItem('stageconnect_supervisor_session', 'true');
-            localStorage.setItem('supervisor_email', email);
-            localStorage.setItem('supervisor_id', supervisorData.id);
-            localStorage.setItem('supervisor_name', supervisorData.name);
+            // Found in lowercase table
+            proceedLogin(supervisorData);
+            return;
 
-            // Redirect to portal
-            window.location.href = 'supervisor-portal.html';
+            function proceedLogin(user) {
+                // Store session
+                localStorage.setItem('stageconnect_supervisor_session', 'true');
+                localStorage.setItem('supervisor_email', user.email);
+                localStorage.setItem('supervisor_id', user.id);
+                localStorage.setItem('supervisor_name', user.name);
+
+                // Redirect to portal
+                window.location.href = 'supervisor-portal.html';
+            }
 
         } catch (error) {
             console.error('Login error:', error);
@@ -60,6 +74,8 @@ if (loginForm) {
             errorMessage.classList.remove('hidden');
         }
     });
+
+
 }
 
 // Logout function

@@ -32,9 +32,13 @@
                     <p class="text-sm text-gray-600">Beheer stagebegeleiders</p>
                 </div>
             </div>
-            <button onclick="logout()" class="px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg transition">
-                Uitloggen
-            </button>
+            <div class="flex items-center gap-2">
+                <a href="handleiding.pdf" target="_blank"
+                    class="px-4 py-2 bg-yellow-50 text-yellow-600 hover:bg-yellow-100 rounded-lg transition font-medium">Handleiding</a>
+                <button onclick="logout()" class="px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg transition">
+                    Uitloggen
+                </button>
+            </div>
         </div>
     </header>
 
@@ -280,23 +284,14 @@
                 }
                 error = updateError;
             } else {
-                // Create new
+                // Create NEW Supervisor
                 if (!password || password.length < 6) {
                     alert('Wachtwoord moet minimaal 6 tekens zijn');
                     return;
                 }
 
-                // Create auth user
-                const { data: authData, error: authError } = await supabase.auth.admin.createUser({
-                    email: email,
-                    password: password,
-                    email_confirm: true
-                });
-
-                if (authError) {
-                    alert('Fout bij aanmaken account: ' + authError.message);
-                    return;
-                }
+                // Add password to data for simple DB login
+                supervisorData.password = password;
 
                 // Insert into table
                 let insertError = null;
