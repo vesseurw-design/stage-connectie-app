@@ -16,7 +16,14 @@ async function init() {
         const { data: companies, error: companyError } = await supabase.from('Bedrijven').select('*').eq('email', userEmail);
 
         if (companyError || !companies.length) {
-            if (userEmail !== 'test@test.nl') { alert('Geen bedrijf gevonden voor dit emailadres.'); return; }
+            console.error('Company fetch error or empty:', companyError);
+            if (userEmail !== 'test@test.nl') {
+                document.getElementById('company-name').textContent = 'Niet gevonden';
+                document.getElementById('supervisor-select').innerHTML = '<option>Geen toegang</option>';
+                document.getElementById('students-grid').innerHTML = '<div class="p-12 text-center text-red-500 font-bold">Geen bedrijfsprofiel gevonden. Controleer of u bent ingelogd met het juiste emailadres of neem contact op met de beheerder.</div>';
+                // alert('Geen bedrijf gevonden voor dit emailadres.'); 
+                return;
+            }
             currentCompany = { id: 'demo-company', company_name: 'Demo Bedrijf' };
         } else {
             currentCompany = companies[0];
@@ -34,7 +41,7 @@ async function init() {
 
 async function loadStudents() {
     const { data, error } = await supabase.from('Students').select('*');
-    if (error) { console.error('Error loading students:', error); return; }
+    if (error || !data) { console.error('Error loading students:', error); return; }
 
     if (currentCompany.id === 'demo-company') {
         students = data.slice(0, 3);
