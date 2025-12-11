@@ -39,6 +39,16 @@
     </div>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="./static/js/admin-auth.js"></script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js?v=6').then(registration => {
+                    console.log('SW Registered v6');
+                    registration.update();
+                });
+            });
+        }
+    </script>
 </body>
 
 </html>

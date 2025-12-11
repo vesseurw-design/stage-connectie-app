@@ -74,7 +74,7 @@
 
 <body class="bg-slate-50 text-slate-900 h-screen overflow-hidden">
   <div id="root" class="h-full overflow-auto"></div>
-  <script>"serviceWorker" in navigator && window.addEventListener("load", () => { navigator.serviceWorker.register("/sw.js?v=5").then(e => { console.log("Service Worker registered v5", e) }).catch(e => { console.log("Service Worker registration failed", e) }) })</script>
+  <script>"serviceWorker" in navigator && window.addEventListener("load", () => { navigator.serviceWorker.register("/sw.js?v=6").then(e => { console.log("Service Worker registered v6", e); e.update(); }).catch(e => { console.log("Service Worker registration failed", e) }) })</script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="./static/js/auth_v2.js"></script>
   <script src="./static/js/attendance-sync.js"></script>

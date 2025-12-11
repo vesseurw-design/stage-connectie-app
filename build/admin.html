@@ -14,6 +14,16 @@
     </style>
     <link rel="manifest" href="manifest-final.json">
     <script>if (!localStorage.getItem('stageconnect_admin_session')) { window.location.href = 'admin-login.html'; }</script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js?v=6').then(registration => {
+                    console.log('SW Registered v6');
+                    registration.update(); // Force immediate update check
+                });
+            });
+        }
+    </script>
 </head>
 
 <body class="bg-gray-50">

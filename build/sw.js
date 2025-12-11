@@ -1,4 +1,4 @@
-const CACHE_NAME = 'stage-connect-v5-NUCLEAR';
+const CACHE_NAME = 'stage-connect-v6-NUCLEAR';
 
 self.addEventListener('install', (e) => {
   console.log('[Service Worker] Install v4');
