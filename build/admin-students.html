@@ -184,7 +184,13 @@
                 // Load relations first
                 const { data: c } = await supabase.from('Bedrijven').select('*');
                 companies = c || [];
-                const { data: s } = await supabase.from('stagebegeleiders').select('*');
+
+                // Robust fetch for Stagebegeleiders (case sensitive check)
+                let { data: s, error: sError } = await supabase.from('Stagebegeleiders').select('*');
+                if (sError) {
+                    const { data: s2 } = await supabase.from('stagebegeleiders').select('*');
+                    s = s2;
+                }
                 supervisors = s || [];
 
                 // Populate selects
