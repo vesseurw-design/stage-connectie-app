@@ -99,6 +99,13 @@ async function loadAttendance() {
         return;
     }
 
+    // DEBUG: Check what's actually in the Attendance table
+    const { data: allData } = await supabase
+        .from('Attendance')
+        .select('*')
+        .limit(10);
+    console.log('📊 Sample of ALL attendance records in database:', allData);
+
     const { data, error } = await supabase
         .from('Attendance')
         .select('*')
@@ -112,6 +119,12 @@ async function loadAttendance() {
 
     allAttendance = data || [];
     console.log('✅ Found attendance records:', allAttendance.length, allAttendance);
+
+    if (allAttendance.length === 0 && allData && allData.length > 0) {
+        console.warn('⚠️ MISMATCH: Attendance records exist but student_id does not match!');
+        console.warn('Expected student names:', studentNames);
+        console.warn('Actual student_ids in database:', [...new Set(allData.map(a => a.student_id))]);
+    }
 }
 
 function setupRealtimeSubscription() {
