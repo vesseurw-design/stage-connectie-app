@@ -51,6 +51,7 @@ async function loadCompanies() {
 
 async function loadStudents() {
     const supervisorId = localStorage.getItem('supervisor_id');
+    console.log('🔍 Loading students for supervisor_id:', supervisorId);
 
     let data = null;
     let error = null;
@@ -85,12 +86,15 @@ async function loadStudents() {
     }
 
     students = data || [];
+    console.log('✅ Found students:', students.length, students);
 }
 
 async function loadAttendance() {
     const studentNames = students.map(s => s.name);
+    console.log('🔍 Loading attendance for students:', studentNames);
 
     if (studentNames.length === 0) {
+        console.warn('⚠️ No students found, skipping attendance load');
         allAttendance = [];
         return;
     }
@@ -102,11 +106,12 @@ async function loadAttendance() {
         .order('date', { ascending: false });
 
     if (error) {
-        console.error('Error loading attendance:', error);
+        console.error('❌ Error loading attendance:', error);
         return;
     }
 
     allAttendance = data || [];
+    console.log('✅ Found attendance records:', allAttendance.length, allAttendance);
 }
 
 function setupRealtimeSubscription() {
