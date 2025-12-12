@@ -1,8 +1,10 @@
 
+
 let students = [];
 let companies = [];
 let allAttendance = [];
 let currentStudent = null;
+let refreshInterval = null;
 
 // Initialize
 async function init() {
@@ -17,11 +19,7 @@ async function init() {
     document.getElementById('filter-date').value = today;
 
     // Load data
-    await Promise.all([
-        loadCompanies(),
-        loadStudents(),
-        loadAttendance()
-    ]);
+    await refreshData();
 
     // Setup real-time subscription
     setupRealtimeSubscription();
@@ -29,9 +27,22 @@ async function init() {
     // Setup filters
     setupFilters();
 
-    // Render dashboard
+    // Auto-refresh every 10 seconds to ensure data is always fresh
+    refreshInterval = setInterval(async () => {
+        await loadAttendance();
+        renderDashboard();
+    }, 10000);
+}
+
+async function refreshData() {
+    await Promise.all([
+        loadCompanies(),
+        loadStudents(),
+        loadAttendance()
+    ]);
     renderDashboard();
 }
+
 
 async function loadCompanies() {
     const { data } = await supabase.from('Bedrijven').select('*');
