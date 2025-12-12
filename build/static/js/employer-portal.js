@@ -36,12 +36,37 @@ async function init() {
         updateWeekDisplay();
         await loadAttendance();
 
-    } catch (err) { console.error('Init error:', err); }
+    } catch (err) {
+        console.error('Init error:', err);
+        document.getElementById('students-grid').innerHTML = `
+            <div class="p-8 text-center">
+                <div class="text-red-500 font-bold mb-2">Er is een fout opgetreden bij het laden.</div>
+                <div class="text-sm text-gray-500">${err.message || 'Onbekende fout'}</div>
+                <button onclick="window.location.reload()" class="mt-4 text-blue-600 hover:text-blue-800 underline">Probeer opnieuw</button>
+            </div>
+        `;
+    }
 }
 
 async function loadStudents() {
-    const { data, error } = await supabase.from('Students').select('*');
-    if (error || !data) { console.error('Error loading students:', error); return; }
+    let { data, error } = await supabase.from('Students').select('*');
+
+    // Fallback to lowercase 'students' if uppercase fails
+    if (error) {
+        const { data: dataLow, error: errorLow } = await supabase.from('students').select('*');
+        if (!errorLow) {
+            data = dataLow;
+            error = null;
+        } else {
+            // Keep original error if both fail
+            console.warn('Both Students and students table fetch failed');
+        }
+    }
+
+    if (error || !data) {
+        console.error('Error loading students:', error);
+        throw new Error('Kon studenten niet laden: ' + (error?.message || 'Onbekende fout'));
+    }
 
     if (currentCompany.id === 'demo-company') {
         students = data.slice(0, 3);

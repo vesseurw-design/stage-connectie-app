@@ -1,23 +1,14 @@
-const CACHE_NAME = 'stage-connect-v6-NUCLEAR';
+const CACHE_NAME = 'stage-connect-v11-NUCLEAR';
 
 self.addEventListener('install', (e) => {
-  console.log('[Service Worker] Install v4');
+  console.log('[Service Worker] Install v12 - FORCE UPDATE');
   self.skipWaiting();
 });
 
 self.addEventListener('activate', (e) => {
-  console.log('[Service Worker] Activate v4 - CLEARING OLD CACHES');
-  e.waitUntil(
-    Promise.all([
-      clients.claim(),
-      caches.keys().then((keyList) => {
-        return Promise.all(keyList.map((key) => {
-          console.log('[Service Worker] Deleting cache:', key);
-          return caches.delete(key);
-        }));
-      })
-    ])
-  );
+  console.log('[Service Worker] Activate v12 - CLAIMING CLIENTS');
+  ])
+);
 });
 
 self.addEventListener('fetch', (e) => {
