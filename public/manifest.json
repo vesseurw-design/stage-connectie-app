@@ -3,12 +3,12 @@
   "name": "Groene Hart StageConnect",
   "icons": [
     {
-      "src": "app-icon.png",
+      "src": "icon-v3.png",
       "type": "image/png",
       "sizes": "192x192"
     },
     {
-      "src": "app-icon.png",
+      "src": "icon-v3.png",
       "type": "image/png",
       "sizes": "512x512"
     }
