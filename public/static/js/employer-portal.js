@@ -264,6 +264,10 @@ function renderGrid(existingAttendance) {
                 // Strong permanent border for empty cells
                 cell.className = 'week-cell bg-white rounded-xl shadow-sm border-2 transition-all duration-150 transform';
 
+                // CRITICAL: Add data attributes so saveWeek can find these cells
+                cell.dataset.studentId = student.name;
+                cell.dataset.date = dateStr;
+
                 cell.onclick = () => openActionSheet(student.name, dateStr, cell);
 
                 // Content will set the border colors
@@ -371,6 +375,8 @@ function confirmLate() {
 
 async function saveWeek() {
     const cells = document.querySelectorAll('.week-cell[data-student-id]');
+    console.log('💾 Saving week - found cells:', cells.length);
+
     const updates = [];
     cells.forEach(cell => {
         const status = cell.dataset.status;
@@ -385,11 +391,22 @@ async function saveWeek() {
         }
     });
 
-    if (updates.length === 0) { showToast(); return; }
+    console.log('💾 Attendance records to save:', updates.length, updates);
+
+    if (updates.length === 0) {
+        console.warn('⚠️ No attendance data to save');
+        showToast();
+        return;
+    }
 
     const { error } = await supabase.from('Attendance').upsert(updates, { onConflict: 'student_id,date' });
-    if (error) { console.error('Save error:', error); alert('Fout bij opslaan: ' + error.message); }
-    else { showToast(); }
+    if (error) {
+        console.error('❌ Save error:', error);
+        alert('Fout bij opslaan: ' + error.message);
+    } else {
+        console.log('✅ Attendance saved successfully!');
+        showToast();
+    }
 }
 
 function showToast() {
