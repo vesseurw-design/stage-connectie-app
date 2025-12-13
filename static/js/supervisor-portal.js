@@ -257,17 +257,73 @@ function openStudentDetail(student) {
     document.getElementById('modal-company').textContent = company?.company_name || '-';
     document.getElementById('modal-scheduled-days').textContent = (student.scheduled_days || []).join(', ') || '-';
 
-    // Load attendance history
-    const studentAttendance = allAttendance
-        .filter(a => a.student_id === student.name)
-        .slice(0, 10); // Last 10 records
+    // Get all attendance for this student
+    const studentAttendance = allAttendance.filter(a => a.student_id === student.name);
 
+    // Populate month filter
+    populateMonthFilter(studentAttendance);
+
+    // Render history (all months by default)
+    renderAttendanceHistory(studentAttendance, 'all');
+
+    document.getElementById('student-modal').classList.remove('hidden');
+}
+
+function populateMonthFilter(attendance) {
+    const monthFilter = document.getElementById('history-month-filter');
+
+    // Get unique months from attendance data
+    const months = new Set();
+    attendance.forEach(a => {
+        const date = new Date(a.date);
+        const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+        months.add(monthKey);
+    });
+
+    // Sort months descending (newest first)
+    const sortedMonths = Array.from(months).sort().reverse();
+
+    // Build options
+    let options = '<option value="all">Alle maanden</option>';
+    sortedMonths.forEach(monthKey => {
+        const [year, month] = monthKey.split('-');
+        const date = new Date(year, month - 1);
+        const monthName = date.toLocaleDateString('nl-NL', { month: 'long', year: 'numeric' });
+        options += `<option value="${monthKey}">${monthName}</option>`;
+    });
+
+    monthFilter.innerHTML = options;
+}
+
+function filterHistoryByMonth() {
+    if (!currentStudent) return;
+
+    const selectedMonth = document.getElementById('history-month-filter').value;
+    const studentAttendance = allAttendance.filter(a => a.student_id === currentStudent.name);
+
+    renderAttendanceHistory(studentAttendance, selectedMonth);
+}
+
+function renderAttendanceHistory(attendance, monthFilter) {
     const historyContainer = document.getElementById('modal-attendance-history');
 
-    if (studentAttendance.length === 0) {
-        historyContainer.innerHTML = '<p class="text-sm text-gray-500">Geen aanwezigheidsdata</p>';
+    // Filter by month if not 'all'
+    let filteredAttendance = attendance;
+    if (monthFilter !== 'all') {
+        filteredAttendance = attendance.filter(a => {
+            const date = new Date(a.date);
+            const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+            return monthKey === monthFilter;
+        });
+    }
+
+    // Sort by date descending (newest first)
+    filteredAttendance.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+    if (filteredAttendance.length === 0) {
+        historyContainer.innerHTML = '<p class="text-sm text-gray-500">Geen aanwezigheidsdata voor deze periode</p>';
     } else {
-        historyContainer.innerHTML = studentAttendance.map(a => {
+        historyContainer.innerHTML = filteredAttendance.map(a => {
             const statusColors = {
                 present: 'bg-green-100 text-green-800',
                 absent: 'bg-red-100 text-red-800',
@@ -281,9 +337,18 @@ function openStudentDetail(student) {
                 late: `Te laat (${a.minutes_late}m)`
             };
 
+            // Format date nicely
+            const date = new Date(a.date);
+            const formattedDate = date.toLocaleDateString('nl-NL', {
+                weekday: 'short',
+                day: 'numeric',
+                month: 'short',
+                year: 'numeric'
+            });
+
             return `
                 <div class="flex justify-between items-center p-2 bg-gray-50 rounded-lg">
-                    <span class="text-sm text-gray-700">${a.date}</span>
+                    <span class="text-sm text-gray-700">${formattedDate}</span>
                     <span class="px-2 py-1 text-xs font-semibold rounded-full ${statusColors[a.status]}">
                         ${statusLabels[a.status]}
                     </span>
@@ -291,8 +356,6 @@ function openStudentDetail(student) {
             `;
         }).join('');
     }
-
-    document.getElementById('student-modal').classList.remove('hidden');
 }
 
 function closeModal() {
