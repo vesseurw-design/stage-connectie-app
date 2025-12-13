@@ -37,8 +37,30 @@
    - Wait for build to complete (2-5 minutes)
    - Your app will be live at `https://your-project.vercel.app`
 
+5. **Add Custom Domain** (Optional but Recommended)
+   - Go to Settings → Domains
+   - Click "Add Domain"
+   - Enter: `stageconnectie.nl`
+   - Configure DNS at your domain registrar (see below)
+   - Wait for DNS propagation (10-30 minutes)
+   - SSL certificate is automatically provisioned
+
+### DNS Configuration for stageconnectie.nl
+
+Add these records at your domain registrar (e.g., TransIP):
+
+```
+Type: A
+Name: @
+Value: 76.76.21.21
+
+Type: CNAME
+Name: www
+Value: cname.vercel-dns.com
+```
+
 ### Post-Deployment Checklist
-- ✅ Test login page works
+- ✅ Test login page works at `https://stageconnectie.nl`
 - ✅ Test admin dashboard
 - ✅ Test Supabase connection (check browser console for errors)
 - ✅ Add custom domain (optional): Vercel project settings → Domains
