@@ -26,16 +26,38 @@
             <div><label class="block text-sm font-medium text-gray-700 mb-2">Email</label><input type="email"
                     id="admin-email" required
                     class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"></div>
-            <div><label class="block text-sm font-medium text-gray-700 mb-2">Wachtwoord</label><input type="password"
-                    id="admin-password" required
-                    class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"></div>
-            <div id="login-error" class="hidden text-red-600 text-sm text-center"></div><button type="submit"
-                class="w-full bg-gray-800 hover:bg-gray-900 text-white font-semibold py-3 rounded-lg transition">Inloggen</button>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Wachtwoord</label>
+                <input type="password" id="admin-password" required
+                    class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+            </div>
+
+            <div class="flex items-center justify-end mb-2">
+                <a href="forgot-password.html" class="text-sm text-blue-600 hover:text-blue-700 font-medium">
+                    Wachtwoord vergeten?
+                </a>
+            </div>
+
+            <div id="login-error" class="hidden text-red-600 text-sm text-center"></div>
+
+            <button type="submit"
+                class="w-full bg-gray-800 hover:bg-gray-900 text-white font-semibold py-3 rounded-lg transition">
+                Inloggen
+            </button>
         </form>
-        <div class="mt-6 text-center"><a href="login.html" class="text-sm text-blue-600 hover:text-blue-700">← Terug
-                naar werkgever login</a></div>
+
+        <div class="mt-6 text-center space-y-2">
+            <a href="index.html" class="block text-sm text-blue-600 hover:text-blue-700">
+                ← Terug naar werkgever login
+            </a>
+            <a href="privacy-policy.html" class="block text-sm text-gray-600 hover:text-gray-700">
+                Privacyverklaring
+            </a>
+        </div>
     </div>
+
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="./static/js/cookie-consent.js"></script>
     <script src="./static/js/admin-auth.js"></script>
 </body>
 

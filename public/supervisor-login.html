@@ -46,6 +46,17 @@
                     class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition">
             </div>
 
+            <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center">
+                    <input type="checkbox" id="remember-me"
+                        class="w-4 h-4 text-green-600 border-gray-300 rounded focus:ring-green-500">
+                    <label for="remember-me" class="ml-2 text-sm text-gray-600">Onthoud mij</label>
+                </div>
+                <a href="forgot-password.html" class="text-sm text-green-600 hover:text-green-700 font-medium">
+                    Wachtwoord vergeten?
+                </a>
+            </div>
+
             <div id="error-message"
                 class="hidden bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm"></div>
 
@@ -57,16 +68,20 @@
 
         <!-- Footer Links -->
         <div class="mt-6 text-center space-y-2">
-            <a href="login.html" class="block text-sm text-gray-600 hover:text-gray-700">
+            <a href="index.html" class="block text-sm text-gray-600 hover:text-gray-700">
                 ← Werkgever login
             </a>
             <a href="admin-login.html" class="block text-sm text-gray-600 hover:text-gray-700">
                 School admin login
             </a>
+            <a href="privacy-policy.html" class="block text-sm text-blue-600 hover:text-blue-700">
+                Privacyverklaring
+            </a>
         </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="./static/js/cookie-consent.js"></script>
     <script src="./static/js/supervisor-auth.js"></script>
 </body>
 
