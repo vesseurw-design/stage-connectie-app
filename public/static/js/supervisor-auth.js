@@ -53,7 +53,7 @@ if (loginForm) {
             }
 
             const { data: supervisorData, error: supervisorError } = await supabase
-                .from('Stagebegeleiders')
+                .from('stagebegeleiders')
                 .select('*')
                 .eq('id', supervisorId)
                 .single();
