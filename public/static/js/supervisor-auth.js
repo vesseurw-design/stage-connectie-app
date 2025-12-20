@@ -52,7 +52,7 @@ if (loginForm) {
                 throw new Error('Supervisor ID niet gevonden. Neem contact op met de beheerder.');
             }
 
-            const { data: supervisorData, error: supervisorError } = await supabase
+            const { data: supervisorData, error: supervisorError } = await supabaseClient
                 .from('stagebegeleiders')
                 .select('*')
                 .eq('id', supervisorId)
