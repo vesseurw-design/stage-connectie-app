@@ -5,7 +5,7 @@
 
 const SUPABASE_URL = 'https://ninkkvffhvkxrrxddgrz.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5pbmtrdmZmaHZreHJyeGRkZ3J6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM5OTc2NTcsImV4cCI6MjA3OTU3MzY1N30.Kq6jojYu5Hopmtzmdqwc9dwUyIZBOm7c27N-OCv1aCM';
-const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // Login form handler
 const loginForm = document.getElementById('supervisor-login-form');
@@ -25,7 +25,7 @@ if (loginForm) {
             console.log('🔐 Attempting supervisor login...');
 
             // Login via Supabase Auth
-            const { data: authData, error: authError } = await supabaseClient.auth.signInWithPassword({
+            const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
                 email: email,
                 password: password
             });
@@ -53,7 +53,7 @@ if (loginForm) {
             }
 
             const { data: supervisorData, error: supervisorError } = await supabase
-                .from('stagebegeleiders')
+                .from('Stagebegeleiders')
                 .select('*')
                 .eq('id', supervisorId)
                 .single();
@@ -123,7 +123,7 @@ window.addEventListener('DOMContentLoaded', () => {
 // Logout function (voor gebruik op andere pagina's)
 function logout() {
     // Sign out van Supabase Auth
-    supabaseClient.auth.signOut();
+    supabase.auth.signOut();
 
     // Clear local storage
     localStorage.removeItem('stageconnect_supervisor_session');
