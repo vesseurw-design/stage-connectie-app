@@ -427,10 +427,18 @@ function showToast() {
     setTimeout(() => { toast.style.opacity = '0'; toast.style.transform = 'translate(-50%, 0) scale(0.9)'; }, 2000);
 }
 
-function logout() {
+async function logout() {
+    // Sign out from Supabase Auth
+    await supabase.auth.signOut();
+
+    // Clear localStorage
     localStorage.removeItem('stageconnect_session');
     localStorage.removeItem('user_email');
-    window.location.href = 'index.html';
+    localStorage.removeItem('company_name');
+    localStorage.removeItem('company_id');
+
+    // Redirect to login
+    window.location.href = 'login.html';
 }
 
 init();
