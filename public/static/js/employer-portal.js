@@ -1,6 +1,6 @@
 const SUPABASE_URL = 'https://ninkkvffhvkxrrxddgrz.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5pbmtrdmZmaHZreHJyeGRkZ3J6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM5OTc2NTcsImV4cCI6MjA3OTU3MzY1N30.Kq6jojYu5Hopmtzmdqwc9dwUyIZBOm7c27N-OCv1aCM';
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 let currentWeekOffset = 0;
 let students = [];
@@ -21,7 +21,7 @@ async function init() {
             document.getElementById('company-name').textContent = companyName;
         }
 
-        const { data: companies, error: companyError } = await supabase.from('Bedrijven').select('*').eq('email', userEmail);
+        const { data: companies, error: companyError } = await supabaseClient.from('Bedrijven').select('*').eq('email', userEmail);
 
         if (companyError || !companies.length) {
             console.error('Company fetch error or empty:', companyError);
@@ -60,11 +60,11 @@ async function init() {
 }
 
 async function loadStudents() {
-    let { data, error } = await supabase.from('Students').select('*');
+    let { data, error } = await supabaseClient.from('Students').select('*');
 
     // Fallback to lowercase 'students' if uppercase fails
     if (error) {
-        const { data: dataLow, error: errorLow } = await supabase.from('students').select('*');
+        const { data: dataLow, error: errorLow } = await supabaseClient.from('students').select('*');
         if (!errorLow) {
             data = dataLow;
             error = null;
@@ -410,7 +410,7 @@ async function saveWeek() {
         return;
     }
 
-    const { error } = await supabase.from('Attendance').upsert(updates, { onConflict: 'student_id,date' });
+    const { error } = await supabaseClient.from('Attendance').upsert(updates, { onConflict: 'student_id,date' });
     if (error) {
         console.error('❌ Save error:', error);
         alert('Fout bij opslaan: ' + error.message);
@@ -429,7 +429,7 @@ function showToast() {
 
 async function logout() {
     // Sign out from Supabase Auth
-    await supabase.auth.signOut();
+    await supabaseClient.auth.signOut();
 
     // Clear localStorage
     localStorage.removeItem('stageconnect_session');
