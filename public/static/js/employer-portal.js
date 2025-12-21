@@ -11,25 +11,36 @@ let activeCell = null;
 async function init() {
     try {
         const userEmail = localStorage.getItem('user_email');
+        const companyName = localStorage.getItem('company_name');
+        const companyId = localStorage.getItem('company_id');
+
         if (!userEmail) { window.location.href = 'index.html'; return; }
+
+        // Show company name from localStorage immediately
+        if (companyName) {
+            document.getElementById('company-name').textContent = companyName;
+        }
 
         const { data: companies, error: companyError } = await supabase.from('Bedrijven').select('*').eq('email', userEmail);
 
         if (companyError || !companies.length) {
             console.error('Company fetch error or empty:', companyError);
-            if (userEmail !== 'test@test.nl') {
+            // Use localStorage data as fallback
+            if (companyId && companyName) {
+                currentCompany = { id: companyId, company_name: companyName };
+                console.log('✅ Using company data from localStorage');
+            } else if (userEmail !== 'test@test.nl') {
                 document.getElementById('company-name').textContent = 'Niet gevonden';
                 document.getElementById('supervisor-select').innerHTML = '<option>Geen toegang</option>';
                 document.getElementById('students-grid').innerHTML = '<div class="p-12 text-center text-red-500 font-bold">Geen bedrijfsprofiel gevonden. Controleer of u bent ingelogd met het juiste emailadres of neem contact op met de beheerder.</div>';
-                // alert('Geen bedrijf gevonden voor dit emailadres.'); 
                 return;
+            } else {
+                currentCompany = { id: 'demo-company', company_name: 'Demo Bedrijf' };
             }
-            currentCompany = { id: 'demo-company', company_name: 'Demo Bedrijf' };
         } else {
             currentCompany = companies[0];
+            document.getElementById('company-name').textContent = currentCompany.company_name;
         }
-
-        document.getElementById('company-name').textContent = currentCompany.company_name;
 
         await loadStudents();
         await loadSupervisors(); // Load supervisors after students
