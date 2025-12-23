@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="nl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Branches Beheren - StageConnect</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+    <script>
+        if (!localStorage.getItem('stageconnect_admin_session')) {
+            window.location.href = 'admin-login.html';
+        }
+    </script>
+</head>
+
+<body class="bg-gray-50">
+    <!-- Header -->
+    <header class="bg-white shadow-sm border-b border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
+            <div class="flex items-center gap-4">
+                <a href="admin.html" class="text-gray-500 hover:text-gray-700">← Terug</a>
+                <div>
+                    <h1 class="text-2xl font-bold text-gray-800">Branches Beheren</h1>
+                    <p class="text-sm text-gray-600">Beheer standaard en custom branches</p>
+                </div>
+            </div>
+            <button onclick="logout()" class="px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg transition">
+                Uitloggen
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-4xl mx-auto px-4 py-8">
+        <!-- Info Box -->
+        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+            <div class="flex items-start gap-3">
+                <svg class="w-5 h-5 text-blue-600 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd"
+                        d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+                        clip-rule="evenodd" />
+                </svg>
+                <div class="text-sm text-blue-800">
+                    <p class="font-medium mb-1">Over Custom Branches</p>
+                    <p>Je hebt 5 custom branch slots. Hernoem deze om ze te activeren. Bijvoorbeeld: verander "Custom 1"
+                        naar "Automotive" of "Logistiek".</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Standard Branches -->
+        <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
+            <h2 class="text-lg font-semibold text-gray-800 mb-4">Standaard Branches</h2>
+            <div class="space-y-2" id="standard-branches">
+                <!-- Loaded via JavaScript -->
+            </div>
+        </div>
+
+        <!-- Custom Branches -->
+        <div class="bg-white rounded-lg shadow-sm p-6">
+            <h2 class="text-lg font-semibold text-gray-800 mb-4">Custom Branches</h2>
+            <p class="text-sm text-gray-600 mb-4">Klik op een custom branch om deze te hernoemen</p>
+            <div class="space-y-3" id="custom-branches">
+                <!-- Loaded via JavaScript -->
+            </div>
+        </div>
+    </main>
+
+    <!-- Edit Modal -->
+    <div id="edit-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-xl shadow-xl max-w-md w-full p-6">
+            <h2 class="text-xl font-bold mb-4">Branch Hernoemen</h2>
+            <form id="edit-form" class="space-y-4">
+                <input type="hidden" id="branch-id">
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Huidige naam</label>
+                    <input type="text" id="old-name" disabled
+                        class="w-full px-3 py-2 border rounded-lg bg-gray-50 text-gray-500">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Nieuwe naam *</label>
+                    <input type="text" id="new-name" required
+                        class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                        placeholder="Bijv. Automotive, Logistiek, etc.">
+                    <p class="text-xs text-gray-500 mt-1">Deze naam wordt zichtbaar in de branche dropdown</p>
+                </div>
+
+                <div class="flex justify-end gap-3 mt-6 pt-4 border-t">
+                    <button type="button" onclick="closeModal()"
+                        class="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition">
+                        Annuleren
+                    </button>
+                    <button type="submit"
+                        class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition">
+                        Opslaan
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="./static/js/admin-branches.js"></script>
+</body>
+
+</html>
