@@ -120,7 +120,6 @@ function openModal(company = null) {
         document.getElementById('contact_person').value = company.contact_person || '';
         document.getElementById('email').value = company.email || '';
         document.getElementById('phone_number').value = company.phone_number || '';
-        document.getElementById('address').value = company.address || '';
     } else {
         title.textContent = 'Bedrijf Toevoegen';
         form.reset();
@@ -166,8 +165,7 @@ document.getElementById('company-form').addEventListener('submit', async (e) => 
         branche: document.getElementById('branche').value || null,
         contact_person: document.getElementById('contact_person').value || null,
         email: document.getElementById('email').value || null,
-        phone_number: document.getElementById('phone_number').value || null,
-        address: document.getElementById('address').value || null
+        phone_number: document.getElementById('phone_number').value || null
     };
 
     let error;
