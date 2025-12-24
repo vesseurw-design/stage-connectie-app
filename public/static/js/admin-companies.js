@@ -3,9 +3,8 @@
  * Met branche functionaliteit
  */
 
-const SUPABASE_URL = 'https://ninkkvffhvkxrrxddgrz.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5pbmtrdmZmaHZreHJyeGRkZ3J6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM5OTc2NTcsImV4cCI6MjA3OTU3MzY1N30.Kq6jojYu5Hopmtzmdqwc9dwUyIZBOm7c27N-OCv1aCM';
-const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+// Use the global authenticated Supabase client from admin-auth.js
+const supabaseClient = window.supabase;
 
 let allBranches = [];
 let currentFilter = '';
