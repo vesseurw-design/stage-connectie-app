@@ -160,35 +160,86 @@ document.getElementById('company-form').addEventListener('submit', async (e) => 
     e.preventDefault();
 
     const id = document.getElementById('company-id').value;
+    const companyName = document.getElementById('company_name').value;
+    const email = document.getElementById('email').value;
+
     const companyData = {
-        company_name: document.getElementById('company_name').value,
+        company_name: companyName,
         branche: document.getElementById('branche').value || null,
         contact_person: document.getElementById('contact_person').value || null,
-        email: document.getElementById('email').value || null,
+        email: email || null,
         phone_number: document.getElementById('phone_number').value || null
     };
 
-    let error;
     if (id) {
-        // Update
-        const result = await supabaseClient
+        // Update existing company
+        const { error } = await supabaseClient
             .from('Bedrijven')
             .update(companyData)
             .eq('id', id);
-        error = result.error;
-    } else {
-        // Insert
-        const result = await supabaseClient
-            .from('Bedrijven')
-            .insert([companyData]);
-        error = result.error;
-    }
 
-    if (error) {
-        alert('Fout bij opslaan: ' + error.message);
+        if (error) {
+            alert('Fout bij opslaan: ' + error.message);
+        } else {
+            closeModal();
+            loadData();
+        }
     } else {
-        closeModal();
-        loadData();
+        // Insert new company
+        if (!email) {
+            alert('Email is verplicht voor nieuwe bedrijven (voor login)');
+            return;
+        }
+
+        // Generate password: Welkom + CompanyName (without spaces)
+        const password = 'Welkom' + companyName.replace(/\s+/g, '');
+
+        try {
+            // Step 1: Create auth user via signUp
+            const { data: authData, error: authError } = await supabaseClient.auth.signUp({
+                email: email,
+                password: password,
+                options: {
+                    data: {
+                        role: 'employer',
+                        company_name: companyName
+                    },
+                    emailRedirectTo: window.location.origin
+                }
+            });
+
+            if (authError) {
+                alert('Fout bij aanmaken auth user: ' + authError.message);
+                return;
+            }
+
+            if (!authData.user) {
+                alert('Fout: Geen user data ontvangen van Supabase');
+                return;
+            }
+
+            // Step 2: Insert company with auth_user_id
+            const { data: companyResult, error: companyError } = await supabaseClient
+                .from('Bedrijven')
+                .insert([{
+                    ...companyData,
+                    auth_user_id: authData.user.id
+                }])
+                .select();
+
+            if (companyError) {
+                alert('Fout bij opslaan bedrijf: ' + companyError.message);
+                return;
+            }
+
+            // Success! Show password to admin
+            alert(`✅ Bedrijf aangemaakt!\n\nLogin gegevens:\nEmail: ${email}\nWachtwoord: ${password}\n\n⚠️ BELANGRIJK:\n1. Kopieer dit wachtwoord\n2. Stuur het naar het bedrijf\n3. Het bedrijf moet mogelijk hun email bevestigen\n\n💡 TIP: Ga naar Supabase Dashboard → Authentication → Users\nen klik op de user om "Confirm email" aan te vinken.`);
+
+            closeModal();
+            loadData();
+        } catch (err) {
+            alert('Onverwachte fout: ' + err.message);
+        }
     }
 });
 
