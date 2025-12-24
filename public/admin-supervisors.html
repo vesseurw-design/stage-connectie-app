@@ -316,10 +316,12 @@
             }
         });
 
-        function logout() {
+        window.logout = function () {
             localStorage.removeItem('stageconnect_admin_session');
+            localStorage.removeItem('admin_email');
+            localStorage.removeItem('admin_name');
             window.location.href = 'admin-login.html';
-        }
+        };
 
         loadData();
     </script>
