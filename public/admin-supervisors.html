@@ -148,7 +148,7 @@
             let error = null;
 
             const { data: dataCap, error: errorSupCap } = await supabase
-                .from('Stagebegeleiders')
+                .from('stagebegeleiders')
                 .select('*')
                 .order('name');
 
@@ -236,7 +236,7 @@
             if (!confirm('Weet je zeker dat je deze begeleider wilt verwijderen?')) return;
 
             let error = null;
-            const { error: errorCap } = await supabase.from('Stagebegeleiders').delete().eq('id', id);
+            const { error: errorCap } = await supabase.from('stagebegeleiders').delete().eq('id', id);
 
             if (errorCap) {
                 const { error: errorLow } = await supabase.from('stagebegeleiders').delete().eq('id', id);
@@ -273,7 +273,7 @@
             if (id) {
                 // Update existing
                 let updateError = null;
-                const { error: errCap } = await supabase.from('Stagebegeleiders').update(supervisorData).eq('id', id);
+                const { error: errCap } = await supabase.from('stagebegeleiders').update(supervisorData).eq('id', id);
                 if (errCap) {
                     const { error: errLow } = await supabase.from('stagebegeleiders').update(supervisorData).eq('id', id);
                     if (errLow) updateError = errLow;
@@ -300,7 +300,7 @@
 
                 // Insert into table
                 let insertError = null;
-                const { error: errCap } = await supabase.from('Stagebegeleiders').insert([supervisorData]);
+                const { error: errCap } = await supabase.from('stagebegeleiders').insert([supervisorData]);
                 if (errCap) {
                     const { error: errLow } = await supabase.from('stagebegeleiders').insert([supervisorData]);
                     if (errLow) insertError = errLow;
