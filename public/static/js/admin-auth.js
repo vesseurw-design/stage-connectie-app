@@ -55,7 +55,7 @@ if (loginForm) {
             console.log('✅ Session stored, redirecting to admin panel...');
 
             // Redirect to admin panel
-            window.location.href = 'admin-students.html';
+            window.location.href = 'admin.html';
 
         } catch (error) {
             console.error('❌ Login error:', error);
