@@ -233,7 +233,7 @@ document.getElementById('company-form').addEventListener('submit', async (e) => 
             }
 
             // Success! Show password to admin
-            alert(`✅ Bedrijf aangemaakt!\n\nLogin gegevens:\nEmail: ${email}\nWachtwoord: ${password}\n\n⚠️ BELANGRIJK:\n1. Kopieer dit wachtwoord\n2. Stuur het naar het bedrijf\n3. Het bedrijf moet mogelijk hun email bevestigen\n\n💡 TIP: Ga naar Supabase Dashboard → Authentication → Users\nen klik op de user om "Confirm email" aan te vinken.`);
+            alert(`✅ Bedrijf aangemaakt!\n\nLogin gegevens:\nEmail: ${email}\nWachtwoord: ${password}\n\n⚠️ BELANGRIJK:\nKopieer dit wachtwoord en stuur het naar het bedrijf.\n\nHet bedrijf kan direct inloggen op:\nhttps://stageconnectie.nl`);
 
             closeModal();
             loadData();
