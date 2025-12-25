@@ -100,15 +100,15 @@ async function loadSupervisors() {
     }
 
     // Try creating table name variants to handle case sensitivity
-    const { data: dataCap, error: errorCap } = await supabase
-        .from('Stagebegeleiders')
+    const { data: dataCap, error: errorCap } = await supabaseClient
+        .from('stagebegeleiders')
         .select('*')
         .in('id', supervisorIds);
 
     let fetchedSupervisors = [];
 
     if (errorCap) {
-        const { data: dataLow } = await supabase
+        const { data: dataLow } = await supabaseClient
             .from('stagebegeleiders')
             .select('*')
             .in('id', supervisorIds);
@@ -226,7 +226,7 @@ async function loadAttendance() {
 
     if (studentNames.length === 0) { renderGrid([]); return; }
 
-    const { data: attendanceData, error } = await supabase
+    const { data: attendanceData, error } = await supabaseClient
         .from('Attendance')
         .select('*')
         .in('student_id', studentNames)
