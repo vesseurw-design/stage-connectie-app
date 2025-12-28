@@ -81,7 +81,7 @@ if (loginForm) {
             console.log('✅ Session stored, redirecting to portal...');
 
             // Redirect to portal
-            window.location.href = 'supervisor-portal.html';
+            window.location.href = 'supervisor-portal-v2.html';
 
         } catch (error) {
             console.error('❌ Login error:', error);
