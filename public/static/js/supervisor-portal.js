@@ -1,7 +1,7 @@
 // Initialize Supabase
 const SUPABASE_URL = 'https://ninkkvffhvkxrrxddgrz.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5pbmtrdmZmaHZreHJyeGRkZ3J6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM5OTc2NTcsImV4cCI6MjA3OTU3MzY1N30.Kq6jojYu5Hopmtzmdqwc9dwUyIZBOm7c27N-OCv1aCM';
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 let students = [];
 let companies = [];
@@ -48,7 +48,7 @@ async function refreshData() {
 
 
 async function loadCompanies() {
-    const { data } = await supabase.from('Bedrijven').select('*');
+    const { data } = await supabaseClient.from('Bedrijven').select('*');
     companies = data || [];
 }
 
@@ -60,7 +60,7 @@ async function loadStudents() {
     let error = null;
 
     // Try capitalized first
-    const { data: dataCap, error: errorCap } = await supabase
+    const { data: dataCap, error: errorCap } = await supabaseClient
         .from('Students')
         .select('*')
         .eq('supervisor_id', supervisorId);
@@ -68,7 +68,7 @@ async function loadStudents() {
     if (errorCap) {
         console.error('Error loading students (capitalized):', errorCap);
         // Try lowercase fallback
-        const { data: dataLow, error: errorLow } = await supabase
+        const { data: dataLow, error: errorLow } = await supabaseClient
             .from('students')
             .select('*')
             .eq('supervisor_id', supervisorId);
@@ -103,13 +103,13 @@ async function loadAttendance() {
     }
 
     // DEBUG: Check what's actually in the Attendance table
-    const { data: allData } = await supabase
+    const { data: allData } = await supabaseClient
         .from('Attendance')
         .select('*')
         .limit(10);
     console.log('📊 Sample of ALL attendance records in database:', allData);
 
-    const { data, error } = await supabase
+    const { data, error } = await supabaseClient
         .from('Attendance')
         .select('*')
         .in('student_id', studentNames)
@@ -131,7 +131,7 @@ async function loadAttendance() {
 }
 
 function setupRealtimeSubscription() {
-    supabase
+    supabaseClient
         .channel('public:Attendance')
         .on('postgres_changes', {
             event: '*',
