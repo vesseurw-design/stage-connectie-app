@@ -222,14 +222,14 @@ async function loadAttendance() {
     const container = document.getElementById('students-grid');
 
     const weekDates = [0, 1, 2, 3, 4].map(i => getWeekDate(i));
-    const studentNames = students.map(s => s.name);
+    const studentIds = students.map(s => s.id);
 
-    if (studentNames.length === 0) { renderGrid([]); return; }
+    if (studentIds.length === 0) { renderGrid([]); return; }
 
     const { data: attendanceData, error } = await supabaseClient
         .from('Attendance')
         .select('*')
-        .in('student_id', studentNames)
+        .in('student_id', studentIds)
         .in('date', weekDates);
 
     renderGrid(attendanceData || []);
@@ -268,7 +268,7 @@ function renderGrid(existingAttendance) {
                 cell.style.pointerEvents = 'none';
                 cell.innerHTML = '';
             } else {
-                const record = existingAttendance.find(a => a.student_id === student.name && a.date === dateStr);
+                const record = existingAttendance.find(a => a.student_id === student.id && a.date === dateStr);
                 const status = record ? record.status : '';
                 const minutesLate = record ? record.minutes_late : 0;
 
@@ -276,10 +276,10 @@ function renderGrid(existingAttendance) {
                 cell.className = 'week-cell bg-white rounded-xl shadow-sm border-2 transition-all duration-150 transform';
 
                 // CRITICAL: Add data attributes so saveWeek can find these cells
-                cell.dataset.studentId = student.name;
+                cell.dataset.studentId = student.id;
                 cell.dataset.date = dateStr;
 
-                cell.onclick = () => openActionSheet(student.name, dateStr, cell);
+                cell.onclick = () => openActionSheet(student.id, dateStr, cell);
 
                 // Content will set the border colors
                 updateCellContent(cell, status, minutesLate);
