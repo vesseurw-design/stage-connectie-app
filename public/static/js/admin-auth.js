@@ -7,6 +7,9 @@ const SUPABASE_URL = 'https://ninkkvffhvkxrrxddgrz.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5pbmtrdmZmaHZreHJyeGRkZ3J6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM5OTc2NTcsImV4cCI6MjA3OTU3MzY1N30.Kq6jojYu5Hopmtzmdqwc9dwUyIZBOm7c27N-OCv1aCM';
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+// Make it globally accessible
+window.supabaseClient = supabaseClient;
+
 // Login form handler
 const loginForm = document.getElementById('admin-login-form');
 const loginError = document.getElementById('login-error');
@@ -93,6 +96,9 @@ function adminLogout() {
 
 // Maak logout beschikbaar globaal
 window.adminLogout = adminLogout;
+
+// Also create logout() alias for backward compatibility
+window.logout = adminLogout;
 
 // Check admin session on protected pages
 function checkAdminSession() {
