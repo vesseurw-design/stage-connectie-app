@@ -17,6 +17,7 @@ if (loginForm) {
 
         const email = document.getElementById('email').value;
         const password = document.getElementById('password').value;
+        const rememberMe = document.getElementById('remember-me')?.checked || false;
 
         errorMessage.classList.add('hidden');
 
@@ -60,6 +61,13 @@ if (loginForm) {
             localStorage.setItem('company_id', companyData.id);
             localStorage.setItem('company_name', companyData.company_name);
 
+            // Remember me functionaliteit
+            if (rememberMe) {
+                localStorage.setItem('remember_employer_email', email);
+            } else {
+                localStorage.removeItem('remember_employer_email');
+            }
+
             console.log('✅ Session stored, redirecting to portal...');
 
             // Redirect to portal
@@ -83,6 +91,22 @@ if (loginForm) {
         }
     });
 }
+
+// Auto-fill email if "remember me" was checked
+window.addEventListener('DOMContentLoaded', () => {
+    const rememberedEmail = localStorage.getItem('remember_employer_email');
+    if (rememberedEmail) {
+        const emailInput = document.getElementById('email');
+        const rememberCheckbox = document.getElementById('remember-me');
+
+        if (emailInput) {
+            emailInput.value = rememberedEmail;
+        }
+        if (rememberCheckbox) {
+            rememberCheckbox.checked = true;
+        }
+    }
+});
 
 // Check if already logged in
 async function checkSession() {

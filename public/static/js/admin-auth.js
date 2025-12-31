@@ -20,6 +20,7 @@ if (loginForm) {
 
         const email = document.getElementById('admin-email').value.trim();
         const password = document.getElementById('admin-password').value;
+        const rememberMe = document.getElementById('remember-me')?.checked || false;
 
         loginError.classList.add('hidden');
 
@@ -55,6 +56,13 @@ if (loginForm) {
             localStorage.setItem('admin_name', user.user_metadata?.name || 'Admin');
             localStorage.setItem('auth_user_id', user.id);
 
+            // Remember me functionaliteit
+            if (rememberMe) {
+                localStorage.setItem('remember_admin_email', email);
+            } else {
+                localStorage.removeItem('remember_admin_email');
+            }
+
             console.log('✅ Session stored, redirecting to admin panel...');
 
             // Redirect to admin panel
@@ -78,6 +86,22 @@ if (loginForm) {
         }
     });
 }
+
+// Auto-fill email if "remember me" was checked
+window.addEventListener('DOMContentLoaded', () => {
+    const rememberedEmail = localStorage.getItem('remember_admin_email');
+    if (rememberedEmail) {
+        const emailInput = document.getElementById('admin-email');
+        const rememberCheckbox = document.getElementById('remember-me');
+
+        if (emailInput) {
+            emailInput.value = rememberedEmail;
+        }
+        if (rememberCheckbox) {
+            rememberCheckbox.checked = true;
+        }
+    }
+});
 
 // Logout function
 function adminLogout() {
