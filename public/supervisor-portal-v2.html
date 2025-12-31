@@ -195,12 +195,12 @@
         }
 
         async function loadAttendance() {
-            const studentNames = students.map(s => s.name);
-            if (studentNames.length === 0) {
+            const studentIds = students.map(s => s.id);
+            if (studentIds.length === 0) {
                 allAttendance = [];
                 return;
             }
-            const { data } = await supabaseClient.from('Attendance').select('*').in('student_id', studentNames).order('date', { ascending: false });
+            const { data } = await supabaseClient.from('Attendance').select('*').in('student_id', studentIds).order('date', { ascending: false });
             allAttendance = data || [];
         }
 
@@ -244,7 +244,7 @@
             }
             container.innerHTML = students.map(student => {
                 const company = companies.find(c => c.id === student.company_id);
-                const todayAttendance = allAttendance.find(a => a.student_id === student.name && a.date === filterDate);
+                const todayAttendance = allAttendance.find(a => a.student_id === student.id && a.date === filterDate);
                 let statusBadge = '';
                 if (todayAttendance) {
                     const statusColors = { present: 'bg-green-100 text-green-800', absent: 'bg-red-100 text-red-800', sick: 'bg-orange-100 text-orange-800', late: 'bg-yellow-100 text-yellow-800' };
@@ -278,7 +278,7 @@
             document.getElementById('modal-student-number').textContent = student.student_number || '-';
             document.getElementById('modal-company').textContent = company?.company_name || '-';
             document.getElementById('modal-scheduled-days').textContent = (student.scheduled_days || []).join(', ') || '-';
-            const studentAttendance = allAttendance.filter(a => a.student_id === student.name);
+            const studentAttendance = allAttendance.filter(a => a.student_id === student.id);
             renderAttendanceHistory(studentAttendance);
             document.getElementById('student-modal').classList.remove('hidden');
         }
