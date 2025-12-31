@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="nl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Debug Test</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-gray-100 p-8">
+    <div class="max-w-4xl mx-auto bg-white rounded-lg shadow-lg p-6">
+        <h1 class="text-2xl font-bold mb-4">Admin Debug Test</h1>
+
+        <div class="space-y-4">
+            <div>
+                <h2 class="font-bold text-lg mb-2">1. Authentication Status</h2>
+                <div id="auth-status" class="p-4 bg-gray-50 rounded"></div>
+            </div>
+
+            <div>
+                <h2 class="font-bold text-lg mb-2">2. Database Queries</h2>
+                <div id="db-status" class="p-4 bg-gray-50 rounded space-y-2"></div>
+            </div>
+
+            <div>
+                <h2 class="font-bold text-lg mb-2">Console Logs</h2>
+                <div id="console-logs" class="p-4 bg-gray-50 rounded font-mono text-xs max-h-96 overflow-auto"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        const SUPABASE_URL = 'https://ninkkvffhvkxrrxddgrz.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5pbmtrdmZmaHZreHJyeGRkZ3J6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM5OTc2NTcsImV4cCI6MjA3OTU3MzY1N30.Kq6jojYu5Hopmtzmdqwc9dwUyIZBOm7c27N-OCv1aCM';
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        const authStatus = document.getElementById('auth-status');
+        const dbStatus = document.getElementById('db-status');
+        const consoleLogs = document.getElementById('console-logs');
+
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const color = type === 'error' ? 'text-red-600' : type === 'success' ? 'text-green-600' : 'text-blue-600';
+            consoleLogs.innerHTML += `<div class="${color}">[${timestamp}] ${message}</div>`;
+            console.log(message);
+        }
+
+        async function runTests() {
+            log('🚀 Starting debug tests...', 'info');
+
+            // Test 1: Check authentication
+            try {
+                const { data: { session }, error } = await supabase.auth.getSession();
+
+                if (error) {
+                    authStatus.innerHTML = `<div class="text-red-600">❌ Auth Error: ${error.message}</div>`;
+                    log(`❌ Auth error: ${error.message}`, 'error');
+                } else if (!session) {
+                    authStatus.innerHTML = `<div class="text-yellow-600">⚠️ No active session - You need to login first!</div>`;
+                    log('⚠️ No active session', 'error');
+                } else {
+                    const user = session.user;
+                    authStatus.innerHTML = `
+                        <div class="text-green-600">✅ Authenticated</div>
+                        <div class="mt-2 space-y-1 text-sm">
+                            <div><strong>Email:</strong> ${user.email}</div>
+                            <div><strong>User ID:</strong> ${user.id}</div>
+                            <div><strong>Role:</strong> ${user.user_metadata?.role || 'No role set'}</div>
+                        </div>
+                    `;
+                    log(`✅ Authenticated as: ${user.email} (role: ${user.user_metadata?.role})`, 'success');
+                }
+            } catch (err) {
+                authStatus.innerHTML = `<div class="text-red-600">❌ Exception: ${err.message}</div>`;
+                log(`❌ Exception in auth check: ${err.message}`, 'error');
+            }
+
+            // Test 2: Try to query each table
+            const tables = [
+                { name: 'Students', displayName: 'Students' },
+                { name: 'Bedrijven', displayName: 'Bedrijven' },
+                { name: 'Attendance', displayName: 'Attendance' },
+                { name: 'stagebegeleiders', displayName: 'Stagebegeleiders' }
+            ];
+
+            for (const table of tables) {
+                try {
+                    log(`📊 Querying ${table.displayName}...`, 'info');
+                    const { data, error, count } = await supabase
+                        .from(table.name)
+                        .select('*', { count: 'exact' });
+
+                    if (error) {
+                        dbStatus.innerHTML += `
+                            <div class="text-red-600">
+                                ❌ ${table.displayName}: ${error.message}
+                                <div class="text-xs mt-1">Code: ${error.code}</div>
+                            </div>
+                        `;
+                        log(`❌ ${table.displayName} error: ${error.message} (${error.code})`, 'error');
+                    } else {
+                        dbStatus.innerHTML += `
+                            <div class="text-green-600">
+                                ✅ ${table.displayName}: ${data?.length || 0} records
+                            </div>
+                        `;
+                        log(`✅ ${table.displayName}: ${data?.length || 0} records`, 'success');
+                    }
+                } catch (err) {
+                    dbStatus.innerHTML += `
+                        <div class="text-red-600">
+                            ❌ ${table.displayName}: Exception - ${err.message}
+                        </div>
+                    `;
+                    log(`❌ ${table.displayName} exception: ${err.message}`, 'error');
+                }
+            }
+
+            log('✅ All tests completed', 'success');
+        }
+
+        // Run tests on load
+        runTests();
+    </script>
+</body>
+
+</html>
