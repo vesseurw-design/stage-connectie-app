@@ -109,6 +109,39 @@
         </div>
     </div>
 
+    <!-- Attendance History Modal -->
+    <div id="attendance-modal"
+        class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-xl max-w-2xl w-full p-6 max-h-[80vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-bold">Aanwezigheidshistorie</h2>
+                <button onclick="closeAttendanceModal()" class="text-gray-500 hover:text-gray-700">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
+                        </path>
+                    </svg>
+                </button>
+            </div>
+
+            <div class="mb-4">
+                <h3 id="attendance-student-name" class="text-lg font-semibold text-gray-800"></h3>
+                <p id="attendance-student-info" class="text-sm text-gray-600"></p>
+            </div>
+
+            <div id="attendance-stats" class="grid grid-cols-4 gap-3 mb-6">
+                <!-- Stats will be inserted here -->
+            </div>
+
+            <div class="space-y-2" id="attendance-list">
+                <!-- Attendance records will be inserted here -->
+            </div>
+
+            <div id="no-attendance" class="hidden text-center py-8 text-gray-500">
+                Geen aanwezigheidsgegevens gevonden voor deze student.
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
         const SUPABASE_URL = 'https://ninkkvffhvkxrrxddgrz.supabase.co';
@@ -158,6 +191,7 @@
                         <td class="px-6 py-4 text-sm">${supervisor?.name || '-'}</td>
                         <td class="px-6 py-4 text-sm">${days || '-'}</td>
                         <td class="px-6 py-4 text-sm text-right">
+                            <button onclick='viewAttendance(${JSON.stringify(student)})' class="text-green-600 hover:text-green-900 mr-2">📊 Aanwezigheid</button>
                             <button onclick='editStudent(${JSON.stringify(student)})' class="text-blue-600 hover:text-blue-900 mr-2">Bewerk</button>
                             <button onclick="deleteStudent('${student.name}')" class="text-red-600 hover:text-red-900">Verwijder</button>
                         </td>
@@ -233,6 +267,112 @@
             localStorage.removeItem('admin_name');
             window.location.href = 'admin-login.html';
         }
+
+        // Attendance History Functions
+        window.viewAttendance = async function (student) {
+            document.getElementById('attendance-modal').classList.remove('hidden');
+            document.getElementById('attendance-student-name').textContent = student.name;
+
+            const company = companies.find(c => c.id === student.company_id);
+            const supervisor = supervisors.find(s => s.id === student.supervisor_id);
+            document.getElementById('attendance-student-info').textContent =
+                `${company?.company_name || 'Geen bedrijf'} • ${supervisor?.name || 'Geen begeleider'}`;
+
+            // Load attendance for this student
+            const { data: attendance, error } = await supabaseClient
+                .from('Attendance')
+                .select('*')
+                .eq('student_id', student.id)
+                .order('date', { ascending: false });
+
+            if (error) {
+                console.error('Error loading attendance:', error);
+                document.getElementById('no-attendance').classList.remove('hidden');
+                document.getElementById('attendance-list').classList.add('hidden');
+                document.getElementById('attendance-stats').classList.add('hidden');
+                return;
+            }
+
+            if (!attendance || attendance.length === 0) {
+                document.getElementById('no-attendance').classList.remove('hidden');
+                document.getElementById('attendance-list').classList.add('hidden');
+                document.getElementById('attendance-stats').classList.add('hidden');
+                return;
+            }
+
+            document.getElementById('no-attendance').classList.add('hidden');
+            document.getElementById('attendance-list').classList.remove('hidden');
+            document.getElementById('attendance-stats').classList.remove('hidden');
+
+            // Calculate stats
+            const stats = {
+                present: attendance.filter(a => a.status === 'present').length,
+                absent: attendance.filter(a => a.status === 'absent').length,
+                sick: attendance.filter(a => a.status === 'sick').length,
+                late: attendance.filter(a => a.status === 'late').length
+            };
+
+            // Render stats
+            document.getElementById('attendance-stats').innerHTML = `
+                <div class="bg-green-50 p-3 rounded-lg">
+                    <div class="text-xs text-green-600 font-medium">Aanwezig</div>
+                    <div class="text-2xl font-bold text-green-700">${stats.present}</div>
+                </div>
+                <div class="bg-red-50 p-3 rounded-lg">
+                    <div class="text-xs text-red-600 font-medium">Afwezig</div>
+                    <div class="text-2xl font-bold text-red-700">${stats.absent}</div>
+                </div>
+                <div class="bg-orange-50 p-3 rounded-lg">
+                    <div class="text-xs text-orange-600 font-medium">Ziek</div>
+                    <div class="text-2xl font-bold text-orange-700">${stats.sick}</div>
+                </div>
+                <div class="bg-yellow-50 p-3 rounded-lg">
+                    <div class="text-xs text-yellow-600 font-medium">Te laat</div>
+                    <div class="text-2xl font-bold text-yellow-700">${stats.late}</div>
+                </div>
+            `;
+
+            // Render attendance list
+            const statusColors = {
+                'present': 'bg-green-100 text-green-800',
+                'absent': 'bg-red-100 text-red-800',
+                'sick': 'bg-orange-100 text-orange-800',
+                'late': 'bg-yellow-100 text-yellow-800'
+            };
+
+            const statusLabels = {
+                'present': 'Aanwezig',
+                'absent': 'Afwezig',
+                'sick': 'Ziek',
+                'late': 'Te laat'
+            };
+
+            document.getElementById('attendance-list').innerHTML = attendance.map(record => {
+                const date = new Date(record.date);
+                const formattedDate = date.toLocaleDateString('nl-NL', {
+                    weekday: 'short',
+                    day: 'numeric',
+                    month: 'short',
+                    year: 'numeric'
+                });
+
+                return `
+                    <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition">
+                        <span class="text-sm font-medium text-gray-700">${formattedDate}</span>
+                        <div class="flex items-center gap-2">
+                            <span class="px-3 py-1 text-xs font-semibold rounded-full ${statusColors[record.status]}">
+                                ${statusLabels[record.status]}${record.status === 'late' && record.minutes_late ? ` (${record.minutes_late}m)` : ''}
+                            </span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        };
+
+        function closeAttendanceModal() {
+            document.getElementById('attendance-modal').classList.add('hidden');
+        }
+
 
         loadData();
     </script>
