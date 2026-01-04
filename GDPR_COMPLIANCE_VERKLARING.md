@@ -19,9 +19,10 @@ StageConnectie is een webapplicatie voor het beheren van stage-aanwezigheid en c
 
 | Component | Provider | Locatie | Regio Code | GDPR Status |
 |-----------|----------|---------|------------|-------------|
-| **Frontend** | Vercel | Frankfurt, Duitsland | fra1 | ✅ EU Compliant |
+| **Frontend** | Netlify | USA (Seattle) | us-west-2 | ⚠️ Niet EU* |
 | **Database** | Supabase | West Europe (Ierland) | eu-west-1 | ✅ EU Compliant |
-| **CDN** | Cloudflare | Europa | EU | ✅ EU Compliant |
+
+*\*Opmerking: De frontend bevat alleen statische bestanden (HTML/CSS/JavaScript) zonder persoonlijke gegevens. Alle gevoelige data wordt uitsluitend opgeslagen in de EU database.*
 
 ### Verificatie
 
@@ -101,8 +102,8 @@ nslookup [project-ref].supabase.co
    - Encrypted backups
 
 4. **Netwerk Beveiliging**
-   - Cloudflare DDoS protection
-   - Web Application Firewall (WAF)
+   - Netlify DDoS protection (built-in)
+   - Automatische HTTPS/SSL certificaten
    - Rate limiting
    - Security headers:
      - X-Content-Type-Options: nosniff
@@ -118,7 +119,7 @@ nslookup [project-ref].supabase.co
 
 2. **Logging & Monitoring**
    - Supabase audit logs
-   - Vercel deployment logs
+   - Netlify deployment logs
    - Error tracking
 
 3. **Backup & Recovery**
@@ -189,21 +190,20 @@ Na afloop van de bewaartermijn worden gegevens:
 
 | Verwerker | Dienst | Locatie | AVG Status | DPA |
 |-----------|--------|---------|------------|-----|
-| Vercel Inc. | Hosting | EU (Frankfurt) | ✅ Compliant | ✅ Beschikbaar |
+| Netlify Inc. | Hosting | USA (met CDN) | ⚠️ USA-based* | ✅ Beschikbaar |
 | Supabase Inc. | Database | EU (Ierland) | ✅ Compliant | ✅ Beschikbaar |
-| Cloudflare Inc. | CDN/Security | EU | ✅ Compliant | ✅ Beschikbaar |
+
+*\*Netlify is gevestigd in de USA. Alle persoonlijke gegevens worden uitsluitend in de EU database (Supabase) opgeslagen.*
 
 ### Documentatie
 
-- **Vercel DPA**: [vercel.com/legal/dpa](https://vercel.com/legal/dpa)
+- **Netlify DPA**: [netlify.com/legal/dpa](https://www.netlify.com/legal/dpa/)
 - **Supabase DPA**: [supabase.com/legal/dpa](https://supabase.com/legal/dpa)
-- **Cloudflare DPA**: [cloudflare.com/gdpr/](https://www.cloudflare.com/gdpr/)
 
 Alle sub-verwerkers zijn:
-- ✅ Gevestigd in de EU of hebben adequate waarborgen
-- ✅ Gecertificeerd volgens ISO 27001
-- ✅ Onderworpen aan regelmatige audits
 - ✅ Gebonden aan Data Processing Agreements (DPA)
+- ✅ Gecertificeerd volgens ISO 27001 of vergelijkbaar
+- ✅ Onderworpen aan regelmatige audits
 
 ---
 
