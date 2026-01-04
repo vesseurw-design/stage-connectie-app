@@ -40,3 +40,17 @@ lerna-debug.log*
 ._*
 .vercel
 .env*.local
+
+# Sensitive documents (school/internal use only)
+GDPR_COMPLIANCE_VERKLARING.md
+**/wachtwoorden.txt
+*.key
+*.pem
+
+# Database exports and migration scripts
+export-database-schema.sql
+import-to-eu-supabase.sql
+create-auth-users.sql
+cleanup-old-attendance.sql
+debug-attendance-*.sql
+fix-*.sql
