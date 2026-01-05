@@ -32,42 +32,24 @@ document.getElementById('form-bedrijf').addEventListener('submit', async (e) => 
     const data = Object.fromEntries(formData);
 
     try {
-        // Step 1: Add to Bedrijven table
-        const { data: bedrijf, error: bedrijfError } = await supabase
-            .from('Bedrijven')
-            .insert([{
-                company_name: data.company_name,
-                email: data.email,
-                phone: data.phone || null,
-                address: data.address || null,
-                branche: data.branche || null
-            }])
-            .select()
-            .single();
-
-        if (bedrijfError) throw bedrijfError;
-
-        // Step 2: Create auth user via Supabase Admin API
-        // Generate password: Welkom + CompanyName (no spaces)
-        const cleanName = data.company_name.replace(/[^a-zA-Z0-9]/g, '');
-        const password = `Welkom${cleanName}`;
-
-        const { data: authUser, error: authError } = await supabase.auth.admin.createUser({
-            email: data.email,
-            password: password,
-            email_confirm: true,
-            user_metadata: {
-                role: 'employer'
+        // Call Edge Function to create user
+        const { data: result, error } = await supabase.functions.invoke('create-user', {
+            body: {
+                userType: 'employer',
+                data: {
+                    company_name: data.company_name,
+                    email: data.email,
+                    phone: data.phone || null,
+                    address: data.address || null,
+                    branche: data.branche || null
+                }
             }
         });
 
-        if (authError) {
-            // Rollback: delete bedrijf
-            await supabase.from('Bedrijven').delete().eq('id', bedrijf.id);
-            throw authError;
-        }
+        if (error) throw error;
+        if (!result.success) throw new Error(result.error);
 
-        showResult('bedrijf', `✅ Bedrijf toegevoegd!<br>📧 Email: ${data.email}<br>🔑 Wachtwoord: <strong>${password}</strong><br><small class="text-gray-600">Geef dit wachtwoord door aan het bedrijf.</small>`, 'success');
+        showResult('bedrijf', `✅ ${result.message}!<br>📧 Email: ${result.email}<br>🔑 Wachtwoord: <strong>${result.password}</strong><br><small class="text-gray-600">Geef dit wachtwoord door aan het bedrijf.</small>`, 'success');
         e.target.reset();
         loadBedrijven();
 
@@ -140,40 +122,23 @@ document.getElementById('form-supervisor').addEventListener('submit', async (e) 
     const data = Object.fromEntries(formData);
 
     try {
-        // Step 1: Add to stagebegeleiders table
-        const { data: supervisor, error: supervisorError } = await supabase
-            .from('stagebegeleiders')
-            .insert([{
-                name: data.name,
-                email: data.email,
-                phone: data.phone || null,
-                whatsapp_enabled: data.whatsapp_enabled === 'on'
-            }])
-            .select()
-            .single();
-
-        if (supervisorError) throw supervisorError;
-
-        // Step 2: Create auth user
-        const password = 'WelkomStagebegeleider';
-
-        const { data: authUser, error: authError } = await supabase.auth.admin.createUser({
-            email: data.email,
-            password: password,
-            email_confirm: true,
-            user_metadata: {
-                role: 'supervisor',
-                supervisor_id: supervisor.id
+        // Call Edge Function
+        const { data: result, error } = await supabase.functions.invoke('create-user', {
+            body: {
+                userType: 'supervisor',
+                data: {
+                    name: data.name,
+                    email: data.email,
+                    phone: data.phone || null,
+                    whatsapp_enabled: data.whatsapp_enabled === 'on'
+                }
             }
         });
 
-        if (authError) {
-            // Rollback
-            await supabase.from('stagebegeleiders').delete().eq('id', supervisor.id);
-            throw authError;
-        }
+        if (error) throw error;
+        if (!result.success) throw new Error(result.error);
 
-        showResult('supervisor', `✅ Stagebegeleider toegevoegd!<br>📧 Email: ${data.email}<br>🔑 Wachtwoord: <strong>${password}</strong><br><small class="text-gray-600">Geef dit wachtwoord door aan de stagebegeleider.</small>`, 'success');
+        showResult('supervisor', `✅ ${result.message}!<br>📧 Email: ${result.email}<br>🔑 Wachtwoord: <strong>${result.password}</strong><br><small class="text-gray-600">Geef dit wachtwoord door aan de stagebegeleider.</small>`, 'success');
         e.target.reset();
         loadSupervisors();
 
@@ -246,21 +211,21 @@ document.getElementById('form-admin').addEventListener('submit', async (e) => {
     const data = Object.fromEntries(formData);
 
     try {
-        const password = 'WelkomAdmin';
-
-        const { data: authUser, error: authError } = await supabase.auth.admin.createUser({
-            email: data.email,
-            password: password,
-            email_confirm: true,
-            user_metadata: {
-                role: 'admin',
-                name: data.name || 'Admin'
+        // Call Edge Function
+        const { data: result, error } = await supabase.functions.invoke('create-user', {
+            body: {
+                userType: 'admin',
+                data: {
+                    email: data.email,
+                    name: data.name || 'Admin'
+                }
             }
         });
 
-        if (authError) throw authError;
+        if (error) throw error;
+        if (!result.success) throw new Error(result.error);
 
-        showResult('admin', `✅ Admin toegevoegd!<br>📧 Email: ${data.email}<br>🔑 Wachtwoord: <strong>${password}</strong><br><small class="text-gray-600">Geef dit wachtwoord door aan de admin.</small>`, 'success');
+        showResult('admin', `✅ ${result.message}!<br>📧 Email: ${result.email}<br>🔑 Wachtwoord: <strong>${result.password}</strong><br><small class="text-gray-600">Geef dit wachtwoord door aan de admin.</small>`, 'success');
         e.target.reset();
         loadAdmins();
 
