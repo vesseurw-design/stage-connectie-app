@@ -3,7 +3,7 @@
 
 const SUPABASE_URL = 'https://vdeipnqyesduiohxvuvu.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZkZWlwbnF5ZXNkdWlvaHh2dXZ1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc1MjY5NTEsImV4cCI6MjA4MzEwMjk1MX0.IknEZ-GQvspcppJxLR00ayBDq1DbL0HiUKy9RDb59DU';
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // Tab Management
 function showTab(tabName) {
@@ -33,7 +33,7 @@ document.getElementById('form-bedrijf').addEventListener('submit', async (e) => 
 
     try {
         // Call Edge Function to create user
-        const { data: result, error } = await supabase.functions.invoke('create-user', {
+        const { data: result, error } = await supabaseClient.functions.invoke('create-user', {
             body: {
                 userType: 'employer',
                 data: {
@@ -96,14 +96,14 @@ async function deleteBedrijf(id, email) {
 
     try {
         // Delete auth user
-        const { data: users } = await supabase.auth.admin.listUsers();
+        const { data: users } = await supabaseClient.auth.admin.listUsers();
         const user = users.users.find(u => u.email === email);
         if (user) {
-            await supabase.auth.admin.deleteUser(user.id);
+            await supabaseClient.auth.admin.deleteUser(user.id);
         }
 
         // Delete bedrijf
-        const { error } = await supabase.from('Bedrijven').delete().eq('id', id);
+        const { error } = await supabaseClient.from('Bedrijven').delete().eq('id', id);
         if (error) throw error;
 
         loadBedrijven();
@@ -123,7 +123,7 @@ document.getElementById('form-supervisor').addEventListener('submit', async (e) 
 
     try {
         // Call Edge Function
-        const { data: result, error } = await supabase.functions.invoke('create-user', {
+        const { data: result, error } = await supabaseClient.functions.invoke('create-user', {
             body: {
                 userType: 'supervisor',
                 data: {
@@ -185,14 +185,14 @@ async function deleteSupervisor(id, email) {
 
     try {
         // Delete auth user
-        const { data: users } = await supabase.auth.admin.listUsers();
+        const { data: users } = await supabaseClient.auth.admin.listUsers();
         const user = users.users.find(u => u.email === email);
         if (user) {
-            await supabase.auth.admin.deleteUser(user.id);
+            await supabaseClient.auth.admin.deleteUser(user.id);
         }
 
         // Delete supervisor
-        const { error } = await supabase.from('stagebegeleiders').delete().eq('id', id);
+        const { error } = await supabaseClient.from('stagebegeleiders').delete().eq('id', id);
         if (error) throw error;
 
         loadSupervisors();
@@ -212,7 +212,7 @@ document.getElementById('form-admin').addEventListener('submit', async (e) => {
 
     try {
         // Call Edge Function
-        const { data: result, error } = await supabase.functions.invoke('create-user', {
+        const { data: result, error } = await supabaseClient.functions.invoke('create-user', {
             body: {
                 userType: 'admin',
                 data: {
@@ -237,7 +237,7 @@ document.getElementById('form-admin').addEventListener('submit', async (e) => {
 
 async function loadAdmins() {
     try {
-        const { data: users } = await supabase.auth.admin.listUsers();
+        const { data: users } = await supabaseClient.auth.admin.listUsers();
         const admins = users.users.filter(u => u.user_metadata?.role === 'admin');
 
         const list = document.getElementById('admins-list');
@@ -267,7 +267,7 @@ async function deleteAdmin(userId) {
     if (!confirm(`Weet je zeker dat je deze admin wilt verwijderen?`)) return;
 
     try {
-        const { error } = await supabase.auth.admin.deleteUser(userId);
+        const { error } = await supabaseClient.auth.admin.deleteUser(userId);
         if (error) throw error;
 
         loadAdmins();
