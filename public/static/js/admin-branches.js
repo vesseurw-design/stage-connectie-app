@@ -12,7 +12,6 @@ async function loadBranches() {
     const { data, error } = await supabaseClient
         .from('Branches')
         .select('*')
-        .order('is_custom', { ascending: true })
         .order('name', { ascending: true });
 
     if (error) {
@@ -20,8 +19,9 @@ async function loadBranches() {
         return;
     }
 
-    const standardBranches = data.filter(b => !b.is_custom);
-    const customBranches = data.filter(b => b.is_custom);
+    // All branches are standard (no custom branches in new schema)
+    const standardBranches = data;
+    const customBranches = [];
 
     // Display standard branches
     const standardContainer = document.getElementById('standard-branches');

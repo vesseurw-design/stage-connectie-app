@@ -15,7 +15,6 @@ async function loadBranches() {
     const { data, error } = await supabaseClient
         .from('Branches')
         .select('*')
-        .order('is_custom', { ascending: true })
         .order('name', { ascending: true });
 
     if (error) {
@@ -30,10 +29,6 @@ async function loadBranches() {
     brancheSelect.innerHTML = '<option value="">Selecteer branche...</option>';
 
     allBranches.forEach(branch => {
-        // Skip custom branches that haven't been renamed yet
-        if (branch.is_custom && branch.name.startsWith('Custom ')) {
-            return;
-        }
         brancheSelect.innerHTML += `<option value="${branch.name}">${branch.name}</option>`;
     });
 
@@ -42,9 +37,6 @@ async function loadBranches() {
     filterSelect.innerHTML = '<option value="">Alle Branches</option>';
 
     allBranches.forEach(branch => {
-        if (branch.is_custom && branch.name.startsWith('Custom ')) {
-            return;
-        }
         filterSelect.innerHTML += `<option value="${branch.name}">${branch.name}</option>`;
     });
 }
