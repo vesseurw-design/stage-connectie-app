@@ -161,7 +161,7 @@ document.getElementById('company-form').addEventListener('submit', async (e) => 
         contact_person: document.getElementById('contact_person').value || null,
         email: email || null,
         phone: document.getElementById('phone_number').value || null,
-        address: document.getElementById('address').value || null
+        address: null  // No address field in form yet
     };
 
     if (id) {
