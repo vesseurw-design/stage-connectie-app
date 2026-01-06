@@ -217,18 +217,8 @@ document.getElementById('company-form').addEventListener('submit', async (e) => 
                 return;
             }
 
-            // Success! Show password to admin
-            alert('✅ Bedrijf aangemaakt!
-
-Login gegevens:
-Email: ' + email + '
-Wachtwoord: ' + password + '
-
-⚠️ BELANGRIJK:
-Kopieer dit wachtwoord en stuur het naar het bedrijf.
-
-Het bedrijf kan direct inloggen op:
-https://stageconnectie.nl');
+            // Success!
+            alert('✅ Bedrijf aangemaakt!\n\nLogin gegevens:\nEmail: ' + email + '\nWachtwoord: ' + password + '\n\n⚠️ BELANGRIJK:\nKopieer dit wachtwoord en stuur het naar het bedrijf.\n\nHet bedrijf kan direct inloggen op:\nhttps://stageconnectie.nl');
 
             closeModal();
             loadData();
