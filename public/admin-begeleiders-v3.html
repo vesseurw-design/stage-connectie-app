@@ -156,27 +156,68 @@
         document.getElementById('form').addEventListener('submit', async (e) => {
             e.preventDefault();
             const id = document.getElementById('supervisor-id').value;
+            const name = document.getElementById('name').value;
+            const email = document.getElementById('email').value;
             const data = {
-                name: document.getElementById('name').value,
-                email: document.getElementById('email').value,
+                name: name,
+                email: email,
                 phone: document.getElementById('phone').value || null,
                 whatsapp_enabled: document.getElementById('whatsapp').checked
             };
 
             let error;
             if (id) {
+                // Update existing supervisor
                 const result = await supabaseClient.from('stagebegeleiders').update(data).eq('id', id);
                 error = result.error;
+                if (!error) {
+                    closeModal();
+                    loadData();
+                }
             } else {
-                const result = await supabaseClient.from('stagebegeleiders').insert([data]);
-                error = result.error;
+                // Create new supervisor
+                try {
+                    // Step 1: Insert supervisor first
+                    const { data: supervisorResult, error: supervisorError } = await supabaseClient
+                        .from('stagebegeleiders')
+                        .insert([data])
+                        .select();
+
+                    if (supervisorError) {
+                        alert('Fout bij opslaan begeleider: ' + supervisorError.message);
+                        return;
+                    }
+
+                    // Step 2: Create auth account via Edge Function
+                    const password = 'Welkom' + name.replace(/\s+/g, '');
+                    const { data: authResult, error: authError } = await supabaseClient.functions.invoke('create-auth-account', {
+                        body: {
+                            email: email,
+                            password: password,
+                            role: 'supervisor',
+                            metadata: {
+                                supervisor_id: supervisorResult[0].id
+                            }
+                        }
+                    });
+
+                    if (authError || !authResult.success) {
+                        // Rollback: delete supervisor
+                        await supabaseClient.from('stagebegeleiders').delete().eq('id', supervisorResult[0].id);
+                        alert('Fout bij aanmaken login account: ' + (authError?.message || authResult.error));
+                        return;
+                    }
+
+                    // Success!
+                    alert('✅ Stagebegeleider aangemaakt!\n\nLogin gegevens:\nEmail: ' + email + '\nWachtwoord: ' + password + '\n\n⚠️ BELANGRIJK:\nKopieer dit wachtwoord en stuur het naar de stagebegeleider.');
+                    closeModal();
+                    loadData();
+                } catch (err) {
+                    alert('Onverwachte fout: ' + err.message);
+                }
             }
 
             if (error) alert('Error: ' + error.message);
-            else {
-                closeModal();
-                loadData();
-            }
         });
 
         function logout() {

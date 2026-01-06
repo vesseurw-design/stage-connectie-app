@@ -187,36 +187,10 @@ document.getElementById('company-form').addEventListener('submit', async (e) => 
         const password = 'Welkom' + companyName.replace(/\s+/g, '');
 
         try {
-            // Step 1: Create auth user via signUp
-            const { data: authData, error: authError } = await supabaseClient.auth.signUp({
-                email: email,
-                password: password,
-                options: {
-                    data: {
-                        role: 'employer',
-                        company_name: companyName
-                    },
-                    emailRedirectTo: window.location.origin
-                }
-            });
-
-            if (authError) {
-                alert('Fout bij aanmaken auth user: ' + authError.message);
-                return;
-            }
-
-            if (!authData.user) {
-                alert('Fout: Geen user data ontvangen van Supabase');
-                return;
-            }
-
-            // Step 2: Insert company with auth_user_id
+            // Step 1: Insert company first
             const { data: companyResult, error: companyError } = await supabaseClient
                 .from('Bedrijven')
-                .insert([{
-                    ...companyData,
-                    auth_user_id: authData.user.id
-                }])
+                .insert([companyData])
                 .select();
 
             if (companyError) {
@@ -224,8 +198,37 @@ document.getElementById('company-form').addEventListener('submit', async (e) => 
                 return;
             }
 
+            // Step 2: Create auth account via Edge Function
+            const { data: authResult, error: authError } = await supabaseClient.functions.invoke('create-auth-account', {
+                body: {
+                    email: email,
+                    password: password,
+                    role: 'employer',
+                    metadata: {
+                        company_name: companyName
+                    }
+                }
+            });
+
+            if (authError || !authResult.success) {
+                // Rollback: delete company
+                await supabaseClient.from('Bedrijven').delete().eq('id', companyResult[0].id);
+                alert('Fout bij aanmaken login account: ' + (authError?.message || authResult.error));
+                return;
+            }
+
             // Success! Show password to admin
-            alert(`✅ Bedrijf aangemaakt!\n\nLogin gegevens:\nEmail: ${email}\nWachtwoord: ${password}\n\n⚠️ BELANGRIJK:\nKopieer dit wachtwoord en stuur het naar het bedrijf.\n\nHet bedrijf kan direct inloggen op:\nhttps://stageconnectie.nl`);
+            alert('✅ Bedrijf aangemaakt!
+
+Login gegevens:
+Email: ' + email + '
+Wachtwoord: ' + password + '
+
+⚠️ BELANGRIJK:
+Kopieer dit wachtwoord en stuur het naar het bedrijf.
+
+Het bedrijf kan direct inloggen op:
+https://stageconnectie.nl');
 
             closeModal();
             loadData();
