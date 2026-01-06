@@ -160,7 +160,8 @@ document.getElementById('company-form').addEventListener('submit', async (e) => 
         branche: document.getElementById('branche').value || null,
         contact_person: document.getElementById('contact_person').value || null,
         email: email || null,
-        phone_number: document.getElementById('phone_number').value || null
+        phone: document.getElementById('phone_number').value || null,
+        address: document.getElementById('address').value || null
     };
 
     if (id) {
