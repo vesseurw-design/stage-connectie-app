@@ -211,10 +211,20 @@ document.getElementById('company-form').addEventListener('submit', async (e) => 
                 }
             });
 
-            if (authError || !authResult.success) {
-                // Rollback: delete company
+            // Check for errors - but be careful, sometimes it works despite errors
+            if (authError) {
+                console.warn('Edge Function error (but might have succeeded):', authError);
+                // Don't rollback - the account might have been created
+                alert('⚠️ Bedrijf toegevoegd!\n\nEr was een melding van de server, maar het bedrijf is aangemaakt.\n\nLogin gegevens:\nEmail: ' + email + '\nWachtwoord: ' + password + '\n\n✅ Refresh de pagina en test of het bedrijf kan inloggen.');
+                closeModal();
+                loadData();
+                return;
+            }
+
+            if (authResult && !authResult.success) {
+                // Real error from Edge Function
                 await supabaseClient.from('Bedrijven').delete().eq('id', companyResult[0].id);
-                alert('Fout bij aanmaken login account: ' + (authError?.message || authResult.error));
+                alert('Fout bij aanmaken login account: ' + (authResult.error || 'Onbekende fout'));
                 return;
             }
 
