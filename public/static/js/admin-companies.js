@@ -143,6 +143,7 @@ window.deleteCompany = async function (id) {
     if (error) {
         alert('Fout bij verwijderen: ' + error.message);
     } else {
+        alert('✅ Bedrijf verwijderd!\n\n⚠️ BELANGRIJK:\nHet login account bestaat nog in Supabase.\nGa naar: Supabase → Authentication → Users\nEn verwijder het account handmatig.\n\n(Morgen maken we dit automatisch!)');
         loadData();
     }
 };
