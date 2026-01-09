@@ -43,42 +43,36 @@ async function init() {
     }, 10000);
 }
 
-// Request notification permission
-async function requestNotificationPermission() {
-    if ('Notification' in window && Notification.permission === 'default') {
-        const permission = await Notification.requestPermission();
-        notificationsEnabled = permission === 'granted';
-        console.log('🔔 Notification permission:', permission);
-    } else if (Notification.permission === 'granted') {
-        notificationsEnabled = true;
-    }
+// In-app notifications don't need permission
+function requestNotificationPermission() {
+    notificationsEnabled = true;
+    console.log('🔔 In-app notifications enabled');
 }
 
-// Show browser notification
+// Show in-app notification banner
 function showNotification(title, body) {
-    if (!notificationsEnabled || Notification.permission !== 'granted') {
-        return;
-    }
-
-    const notification = new Notification(title, {
-        body: body,
-        icon: '/icon-v3.png',
-        badge: '/icon-v3.png',
-        tag: 'attendance-update',
-        requireInteraction: false
-    });
-
-    // Play sound (optional)
+    const banner = document.getElementById('notification-banner');
+    const titleEl = document.getElementById('notification-title');
+    const messageEl = document.getElementById('notification-message');
+    
+    titleEl.textContent = title;
+    messageEl.textContent = body;
+    
+    // Show banner
+    banner.classList.remove('hidden');
+    
+    // Play sound
     playNotificationSound();
+    
+    // Auto-hide after 5 seconds
+    setTimeout(() => {
+        banner.classList.add('hidden');
+    }, 5000);
+}
 
-    // Auto-close after 5 seconds
-    setTimeout(() => notification.close(), 5000);
-
-    // Click to focus window
-    notification.onclick = () => {
-        window.focus();
-        notification.close();
-    };
+// Close notification banner
+function closeNotificationBanner() {
+    document.getElementById('notification-banner').classList.add('hidden');
 }
 
 // Play notification sound
