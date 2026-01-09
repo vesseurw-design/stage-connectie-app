@@ -8,9 +8,7 @@
 1. [Inloggen](#inloggen)
 2. [Dashboard Overzicht](#dashboard-overzicht)
 3. [Aanwezigheid Registreren](#aanwezigheid-registreren)
-4. [Studenten Bekijken](#studenten-bekijken)
-5. [Geschiedenis Raadplegen](#geschiedenis-raadplegen)
-6. [Veelgestelde Vragen](#veelgestelde-vragen)
+4. [Veelgestelde Vragen](#veelgestelde-vragen)
 
 ---
 
@@ -116,62 +114,6 @@ Na het inloggen ziet u het **Bedrijf Portal Dashboard** met:
 2. **Stagebegeleider krijgt notificatie** (als online)
 3. **School kan data inzien** voor rapportage
 4. **Student kan eigen aanwezigheid zien** (toekomstige feature)
-
----
-
-## 👥 Studenten Bekijken
-
-### Studentinformatie
-
-**Klik op een studentkaart** om te zien:
-
-- **Naam** - Volledige naam van de student
-- **Studentnummer** - Uniek nummer
-- **Stagebegeleider** - Wie de student begeleidt vanuit school
-- **Stagedagen** - Welke dagen de student stage loopt
-- **Aanwezigheidshistorie** - Alle eerdere registraties
-
-### Studentkaart Kleuren
-
-De studentkaarten hebben verschillende kleuren:
-
-- **🟢 Groen** - Student is vandaag aanwezig
-- **🔴 Rood** - Student is vandaag afwezig
-- **🟠 Oranje** - Student is vandaag ziek
-- **🟡 Geel** - Student was vandaag te laat
-- **⚪ Grijs** - Nog geen aanwezigheid ingevuld vandaag
-
----
-
-## 📜 Geschiedenis Raadplegen
-
-### Aanwezigheidshistorie Bekijken
-
-1. **Klik op een studentkaart**
-2. **Scroll naar beneden** in de popup
-3. **Zie "Aanwezigheidshistorie"**
-
-### Filteren op Maand
-
-1. **Klik op het dropdown menu** (rechts van "Aanwezigheidshistorie")
-2. **Kies een maand** (bijv. "januari 2026")
-3. **Zie alleen die maand** - Overzichtelijker!
-
-### Wat Ziet U?
-
-Voor elke dag ziet u:
-- **📅 Datum** - Dag, datum, maand, jaar
-- **Status badge** - Aanwezig/Afwezig/Ziek/Te laat
-- **Minuten te laat** - Als van toepassing
-
-### Voorbeeld
-
-```
-wo 8 jan 2026    [Aanwezig]
-di 7 jan 2026    [Te laat (15m)]
-ma 6 jan 2026    [Aanwezig]
-vr 3 jan 2026    [Ziek]
-```
 
 ---
 
