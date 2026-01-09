@@ -7,6 +7,7 @@ let students = [];
 let supervisors = [];
 let currentCompany = null;
 let activeCell = null;
+let isSaving = false;
 
 async function init() {
     try {
@@ -388,6 +389,7 @@ function confirmLate() {
 }
 
 async function saveWeek() {
+    isSaving = true;
     const cells = document.querySelectorAll('.week-cell[data-student-id]');
     console.log('💾 Saving week - found cells:', cells.length);
 
@@ -425,6 +427,7 @@ async function saveWeek() {
         if (deleteError) {
             console.error('❌ Delete error:', deleteError);
             alert('Fout bij verwijderen oude data: ' + deleteError.message);
+            isSaving = false;
             return;
         } else {
             console.log('🗑️ Cleared old attendance for this week');
@@ -454,12 +457,19 @@ async function saveWeek() {
         if (error) {
             console.error('❌ Save error:', error);
             alert('Fout bij opslaan: ' + error.message);
+            isSaving = false;
             return;
         }
     }
 
     console.log('✅ Attendance saved successfully!');
     showToast();
+    
+    // Wait a bit before re-enabling realtime to avoid race condition
+    setTimeout(() => {
+        isSaving = false;
+        loadAttendance(); // Reload once to sync
+    }, 500);
 }
 
 function showToast() {
@@ -494,8 +504,13 @@ function setupRealtimeSubscription() {
             table: 'Attendance'
         }, (payload) => {
             console.log('🔄 Real-time update:', payload);
-            // Reload attendance data when changes occur
-            loadAttendance();
+            // Only reload if we're not currently saving
+            if (!isSaving) {
+                console.log('📥 Loading attendance from realtime update');
+                loadAttendance();
+            } else {
+                console.log('⏸️ Skipping reload - save in progress');
+            }
         })
         .subscribe();
     
