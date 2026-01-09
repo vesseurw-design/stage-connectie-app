@@ -244,6 +244,10 @@
                 supervisor_id: document.getElementById('supervisor_id').value || null,
                 scheduled_days: Array.from(document.querySelectorAll('input[name="days"]:checked')).map(cb => cb.value)
             };
+            
+            // Ensure empty strings become null for foreign keys
+            if (data.company_id === '') data.company_id = null;
+            if (data.supervisor_id === '') data.supervisor_id = null;
 
             let error;
             if (id) {
