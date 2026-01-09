@@ -8,6 +8,8 @@ let companies = [];
 let allAttendance = [];
 let currentStudent = null;
 let refreshInterval = null;
+let lastAttendanceCount = 0; // Track attendance count for notifications
+let notificationsEnabled = false;
 
 // Initialize
 async function init() {
@@ -21,8 +23,12 @@ async function init() {
     const today = new Date().toISOString().split('T')[0];
     document.getElementById('filter-date').value = today;
 
+    // Request notification permission
+    requestNotificationPermission();
+
     // Load data
     await refreshData();
+    lastAttendanceCount = allAttendance.length; // Set initial count
 
     // Setup real-time subscription
     setupRealtimeSubscription();
@@ -35,6 +41,68 @@ async function init() {
         await loadAttendance();
         renderDashboard();
     }, 10000);
+}
+
+// Request notification permission
+async function requestNotificationPermission() {
+    if ('Notification' in window && Notification.permission === 'default') {
+        const permission = await Notification.requestPermission();
+        notificationsEnabled = permission === 'granted';
+        console.log('🔔 Notification permission:', permission);
+    } else if (Notification.permission === 'granted') {
+        notificationsEnabled = true;
+    }
+}
+
+// Show browser notification
+function showNotification(title, body) {
+    if (!notificationsEnabled || Notification.permission !== 'granted') {
+        return;
+    }
+
+    const notification = new Notification(title, {
+        body: body,
+        icon: '/icon-v3.png',
+        badge: '/icon-v3.png',
+        tag: 'attendance-update',
+        requireInteraction: false
+    });
+
+    // Play sound (optional)
+    playNotificationSound();
+
+    // Auto-close after 5 seconds
+    setTimeout(() => notification.close(), 5000);
+
+    // Click to focus window
+    notification.onclick = () => {
+        window.focus();
+        notification.close();
+    };
+}
+
+// Play notification sound
+function playNotificationSound() {
+    // Simple beep sound using Web Audio API
+    try {
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+
+        oscillator.frequency.value = 800;
+        oscillator.type = 'sine';
+
+        gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+
+        oscillator.start(audioContext.currentTime);
+        oscillator.stop(audioContext.currentTime + 0.5);
+    } catch (e) {
+        console.warn('Could not play notification sound:', e);
+    }
 }
 
 async function refreshData() {
@@ -138,7 +206,29 @@ function setupRealtimeSubscription() {
             schema: 'public',
             table: 'Attendance'
         }, (payload) => {
-            console.log('Real-time update:', payload);
+            console.log('🔔 Real-time update:', payload);
+
+            // Check if this is a new INSERT
+            if (payload.eventType === 'INSERT') {
+                const newRecord = payload.new;
+                const student = students.find(s => s.name === newRecord.student_id);
+
+                if (student) {
+                    // Show notification
+                    const statusLabels = {
+                        present: 'Aanwezig',
+                        absent: 'Afwezig',
+                        sick: 'Ziek',
+                        late: 'Te laat'
+                    };
+
+                    showNotification(
+                        '📋 Nieuwe Aanwezigheid',
+                        `${student.name} is gemarkeerd als ${statusLabels[newRecord.status] || newRecord.status}`
+                    );
+                }
+            }
+
             loadAttendance().then(renderDashboard);
         })
         .subscribe();
@@ -168,6 +258,26 @@ function renderDashboard() {
 
     // Render student cards
     renderStudentCards(filteredAttendance);
+
+    // Update notification badge
+    updateNotificationBadge();
+}
+
+function updateNotificationBadge() {
+    const today = new Date().toISOString().split('T')[0];
+    const todayAttendance = allAttendance.filter(a => a.date === today);
+    const newCount = todayAttendance.length;
+
+    // Update badge in header (we'll add this to HTML)
+    const badge = document.getElementById('notification-badge');
+    if (badge) {
+        if (newCount > 0) {
+            badge.textContent = newCount;
+            badge.classList.remove('hidden');
+        } else {
+            badge.classList.add('hidden');
+        }
+    }
 }
 
 function updateStats(attendance) {
