@@ -135,16 +135,52 @@ window.deleteCompany = async function (id) {
         return;
     }
 
-    const { error } = await supabaseClient
-        .from('Bedrijven')
-        .delete()
-        .eq('id', id);
+    try {
+        // Step 1: Get company email first
+        const { data: company, error: fetchError } = await supabaseClient
+            .from('Bedrijven')
+            .select('email')
+            .eq('id', id)
+            .single();
 
-    if (error) {
-        alert('Fout bij verwijderen: ' + error.message);
-    } else {
-        alert('✅ Bedrijf verwijderd!\n\n⚠️ BELANGRIJK:\nHet login account bestaat nog in Supabase.\nGa naar: Supabase → Authentication → Users\nEn verwijder het account handmatig.\n\n(Morgen maken we dit automatisch!)');
+        if (fetchError) {
+            alert('Fout bij ophalen bedrijf: ' + fetchError.message);
+            return;
+        }
+
+        // Step 2: Delete from database
+        const { error: deleteError } = await supabaseClient
+            .from('Bedrijven')
+            .delete()
+            .eq('id', id);
+
+        if (deleteError) {
+            alert('Fout bij verwijderen: ' + deleteError.message);
+            return;
+        }
+
+        // Step 3: Delete auth account via Edge Function
+        if (company.email) {
+            const { data: authResult, error: authError } = await supabaseClient.functions.invoke('delete-auth-account', {
+                body: {
+                    email: company.email
+                }
+            });
+
+            if (authError || (authResult && !authResult.success)) {
+                console.warn('Auth account delete failed:', authError || authResult.error);
+                alert('✅ Bedrijf verwijderd!\n\n⚠️ Let op: Het login account kon niet automatisch worden verwijderd.\nGa naar Supabase → Authentication → Users en verwijder handmatig.');
+            } else {
+                alert('✅ Bedrijf en login account succesvol verwijderd!');
+            }
+        } else {
+            alert('✅ Bedrijf verwijderd!\n\n⚠️ Geen email gevonden.');
+        }
+
         loadData();
+    } catch (err) {
+        console.error('Delete error:', err);
+        alert('Onverwachte fout: ' + err.message);
     }
 };
 

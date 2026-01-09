@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="nl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prijzen - StageConnect</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 60px;
+        }
+
+        .header h1 {
+            font-size: 48px;
+            font-weight: 800;
+            margin-bottom: 16px;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .header p {
+            font-size: 20px;
+            opacity: 0.95;
+        }
+
+        .pricing-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-bottom: 60px;
+        }
+
+        .pricing-card {
+            background: white;
+            border-radius: 20px;
+            padding: 40px 30px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .pricing-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.3);
+        }
+
+        .pricing-card.popular {
+            border: 3px solid #667eea;
+            transform: scale(1.05);
+        }
+
+        .pricing-card.popular::before {
+            content: "MEEST GEKOZEN";
+            position: absolute;
+            top: 20px;
+            right: -35px;
+            background: #667eea;
+            color: white;
+            padding: 5px 40px;
+            transform: rotate(45deg);
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+
+        .plan-name {
+            font-size: 24px;
+            font-weight: 700;
+            color: #1a202c;
+            margin-bottom: 10px;
+        }
+
+        .plan-description {
+            color: #718096;
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+
+        .price {
+            margin-bottom: 30px;
+        }
+
+        .price-amount {
+            font-size: 48px;
+            font-weight: 800;
+            color: #667eea;
+        }
+
+        .price-period {
+            color: #718096;
+            font-size: 16px;
+        }
+
+        .features {
+            list-style: none;
+            margin-bottom: 30px;
+        }
+
+        .features li {
+            padding: 12px 0;
+            color: #4a5568;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .features li::before {
+            content: "✓";
+            color: #48bb78;
+            font-weight: 700;
+            font-size: 18px;
+        }
+
+        .cta-button {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: block;
+            text-align: center;
+        }
+
+        .cta-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+        }
+
+        .cta-button.secondary {
+            background: white;
+            color: #667eea;
+            border: 2px solid #667eea;
+        }
+
+        .cta-button.secondary:hover {
+            background: #f7fafc;
+        }
+
+        .faq-section {
+            background: white;
+            border-radius: 20px;
+            padding: 50px 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+        }
+
+        .faq-section h2 {
+            font-size: 32px;
+            font-weight: 700;
+            color: #1a202c;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .faq-item {
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .faq-item:last-child {
+            border-bottom: none;
+        }
+
+        .faq-question {
+            font-size: 18px;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 10px;
+        }
+
+        .faq-answer {
+            color: #718096;
+            line-height: 1.6;
+        }
+
+        .value-prop {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 30px;
+            color: white;
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .value-prop h3 {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+
+        .value-prop p {
+            font-size: 16px;
+            opacity: 0.9;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 32px;
+            }
+
+            .pricing-card.popular {
+                transform: scale(1);
+            }
+
+            .pricing-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎓 Kies het juiste plan</h1>
+            <p>Transparante prijzen, geen verborgen kosten</p>
+        </div>
+
+        <div class="value-prop">
+            <h3>💰 Gemiddelde besparing: €3.500 per jaar</h3>
+            <p>Door automatisering van stagebeheer bespaart u 100+ uren administratie</p>
+        </div>
+
+        <div class="pricing-grid">
+            <!-- FREE TIER -->
+            <div class="pricing-card">
+                <div class="plan-name">🆓 Gratis</div>
+                <div class="plan-description">Perfect om te starten</div>
+                <div class="price">
+                    <div class="price-amount">€0</div>
+                    <div class="price-period">per jaar</div>
+                </div>
+                <ul class="features">
+                    <li>Tot 50 studenten</li>
+                    <li>Basis aanwezigheidsregistratie</li>
+                    <li>Communicatie met bedrijven</li>
+                    <li>Community support</li>
+                    <li>GDPR compliant</li>
+                </ul>
+                <a href="mailto:info@stageconnect.nl?subject=Gratis%20Plan%20Aanvragen"
+                    class="cta-button secondary">Start Gratis</a>
+            </div>
+
+            <!-- STARTER TIER -->
+            <div class="pricing-card popular">
+                <div class="plan-name">💼 Starter</div>
+                <div class="plan-description">Voor kleine tot middelgrote scholen</div>
+                <div class="price">
+                    <div class="price-amount">€500</div>
+                    <div class="price-period">per jaar</div>
+                </div>
+                <ul class="features">
+                    <li>Tot 150 studenten</li>
+                    <li>Alle features</li>
+                    <li>Real-time aanwezigheid</li>
+                    <li>Email support</li>
+                    <li>Onboarding hulp</li>
+                    <li>GDPR compliant</li>
+                    <li>Maandelijkse updates</li>
+                </ul>
+                <a href="mailto:info@stageconnect.nl?subject=Starter%20Plan%20Aanvragen" class="cta-button">Kies
+                    Starter</a>
+            </div>
+
+            <!-- PROFESSIONAL TIER -->
+            <div class="pricing-card">
+                <div class="plan-name">🚀 Professional</div>
+                <div class="plan-description">Voor grote scholen</div>
+                <div class="price">
+                    <div class="price-amount">€1.000</div>
+                    <div class="price-period">per jaar</div>
+                </div>
+                <ul class="features">
+                    <li>Tot 300 studenten</li>
+                    <li>Alle features</li>
+                    <li>Priority support</li>
+                    <li>Maandelijkse check-ins</li>
+                    <li>Custom branding</li>
+                    <li>Dedicated account manager</li>
+                    <li>Training sessies</li>
+                    <li>API toegang</li>
+                </ul>
+                <a href="mailto:info@stageconnect.nl?subject=Professional%20Plan%20Aanvragen" class="cta-button">Kies
+                    Professional</a>
+            </div>
+
+            <!-- ENTERPRISE TIER -->
+            <div class="pricing-card">
+                <div class="plan-name">🏢 Enterprise</div>
+                <div class="plan-description">Op maat gemaakt</div>
+                <div class="price">
+                    <div class="price-amount">€2.000</div>
+                    <div class="price-period">per jaar</div>
+                </div>
+                <ul class="features">
+                    <li>Onbeperkt studenten</li>
+                    <li>Alle features</li>
+                    <li>24/7 support</li>
+                    <li>Custom features</li>
+                    <li>SLA garantie</li>
+                    <li>Whitelabel optie</li>
+                    <li>Dedicated server</li>
+                    <li>Persoonlijke training</li>
+                </ul>
+                <a href="mailto:info@stageconnect.nl?subject=Enterprise%20Plan%20Aanvragen" class="cta-button">Contact
+                    Opnemen</a>
+            </div>
+        </div>
+
+        <div class="faq-section">
+            <h2>❓ Veelgestelde Vragen</h2>
+
+            <div class="faq-item">
+                <div class="faq-question">Wat gebeurt er als ik meer studenten heb dan mijn plan toestaat?</div>
+                <div class="faq-answer">Geen probleem! We nemen contact met u op om te upgraden naar een passend plan. U
+                    betaalt alleen het verschil voor de resterende periode.</div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question">Kan ik het gratis plan eerst uitproberen?</div>
+                <div class="faq-answer">Absoluut! Start met het gratis plan en upgrade wanneer u klaar bent. Geen
+                    creditcard nodig.</div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question">Zijn er setup kosten?</div>
+                <div class="faq-answer">Nee, er zijn geen setup kosten. Onboarding en training zijn inbegrepen bij alle
+                    betaalde plannen.</div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question">Kan ik op elk moment opzeggen?</div>
+                <div class="faq-answer">Ja, u kunt op elk moment opzeggen. Bij jaarlijkse betaling krijgt u een pro-rata
+                    terugbetaling.</div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question">Is mijn data veilig?</div>
+                <div class="faq-answer">Ja! We hosten in de EU (Frankfurt & Dublin), zijn GDPR compliant, en gebruiken
+                    enterprise-grade beveiliging.</div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question">Krijg ik korting voor meerdere jaren?</div>
+                <div class="faq-answer">Ja! Bij een 2-jarig contract krijgt u 10% korting, bij 3 jaar 15% korting.</div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question">Hoe werkt de betaling?</div>
+                <div class="faq-answer">We sturen jaarlijks een factuur. Betaling via iDEAL, bankoverschrijving of
+                    automatische incasso mogelijk.</div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

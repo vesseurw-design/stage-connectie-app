@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="nl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vercel Regio Checker</title>
+    <style>
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        h1 {
+            color: #333;
+            margin-top: 0;
+        }
+
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        button:hover {
+            background: #5568d3;
+        }
+
+        #result {
+            margin-top: 20px;
+            padding: 20px;
+            border-radius: 8px;
+            display: none;
+        }
+
+        .success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+
+        .error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+
+        .info {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .region-badge {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="card">
+        <h1>🌍 Vercel Regio Checker</h1>
+        <p>Check waar StageConnectie.nl wordt gehost</p>
+
+        <button onclick="checkRegion()">Check Vercel Regio</button>
+
+        <div id="result"></div>
+
+        <div class="info">
+            <strong>ℹ️ Regio codes:</strong><br>
+            • <strong>fra1</strong> = Frankfurt, Duitsland 🇩🇪<br>
+            • <strong>ams1</strong> = Amsterdam, Nederland 🇳🇱<br>
+            • <strong>iad1</strong> = Washington DC, USA 🇺🇸<br>
+            <br>
+            Voor GDPR moet het <strong>fra1</strong> of <strong>ams1</strong> zijn (EU).
+        </div>
+    </div>
+
+    <script>
+        async function checkRegion() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.style.display = 'block';
+            resultDiv.className = '';
+            resultDiv.innerHTML = '🔄 Checking...';
+
+            try {
+                const response = await fetch('https://stageconnectie.nl', {
+                    method: 'HEAD',
+                    cache: 'no-cache'
+                });
+
+                const vercelId = response.headers.get('x-vercel-id');
+
+                if (vercelId) {
+                    const region = vercelId.split('::')[0];
+
+                    let regionName = 'Onbekend';
+                    let flag = '🌍';
+                    let isEU = false;
+
+                    if (region === 'fra1') {
+                        regionName = 'Frankfurt, Duitsland';
+                        flag = '🇩🇪';
+                        isEU = true;
+                    } else if (region === 'ams1') {
+                        regionName = 'Amsterdam, Nederland';
+                        flag = '🇳🇱';
+                        isEU = true;
+                    } else if (region === 'iad1') {
+                        regionName = 'Washington DC, USA';
+                        flag = '🇺🇸';
+                        isEU = false;
+                    }
+
+                    resultDiv.className = isEU ? 'success' : 'error';
+                    resultDiv.innerHTML = `
+                        <strong>${isEU ? '✅ GDPR Compliant!' : '⚠️ Niet in EU!'}</strong><br>
+                        <div class="region-badge">${flag} ${regionName}</div><br>
+                        <small style="color: #666; margin-top: 10px; display: block;">
+                            Regio code: ${region}<br>
+                            Volledige ID: ${vercelId}
+                        </small>
+                    `;
+                } else {
+                    resultDiv.className = 'error';
+                    resultDiv.innerHTML = '❌ Geen Vercel headers gevonden. Is de site wel op Vercel?';
+                }
+            } catch (error) {
+                resultDiv.className = 'error';
+                resultDiv.innerHTML = `❌ Fout: ${error.message}`;
+            }
+        }
+    </script>
+</body>
+
+</html>
