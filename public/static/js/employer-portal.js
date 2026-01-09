@@ -408,6 +408,7 @@ async function saveWeek() {
     // Step 1: Delete all attendance for this week for current company's students
     if (datesArray.length > 0 && students.length > 0) {
         const studentIds = students.map(s => s.name);
+        console.log('🗑️ Deleting attendance for:', { dates: datesArray, studentIds });
         const { error: deleteError } = await supabaseClient
             .from('Attendance')
             .delete()
