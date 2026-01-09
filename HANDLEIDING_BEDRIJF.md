@@ -82,20 +82,23 @@ Na het inloggen ziet u het **Bedrijf Portal Dashboard** met:
 
    **Optie 1: Aanwezig** ✅
    - Klik op de **groene "Aanwezig" knop**
+   - Klik op **"Wijzigingen opslaan"**
    - Klaar! De student is geregistreerd als aanwezig
 
    **Optie 2: Afwezig** ❌
    - Klik op de **rode "Afwezig" knop**
+   - Klik op **"Wijzigingen opslaan"**
    - De student is geregistreerd als afwezig
 
    **Optie 3: Ziek** 🤒
    - Klik op de **oranje "Ziek" knop**
+   - Klik op **"Wijzigingen opslaan"**
    - De student is geregistreerd als ziek
 
    **Optie 4: Te laat** ⏰
    - Klik op de **gele "Te laat" knop**
    - **Vul het aantal minuten in** (bijv. 15)
-   - Klik "Opslaan"
+   - Klik op **"Wijzigingen opslaan"**
 
 4. **Bevestiging** - U ziet een groen vinkje ✅
 5. **Popup sluit automatisch** - De aanwezigheid is opgeslagen
@@ -105,7 +108,7 @@ Na het inloggen ziet u het **Bedrijf Portal Dashboard** met:
 - ✅ **Vul dagelijks in** - Bij voorkeur 's ochtends
 - ✅ **Controleer de datum** - Staat bovenaan de popup
 - ✅ **Wijzigen mogelijk** - Klik opnieuw op de student om te wijzigen
-- ✅ **Automatisch opgeslagen** - Geen "opslaan" knop nodig
+- ✅ **Vergeet niet op te slaan** - Klik altijd op "Wijzigingen opslaan"
 
 ### Wat Gebeurt Er Na Het Invullen?
 
