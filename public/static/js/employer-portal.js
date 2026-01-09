@@ -393,35 +393,25 @@ async function saveWeek() {
     const cells = document.querySelectorAll('.week-cell[data-student-id]');
     console.log('💾 Saving week - found cells:', cells.length);
 
-    // Collect all dates in current week
-    const dates = [];
-    const weekDates = document.querySelectorAll('[id^="date-"]');
-    weekDates.forEach(el => {
-        const date = el.textContent.trim();
-        if (date && date !== '-') {
-            // Convert "8 jan" to "2026-01-08" format
-            const parts = date.split(' ');
-            if (parts.length >= 2) {
-                const day = parts[0].padStart(2, '0');
-                const monthMap = {jan:'01',feb:'02',mrt:'03',apr:'04',mei:'05',jun:'06',jul:'07',aug:'08',sep:'09',okt:'10',nov:'11',dec:'12'};
-                const month = monthMap[parts[1]];
-                if (month) {
-                    const year = new Date().getFullYear();
-                    dates.push(`${year}-${month}-${day}`);
-                }
-            }
+    // Collect all unique dates from the cells
+    const dates = new Set();
+    cells.forEach(cell => {
+        const date = cell.dataset.date;
+        if (date) {
+            dates.add(date);
         }
     });
+    const datesArray = Array.from(dates);
 
-    console.log('📅 Week dates:', dates);
+    console.log('📅 Week dates:', datesArray);
 
     // Step 1: Delete all attendance for this week for current company's students
-    if (dates.length > 0 && students.length > 0) {
+    if (datesArray.length > 0 && students.length > 0) {
         const studentIds = students.map(s => s.name);
         const { error: deleteError } = await supabaseClient
             .from('Attendance')
             .delete()
-            .in('date', dates)
+            .in('date', datesArray)
             .in('student_id', studentIds);
         
         if (deleteError) {
