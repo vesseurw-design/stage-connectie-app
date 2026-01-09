@@ -414,7 +414,7 @@ async function saveWeek() {
     console.log('📅 Week dates:', dates);
 
     // Step 1: Delete all attendance for this week for current company's students
-    if (dates.length > 0) {
+    if (dates.length > 0 && students.length > 0) {
         const studentIds = students.map(s => s.name);
         const { error: deleteError } = await supabaseClient
             .from('Attendance')
@@ -424,12 +424,14 @@ async function saveWeek() {
         
         if (deleteError) {
             console.error('❌ Delete error:', deleteError);
+            alert('Fout bij verwijderen oude data: ' + deleteError.message);
+            return;
         } else {
             console.log('🗑️ Cleared old attendance for this week');
         }
     }
 
-    // Step 2: Insert new attendance records
+    // Step 2: Collect new attendance records
     const updates = [];
     cells.forEach(cell => {
         const status = cell.dataset.status;
@@ -444,10 +446,11 @@ async function saveWeek() {
         }
     });
 
-    console.log('💾 Attendance records to save:', updates.length, updates);
+    console.log('�� Attendance records to save:', updates.length, updates);
 
+    // Step 3: Insert new records (if any)
     if (updates.length > 0) {
-        const { error } = await supabaseClient.from('Attendance').insert(updates);
+        const { error } = await supabaseClient.from('Attendance').upsert(updates, { onConflict: 'student_id,date' });
         if (error) {
             console.error('❌ Save error:', error);
             alert('Fout bij opslaan: ' + error.message);
