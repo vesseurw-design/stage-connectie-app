@@ -46,6 +46,9 @@ async function init() {
         await loadSupervisors(); // Load supervisors after students
         updateWeekDisplay();
         await loadAttendance();
+        
+        // Setup realtime subscription for live updates
+        setupRealtimeSubscription();
 
     } catch (err) {
         console.error('Init error:', err);
@@ -439,6 +442,25 @@ async function logout() {
 
     // Redirect to login
     window.location.href = 'login.html';
+}
+
+
+// Setup realtime subscription for live updates across devices
+function setupRealtimeSubscription() {
+    supabaseClient
+        .channel('public:Attendance')
+        .on('postgres_changes', {
+            event: '*',
+            schema: 'public',
+            table: 'Attendance'
+        }, (payload) => {
+            console.log('🔄 Real-time update:', payload);
+            // Reload attendance data when changes occur
+            loadAttendance();
+        })
+        .subscribe();
+    
+    console.log('✅ Realtime subscription active');
 }
 
 init();
