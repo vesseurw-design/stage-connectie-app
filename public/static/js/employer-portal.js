@@ -460,7 +460,7 @@ async function saveWeek() {
     setTimeout(() => {
         isSaving = false;
         loadAttendance(); // Reload once to sync
-    }, 500);
+    }, 1500);
 }
 
 function showToast() {
