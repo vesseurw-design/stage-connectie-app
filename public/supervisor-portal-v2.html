@@ -167,6 +167,37 @@
         let allAttendance = [];
         let currentStudent = null;
 
+
+        function setupRealtimeSubscription() {
+            supabaseClient
+                .channel('public:Attendance')
+                .on('postgres_changes', {
+                    event: '*',
+                    schema: 'public',
+                    table: 'Attendance'
+                }, (payload) => {
+                    console.log('🔔 Real-time update:', payload);
+                    if (payload.eventType === 'INSERT') {
+                        const newRecord = payload.new;
+                        const student = students.find(s => s.id === newRecord.student_id);
+                        if (student) {
+                            showNotification(
+                                '📋 Nieuwe Aanwezigheid',
+                                `${student.name} is gemarkeerd als aanwezig`
+                            );
+                        }
+                    }
+                    loadAttendance().then(renderDashboard);
+                })
+                .subscribe();
+            console.log('✅ Realtime subscription active');
+        }
+
+        function showNotification(title, message) {
+            // Simple alert for now - can be improved later
+            console.log(`🔔 ${title}: ${message}`);
+        }
+
         async function init() {
             const supervisorName = localStorage.getItem('supervisor_name');
             if (supervisorName) {
@@ -175,6 +206,7 @@
             const today = new Date().toISOString().split('T')[0];
             document.getElementById('filter-date').value = today;
             await refreshData();
+            setupRealtimeSubscription();
             setupFilters();
         }
 
