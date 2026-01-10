@@ -393,39 +393,10 @@ async function saveWeek() {
     const cells = document.querySelectorAll('.week-cell[data-student-id]');
     console.log('💾 Saving week - found cells:', cells.length);
 
-    // Collect all unique dates from the cells
-    const dates = new Set();
-    cells.forEach(cell => {
-        const date = cell.dataset.date;
-        if (date) {
-            dates.add(date);
-        }
-    });
-    const datesArray = Array.from(dates);
+    // No need to collect dates - we only UPSERT now
 
-    console.log('📅 Week dates:', datesArray);
-
-    // Step 1: Delete all attendance for this week for current company's students
-    if (datesArray.length > 0 && students.length > 0) {
-        const studentIds = students.map(s => s.id);
-        console.log('🗑️ Deleting attendance for:', { dates: datesArray, studentIds });
-        const { error: deleteError } = await supabaseClient
-            .from('Attendance')
-            .delete()
-            .in('date', datesArray)
-            .in('student_id', studentIds);
-        
-        if (deleteError) {
-            console.error('❌ Delete error:', deleteError);
-            alert('Fout bij verwijderen oude data: ' + deleteError.message);
-            isSaving = false;
-            return;
-        } else {
-            console.log('🗑️ Cleared old attendance for this week');
-        }
-    }
-
-    // Step 2: Collect new attendance records
+    
+    // Collect attendance records
     const updates = [];
     cells.forEach(cell => {
         const status = cell.dataset.status;
@@ -442,7 +413,7 @@ async function saveWeek() {
 
     console.log('�� Attendance records to save:', updates.length, updates);
 
-    // Step 3: Insert new records (if any)
+    // Upsert records (if any)
     if (updates.length > 0) {
         const { error } = await supabaseClient.from('Attendance').upsert(updates, { onConflict: 'student_id,date' });
         if (error) {
