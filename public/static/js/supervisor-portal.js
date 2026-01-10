@@ -226,6 +226,8 @@ function setupRealtimeSubscription() {
             loadAttendance().then(renderDashboard);
         })
         .subscribe();
+    
+    console.log('✅ Realtime subscription active');
 }
 
 function setupFilters() {
