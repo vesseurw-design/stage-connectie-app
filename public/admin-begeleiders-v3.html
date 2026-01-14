@@ -148,9 +148,51 @@
 
         window.deleteSupervisor = async function (id) {
             if (!confirm('Weet je zeker dat je deze begeleider wilt verwijderen?')) return;
-            const { error } = await supabaseClient.from('stagebegeleiders').delete().eq('id', id);
-            if (error) alert('Error: ' + error.message);
-            else loadData();
+
+            try {
+                // Step 1: Get supervisor email first
+                const { data: supervisor, error: fetchError } = await supabaseClient
+                    .from('stagebegeleiders')
+                    .select('email')
+                    .eq('id', id)
+                    .single();
+
+                if (fetchError) {
+                    alert('Fout bij ophalen gegevens: ' + fetchError.message);
+                    return;
+                }
+
+                // Step 2: Delete from database
+                const { error: deleteError } = await supabaseClient
+                    .from('stagebegeleiders')
+                    .delete()
+                    .eq('id', id);
+
+                if (deleteError) {
+                    alert('Fout bij verwijderen: ' + deleteError.message);
+                    return;
+                }
+
+                // Step 3: Delete auth account via Edge Function
+                if (supervisor.email) {
+                    const { data: authResult, error: authError } = await supabaseClient.functions.invoke('delete-auth-account', {
+                        body: { email: supervisor.email }
+                    });
+
+                    if (authError || !authResult?.success) {
+                        console.warn('Auth account deletion failed:', authError || authResult);
+                        alert('⚠️ Begeleider verwijderd, maar login account kon niet worden verwijderd. Neem contact op met beheerder.');
+                    } else {
+                        alert('✅ Begeleider en login account succesvol verwijderd!');
+                    }
+                } else {
+                    alert('✅ Begeleider verwijderd (geen email gevonden).');
+                }
+
+                loadData();
+            } catch (err) {
+                alert('Onverwachte fout: ' + err.message);
+            }
         };
 
         document.getElementById('form').addEventListener('submit', async (e) => {
