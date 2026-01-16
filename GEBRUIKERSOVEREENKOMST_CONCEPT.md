@@ -1,24 +1,24 @@
-# GEBRUIKERSOVEREENKOMST & PRIVACYCLAUSULE STAGECONNECT
+# GEBRUIKERSOVEREENKOMST & PRIVACYCLAUSULE STAGECONNECTIE
 
-**Versie:** 1.0 (Concept)  
+**Versie:** 2.0  
 **Datum:** 16 Januari 2026  
-**Eigenaar:** Willemien Vesseur (StageConnect)
+**Eigenaar:** Willemien Vesseur (StageConnectie)
 
 ---
 
-## 1. INLEIDING
-Dit document regelt het gebruik van de applicatie **StageConnect** (hierna: "De Applicatie"). Door gebruik te maken van de Applicatie, ga je akkoord met deze voorwaarden. De Applicatie is ontwikkeld door Willemien Vesseur (hierna: "De Eigenaar") en wordt ingezet om de aanwezigheid en voortgang van leerlingen tijdens hun stage te monitoren.
+## INLEIDING
+Dit document regelt het gebruik van de applicatie **StageConnectie** (hierna: "De Applicatie"). Door gebruik te maken van de Applicatie, ga je akkoord met deze voorwaarden. De Applicatie is ontwikkeld door Willemien Vesseur (hierna: "De Eigenaar") en wordt ingezet om de aanwezigheid en voortgang van leerlingen tijdens hun stage te monitoren.
 
 De overeenkomst is van toepassing op alle gebruikers:
-*   **Schoolmedewerkers** (Beheerders/Docenten)
-*   **Stagebegeleiders** (Externe begeleiders bij bedrijven)
-*   **Werkgevers** (Contactpersonen bij stagebedrijven)
+*   Schoolmedewerkers (Beheerders/Docenten)
+*   Stagebegeleiders (Externe begeleiders bij bedrijven)
+*   Werkgevers (Contactpersonen bij stagebedrijven)
 
 ---
 
 ## 2. DOEL EN GEBRUIK (EXCLUSIVITEIT)
 1.  **Doel:** De Applicatie mag uitsluitend gebruikt worden voor het registreren, inzien en beheren van stage-gerelateerde gegevens (zoals aanwezigheid en contactgegevens) ten behoeve van het onderwijs (bijv. aan Groene Hart Pro College).
-2.  **Exclusief gebruik:** Het gebruiksrecht is strikt persoonlijk en wordt verleend door De Eigenaar. Het is niet toegestaan om inloggegevens te delen met collega's, familieleden of andere derden. Iedere gebruiker dient een eigen account te hebben.
+2.  **Exclusief gebruik:** Het gebruiksrecht is strikt persoonlijk en wordt verleend door De Eigenaar. Het is niet toegestaan om inloggegevens te delen met collega's, familieleden of andere derden zonder toestemming van De Eigenaar. Iedere gebruiker dient een eigen account te hebben.
 3.  **Verbod op misbruik:** Het is verboden de Applicatie te gebruiken voor doeleinden anders dan hierboven beschreven, of op een manier die de werking van de Applicatie of de integriteit van de gegevens kan schaden.
 
 ---
@@ -54,6 +54,4 @@ Conform de Algemene Verordening Gegevensbescherming (AVG) worden gegevens niet l
 
 ### ONDERTEKENING (Optioneel / Digitaal Akkoord)
 
-Door de Applicatie in gebruik te nemen, verklaart de gebruiker akkoord te gaan met bovenstaande voorwaarden.
-
-*Copyright © 2026 Willemien Vesseur - StageConnect*
+Door de Applicatie StageConnectie in gebruik te nemen, verklaart de gebruiker akkoord te gaan met bovenstaande voorwaarden.
