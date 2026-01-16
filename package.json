@@ -14,7 +14,7 @@
   },
   "scripts": {
     "start": "react-scripts start",
-    "build": "react-scripts build",
+    "build": "mkdir -p build && cp -R public/* build/",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },
