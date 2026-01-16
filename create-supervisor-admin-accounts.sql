@@ -129,11 +129,20 @@ INSERT INTO auth.users (
     email_confirmed_at, raw_user_meta_data, created_at, updated_at
 ) VALUES (
     '00000000-0000-0000-0000-000000000000', gen_random_uuid(),
-    'authenticated', 'authenticated', 'admin@youscope.nl',  -- ← VERVANG
+    'authenticated', 'authenticated', 'wvs@scopemail.nl',  -- ← VERVANG
     crypt('AdminStage2026!', gen_salt('bf')),  -- ← VERVANG
     now(), '{"role": "admin"}'::jsonb, now(), now()
 );
-
+-- Admin account 2
+INSERT INTO auth.users (
+    instance_id, id, aud, role, email, encrypted_password,
+    email_confirmed_at, raw_user_meta_data, created_at, updated_at
+) VALUES (
+    '00000000-0000-0000-0000-000000000000', gen_random_uuid(),
+    'authenticated', 'authenticated', 'ksm@scopemail.nl',  -- ← ANDERE EMAIL
+    crypt('Admin2Wachtwoord!', gen_salt('bf')),  -- ← ANDER WACHTWOORD
+    now(), '{"role": "admin"}'::jsonb, now(), now()
+);
 -- ============================================
 -- VERIFICATION
 -- ============================================
