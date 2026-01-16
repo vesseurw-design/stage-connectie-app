@@ -124,7 +124,7 @@
                     </div>
                     <div class="col-span-2">
                         <label class="block text-sm font-semibold text-gray-700 mb-1">Uitschrijfdatum</label>
-                        <input type="date" id="enrollment_end_date"
+                        <input type="date" id="unenrollment_date"
                             class="block w-full border border-gray-200 rounded-lg shadow-sm p-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition">
                         <p class="text-xs text-gray-400 mt-1">Gegevens worden 1 jaar na deze datum verwijderd</p>
                     </div>
@@ -272,7 +272,7 @@
                 document.getElementById("student_number").value = student.student_number || "";
                 document.getElementById("company_id").value = student.company_id || "";
                 document.getElementById("supervisor_id").value = student.supervisor_id || "";
-                document.getElementById("enrollment_end_date").value = student.enrollment_end_date || "";
+                document.getElementById("unenrollment_date").value = student.unenrollment_date || "";
                 document.querySelectorAll('input[name="days"]').forEach(cb => cb.checked = false);
                 (student.scheduled_days || []).forEach(day => {
                     const checkbox = document.querySelector(`input[name="days"][value="${day}"]`);
@@ -308,9 +308,9 @@
             const student_number = document.getElementById("student_number").value;
             const company_id = document.getElementById("company_id").value || null;
             const supervisor_id = document.getElementById("supervisor_id").value || null;
-            const enrollment_end_date = document.getElementById("enrollment_end_date").value || null;
+            const unenrollment_date = document.getElementById("unenrollment_date").value || null;
             const scheduled_days = Array.from(document.querySelectorAll('input[name="days"]:checked')).map(cb => cb.value);
-            const studentData = { name, student_number, company_id, supervisor_id, enrollment_end_date, scheduled_days };
+            const studentData = { name, student_number, company_id, supervisor_id, unenrollment_date, scheduled_days };
 
             let error = null;
 

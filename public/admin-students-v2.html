@@ -88,7 +88,7 @@
                 </div>
                 <div>
                     <label class="block text-sm font-medium mb-1">Uitschrijfdatum</label>
-                    <input type="date" id="enrollment_end_date" class="w-full px-3 py-2 border rounded-lg">
+                    <input type="date" id="unenrollment_date" class="w-full px-3 py-2 border rounded-lg">
                     <p class="text-xs text-gray-500 mt-1">Gegevens worden 1 jaar na deze datum verwijderd</p>
                 </div>
                 <div>
@@ -219,7 +219,7 @@
                 document.getElementById('student_number').value = student.student_number || '';
                 document.getElementById('company_id').value = student.company_id || '';
                 document.getElementById('supervisor_id').value = student.supervisor_id || '';
-                document.getElementById('enrollment_end_date').value = student.enrollment_end_date || '';
+                document.getElementById('unenrollment_date').value = student.unenrollment_date || '';
                 document.querySelectorAll('input[name="days"]').forEach(cb => cb.checked = false);
                 (student.scheduled_days || []).forEach(day => {
                     const cb = document.querySelector(`input[value="${day}"]`);
@@ -253,7 +253,7 @@
                 student_number: document.getElementById('student_number').value || null,
                 company_id: document.getElementById('company_id').value || null,
                 supervisor_id: document.getElementById('supervisor_id').value || null,
-                enrollment_end_date: document.getElementById('enrollment_end_date').value || null,
+                unenrollment_date: document.getElementById('unenrollment_date').value || null,
                 scheduled_days: Array.from(document.querySelectorAll('input[name="days"]:checked')).map(cb => cb.value)
             };
 
