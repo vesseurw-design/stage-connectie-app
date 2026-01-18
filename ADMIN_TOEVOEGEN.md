@@ -18,17 +18,30 @@ Om de veiligheid te waarborgen, worden admins niet via de app zelf toegevoegd, m
 ### Stap 2: Admin-rol toewijzen
 Zonder deze stap is de gebruiker wel aangemaakt, maar kan hij nog niet inloggen op het Admin-gedeelte.
 
+#### Methode A: Via de interface (als beschikbaar)
 1.  Klik op de e-mail van de nieuwe gebruiker in de lijst.
-2.  Er opent een zijpaneel of nieuwe pagina. Zoek naar het blok **User Metadata**.
-3.  Klik op de knop **Edit** (meestal een potlood-icoon bij de metadata).
-4.  Je ziet nu een tekstvak met waarschijnlijk `{}`. Verander dit naar:
+2.  Zoek naar het blok **User Metadata**.
+3.  Klik op **Edit metadata**.
+4.  Zorg dat de tekst er zo uitziet:
     ```json
     {
+      "email_verified": true,
       "role": "admin"
     }
     ```
-    *(Let op: als er al tekst staat, voeg dan `, "role": "admin"` toe voor de laatste accolade).*
 5.  Klik op **Save changes**.
+
+#### Methode B: Via SQL Editor (Meest betrouwbaar)
+Als de bovenstaande knoppen lastig te vinden zijn, gebruik dan deze methode:
+1.  Ga naar de **SQL Editor** in het linkermenu (`>_`).
+2.  Klik op **New query**.
+3.  Voer de volgende code uit (vervang het e-mailadres):
+    ```sql
+    UPDATE auth.users 
+    SET raw_user_meta_data = raw_user_meta_data || '{"role": "admin"}'::jsonb
+    WHERE email = 'collega@voorbeeld.nl';
+    ```
+4.  Klik op **Run**.
 
 ---
 
