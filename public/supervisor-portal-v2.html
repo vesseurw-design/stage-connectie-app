@@ -196,6 +196,16 @@
                     <p class="text-sm text-gray-500">Stagedagen</p>
                     <p class="font-medium" id="modal-scheduled-days">-</p>
                 </div>
+                <div class="grid grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <p class="text-sm text-gray-500">Klas</p>
+                        <p class="font-medium" id="modal-student-class">-</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-500">Schooljaar</p>
+                        <p class="font-medium" id="modal-school-year">-</p>
+                    </div>
+                </div>
                 <div>
                     <div class="flex justify-between items-center mb-2">
                         <p class="text-sm text-gray-500">Aanwezigheidshistorie</p>
@@ -375,6 +385,9 @@
                             ${statusBadge}
                         </div>
                         <div class="text-sm text-gray-600">
+                            <p class="mb-1 text-xs px-2 py-0.5 bg-gray-100 rounded inline-block">
+                                ${student.class || '-'} • ${student.school_year || '-'}
+                            </p>
                             <p class="mb-1">📍 ${company?.company_name || 'Geen bedrijf'}</p>
                             <p>📅 ${(student.scheduled_days || []).join(', ') || 'Geen dagen'}</p>
                         </div>
@@ -390,6 +403,8 @@
             document.getElementById('modal-student-number').textContent = student.student_number || '-';
             document.getElementById('modal-company').textContent = company?.company_name || '-';
             document.getElementById('modal-scheduled-days').textContent = (student.scheduled_days || []).join(', ') || '-';
+            document.getElementById('modal-student-class').textContent = student.class || '-';
+            document.getElementById('modal-school-year').textContent = student.school_year || '-';
             const studentAttendance = allAttendance.filter(a => a.student_id === student.id);
             renderAttendanceHistory(studentAttendance);
             document.getElementById('student-modal').classList.remove('hidden');

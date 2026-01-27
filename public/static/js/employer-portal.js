@@ -47,7 +47,7 @@ async function init() {
         await loadSupervisors(); // Load supervisors after students
         updateWeekDisplay();
         await loadAttendance();
-        
+
         // Setup realtime subscription for live updates
         setupRealtimeSubscription();
 
@@ -254,7 +254,7 @@ function renderGrid(existingAttendance) {
 
         const nameCell = document.createElement('div');
         nameCell.className = 'week-cell student-name pl-6 bg-white rounded-xl shadow-sm border border-gray-200 justify-start';
-        nameCell.innerHTML = `<div><div class="text-gray-900 font-black text-sm uppercase tracking-wide">${student.name}</div><div class="text-xs text-blue-600 font-bold mt-0.5">${student.student_number || ''}</div></div>`;
+        nameCell.innerHTML = `<div><div class="text-gray-900 font-black text-sm uppercase tracking-wide">${student.name}</div><div class="text-xs text-blue-600 font-bold mt-0.5">${student.class || ''} ${student.student_number ? '• ' + student.student_number : ''}</div></div>`;
         row.appendChild(nameCell);
 
         const dayMap = ['Ma', 'Di', 'Wo', 'Do', 'Vr'];
@@ -395,7 +395,7 @@ async function saveWeek() {
 
     // No need to collect dates - we only UPSERT now
 
-    
+
     // Collect attendance records
     const updates = [];
     cells.forEach(cell => {
@@ -426,7 +426,7 @@ async function saveWeek() {
 
     console.log('✅ Attendance saved successfully!');
     showToast();
-    
+
     // Wait a bit before re-enabling realtime to avoid race condition
     setTimeout(() => {
         isSaving = false;
@@ -475,7 +475,7 @@ function setupRealtimeSubscription() {
             }
         })
         .subscribe();
-    
+
     console.log('✅ Realtime subscription active');
 }
 

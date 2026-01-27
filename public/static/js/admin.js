@@ -223,6 +223,7 @@ function renderTable(attendance) {
             <tr class="hover:bg-gray-50">
                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                     ${studentName}
+                    <div class="text-xs font-normal text-gray-500">${student?.class || '-'}</div>
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     ${companyName}
