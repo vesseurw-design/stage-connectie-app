@@ -1,8 +1,11 @@
 import os
 
 # New staging credentials
-new_url = 'https://rnjsfhphndexsqelkxvj.supabase.co'
+new_url = 'https://rnjsfhphncdexsqelkxv.supabase.co'
 new_key = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJuanNmaHBobmNkZXhzcWVsa3h2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg4MzYyOTksImV4cCI6MjA4NDQxMjI5OX0.a_Rs8YfssIjsz678O--WBGus5GssvsxD1yZL4D_QxcY'
+
+# Previous wrong staging URL to fix
+wrong_staging_url = 'https://rnjsfhphndexsqelkxvj.supabase.co'
 
 # Current production credentials
 old_url = 'https://vdeipnqyesduiohxvuvu.supabase.co'
@@ -17,10 +20,10 @@ for root, dirs, files in os.walk(public_dir):
             with open(path, 'r', encoding='utf-8') as f:
                 content = f.read()
             
-            new_content = content.replace(old_url, new_url).replace(old_key, new_key)
+            new_content = content.replace(old_url, new_url).replace(old_key, new_key).replace(wrong_staging_url, new_url)
             
             if new_content != content:
-                print(f"Updating {path} to STAGING")
+                print(f"Updating {path} to CORRECT STAGING")
                 with open(path, 'w', encoding='utf-8') as f:
                     f.write(new_content)
 

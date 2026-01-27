@@ -2,7 +2,7 @@
 // Versie: 2.0 - GDPR Compliant
 
 // Initialize Supabase client
-const SUPABASE_URL = 'https://rnjsfhphndexsqelkxvj.supabase.co';
+const SUPABASE_URL = 'https://rnjsfhphncdexsqelkxv.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJuanNmaHBobmNkZXhzcWVsa3h2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg4MzYyOTksImV4cCI6MjA4NDQxMjI5OX0.a_Rs8YfssIjsz678O--WBGus5GssvsxD1yZL4D_QxcY';
 
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
