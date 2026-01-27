@@ -38,8 +38,21 @@
     </header>
 
     <main class="max-w-7xl mx-auto px-4 py-8">
-        <div class="mb-6 flex justify-end">
-            <button onclick="openModal()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg shadow">
+        <div class="mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div class="flex flex-wrap gap-3">
+                <select id="filter-class"
+                    class="px-3 py-2 border rounded-lg text-sm bg-white shadow-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                    <option value="">Alle Klassen</option>
+                </select>
+                <select id="filter-year"
+                    class="px-3 py-2 border rounded-lg text-sm bg-white shadow-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                    <option value="">Alle Schooljaren</option>
+                </select>
+                <button onclick="clearFilters()" class="text-sm text-gray-500 hover:text-blue-600 font-medium">Reset
+                    filters</button>
+            </div>
+            <button onclick="openModal()"
+                class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg shadow whitespace-nowrap">
                 + Nieuwe Student
             </button>
         </div>
@@ -179,6 +192,7 @@
 
         let companies = [];
         let supervisors = [];
+        let allStudents = []; // Store all students for filtering
 
         async function loadData() {
             // Load companies
@@ -206,9 +220,55 @@
                 return;
             }
 
+            allStudents = students || [];
+            updateFilters();
+            renderTable();
+        }
+
+        function updateFilters() {
+            const classFilter = document.getElementById('filter-class');
+            const yearFilter = document.getElementById('filter-year');
+
+            const currentClassValue = classFilter.value;
+            const currentYearValue = yearFilter.value;
+
+            // Get unique values
+            const classes = [...new Set(allStudents.map(s => s.class).filter(Boolean))].sort();
+            const years = [...new Set(allStudents.map(s => s.school_year).filter(Boolean))].sort().reverse();
+
+            classFilter.innerHTML = '<option value="">Alle Klassen</option>' +
+                classes.map(c => `<option value="${c}">${c}</option>`).join('');
+
+            yearFilter.innerHTML = '<option value="">Alle Schooljaren</option>' +
+                years.map(y => `<option value="${y}">${y}</option>`).join('');
+
+            // Restore values
+            classFilter.value = currentClassValue;
+            yearFilter.value = currentYearValue;
+        }
+
+        function renderTable() {
+            const classFilter = document.getElementById('filter-class').value;
+            const yearFilter = document.getElementById('filter-year').value;
+
+            let filteredStudents = allStudents;
+
+            if (classFilter) {
+                filteredStudents = filteredStudents.filter(s => s.class === classFilter);
+            }
+            if (yearFilter) {
+                filteredStudents = filteredStudents.filter(s => s.school_year === yearFilter);
+            }
+
             const tbody = document.getElementById('students-table');
             tbody.innerHTML = '';
-            (students || []).forEach(student => {
+
+            if (filteredStudents.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" class="px-6 py-8 text-center text-gray-500">Geen studenten gevonden met deze filters</td></tr>';
+                return;
+            }
+
+            filteredStudents.forEach(student => {
                 const company = companies.find(c => c.id === student.company_id);
                 const supervisor = supervisors.find(s => s.id === student.supervisor_id);
                 const days = (student.scheduled_days || []).join(', ');
@@ -230,6 +290,16 @@
                 `;
             });
         }
+
+        function clearFilters() {
+            document.getElementById('filter-class').value = '';
+            document.getElementById('filter-year').value = '';
+            renderTable();
+        }
+
+        // Add event listeners for filters
+        document.getElementById('filter-class').addEventListener('change', renderTable);
+        document.getElementById('filter-year').addEventListener('change', renderTable);
 
         function openModal(student = null) {
             document.getElementById('modal').classList.remove('hidden');
