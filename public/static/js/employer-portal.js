@@ -486,7 +486,7 @@ async function logout() {
     localStorage.removeItem('company_id');
 
     // Redirect to login
-    window.location.href = 'login.html';
+    window.location.href = 'index.html';
 }
 
 
