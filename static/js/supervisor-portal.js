@@ -35,11 +35,11 @@ async function init() {
 }
 
 async function refreshData() {
-    await Promise.all([
-        loadCompanies(),
-        loadStudents(),
-        loadAttendance()
-    ]);
+    // We load students first because attendance depends on the student list
+    await loadCompanies();
+    await loadStudents();
+    await loadAttendance();
+
     renderDashboard();
 }
 

@@ -8,7 +8,7 @@
     "lucide-react": "^0.263.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "react-scripts": "5.0.1",
+    "react-scripts": "^0.0.0",
     "typescript": "^4.9.5",
     "web-vitals": "^2.1.4"
   },
@@ -37,6 +37,6 @@
     ]
   },
   "devDependencies": {
-    "vercel": "^49.1.1"
+    "vercel": "^50.25.4"
   }
 }

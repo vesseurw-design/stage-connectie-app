@@ -1,9 +1,9 @@
 // Employer Authentication met Supabase Auth
-// Versie: 2.0 - GDPR Compliant
+// Versie: 2.1 - Case Insensitive Fix
 
 // Initialize Supabase client
-const SUPABASE_URL = 'https://rnjsfhphncdexsqelkxv.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJuanNmaHBobmNkZXhzcWVsa3h2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg4MzYyOTksImV4cCI6MjA4NDQxMjI5OX0.a_Rs8YfssIjsz678O--WBGus5GssvsxD1yZL4D_QxcY';
+const SUPABASE_URL = 'https://vdeipnqyesduiohxvuvu.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZkZWlwbnF5ZXNkdWlvaHh2dXZ1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc1MjY5NTEsImV4cCI6MjA4MzEwMjk1MX0.IknEZ-GQvspcppJxLR00ayBDq1DbL0HiUKy9RDb59DU';
 
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
@@ -15,7 +15,8 @@ if (loginForm) {
     loginForm.addEventListener('submit', async (e) => {
         e.preventDefault();
 
-        const email = document.getElementById('email').value;
+        // FIX: Trim input to remove accidental spaces
+        const email = document.getElementById('email').value.trim();
         const password = document.getElementById('password').value;
         const rememberMe = document.getElementById('remember-me')?.checked || false;
 
@@ -37,20 +38,22 @@ if (loginForm) {
             console.log('✅ Auth successful:', authData.user.email);
 
             // Check if user is employer
-            const userRole = authData.user.user_metadata?.role;
+            const userRole = authData.user.user_metadata?.role || authData.user.app_metadata?.role;
             if (userRole !== 'employer') {
                 throw new Error('Dit account is geen werkgever account. Gebruik de juiste login pagina.');
             }
 
             // Haal bedrijfsgegevens op via email
+            // FIX: Use ilike for case-insensitive matching
             const { data: companyData, error: companyError } = await supabaseClient
                 .from('Bedrijven')
                 .select('*')
-                .eq('email', email)
+                .ilike('email', email)
                 .single();
 
             if (companyError || !companyData) {
-                throw new Error('Bedrijfsgegevens niet gevonden.');
+                console.error('Company fetch error:', companyError);
+                throw new Error('Bedrijfsgegevens niet gevonden. Controleer of je email exact overeenkomt.');
             }
 
             console.log('✅ Company data loaded:', companyData.company_name);
@@ -83,6 +86,8 @@ if (loginForm) {
             } else if (error.message.includes('Email not confirmed')) {
                 errorMsg = 'Je email adres is nog niet bevestigd. Check je inbox.';
             } else if (error.message.includes('geen werkgever')) {
+                errorMsg = error.message;
+            } else if (error.message.includes('Bedrijfsgegevens')) {
                 errorMsg = error.message;
             }
 

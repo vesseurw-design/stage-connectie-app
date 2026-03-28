@@ -1,9 +1,14 @@
-// Use the Supabase client from admin-auth.js
-// Use a different variable name to avoid conflict with window.supabase
-const supabaseDB = window.supabaseClient || window.supabase.createClient(
-    'https://rnjsfhphncdexsqelkxv.supabase.co',
-    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJuanNmaHBobmNkZXhzcWVsa3h2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg4MzYyOTksImV4cCI6MjA4NDQxMjI5OX0.a_Rs8YfssIjsz678O--WBGus5GssvsxD1yZL4D_QxcY'
-);
+// Conditional initialization to prevent redeclaration errors
+if (typeof window.SUPABASE_URL === 'undefined') {
+    window.SUPABASE_URL = 'https://vdeipnqyesduiohxvuvu.supabase.co';
+}
+if (typeof window.SUPABASE_KEY === 'undefined') {
+    window.SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZkZWlwbnF5ZXNkdWlvaHh2dXZ1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc1MjY5NTEsImV4cCI6MjA4MzEwMjk1MX0.IknEZ-GQvspcppJxLR00ayBDq1DbL0HiUKy9RDb59DU';
+}
+if (typeof window.supabaseClient === 'undefined') {
+    window.supabaseClient = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_KEY);
+}
+var supabaseDB = window.supabaseClient;
 
 let allAttendance = [];
 let companies = [];
@@ -50,11 +55,9 @@ async function init() {
         return; // Will redirect to login
     }
 
-    await Promise.all([
-        loadCompanies(),
-        loadStudents(),
-        loadAttendance()
-    ]);
+    await loadCompanies();
+    await loadStudents();
+    await loadAttendance();
     setupRealtimeSubscription();
     setupFilters();
     updateDashboard();
@@ -68,6 +71,7 @@ async function loadCompanies() {
 
     if (error) {
         console.error('❌ Error loading companies:', error);
+        showAdminError('Fout bij laden bedrijven: ' + error.message);
         return;
     }
 
@@ -88,6 +92,7 @@ async function loadStudents() {
 
     if (error) {
         console.error('❌ Error loading students:', error);
+        showAdminError('Fout bij laden studenten: ' + error.message);
         return;
     }
 
@@ -246,5 +251,23 @@ function renderTable(attendance) {
     });
 }
 
-// Initialize on page load
-init();
+// Visual Error Helper
+function showAdminError(message) {
+    const errorContainer = document.getElementById('admin-error-container');
+    if (!errorContainer) {
+        const div = document.createElement('div');
+        div.id = 'admin-error-container';
+        div.className = 'bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-6';
+        div.role = 'alert';
+        div.innerHTML = `<p class="font-bold">Database Fout</p><p>${message}</p>`;
+        const main = document.querySelector('main');
+        if (main) main.prepend(div);
+    } else {
+        errorContainer.insertAdjacentHTML('beforeend', `<p>${message}</p>`);
+    }
+}
+
+// Initialize on page load with a slight delay to ensure Auth is ready
+window.addEventListener('load', () => {
+    setTimeout(init, 500);
+});

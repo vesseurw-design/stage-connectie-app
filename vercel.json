@@ -4,6 +4,7 @@
         "fra1"
     ],
     "public": true,
+    "outputDirectory": "public",
     "headers": [
         {
             "source": "/(.*)",
@@ -19,38 +20,14 @@
                 {
                     "key": "Expires",
                     "value": "0"
-                },
-                {
-                    "key": "X-Content-Type-Options",
-                    "value": "nosniff"
-                },
-                {
-                    "key": "X-Frame-Options",
-                    "value": "DENY"
-                },
-                {
-                    "key": "X-XSS-Protection",
-                    "value": "1; mode=block"
-                },
-                {
-                    "key": "Referrer-Policy",
-                    "value": "strict-origin-when-cross-origin"
-                },
-                {
-                    "key": "Permissions-Policy",
-                    "value": "geolocation=(), microphone=(), camera=()"
                 }
             ]
         }
     ],
     "rewrites": [
         {
-            "source": "/",
-            "destination": "/public/index.html"
-        },
-        {
             "source": "/(.*)",
-            "destination": "/public/$1"
+            "destination": "/$1"
         }
     ]
 }

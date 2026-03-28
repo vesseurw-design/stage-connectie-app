@@ -1,7 +1,19 @@
 // Initialize Supabase
-const SUPABASE_URL = 'https://rnjsfhphncdexsqelkxv.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJuanNmaHBobmNkZXhzcWVsa3h2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg4MzYyOTksImV4cCI6MjA4NDQxMjI5OX0.a_Rs8YfssIjsz678O--WBGus5GssvsxD1yZL4D_QxcY';
-const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+/**
+ * Supervisor Portal Logic
+ * Versie 4.3 - Fixed Redeclaration Syntax Error
+ */
+
+// Global configuration with redeclaration safeguard
+if (typeof SUPABASE_URL === 'undefined') {
+    window.SUPABASE_URL = 'https://vdeipnqyesduiohxvuvu.supabase.co';
+}
+if (typeof SUPABASE_KEY === 'undefined') {
+    window.SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZkZWlwbnF5ZXNkdWlvaHh2dXZ1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc1MjY5NTEsImV4cCI6MjA4MzEwMjk1MX0.IknEZ-GQvspcppJxLR00ayBDq1DbL0HiUKy9RDb59DU';
+}
+if (typeof supabaseClient === 'undefined') {
+    window.supabaseClient = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_KEY);
+}
 
 let students = [];
 let companies = [];
@@ -13,11 +25,19 @@ let notificationsEnabled = false;
 
 // Initialize
 async function init() {
-    // Set supervisor name
+    console.log('🚀 Final Force Version 4.3: Initializing...');
+
+    // Set supervisor name and check ID
     const supervisorName = localStorage.getItem('supervisor_name');
-    if (supervisorName) {
-        document.getElementById('supervisor-name').textContent = `Hallo, ${supervisorName}`;
+    const supervisorId = localStorage.getItem('supervisor_id');
+
+    if (!supervisorName || !supervisorId) {
+        console.error('❌ Missing session data, redirecting...');
+        window.location.href = 'supervisor-login.html';
+        return;
     }
+
+    document.getElementById('supervisor-name').textContent = `Hallo, ${supervisorName}`;
 
     // Set today's date as default filter
     const today = new Date().toISOString().split('T')[0];
@@ -26,21 +46,21 @@ async function init() {
     // Request notification permission
     requestNotificationPermission();
 
-    // Load data
+    console.log('🚀 Final Force Version 4.1: Initializing...');
+
+    // Load initial data
     await refreshData();
-    lastAttendanceCount = allAttendance.length; // Set initial count
+    lastAttendanceCount = allAttendance.length;
 
-    // Setup real-time subscription
+    // Setup real-time and UI
     setupRealtimeSubscription();
-
-    // Setup filters
     setupFilters();
 
-    // Auto-refresh every 10 seconds to ensure data is always fresh
+    // Auto-refresh every 30 seconds (slower for stability)
     refreshInterval = setInterval(async () => {
         await loadAttendance();
         renderDashboard();
-    }, 10000);
+    }, 30000);
 }
 
 // In-app notifications don't need permission
@@ -54,16 +74,16 @@ function showNotification(title, body) {
     const banner = document.getElementById('notification-banner');
     const titleEl = document.getElementById('notification-title');
     const messageEl = document.getElementById('notification-message');
-    
+
     titleEl.textContent = title;
     messageEl.textContent = body;
-    
+
     // Show banner
     banner.classList.remove('hidden');
-    
+
     // Play sound
     playNotificationSound();
-    
+
     // Auto-hide after 5 seconds
     setTimeout(() => {
         banner.classList.add('hidden');
@@ -100,11 +120,12 @@ function playNotificationSound() {
 }
 
 async function refreshData() {
-    await Promise.all([
-        loadCompanies(),
-        loadStudents(),
-        loadAttendance()
-    ]);
+    // We load students first because attendance depends on the student list
+    // Load sequentially to avoid race conditions
+    await loadCompanies();
+    await loadStudents();
+    await loadAttendance();
+
     renderDashboard();
 }
 
@@ -122,13 +143,13 @@ async function loadStudents() {
     let error = null;
 
     // Try capitalized first
-    const { data: dataCap, error: errorCap } = await supabaseClient
+    let { data: dataCap, error: errorCap } = await supabaseClient
         .from('Students')
         .select('*')
         .eq('supervisor_id', supervisorId);
 
     if (errorCap) {
-        console.error('Error loading students (capitalized):', errorCap);
+        console.warn('Error loading Students (capitalized), trying lowercase...');
         // Try lowercase fallback
         const { data: dataLow, error: errorLow } = await supabaseClient
             .from('students')
@@ -136,7 +157,7 @@ async function loadStudents() {
             .eq('supervisor_id', supervisorId);
 
         if (errorLow) {
-            console.error('Error loading students (lowercase):', errorLow);
+            console.error('Final student load error:', errorLow);
             error = errorLow;
         } else {
             data = dataLow;
@@ -147,6 +168,7 @@ async function loadStudents() {
 
     if (error) {
         console.error('Final error loading students:', error);
+        allAttendance = []; // Ensure we don't try to load attendance for 0 students
         return;
     }
 
@@ -154,41 +176,45 @@ async function loadStudents() {
     console.log('✅ Found students:', students.length, students);
 }
 
-async function loadAttendance() {
-    const studentNames = students.map(s => s.name);
-    console.log('🔍 Loading attendance for students:', studentNames);
+async function loadAttendance(retryCount = 0) {
+    // IMPORTANT: student_id column is a UUID type. 
+    // Passing names here will cause the entire query to fail with a syntax error.
+    const studentIds = students.map(s => s.id).filter(id => {
+        // Simple UUID regex check
+        return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+    });
 
-    if (studentNames.length === 0) {
-        console.warn('⚠️ No students found, skipping attendance load');
+    console.log('🔍 Querying Attendance for UUIDs:', studentIds);
+
+    if (studentIds.length === 0) {
         allAttendance = [];
         return;
     }
 
-    // DEBUG: Check what's actually in the Attendance table
-    const { data: allData } = await supabaseClient
-        .from('Attendance')
-        .select('*')
-        .limit(10);
-    console.log('📊 Sample of ALL attendance records in database:', allData);
+    try {
+        let { data, error } = await supabaseClient
+            .from('Attendance')
+            .select('*')
+            .in('student_id', studentIds)
+            .order('date', { ascending: false });
 
-    const { data, error } = await supabaseClient
-        .from('Attendance')
-        .select('*')
-        .in('student_id', studentNames)
-        .order('date', { ascending: false });
+        if (error) throw error;
 
-    if (error) {
-        console.error('❌ Error loading attendance:', error);
-        return;
-    }
+        allAttendance = data || [];
 
-    allAttendance = data || [];
-    console.log('✅ Found attendance records:', allAttendance.length, allAttendance);
+        // If we found truly nothing and it's the first try, wait a bit
+        if (allAttendance.length === 0 && retryCount < 2) {
+            console.log(`⌛ No attendance found yet (attempt ${retryCount + 1}), waiting for DB...`);
+            return new Promise(resolve => {
+                setTimeout(() => resolve(loadAttendance(retryCount + 1)), 1500);
+            });
+        }
 
-    if (allAttendance.length === 0 && allData && allData.length > 0) {
-        console.warn('⚠️ MISMATCH: Attendance records exist but student_id does not match!');
-        console.warn('Expected student names:', studentNames);
-        console.warn('Actual student_ids in database:', [...new Set(allData.map(a => a.student_id))]);
+        console.log(`✅ Loaded ${allAttendance.length} records`);
+    } catch (err) {
+        console.error('Attendance load error, trying fallback:', err);
+        const { data: dataLow } = await supabaseClient.from('attendance').select('*').in('student_id', studentIds);
+        if (dataLow) allAttendance = dataLow;
     }
 }
 
@@ -226,7 +252,7 @@ function setupRealtimeSubscription() {
             loadAttendance().then(renderDashboard);
         })
         .subscribe();
-    
+
     console.log('✅ Realtime subscription active');
 }
 
@@ -300,7 +326,7 @@ function renderStudentCards(attendance) {
     if (students.length === 0) {
         container.innerHTML = `
             <div class="bg-white p-6 rounded-xl text-center">
-                <p class="text-gray-500">Geen studenten toegewezen</p>
+                <p class="text-gray-500 italic">Gegevens ophalen...</p>
             </div>
         `;
         return;
@@ -308,9 +334,13 @@ function renderStudentCards(attendance) {
 
     container.innerHTML = students.map(student => {
         const company = companies.find(c => c.id === student.company_id);
-        const todayAttendance = allAttendance.find(a =>
-            a.student_id === student.name && a.date === filterDate
-        );
+        const todayAttendance = allAttendance.find(a => {
+            if (!a.student_id) return false;
+            const dbId = String(a.student_id).trim().toLowerCase();
+            const sId = String(student.id || '').trim().toLowerCase();
+            const sName = String(student.name || '').trim().toLowerCase();
+            return (dbId === sId || dbId === sName) && a.date === filterDate;
+        });
 
         let statusBadge = '';
         if (todayAttendance) {
@@ -327,14 +357,24 @@ function renderStudentCards(attendance) {
                 late: `Te laat (${todayAttendance.minutes_late}m)`
             };
             statusBadge = `
-                <span class="px-2 py-1 text-xs font-semibold rounded-full ${statusColors[todayAttendance.status]}">
-                    ${statusLabels[todayAttendance.status]}
-                </span>
+                <div class="flex flex-col items-end gap-1">
+                    <span class="px-2 py-1 text-xs font-semibold rounded-full ${statusColors[todayAttendance.status]}">
+                        ${statusLabels[todayAttendance.status]}
+                    </span>
+                    ${todayAttendance.student_status || todayAttendance.student_hours > 0 ? `
+                        <div class="flex items-center gap-1 bg-purple-50 text-purple-700 text-[9px] px-1.5 py-0.5 rounded border border-purple-100" title="Eigen invoer student">
+                            <span>🎓 ${todayAttendance.student_status ? todayAttendance.student_status.charAt(0).toUpperCase() + todayAttendance.student_status.slice(1) : ''}</span>
+                            ${todayAttendance.student_hours > 0 ? `<span class="font-bold border-l border-purple-200 pl-1 ml-1">${todayAttendance.student_hours}u</span>` : ''}
+                        </div>
+                    ` : ''}
+                </div>
             `;
         } else {
+            // Show loading if allAttendance is still completely empty after first start
+            const isLoading = allAttendance.length === 0;
             statusBadge = `
-                <span class="px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-600">
-                    Geen data
+                <span class="px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-500 italic">
+                    ${isLoading ? 'Laden...' : 'Niet ingevuld'}
                 </span>
             `;
         }
@@ -349,6 +389,9 @@ function renderStudentCards(attendance) {
                     ${statusBadge}
                 </div>
                 <div class="text-sm text-gray-600">
+                    <p class="mb-1 text-xs px-2 py-0.5 bg-gray-100 rounded inline-block">
+                        ${student.class || '-'} • ${student.school_year || '-'}
+                    </p>
                     <p class="mb-1">📍 ${company?.company_name || 'Geen bedrijf'}</p>
                     <p>📅 ${(student.scheduled_days || []).join(', ') || 'Geen dagen'}</p>
                 </div>
@@ -366,8 +409,14 @@ function openStudentDetail(student) {
     document.getElementById('modal-company').textContent = company?.company_name || '-';
     document.getElementById('modal-scheduled-days').textContent = (student.scheduled_days || []).join(', ') || '-';
 
-    // Get all attendance for this student
-    const studentAttendance = allAttendance.filter(a => a.student_id === student.name);
+    // Support for V2 modal fields
+    const classEl = document.getElementById('modal-student-class');
+    const yearEl = document.getElementById('modal-school-year');
+    if (classEl) classEl.textContent = student.class || '-';
+    if (yearEl) yearEl.textContent = student.school_year || '-';
+
+    // Get all attendance for this student (support both ID and name fallback)
+    const studentAttendance = allAttendance.filter(a => a.student_id === student.id || a.student_id === student.name);
 
     // Populate month filter
     populateMonthFilter(studentAttendance);
@@ -408,7 +457,7 @@ function filterHistoryByMonth() {
     if (!currentStudent) return;
 
     const selectedMonth = document.getElementById('history-month-filter').value;
-    const studentAttendance = allAttendance.filter(a => a.student_id === currentStudent.name);
+    const studentAttendance = allAttendance.filter(a => a.student_id === currentStudent.id || a.student_id === currentStudent.name);
 
     renderAttendanceHistory(studentAttendance, selectedMonth);
 }
@@ -456,11 +505,24 @@ function renderAttendanceHistory(attendance, monthFilter) {
             });
 
             return `
-                <div class="flex justify-between items-center p-2 bg-gray-50 rounded-lg">
-                    <span class="text-sm text-gray-700">${formattedDate}</span>
-                    <span class="px-2 py-1 text-xs font-semibold rounded-full ${statusColors[a.status]}">
-                        ${statusLabels[a.status]}
-                    </span>
+                <div class="p-3 bg-gray-50 rounded-xl space-y-2 border border-blue-50">
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm font-bold text-gray-800">${formattedDate}</span>
+                        <span class="px-2 py-1 text-[10px] font-bold uppercase rounded-full ${statusColors[a.status]}">
+                            ${statusLabels[a.status]}
+                        </span>
+                    </div>
+                    
+                    <div class="flex flex-wrap gap-2 text-[11px]">
+                        ${a.hours_worked ? `<div class="bg-blue-100 text-blue-800 px-2 py-0.5 rounded-md">🏢 Werkgever: ${a.hours_worked}u</div>` : ''}
+                        
+                        ${a.student_status || a.student_hours > 0 ? `
+                            <div class="bg-purple-100 text-purple-800 px-2 py-0.5 rounded-md flex items-center gap-1" title="Invoer student">
+                                <span>🎓 Student: ${a.student_status || 'ingevuld'}</span>
+                                ${a.student_hours > 0 ? `<span class="font-black border-l border-purple-300 pl-1 ml-1">${a.student_hours}u</span>` : ''}
+                            </div>
+                        ` : ''}
+                    </div>
                 </div>
             `;
         }).join('');
