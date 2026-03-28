@@ -1,5 +1,5 @@
-const SUPABASE_URL = 'https://rnjsfhphncdexsqelkxv.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJuanNmaHBobmNkZXhzcWVsa3h2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg4MzYyOTksImV4cCI6MjA4NDQxMjI5OX0.a_Rs8YfssIjsz678O--WBGus5GssvsxD1yZL4D_QxcY';
+const SUPABASE_URL = 'https://vdeipnqyesduiohxvuvu.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZkZWlwbnF5ZXNkdWlvaHh2dXZ1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc1MjY5NTEsImV4cCI6MjA4MzEwMjk1MX0.IknEZ-GQvspcppJxLR00ayBDq1DbL0HiUKy9RDb59DU';
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 let currentWeekOffset = 0;
@@ -275,22 +275,22 @@ function renderGrid(existingAttendance) {
                 const record = existingAttendance.find(a => a.student_id === student.id && a.date === dateStr);
                 const status = record ? record.status : '';
                 const minutesLate = record ? record.minutes_late : 0;
+                const studentStatus = record ? record.student_status : '';
+                const studentHours = record ? record.student_hours : 0;
 
                 // Strong permanent border for empty cells
                 cell.className = 'week-cell bg-white rounded-xl shadow-sm border-2 transition-all duration-150 transform';
 
-                // CRITICAL: Add data attributes so saveWeek can find these cells
                 cell.dataset.studentId = student.id;
                 cell.dataset.date = dateStr;
 
+                // Employer can ALWAYS click/edit their own status
                 cell.onclick = () => openActionSheet(student.id, dateStr, cell);
-
-                // Content will set the border colors
-                updateCellContent(cell, status, minutesLate);
-
-                // Hover effect: just scale and blue border for all interactable cells
                 cell.classList.add('hover:border-blue-400');
                 cell.classList.add('hover:-translate-y-0.5');
+
+                // Content will set the border colors
+                updateCellContent(cell, status, minutesLate, studentStatus, studentHours);
             }
 
             row.appendChild(cell);
@@ -300,16 +300,27 @@ function renderGrid(existingAttendance) {
     });
 }
 
-function updateCellContent(cell, status, minutesLate) {
+function updateCellContent(cell, status, minutesLate, studentStatus = '', studentHours = 0) {
     const icons = { 'present': '✅', 'absent': '❌', 'sick': '🤒', 'late': '⏱️', '': '' };
+    const studentIcons = { 'present': '🎓', 'absent': '❓', 'late': '⏳', '': '' };
 
-    // Explicit placeholder '+' if empty
+    // Employer Status (Big icon)
     const content = status ? icons[status] : '<span class="text-gray-300 text-3xl font-black">+</span>';
-
     cell.innerHTML = `<div class="status-badge ${status || 'empty'}">${content}</div>`;
 
     if (status === 'late' && minutesLate > 0) {
         cell.innerHTML += `<div class="late-minutes">${minutesLate}m</div>`;
+    }
+
+    // Student Input (Small badge at the bottom)
+    if (studentStatus || studentHours > 0) {
+        const studentIcon = studentIcons[studentStatus] || '🎓';
+        cell.innerHTML += `
+            <div class="absolute bottom-1 right-1 flex items-center gap-0.5 bg-purple-100 text-purple-700 text-[9px] font-black px-1 rounded shadow-sm" title="Eigen invoer student: ${studentStatus}">
+                <span>${studentIcon}</span>
+                ${studentHours > 0 ? `<span>${studentHours}u</span>` : ''}
+            </div>
+        `;
     }
 
     // Reset specific borders
@@ -357,33 +368,56 @@ function setStatus(status) {
     closeActions();
 }
 
+let isCustomLate = false;
+
 function showLateInput() {
     document.getElementById('late-input-container').classList.remove('hidden');
-    document.getElementById('minute-slider').value = 15;
-    updateMinuteDisplay();
+    document.getElementById('minute-input').value = 15;
+    toggleCustomLate(false);
 }
 
 function hideLateInput() {
     document.getElementById('late-input-container').classList.add('hidden');
 }
 
-function updateMinuteDisplay() {
-    const val = document.getElementById('minute-slider').value;
-    document.getElementById('minute-display').textContent = val;
+function toggleCustomLate(show) {
+    isCustomLate = show;
+    if (show) {
+        document.getElementById('regular-late-input').classList.add('hidden');
+        document.getElementById('custom-late-input').classList.remove('hidden');
+        document.getElementById('custom-minute-input').value = 121;
+        document.getElementById('custom-minute-input').focus();
+    } else {
+        document.getElementById('custom-late-input').classList.add('hidden');
+        document.getElementById('regular-late-input').classList.remove('hidden');
+        document.getElementById('minute-input').value = 15;
+        document.getElementById('minute-input').focus();
+    }
 }
 
-function adjustMinutes(delta) {
-    const slider = document.getElementById('minute-slider');
-    let val = parseInt(slider.value) + delta;
-    if (val < 5) val = 5;
-    if (val > 120) val = 120;
-    slider.value = val;
-    updateMinuteDisplay();
+function validateMinuteInput() {
+    const input = document.getElementById('minute-input');
+    let val = parseInt(input.value);
+    if (val > 120) {
+        input.value = 120;
+    } else if (val < 1) {
+        input.value = 1;
+    }
 }
 
 function confirmLate() {
     if (!activeCell) return;
-    const minutes = document.getElementById('minute-slider').value;
+    
+    let minutes;
+    if (isCustomLate) {
+        minutes = parseInt(document.getElementById('custom-minute-input').value);
+        if (isNaN(minutes) || minutes < 121) minutes = 121;
+    } else {
+        minutes = parseInt(document.getElementById('minute-input').value);
+        if (isNaN(minutes) || minutes < 1) minutes = 1;
+        if (minutes > 120) minutes = 120;
+    }
+    
     updateCellContent(activeCell.element, 'late', minutes);
     closeActions();
 }
