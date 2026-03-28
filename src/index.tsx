@@ -371,6 +371,7 @@ const EmployerPortal: React.FC<{ onLogout: () => void, loggedInEmployerId: strin
   const [isLateModalOpen, setIsLateModalOpen] = useState(false);
   const [lateMinutesInput, setLateMinutesInput] = useState('15');
   const [dateForLateEntry, setDateForLateEntry] = useState<Date | null>(null);
+  const [showCustomLate, setShowCustomLate] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
 
   const myInternships = useMemo(() => getInternshipByEmployer(selectedEmployerId), [selectedEmployerId, getInternshipByEmployer]);
@@ -444,6 +445,7 @@ const EmployerPortal: React.FC<{ onLogout: () => void, loggedInEmployerId: strin
     if (status === AttendanceStatus.LATE) {
       setDateForLateEntry(date);
       setLateMinutesInput('15');
+      setShowCustomLate(false);
       setIsLateModalOpen(true);
       return; 
     }
@@ -675,10 +677,58 @@ const EmployerPortal: React.FC<{ onLogout: () => void, loggedInEmployerId: strin
               <p className="text-sm text-slate-500">Hoeveel minuten is de stagiair te laat?</p>
             </div>
             <form onSubmit={confirmLateAttendance}>
-              <div className="flex items-center justify-center mb-6">
-                <input type="number" min="1" max="480" autoFocus required value={lateMinutesInput} onChange={(e) => setLateMinutesInput(e.target.value)} className="text-center text-3xl font-bold w-24 border-b-2 border-[#009FE3] focus:outline-none text-slate-800 pb-1" />
-                <span className="text-slate-400 ml-2 font-medium">minuten</span>
-              </div>
+              {/* Normaal invoerveld (1-120 min) */}
+              {!showCustomLate && (
+                <>
+                  <div className="flex items-center justify-center mb-4">
+                    <input 
+                      type="number" 
+                      min="1" 
+                      max="120"
+                      autoFocus
+                      required
+                      value={lateMinutesInput} 
+                      onChange={(e) => setLateMinutesInput(e.target.value)}
+                      className="text-center text-3xl font-bold w-24 border-b-2 border-[#009FE3] focus:outline-none text-slate-800 pb-1"
+                    />
+                    <span className="text-slate-400 ml-2 font-medium">minuten</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => { setShowCustomLate(true); setLateMinutesInput('121'); }}
+                    className="w-full mb-4 py-2 rounded-xl text-sm font-bold border bg-orange-50 text-orange-600 border-orange-200 hover:bg-orange-100 transition"
+                  >
+                    Langer dan 120 min?
+                  </button>
+                </>
+              )}
+
+              {/* Vrij invoerveld voor >120 min */}
+              {showCustomLate && (
+                <div className="mb-4">
+                  <button
+                    type="button"
+                    onClick={() => { setShowCustomLate(false); setLateMinutesInput('15'); }}
+                    className="text-xs text-slate-400 hover:text-slate-600 underline mb-3 block"
+                  >
+                    ← Terug
+                  </button>
+                  <p className="text-sm text-orange-600 font-medium mb-2">Langer dan 120 minuten – vul exact aantal in:</p>
+                  <div className="flex items-center justify-center">
+                    <input 
+                      type="number" 
+                      min="121" 
+                      autoFocus
+                      required
+                      value={lateMinutesInput} 
+                      onChange={(e) => setLateMinutesInput(e.target.value)}
+                      className="text-center text-3xl font-bold w-28 border-b-2 border-orange-400 focus:outline-none text-slate-800 pb-1"
+                    />
+                    <span className="text-slate-400 ml-2 font-medium">minuten</span>
+                  </div>
+                </div>
+              )}
+
               <div className="grid grid-cols-2 gap-3">
                 <button type="button" onClick={() => setIsLateModalOpen(false)} className="w-full py-3 rounded-xl border border-slate-200 text-slate-600 font-medium hover:bg-slate-50 transition">Annuleren</button>
                 <button type="submit" className="w-full py-3 rounded-xl bg-[#009FE3] text-white font-bold hover:bg-blue-600 transition shadow-lg shadow-blue-200">Opslaan</button>
