@@ -52,13 +52,20 @@ async function init() {
             .single();
 
         if (attendance) {
-            selectStatus(attendance.student_status);
+            document.getElementById('no-stage-block').classList.add('hidden');
+            document.getElementById('reporting-block').classList.remove('hidden');
+            selectStatus(attendance.student_status, false);
             document.getElementById('hours-worked').value = attendance.student_hours || 0;
         } else {
             const dayNames = ['Zo', 'Ma', 'Di', 'Wo', 'Do', 'Vr', 'Za'];
             const todayName = dayNames[new Date().getDay()];
             if (currentStudent.scheduled_days && currentStudent.scheduled_days.includes(todayName)) {
+                document.getElementById('no-stage-block').classList.add('hidden');
+                document.getElementById('reporting-block').classList.remove('hidden');
                 document.getElementById('hours-worked').value = 8;
+            } else {
+                document.getElementById('no-stage-block').classList.remove('hidden');
+                document.getElementById('reporting-block').classList.add('hidden');
             }
         }
 
@@ -77,7 +84,12 @@ function renderHeader() {
     document.getElementById('student-info').textContent = `${company} • ${currentStudent.student_number || ''}`;
 }
 
-function selectStatus(status) {
+function showReportingBlock() {
+    document.getElementById('no-stage-block').classList.add('hidden');
+    document.getElementById('reporting-block').classList.remove('hidden');
+}
+
+function selectStatus(status, showModal = true) {
     currentStatus = status;
     // Reset buttons
     document.querySelectorAll('.status-btn').forEach(btn => {
@@ -94,6 +106,93 @@ function selectStatus(status) {
         else if (status === 'sick') btn.classList.add('border-orange-500', 'bg-orange-50');
         else if (status === 'late') btn.classList.add('border-yellow-500', 'bg-yellow-50');
     }
+
+    // Hide hours when absent, show for other statuses
+    const hoursContainer = document.getElementById('hours-container');
+    if (status === 'absent') {
+        hoursContainer.classList.add('hidden');
+        document.getElementById('hours-worked').value = 0;
+    } else {
+        hoursContainer.classList.remove('hidden');
+    }
+
+    if (status === 'absent' && showModal) {
+        showAbsentModal();
+    }
+}
+
+function showAbsentModal() {
+    const modal = document.getElementById('absent-modal');
+    if (!modal) return;
+    const content = document.getElementById('absent-modal-content');
+
+    // Reset checkboxes and button state
+    ['check-1', 'check-2', 'check-3'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.checked = false;
+    });
+    ['label-check-1', 'label-check-2', 'label-check-3'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.classList.remove('border-red-400', 'bg-red-50', 'border-green-400', 'bg-green-50');
+    });
+    const confirmBtn = document.getElementById('confirm-absent-btn');
+    if (confirmBtn) {
+        confirmBtn.disabled = true;
+        confirmBtn.className = 'w-full bg-red-300 text-white font-bold py-3 px-4 rounded-xl transition shadow-md cursor-not-allowed opacity-60';
+    }
+
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    void modal.offsetWidth; // trigger reflow
+    modal.classList.remove('opacity-0');
+    content.classList.remove('scale-95');
+    content.classList.add('scale-100');
+}
+
+function updateModalButton() {
+    const allChecked = ['check-1', 'check-2', 'check-3'].every(id => {
+        const el = document.getElementById(id);
+        return el && el.checked;
+    });
+
+    // Update label styling per checkbox
+    ['check-1', 'check-2', 'check-3'].forEach(id => {
+        const checkbox = document.getElementById(id);
+        const label = document.getElementById('label-' + id);
+        if (label && checkbox) {
+            if (checkbox.checked) {
+                label.classList.remove('border-gray-200');
+                label.classList.add('border-green-400', 'bg-green-50');
+            } else {
+                label.classList.remove('border-green-400', 'bg-green-50');
+                label.classList.add('border-gray-200');
+            }
+        }
+    });
+
+    const confirmBtn = document.getElementById('confirm-absent-btn');
+    if (confirmBtn) {
+        if (allChecked) {
+            confirmBtn.disabled = false;
+            confirmBtn.className = 'w-full bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-4 rounded-xl transition shadow-md hover:shadow-lg cursor-pointer';
+        } else {
+            confirmBtn.disabled = true;
+            confirmBtn.className = 'w-full bg-red-300 text-white font-bold py-3 px-4 rounded-xl transition shadow-md cursor-not-allowed opacity-60';
+        }
+    }
+}
+
+function closeAbsentModal() {
+    const modal = document.getElementById('absent-modal');
+    if (!modal) return;
+    const content = document.getElementById('absent-modal-content');
+    modal.classList.add('opacity-0');
+    content.classList.remove('scale-100');
+    content.classList.add('scale-95');
+    setTimeout(() => {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+    }, 300);
 }
 
 async function saveReporting() {
