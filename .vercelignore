@@ -1,0 +1,19 @@
+node_modules
+node_modules 2
+.git
+build
+backup_build
+.next
+.DS_Store
+*.md
+*.sql
+Bash/
+**/.DS_Store
+*.csv
+*.psd
+*.png
+!app-icon.png
+!stageconnectie-logo.png
+!stageconnectie-logo-white.png
+!test-logo.png
+!icon-v3.png

@@ -57,13 +57,33 @@ async function init() {
             selectStatus(attendance.student_status, false);
             document.getElementById('hours-worked').value = attendance.student_hours || 0;
         } else {
+            // Check if today is a holiday
+            const { data: holidays } = await supabaseClient
+                .from('Vakanties')
+                .select('*')
+                .lte('start_date', today)
+                .gte('end_date', today);
+
+            const isHoliday = holidays && holidays.length > 0;
+            const currentHoliday = isHoliday ? holidays[0] : null;
+
             const dayNames = ['Zo', 'Ma', 'Di', 'Wo', 'Do', 'Vr', 'Za'];
             const todayName = dayNames[new Date().getDay()];
-            if (currentStudent.scheduled_days && currentStudent.scheduled_days.includes(todayName)) {
+
+            if (isHoliday) {
+                document.getElementById('no-stage-icon').textContent = '🏖️';
+                document.getElementById('no-stage-title').textContent = `Het is ${currentHoliday.name || 'vakantie'}!`;
+                document.getElementById('no-stage-desc').textContent = 'Geniet van je vrije tijd! Loop je in de vakantie toch stage?';
+                document.getElementById('no-stage-block').classList.remove('hidden');
+                document.getElementById('reporting-block').classList.add('hidden');
+            } else if (currentStudent.scheduled_days && currentStudent.scheduled_days.includes(todayName)) {
                 document.getElementById('no-stage-block').classList.add('hidden');
                 document.getElementById('reporting-block').classList.remove('hidden');
                 document.getElementById('hours-worked').value = 8;
             } else {
+                document.getElementById('no-stage-icon').textContent = '☕';
+                document.getElementById('no-stage-title').textContent = 'Je hebt vandaag geen stage gepland staan.';
+                document.getElementById('no-stage-desc').textContent = 'Geniet van je dag! Loop je per uitzondering toch stage vandaag?';
                 document.getElementById('no-stage-block').classList.remove('hidden');
                 document.getElementById('reporting-block').classList.add('hidden');
             }

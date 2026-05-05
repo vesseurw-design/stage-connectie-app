@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="nl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vakanties Beheer - Stage Connectie</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+    <script>
+        if (!localStorage.getItem('stageconnect_admin_session')) { 
+            window.location.href = 'admin-login.html'; 
+        }
+    </script>
+</head>
+
+<body class="bg-gray-50">
+    <header class="bg-white shadow-sm border-b border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
+            <div>
+                <h1 class="text-2xl font-bold text-gray-800">Vakanties Beheer</h1>
+                <p class="text-sm text-gray-600">StageConnectie Admin Portal</p>
+            </div>
+            <div class="flex gap-4 flex-wrap">
+                <a href="admin.html" class="px-4 py-2 bg-gray-50 text-gray-600 hover:bg-gray-100 rounded-lg transition font-medium">Dashboard</a>
+                <a href="admin-students-v2.html" class="px-4 py-2 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-lg transition font-medium">Studenten</a>
+                <a href="admin-vakanties.html" class="px-4 py-2 bg-pink-500 text-white rounded-lg shadow transition font-medium">🏖️ Vakanties</a>
+                <button onclick="adminLogout()" class="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition">Uitloggen</button>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-4xl mx-auto px-4 py-8">
+        
+        <!-- Add New Holiday -->
+        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 mb-8">
+            <h2 class="text-lg font-bold text-gray-800 mb-4">Nieuwe Vakantie Toevoegen</h2>
+            <form id="add-holiday-form" class="flex flex-col md:flex-row gap-4 items-end">
+                <div class="flex-1">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Naam (bijv. Herfstvakantie)</label>
+                    <input type="text" id="h-name" required class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-pink-500 outline-none">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Startdatum</label>
+                    <input type="date" id="h-start" required class="px-4 py-2 border rounded-lg focus:ring-2 focus:ring-pink-500 outline-none">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Einddatum</label>
+                    <input type="date" id="h-end" required class="px-4 py-2 border rounded-lg focus:ring-2 focus:ring-pink-500 outline-none">
+                </div>
+                <button type="submit" class="px-6 py-2 bg-pink-600 hover:bg-pink-700 text-white font-bold rounded-lg transition shadow-md h-[42px]">
+                    Toevoegen
+                </button>
+            </form>
+            <p id="form-msg" class="text-sm mt-3 hidden"></p>
+        </div>
+
+        <!-- List Holidays -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+            <div class="p-6 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
+                <h2 class="text-lg font-bold text-gray-800">Geplande Vakanties</h2>
+                <button onclick="loadHolidays()" class="text-sm text-pink-600 hover:underline">Verversen</button>
+            </div>
+            <div class="p-0">
+                <table class="w-full text-left">
+                    <thead class="bg-gray-50 text-gray-500 text-sm border-b">
+                        <tr>
+                            <th class="px-6 py-3 font-medium">Naam</th>
+                            <th class="px-6 py-3 font-medium">Startdatum</th>
+                            <th class="px-6 py-3 font-medium">Einddatum</th>
+                            <th class="px-6 py-3 font-medium text-right">Actie</th>
+                        </tr>
+                    </thead>
+                    <tbody id="holidays-list" class="divide-y divide-gray-100">
+                        <tr><td colspan="4" class="p-6 text-center text-gray-500">Laden...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="./static/js/admin-auth.js?v=5.0"></script>
+    <script>
+        const supClient = window.supabase.createClient(
+            'https://vdeipnqyesduiohxvuvu.supabase.co',
+            'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZkZWlwbnF5ZXNkdWlvaHh2dXZ1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc1MjY5NTEsImV4cCI6MjA4MzEwMjk1MX0.IknEZ-GQvspcppJxLR00ayBDq1DbL0HiUKy9RDb59DU'
+        );
+
+        async function loadHolidays() {
+            const list = document.getElementById('holidays-list');
+            list.innerHTML = '<tr><td colspan="4" class="p-6 text-center text-gray-500">Laden...</td></tr>';
+            
+            const { data, error } = await supClient
+                .from('Vakanties')
+                .select('*')
+                .order('start_date', { ascending: true });
+
+            if (error) {
+                list.innerHTML = `<tr><td colspan="4" class="p-6 text-center text-red-500">Fout: ${error.message}</td></tr>`;
+                return;
+            }
+
+            if (!data || data.length === 0) {
+                list.innerHTML = '<tr><td colspan="4" class="p-6 text-center text-gray-500 italic">Geen vakanties gepland.</td></tr>';
+                return;
+            }
+
+            list.innerHTML = data.map(h => `
+                <tr class="hover:bg-gray-50 transition">
+                    <td class="px-6 py-4 font-medium text-gray-900">${h.name}</td>
+                    <td class="px-6 py-4 text-gray-600">${new Date(h.start_date).toLocaleDateString('nl-NL')}</td>
+                    <td class="px-6 py-4 text-gray-600">${new Date(h.end_date).toLocaleDateString('nl-NL')}</td>
+                    <td class="px-6 py-4 text-right">
+                        <button onclick="deleteHoliday('${h.id}')" class="text-red-500 hover:text-red-700 text-sm font-medium transition">
+                            Verwijderen
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        document.getElementById('add-holiday-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const msg = document.getElementById('form-msg');
+            msg.className = 'text-sm mt-3 text-gray-500';
+            msg.textContent = 'Opslaan...';
+            msg.classList.remove('hidden');
+
+            const name = document.getElementById('h-name').value;
+            const start = document.getElementById('h-start').value;
+            const end = document.getElementById('h-end').value;
+
+            if (start > end) {
+                msg.className = 'text-sm mt-3 text-red-500';
+                msg.textContent = 'Startdatum kan niet na de einddatum liggen.';
+                return;
+            }
+
+            const { error } = await supClient.from('Vakanties').insert([{
+                name: name,
+                start_date: start,
+                end_date: end
+            }]);
+
+            if (error) {
+                console.error(error);
+                msg.className = 'text-sm mt-3 text-red-500';
+                // Provide a specific message if it's an RLS error
+                if (error.code === '42501') {
+                    msg.innerHTML = 'Geen permissie om vakanties toe te voegen (RLS Policy blockt dit). We moeten de database permissies openzetten.';
+                } else {
+                    msg.textContent = `Fout bij opslaan: ${error.message}`;
+                }
+            } else {
+                msg.className = 'text-sm mt-3 text-green-500 font-medium';
+                msg.textContent = '✅ Vakantie succesvol toegevoegd!';
+                document.getElementById('add-holiday-form').reset();
+                loadHolidays();
+                setTimeout(() => msg.classList.add('hidden'), 3000);
+            }
+        });
+
+        async function deleteHoliday(id) {
+            if (!confirm('Weet je zeker dat je deze vakantie wilt verwijderen?')) return;
+            
+            const { error } = await supClient.from('Vakanties').delete().eq('id', id);
+            if (error) {
+                alert('Fout bij verwijderen: ' + error.message);
+            } else {
+                loadHolidays();
+            }
+        }
+
+        // Init
+        loadHolidays();
+    </script>
+</body>
+</html>
