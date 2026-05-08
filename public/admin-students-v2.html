@@ -337,9 +337,49 @@
 
         window.deleteStudent = async function (name) {
             if (!confirm(`Weet je zeker dat je ${name} wilt verwijderen?`)) return;
-            const { error } = await supabaseClient.from('Students').delete().eq('name', name);
-            if (error) alert('Error: ' + error.message);
-            else loadData();
+
+            try {
+                // Stap 1: Haal student gegevens op (voor het emailadres)
+                const { data: student, error: fetchError } = await supabaseClient
+                    .from('Students')
+                    .select('email')
+                    .eq('name', name)
+                    .single();
+
+                if (fetchError) {
+                    alert('Fout bij ophalen student: ' + fetchError.message);
+                    return;
+                }
+
+                // Stap 2: Verwijder uit database
+                const { error: deleteError } = await supabaseClient.from('Students').delete().eq('name', name);
+                
+                if (deleteError) {
+                    alert('Error bij verwijderen uit database: ' + deleteError.message);
+                    return;
+                }
+
+                // Stap 3: Verwijder auth account via Edge Function (indien email bekend is)
+                if (student.email) {
+                    const { data: authResult, error: authError } = await supabaseClient.functions.invoke('delete-auth-account', {
+                        body: { email: student.email }
+                    });
+
+                    if (authError || (authResult && !authResult.success)) {
+                        console.warn('Auth account delete failed:', authError || authResult.error);
+                        alert('✅ Student verwijderd uit database!\n\n⚠️ Let op: Het inlog-account kon niet automatisch worden verwijderd.\nGa naar Supabase → Authentication → Users en verwijder handmatig indien nodig.');
+                    } else {
+                        alert('✅ Student en inlog-account succesvol verwijderd!');
+                    }
+                } else {
+                    alert('✅ Student verwijderd!');
+                }
+
+                loadData();
+            } catch (err) {
+                console.error('Delete error:', err);
+                alert('Onverwachte fout: ' + err.message);
+            }
         };
 
         document.getElementById('form').addEventListener('submit', async (e) => {
