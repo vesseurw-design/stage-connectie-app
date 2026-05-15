@@ -50,6 +50,15 @@ serve(async (req) => {
         const { data: attendance } = await supabaseAdmin.from('Attendance').select('*').gte('date', weekDates['Ma']).lte('date', weekDates['Vr']);
         const { data: holidays } = await supabaseAdmin.from('Vakanties').select('*').lte('start_date', weekDates['Vr']).gte('end_date', weekDates['Ma']);
 
+        // 2b. Check if TODAY is a holiday. If so, skip everything.
+        const todayStr = now.toISOString().split('T')[0];
+        const isTodayHoliday = holidays?.some(h => todayStr >= h.start_date && todayStr <= h.end_date);
+        
+        if (isTodayHoliday) {
+            console.log('🏖️ Today is a holiday. Skipping attendance reminders.');
+            return new Response(JSON.stringify({ success: true, message: 'Holiday today, no reminders sent.' }), { status: 200 });
+        }
+
         const reminderList: { [email: string]: any } = {};
 
         // 3. Logic
