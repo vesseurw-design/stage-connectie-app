@@ -139,8 +139,8 @@ function renderGrid(existingAttendance) {
             cell.className = 'flex flex-col items-center justify-center p-4 bg-gray-50 rounded-xl border border-gray-200 text-center min-h-[120px] cursor-pointer hover:bg-gray-100 transition shadow-sm hover:-translate-y-0.5';
             cell.onclick = () => openActionSheet(dateStr, cell, true);
             cell.innerHTML = `
-                <span class="text-3xl mb-1 filter drop-shadow-sm opacity-50">☕</span>
-                <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">Vrij</span>
+                <span class="text-3xl mb-1 filter drop-shadow-sm opacity-50">🏫</span>
+                <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">School</span>
             `;
             cell.dataset.date = dateStr;
             cell.dataset.status = '';
