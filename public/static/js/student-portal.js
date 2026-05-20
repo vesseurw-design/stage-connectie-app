@@ -1,11 +1,12 @@
-
 // Student Portal Logic
 const SUPABASE_URL = 'https://vdeipnqyesduiohxvuvu.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZkZWlwbnF5ZXNkdWlvaHh2dXZ1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc1MjY5NTEsImV4cCI6MjA4MzEwMjk1MX0.IknEZ-GQvspcppJxLR00ayBDq1DbL0HiUKy9RDb59DU';
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 let currentStudent = null;
-let currentStatus = '';
+let holidays = [];
+let activeCell = null; // { date, element }
+let isSaving = false;
 
 async function init() {
     const email = localStorage.getItem('student_email');
@@ -41,55 +42,13 @@ async function init() {
 
         renderHeader();
 
-        const today = new Date().toISOString().split('T')[0];
-        document.getElementById('current-date').textContent = new Date().toLocaleDateString('nl-NL', { weekday: 'long', day: 'numeric', month: 'long' });
+        // Load holidays
+        const { data: fetchedHolidays } = await supabaseClient.from('Vakanties').select('*');
+        if (fetchedHolidays) holidays = fetchedHolidays;
 
-        const { data: attendance } = await supabaseClient
-            .from('Attendance')
-            .select('student_status, student_hours')
-            .eq('student_id', currentStudent.id)
-            .eq('date', today)
-            .single();
+        updateWeekDisplay();
+        await loadAttendance();
 
-        if (attendance) {
-            document.getElementById('no-stage-block').classList.add('hidden');
-            document.getElementById('reporting-block').classList.remove('hidden');
-            selectStatus(attendance.student_status, false);
-            document.getElementById('hours-worked').value = attendance.student_hours || 0;
-        } else {
-            // Check if today is a holiday
-            const { data: holidays } = await supabaseClient
-                .from('Vakanties')
-                .select('*')
-                .lte('start_date', today)
-                .gte('end_date', today);
-
-            const isHoliday = holidays && holidays.length > 0;
-            const currentHoliday = isHoliday ? holidays[0] : null;
-
-            const dayNames = ['Zo', 'Ma', 'Di', 'Wo', 'Do', 'Vr', 'Za'];
-            const todayName = dayNames[new Date().getDay()];
-
-            if (isHoliday) {
-                document.getElementById('no-stage-icon').textContent = '🏖️';
-                document.getElementById('no-stage-title').textContent = `Het is ${currentHoliday.name || 'vakantie'}!`;
-                document.getElementById('no-stage-desc').textContent = 'Geniet van je vrije tijd! Loop je in de vakantie toch stage?';
-                document.getElementById('no-stage-block').classList.remove('hidden');
-                document.getElementById('reporting-block').classList.add('hidden');
-            } else if (currentStudent.scheduled_days && currentStudent.scheduled_days.includes(todayName)) {
-                document.getElementById('no-stage-block').classList.add('hidden');
-                document.getElementById('reporting-block').classList.remove('hidden');
-                document.getElementById('hours-worked').value = 8;
-            } else {
-                document.getElementById('no-stage-icon').textContent = '☕';
-                document.getElementById('no-stage-title').textContent = 'Je hebt vandaag geen stage gepland staan.';
-                document.getElementById('no-stage-desc').textContent = 'Geniet van je dag! Loop je per uitzondering toch stage vandaag?';
-                document.getElementById('no-stage-block').classList.remove('hidden');
-                document.getElementById('reporting-block').classList.add('hidden');
-            }
-        }
-
-        loadHistory();
         document.getElementById('loading').classList.add('hidden');
         document.getElementById('content').classList.remove('hidden');
 
@@ -104,41 +63,241 @@ function renderHeader() {
     document.getElementById('student-info').textContent = `${company} • ${currentStudent.student_number || ''}`;
 }
 
-function showReportingBlock() {
-    document.getElementById('no-stage-block').classList.add('hidden');
-    document.getElementById('reporting-block').classList.remove('hidden');
+function getMonday(d) {
+    d = new Date(d);
+    var day = d.getDay(), diff = d.getDate() - day + (day == 0 ? -6 : 1);
+    return new Date(d.setDate(diff));
 }
 
-function selectStatus(status, showModal = true) {
-    currentStatus = status;
-    // Reset buttons
-    document.querySelectorAll('.status-btn').forEach(btn => {
-        btn.classList.remove('border-green-500', 'bg-green-50', 'border-red-500', 'bg-red-50', 'border-orange-500', 'bg-orange-50', 'border-yellow-500', 'bg-yellow-50');
-        btn.classList.add('border-gray-100', 'bg-gray-50');
-    });
+function getWeekDate(offsetDays) {
+    const today = new Date();
+    const monday = getMonday(today);
+    const targetDate = new Date(monday);
+    targetDate.setDate(monday.getDate() + offsetDays);
+    return targetDate.toISOString().split('T')[0];
+}
 
-    // Highlight selected
-    const btn = document.getElementById(`btn-${status}`);
-    if (btn) {
-        btn.classList.remove('border-gray-100', 'bg-gray-50');
-        if (status === 'present') btn.classList.add('border-green-500', 'bg-green-50');
-        else if (status === 'absent') btn.classList.add('border-red-500', 'bg-red-50');
-        else if (status === 'sick') btn.classList.add('border-orange-500', 'bg-orange-50');
-        else if (status === 'late') btn.classList.add('border-yellow-500', 'bg-yellow-50');
+function updateWeekDisplay() {
+    const monday = new Date(getWeekDate(0));
+    const friday = new Date(getWeekDate(4));
+
+    const oneJan = new Date(monday.getFullYear(), 0, 1);
+    const numberOfDays = Math.floor((monday - oneJan) / (24 * 60 * 60 * 1000));
+    const weekNum = Math.ceil((monday.getDay() + 1 + numberOfDays) / 7);
+
+    document.getElementById('current-week-label').textContent = `Week ${weekNum}`;
+    const options = { month: 'short', day: 'numeric' };
+    document.getElementById('current-date-range').textContent = `${monday.toLocaleDateString('nl-NL', options)} - ${friday.toLocaleDateString('nl-NL', options)}`;
+
+    const days = ['mon', 'tue', 'wed', 'thu', 'fri'];
+    days.forEach((day, index) => {
+        const date = new Date(getWeekDate(index));
+        document.getElementById(`date-${day}`).textContent = date.toLocaleDateString('nl-NL', { day: 'numeric', month: 'numeric' });
+    });
+}
+
+async function loadAttendance() {
+    const container = document.getElementById('student-week-row');
+    container.innerHTML = '<div class="p-12 col-span-5 text-center text-gray-500 font-bold">Laden...</div>';
+
+    const weekDates = [0, 1, 2, 3, 4].map(i => getWeekDate(i));
+
+    const { data: attendanceData, error } = await supabaseClient
+        .from('Attendance')
+        .select('*')
+        .eq('student_id', currentStudent.id)
+        .in('date', weekDates);
+
+    renderGrid(attendanceData || []);
+}
+
+function isHoliday(dateStr) {
+    return holidays.some(h => dateStr >= h.start_date && dateStr <= h.end_date);
+}
+
+function renderGrid(existingAttendance) {
+    const container = document.getElementById('student-week-row');
+    container.innerHTML = '';
+
+    const dayMap = ['Ma', 'Di', 'Wo', 'Do', 'Vr'];
+
+    [0, 1, 2, 3, 4].forEach(dayIndex => {
+        const dateStr = getWeekDate(dayIndex);
+        const dayCode = dayMap[dayIndex];
+        const isScheduled = !currentStudent.scheduled_days || currentStudent.scheduled_days.length === 0 || currentStudent.scheduled_days.includes(dayCode);
+        const holiday = isHoliday(dateStr);
+
+        const cell = document.createElement('div');
+        
+        if (holiday) {
+            cell.className = 'flex flex-col items-center justify-center p-4 bg-purple-50 rounded-xl border border-purple-100 text-center min-h-[120px] shadow-sm';
+            cell.innerHTML = `
+                <span class="text-3xl mb-1 filter drop-shadow-sm">🏖️</span>
+                <span class="text-xs font-bold text-purple-700 uppercase tracking-wider">Vakantie</span>
+            `;
+        } else if (!isScheduled) {
+            cell.className = 'flex flex-col items-center justify-center p-4 bg-gray-50 rounded-xl border border-gray-200 text-center min-h-[120px] cursor-pointer hover:bg-gray-100 transition shadow-sm hover:-translate-y-0.5';
+            cell.onclick = () => openActionSheet(dateStr, cell, true);
+            cell.innerHTML = `
+                <span class="text-3xl mb-1 filter drop-shadow-sm opacity-50">☕</span>
+                <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">Vrij</span>
+            `;
+            cell.dataset.date = dateStr;
+            cell.dataset.status = '';
+            cell.dataset.hours = 0;
+            
+            // Check if there was an exception filled in
+            const record = existingAttendance.find(a => a.date === dateStr);
+            if (record && record.student_status) {
+                updateCellContent(cell, record.student_status, record.student_hours || 0);
+            }
+        } else {
+            const record = existingAttendance.find(a => a.date === dateStr);
+            const status = record ? record.student_status : '';
+            const hours = record ? record.student_hours : 0;
+
+            cell.className = 'flex flex-col items-center justify-center p-4 bg-white rounded-xl border-2 cursor-pointer transition-all duration-200 hover:-translate-y-0.5 shadow-sm min-h-[120px]';
+            cell.dataset.date = dateStr;
+            cell.onclick = () => openActionSheet(dateStr, cell, false);
+
+            updateCellContent(cell, status, hours);
+        }
+
+        container.appendChild(cell);
+    });
+}
+
+function updateCellContent(cell, status, hours) {
+    const icons = { 'present': '✅', 'absent': '❌', 'sick': '🤒', 'late': '⏱️', '': '<span class="text-gray-300 text-3xl font-black">+</span>' };
+    
+    let content = icons[status] || icons[''];
+    if (status !== '') content = `<span class="text-4xl filter drop-shadow-sm">${content}</span>`;
+
+    cell.innerHTML = `
+        <div class="mb-2">${content}</div>
+        ${status ? `<span class="text-xs font-bold text-gray-700 uppercase tracking-wide mb-1">${getStatusLabel(status)}</span>` : '<span class="text-xs font-bold text-gray-400 uppercase tracking-wide">Vul in</span>'}
+        ${hours > 0 && status !== 'absent' ? `<div class="bg-purple-100 text-purple-700 text-xs font-black px-2 py-0.5 rounded shadow-sm mt-auto">${hours} uur</div>` : ''}
+    `;
+
+    // Remove old borders and colors
+    cell.classList.remove('border-gray-100', 'border-gray-200', 'border-green-400', 'border-red-400', 'border-orange-400', 'border-yellow-400', 'hover:border-purple-400', 'hover:shadow-md', 'bg-gray-50', 'bg-white');
+    
+    cell.classList.add('bg-white');
+
+    if (status) {
+        if (status === 'present') cell.classList.add('border-green-400');
+        else if (status === 'absent') cell.classList.add('border-red-400');
+        else if (status === 'sick') cell.classList.add('border-orange-400');
+        else if (status === 'late') cell.classList.add('border-yellow-400');
+    } else {
+        cell.classList.add('border-gray-200', 'hover:border-purple-400', 'hover:shadow-md');
     }
 
-    // Hide hours when absent, show for other statuses
-    const hoursContainer = document.getElementById('hours-container');
+    cell.dataset.status = status;
+    cell.dataset.hours = hours;
+}
+
+function getStatusLabel(status) {
+    switch (status) {
+        case 'present': return 'Aanwezig';
+        case 'absent': return 'Afwezig';
+        case 'sick': return 'Ziek';
+        case 'late': return 'Te laat';
+        default: return '';
+    }
+}
+
+// Action Sheet Logic
+function openActionSheet(dateStr, element, isUnscheduled) {
+    activeCell = { date: dateStr, element: element };
+    
+    // Set date label
+    const dateObj = new Date(dateStr);
+    document.getElementById('action-date-label').textContent = dateObj.toLocaleDateString('nl-NL', { weekday: 'long', day: 'numeric', month: 'long' });
+
+    // Pre-fill from cell dataset
+    const currentStatus = element.dataset.status || '';
+    const currentHours = element.dataset.hours || (isUnscheduled ? 0 : 8);
+
+    document.getElementById('action-hours-worked').value = currentHours;
+    updateActionSheetButtons(currentStatus);
+
+    const sheet = document.getElementById('action-sheet');
+    const overlay = document.getElementById('action-overlay');
+    sheet.classList.remove('hidden');
+    overlay.classList.remove('hidden');
+    setTimeout(() => { sheet.classList.remove('translate-y-full'); }, 10);
+}
+
+function closeActions() {
+    const sheet = document.getElementById('action-sheet');
+    const overlay = document.getElementById('action-overlay');
+    sheet.classList.add('translate-y-full');
+    setTimeout(() => { sheet.classList.add('hidden'); overlay.classList.add('hidden'); }, 300);
+}
+
+function updateActionSheetButtons(status) {
+    // Reset buttons
+    ['present', 'absent', 'sick', 'late'].forEach(s => {
+        const btn = document.getElementById(`action-btn-${s}`);
+        btn.classList.remove('bg-green-50', 'border-green-200', 'text-green-700', 'bg-red-50', 'border-red-200', 'text-red-700', 'bg-orange-50', 'border-orange-200', 'text-orange-700', 'bg-yellow-50', 'border-yellow-200', 'text-yellow-700', 'border-gray-300', 'scale-[1.02]');
+        btn.classList.add('bg-gray-50', 'border-gray-100', 'text-gray-700');
+    });
+
+    if (status) {
+        const activeBtn = document.getElementById(`action-btn-${status}`);
+        activeBtn.classList.remove('bg-gray-50', 'border-gray-100', 'text-gray-700');
+        activeBtn.classList.add('scale-[1.02]');
+        
+        if (status === 'present') activeBtn.classList.add('bg-green-50', 'border-green-300', 'text-green-700');
+        else if (status === 'absent') activeBtn.classList.add('bg-red-50', 'border-red-300', 'text-red-700');
+        else if (status === 'sick') activeBtn.classList.add('bg-orange-50', 'border-orange-300', 'text-orange-700');
+        else if (status === 'late') activeBtn.classList.add('bg-yellow-50', 'border-yellow-300', 'text-yellow-700');
+    }
+
+    const hoursContainer = document.getElementById('action-hours-container');
     if (status === 'absent') {
         hoursContainer.classList.add('hidden');
-        document.getElementById('hours-worked').value = 0;
+        document.getElementById('action-hours-worked').value = 0;
     } else {
         hoursContainer.classList.remove('hidden');
     }
+}
 
-    if (status === 'absent' && showModal) {
+let pendingStatus = '';
+
+function setStatus(status) {
+    if (status === 'absent') {
+        pendingStatus = 'absent';
         showAbsentModal();
+    } else {
+        activeCell.tempStatus = status;
+        updateActionSheetButtons(status);
     }
+}
+
+function confirmAction() {
+    if (!activeCell) return;
+    const status = activeCell.tempStatus || (activeCell.element.dataset.status && document.getElementById(`action-btn-${activeCell.element.dataset.status}`).classList.contains('scale-[1.02]') ? activeCell.element.dataset.status : '');
+    
+    let finalStatus = status;
+    
+    ['present', 'absent', 'sick', 'late'].forEach(s => {
+        if(document.getElementById(`action-btn-${s}`).classList.contains('scale-[1.02]')) {
+            finalStatus = s;
+        }
+    });
+
+    if (!finalStatus) {
+        alert('Kies eerst een status.');
+        return;
+    }
+
+    let hours = parseFloat(document.getElementById('action-hours-worked').value) || 0;
+    if (finalStatus === 'absent') hours = 0;
+
+    updateCellContent(activeCell.element, finalStatus, hours);
+    closeActions();
 }
 
 function showAbsentModal() {
@@ -146,7 +305,6 @@ function showAbsentModal() {
     if (!modal) return;
     const content = document.getElementById('absent-modal-content');
 
-    // Reset checkboxes and button state
     ['check-1', 'check-2', 'check-3'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.checked = false;
@@ -163,7 +321,7 @@ function showAbsentModal() {
 
     modal.classList.remove('hidden');
     modal.classList.add('flex');
-    void modal.offsetWidth; // trigger reflow
+    void modal.offsetWidth; 
     modal.classList.remove('opacity-0');
     content.classList.remove('scale-95');
     content.classList.add('scale-100');
@@ -175,7 +333,6 @@ function updateModalButton() {
         return el && el.checked;
     });
 
-    // Update label styling per checkbox
     ['check-1', 'check-2', 'check-3'].forEach(id => {
         const checkbox = document.getElementById(id);
         const label = document.getElementById('label-' + id);
@@ -206,6 +363,14 @@ function closeAbsentModal() {
     const modal = document.getElementById('absent-modal');
     if (!modal) return;
     const content = document.getElementById('absent-modal-content');
+    
+    const allChecked = ['check-1', 'check-2', 'check-3'].every(id => document.getElementById(id) && document.getElementById(id).checked);
+    
+    if (allChecked && pendingStatus === 'absent') {
+        activeCell.tempStatus = 'absent';
+        updateActionSheetButtons('absent');
+    }
+
     modal.classList.add('opacity-0');
     content.classList.remove('scale-100');
     content.classList.add('scale-95');
@@ -215,85 +380,57 @@ function closeAbsentModal() {
     }, 300);
 }
 
-async function saveReporting() {
-    if (!currentStatus) {
-        alert('Kies eerst een status (aanwezig, afwezig, etc.)');
-        return;
-    }
-
-    const today = new Date().toISOString().split('T')[0];
-    const hours = parseFloat(document.getElementById('hours-worked').value) || 0;
+async function saveWeek() {
+    if (isSaving) return;
+    isSaving = true;
 
     const btnSave = document.getElementById('btn-save');
-    btnSave.disabled = true;
-    btnSave.innerHTML = '<div class="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>';
+    const originalText = btnSave.innerHTML;
+    btnSave.innerHTML = '<div class="animate-spin rounded-full h-5 w-5 border-b-2 border-white mx-auto"></div>';
 
-    try {
-        console.log('💾 Saving to "Attendance" table (Upper case)...');
-        const { error } = await supabaseClient.from('Attendance').upsert({
-            student_id: currentStudent.id,
-            date: today,
-            student_status: currentStatus,
-            student_hours: hours,
-            updated_at: new Date().toISOString()
-        }, { onConflict: 'student_id,date' });
+    const cells = document.querySelectorAll('#student-week-row > div[data-date]');
+    const updates = [];
 
-        if (error) {
-            console.error('❌ Database error:', error);
-            throw new Error(`Database fout: ${error.message} (Code: ${error.code})`);
+    cells.forEach(cell => {
+        const status = cell.dataset.status;
+        if (status && status !== '') {
+            updates.push({
+                student_id: currentStudent.id,
+                date: cell.dataset.date,
+                student_status: status,
+                student_hours: parseFloat(cell.dataset.hours) || 0,
+                updated_at: new Date().toISOString()
+            });
         }
+    });
 
+    if (updates.length > 0) {
+        try {
+            const { error } = await supabaseClient.from('Attendance').upsert(updates, { onConflict: 'student_id,date' });
+            if (error) throw error;
+            
+            showToast();
+        } catch (err) {
+            console.error('Save error:', err);
+            alert('Fout bij opslaan: ' + err.message);
+        }
+    } else {
         showToast();
-        loadHistory();
-
-    } catch (err) {
-        console.error('Save error:', err);
-        alert('Oeps! ' + err.message);
-    } finally {
-        btnSave.disabled = false;
-        btnSave.textContent = 'Opslaan';
-    }
-}
-
-async function loadHistory() {
-    const { data: history, error } = await supabaseClient
-        .from('Attendance')
-        .select('*')
-        .eq('student_id', currentStudent.id)
-        .order('date', { ascending: false })
-        .limit(10);
-
-    if (error) return;
-
-    const container = document.getElementById('attendance-history');
-    if (history.length === 0) {
-        container.innerHTML = '<p class="p-6 text-center text-gray-400 italic">Nog geen activiteit gevonden.</p>';
-        return;
     }
 
-    const icons = { 'present': '✅', 'absent': '❌', 'late': '⏱️' };
-    const label = { 'present': 'Aanwezig', 'absent': 'Afwezig', 'late': 'Te laat' };
-
-    container.innerHTML = history.map(item => `
-        <div class="p-4 flex justify-between items-center">
-            <div>
-                <p class="font-bold text-gray-800">${new Date(item.date).toLocaleDateString('nl-NL', { weekday: 'short', day: 'numeric', month: 'short' })}</p>
-                <p class="text-xs text-gray-500">${icons[item.student_status] || '❓'} ${label[item.student_status] || 'Geen eigen invoer'}</p>
-            </div>
-            <div class="text-right">
-                <p class="font-black text-purple-600">${item.student_hours || 0}u</p>
-            </div>
-        </div>
-    `).join('');
+    isSaving = false;
+    btnSave.innerHTML = originalText;
+    
+    setTimeout(loadAttendance, 1000);
 }
 
 function showToast() {
     const toast = document.getElementById('toast');
     toast.style.opacity = '1';
-    toast.style.pointerEvents = 'auto';
-    setTimeout(() => {
-        toast.style.opacity = '0';
-        toast.style.pointerEvents = 'none';
+    toast.style.transform = 'translate(-50%, 0) scale(1)';
+    setTimeout(() => { 
+        toast.style.opacity = '0'; 
+        toast.style.transform = 'translate(-50%, 0) scale(0.9)'; 
     }, 2000);
 }
 
