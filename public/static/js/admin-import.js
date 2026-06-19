@@ -16,8 +16,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const companiesResults = document.getElementById('companies-results');
 
     // Initialiseer Supabase client (gebruikt window.supabase uit auth scripts)
-    const supabaseUrl = window.ENV_SUPABASE_URL || localStorage.getItem('supabaseUrl');
-    const supabaseKey = window.ENV_SUPABASE_KEY || localStorage.getItem('supabaseKey');
+    const supabaseUrl = window.SUPABASE_URL || window.ENV_SUPABASE_URL || localStorage.getItem('supabaseUrl');
+    const supabaseKey = window.SUPABASE_KEY || window.ENV_SUPABASE_KEY || localStorage.getItem('supabaseKey');
     
     if (!supabaseUrl || !supabaseKey) {
         console.error("Supabase configuratie ontbreekt in localStorage.");

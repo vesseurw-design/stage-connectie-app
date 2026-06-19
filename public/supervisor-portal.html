@@ -178,6 +178,13 @@
                     <p class="text-sm text-gray-500">Stagedagen</p>
                     <p class="font-medium" id="modal-scheduled-days">-</p>
                 </div>
+                <!-- Aanwezigheid corrigeren knop -->
+                <div class="mb-4">
+                    <button onclick="openCorrectModal()" 
+                        class="w-full flex items-center justify-center gap-2 py-2.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-semibold rounded-xl border border-indigo-200 transition text-sm">
+                        ✏️ Aanwezigheid invullen / corrigeren
+                    </button>
+                </div>
                 <div>
                     <div class="flex justify-between items-center mb-2">
                         <p class="text-sm text-gray-500">Aanwezigheidshistorie</p>
@@ -194,7 +201,65 @@
         </div>
     </div>
 
+    <!-- Aanwezigheid Correctie Modal -->
+    <div id="correct-modal" class="hidden fixed inset-0 bg-black bg-opacity-60 z-[60] flex items-end sm:items-center justify-center">
+        <div class="bg-white rounded-t-3xl sm:rounded-2xl w-full sm:max-w-md p-6">
+            <h3 class="text-lg font-bold text-gray-800 mb-1" id="correct-modal-name">Student</h3>
+            <p class="text-sm text-gray-500 mb-5" id="correct-modal-subtitle">Selecteer datum en status</p>
+
+            <!-- Datum -->
+            <div class="mb-4">
+                <label class="block text-sm font-semibold text-gray-700 mb-1">Datum</label>
+                <input type="date" id="correct-date"
+                    class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-indigo-400 outline-none transition">
+            </div>
+
+            <!-- Status knoppen -->
+            <div class="mb-4">
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Status</label>
+                <div class="grid grid-cols-2 gap-2">
+                    <button id="sup-btn-present" onclick="selectCorrectStatus('present')"
+                        class="sup-status-btn flex items-center gap-2 p-3 rounded-xl border-2 border-gray-200 text-gray-600 font-medium text-sm transition">
+                        ✅ Aanwezig
+                    </button>
+                    <button id="sup-btn-absent" onclick="selectCorrectStatus('absent')"
+                        class="sup-status-btn flex items-center gap-2 p-3 rounded-xl border-2 border-gray-200 text-gray-600 font-medium text-sm transition">
+                        ❌ Afwezig
+                    </button>
+                    <button id="sup-btn-sick" onclick="selectCorrectStatus('sick')"
+                        class="sup-status-btn flex items-center gap-2 p-3 rounded-xl border-2 border-gray-200 text-gray-600 font-medium text-sm transition">
+                        🤒 Ziek
+                    </button>
+                    <button id="sup-btn-late" onclick="selectCorrectStatus('late')"
+                        class="sup-status-btn flex items-center gap-2 p-3 rounded-xl border-2 border-gray-200 text-gray-600 font-medium text-sm transition">
+                        ⏱️ Te laat
+                    </button>
+                </div>
+            </div>
+
+            <!-- Uren -->
+            <div class="mb-5" id="correct-hours-row">
+                <label class="block text-sm font-semibold text-gray-700 mb-1">Uren gewerkt</label>
+                <input type="number" id="correct-hours" min="0" max="12" step="0.5" value="8"
+                    class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-indigo-400 outline-none transition">
+            </div>
+
+            <!-- Knoppen -->
+            <div class="flex gap-3">
+                <button onclick="closeCorrectModal()"
+                    class="flex-1 py-2.5 border border-gray-200 text-gray-600 rounded-xl font-medium text-sm hover:bg-gray-50 transition">
+                    Annuleren
+                </button>
+                <button onclick="saveCorrection()"
+                    class="flex-1 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold text-sm transition shadow-md">
+                    Opslaan
+                </button>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="./static/js/config.js"></script>
     <script src="./static/js/supervisor-auth.js?v=4.3"></script>
     <script src="./static/js/supervisor-portal.js?v=4.3"></script>
 </body>

@@ -5,113 +5,826 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Portal - Stage Connectie App</title>
+    <link rel="icon" type="image/png" href="icon-v3.png">
+    <link rel="apple-touch-icon" href="icon-v3.png">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         body {
             font-family: 'Inter', sans-serif;
         }
+
+        /* ============ PRINT STYLES ============ */
+        @media print {
+            body * { visibility: hidden; }
+            #print-section, #print-section * { visibility: visible; }
+            #print-section {
+                position: fixed;
+                top: 0; left: 0;
+                width: 100%;
+                padding: 20px;
+                background: white;
+            }
+            .no-print { display: none !important; }
+            /* Totaaloverzicht tabel */
+            .print-table {
+                width: 100%;
+                border-collapse: collapse;
+                font-size: 11px;
+            }
+            .print-table th, .print-table td {
+                border: 1px solid #333;
+                padding: 5px 7px;
+                text-align: center;
+            }
+            .print-table th { background: #f0f0f0; font-weight: 700; }
+            .print-table td:first-child, .print-table th:first-child { text-align: left; min-width: 130px; }
+            .print-table td:nth-child(2), .print-table th:nth-child(2) { text-align: left; min-width: 120px; }
+            /* Losse leerlingformulieren */
+            .student-form-card {
+                page-break-after: always;
+                padding: 0;
+                margin-bottom: 0;
+            }
+            .student-form-card:last-child { page-break-after: auto; }
+            .student-form-table {
+                width: 100%;
+                border-collapse: collapse;
+                font-size: 12px;
+                margin-top: 10px;
+            }
+            .student-form-table th, .student-form-table td {
+                border: 1px solid #333;
+                padding: 8px 10px;
+            }
+            .student-form-table th { background: #f0f0f0; font-weight: 700; text-align: left; }
+            .student-form-table td { min-height: 36px; }
+            .form-header { margin-bottom: 12px; border-bottom: 2px solid #333; padding-bottom: 8px; }
+        }
+        @media screen {
+            #print-section { display: none; }
+        }
     </style>
-    <script>if (!localStorage.getItem('stageconnect_admin_session')) { window.location.href = 'admin-login.html'; }</script>
 </head>
 
 <body class="bg-gray-50">
-    <header class="bg-white shadow-sm border-b border-gray-200">
+
+    <!-- ============ NAVIGATIE ============ -->
+    <header class="bg-white shadow-sm border-b border-gray-200 no-print">
         <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
             <div>
                 <h1 class="text-2xl font-bold text-gray-800">Admin Portal</h1>
                 <p class="text-sm text-gray-600">StageConnectie</p>
             </div>
-            <div class="flex gap-4">
+            <div class="flex gap-3 flex-wrap">
                 <a href="admin-students-v2.html"
-                    class="px-4 py-2 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-lg transition font-medium">
+                    class="px-4 py-2 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-lg transition font-medium text-sm">
                     Studenten Beheer
                 </a>
                 <a href="admin-companies.html"
-                    class="px-4 py-2 bg-purple-50 text-purple-600 hover:bg-purple-100 rounded-lg transition font-medium">
+                    class="px-4 py-2 bg-purple-50 text-purple-600 hover:bg-purple-100 rounded-lg transition font-medium text-sm">
                     Bedrijven Beheer
                 </a>
                 <a href="admin-begeleiders-v3.html"
-                    class="px-4 py-2 bg-green-50 text-green-600 hover:bg-green-100 rounded-lg transition font-medium">
+                    class="px-4 py-2 bg-green-50 text-green-600 hover:bg-green-100 rounded-lg transition font-medium text-sm">
                     Begeleiders Beheer
                 </a>
                 <a href="admin-branches.html"
-                    class="px-4 py-2 bg-orange-50 text-orange-600 hover:bg-orange-100 rounded-lg transition font-medium">
+                    class="px-4 py-2 bg-orange-50 text-orange-600 hover:bg-orange-100 rounded-lg transition font-medium text-sm">
                     Branches
                 </a>
                 <a href="admin-vakanties.html"
-                    class="px-4 py-2 bg-pink-50 text-pink-600 hover:bg-pink-100 rounded-lg transition font-medium">
+                    class="px-4 py-2 bg-pink-50 text-pink-600 hover:bg-pink-100 rounded-lg transition font-medium text-sm">
                     🏖️ Vakanties
                 </a>
                 <a href="admin-import.html"
-                    class="px-4 py-2 bg-indigo-50 text-indigo-600 hover:bg-indigo-100 rounded-lg transition font-medium">
+                    class="px-4 py-2 bg-indigo-50 text-indigo-600 hover:bg-indigo-100 rounded-lg transition font-medium text-sm">
                     📥 Importeer CSV
                 </a>
-                <button onclick="adminLogout()"
-                    class="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition">
+                <button onclick="handleLogout()"
+                    class="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition text-sm">
                     Uitloggen
                 </button>
             </div>
         </div>
     </header>
-    <main class="max-w-7xl mx-auto px-4 py-8">
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-                <h3 class="text-gray-500 text-sm font-medium">Aanwezig Vandaag</h3>
+
+    <!-- ============ HOOFDINHOUD ============ -->
+    <main class="max-w-7xl mx-auto px-4 py-8 no-print">
+
+        <!-- Stats -->
+        <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
+            <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
+                <h3 class="text-gray-500 text-xs font-medium uppercase tracking-wide">Aanwezig</h3>
                 <p class="text-3xl font-bold text-green-600 mt-2" id="stat-present">-</p>
             </div>
-            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-                <h3 class="text-gray-500 text-sm font-medium">Afwezig</h3>
+            <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
+                <h3 class="text-gray-500 text-xs font-medium uppercase tracking-wide">Afwezig</h3>
                 <p class="text-3xl font-bold text-red-600 mt-2" id="stat-absent">-</p>
             </div>
-            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-                <h3 class="text-gray-500 text-sm font-medium">Ziek</h3>
+            <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
+                <h3 class="text-gray-500 text-xs font-medium uppercase tracking-wide">Ziek</h3>
                 <p class="text-3xl font-bold text-orange-500 mt-2" id="stat-sick">-</p>
             </div>
-            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-                <h3 class="text-gray-500 text-sm font-medium">Te Laat</h3>
+            <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
+                <h3 class="text-gray-500 text-xs font-medium uppercase tracking-wide">Te Laat</h3>
                 <p class="text-3xl font-bold text-yellow-500 mt-2" id="stat-late">-</p>
             </div>
+            <div class="bg-white p-5 rounded-xl shadow-sm border border-orange-100 border-2">
+                <h3 class="text-orange-600 text-xs font-medium uppercase tracking-wide">Niet Ingevuld</h3>
+                <p class="text-3xl font-bold text-orange-500 mt-2" id="stat-missing">-</p>
+            </div>
         </div>
-        <div class="bg-white p-4 rounded-lg shadow-sm mb-6 flex flex-wrap gap-4 items-end">
-            <div><label class="block text-sm font-medium text-gray-700 mb-1">Datum</label><input type="date"
-                    id="filter-date" class="px-3 py-2 border rounded-lg text-sm"></div>
-            <div><label class="block text-sm font-medium text-gray-700 mb-1">Bedrijf</label><select id="filter-company"
-                    class="px-3 py-2 border rounded-lg text-sm min-w-[200px]">
-                    <option value="">Alle bedrijven</option>
-                </select></div>
-            <div><label class="block text-sm font-medium text-gray-700 mb-1">Status</label><select id="filter-status"
-                    class="px-3 py-2 border rounded-lg text-sm">
-                    <option value="">Alle status</option>
-                    <option value="present">Aanwezig</option>
-                    <option value="absent">Afwezig</option>
-                    <option value="sick">Ziek</option>
-                    <option value="late">Te laat</option>
-                </select></div>
+
+        <!-- Filters + knoppen -->
+        <div class="bg-white p-4 rounded-xl shadow-sm mb-6 flex flex-wrap gap-4 items-end justify-between">
+            <div class="flex flex-wrap gap-4 items-end">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Datum</label>
+                    <input type="date" id="filter-date" class="px-3 py-2 border border-gray-200 rounded-lg text-sm">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Bedrijf</label>
+                    <select id="filter-company" class="px-3 py-2 border border-gray-200 rounded-lg text-sm min-w-[180px]">
+                        <option value="">Alle bedrijven</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                    <select id="filter-status" class="px-3 py-2 border border-gray-200 rounded-lg text-sm">
+                        <option value="">Alle status</option>
+                        <option value="present">Aanwezig</option>
+                        <option value="absent">Afwezig</option>
+                        <option value="sick">Ziek</option>
+                        <option value="late">Te laat</option>
+                        <option value="missing">Niet ingevuld</option>
+                    </select>
+                </div>
+                <div class="flex items-end">
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" id="show-missing" class="w-4 h-4 rounded" checked>
+                        <span class="text-sm font-medium text-gray-700">Toon niet-ingevuld</span>
+                    </label>
+                </div>
+            </div>
+            <div class="flex gap-3">
+                <button onclick="openPrintSection('overview')"
+                    class="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg transition shadow-sm text-sm">
+                    📋 Totaaloverzicht
+                </button>
+                <button onclick="openPrintSection('perStudent')"
+                    class="flex items-center gap-2 px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white font-medium rounded-lg transition shadow-sm text-sm">
+                    🖨️ Formulier per leerling
+                </button>
+            </div>
         </div>
-        <div class="bg-white rounded-lg shadow-sm overflow-hidden">
+
+        <!-- Tabel -->
+        <div class="bg-white rounded-xl shadow-sm overflow-hidden">
             <table class="w-full">
                 <thead class="bg-gray-50 border-b border-gray-200">
                     <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Student</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Bedrijf</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Datum
-                        </th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Status</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Details</th>
+                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Student</th>
+                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Bedrijf</th>
+                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Datum</th>
+                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
+                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Uren</th>
+                        <th class="px-6 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Actie</th>
                     </tr>
                 </thead>
-                <tbody id="attendance-table-body" class="divide-y divide-gray-200"></tbody>
+                <tbody id="attendance-table-body" class="divide-y divide-gray-100"></tbody>
             </table>
         </div>
     </main>
+
+    <!-- ============ ADMIN INVOER MODAL ============ -->
+    <div id="edit-modal" class="hidden fixed inset-0 bg-gray-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8">
+            <h2 class="text-xl font-bold text-gray-800 mb-1" id="modal-student-name">Student</h2>
+            <p class="text-sm text-gray-500 mb-6" id="modal-date-label"></p>
+
+            <div class="space-y-5">
+                <!-- Status knoppen -->
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Status</label>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button id="modal-btn-present" onclick="selectModalStatus('present')"
+                            class="modal-status-btn flex items-center gap-2 p-3 rounded-xl border-2 border-gray-200 text-gray-600 font-medium text-sm transition hover:border-green-300 hover:bg-green-50">
+                            ✅ Aanwezig
+                        </button>
+                        <button id="modal-btn-absent" onclick="selectModalStatus('absent')"
+                            class="modal-status-btn flex items-center gap-2 p-3 rounded-xl border-2 border-gray-200 text-gray-600 font-medium text-sm transition hover:border-red-300 hover:bg-red-50">
+                            ❌ Afwezig
+                        </button>
+                        <button id="modal-btn-sick" onclick="selectModalStatus('sick')"
+                            class="modal-status-btn flex items-center gap-2 p-3 rounded-xl border-2 border-gray-200 text-gray-600 font-medium text-sm transition hover:border-orange-300 hover:bg-orange-50">
+                            🤒 Ziek
+                        </button>
+                        <button id="modal-btn-late" onclick="selectModalStatus('late')"
+                            class="modal-status-btn flex items-center gap-2 p-3 rounded-xl border-2 border-gray-200 text-gray-600 font-medium text-sm transition hover:border-yellow-300 hover:bg-yellow-50">
+                            ⏱️ Te laat
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Uren -->
+                <div id="modal-hours-row">
+                    <label class="block text-sm font-semibold text-gray-700 mb-1">Uren gewerkt</label>
+                    <input type="number" id="modal-hours" min="0" max="12" step="0.5" value="8"
+                        class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none transition">
+                </div>
+
+                <!-- Opmerking -->
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-1">Opmerking (optioneel)</label>
+                    <input type="text" id="modal-note" placeholder="bijv. begeleider goedgekeurd"
+                        class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none transition">
+                </div>
+            </div>
+
+            <div class="flex gap-3 mt-6">
+                <button onclick="closeEditModal()"
+                    class="flex-1 py-2.5 border border-gray-200 text-gray-600 rounded-xl font-medium text-sm hover:bg-gray-50 transition">
+                    Annuleren
+                </button>
+                <button id="modal-delete-btn" onclick="deleteAttendance()"
+                    class="py-2.5 px-4 border border-red-200 text-red-600 rounded-xl font-medium text-sm hover:bg-red-50 transition hidden">
+                    🗑️ Wissen
+                </button>
+                <button onclick="saveAttendance()"
+                    class="flex-1 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-sm transition shadow-md">
+                    Opslaan
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============ PRINT SECTIE ============ -->
+    <div id="print-section">
+
+        <!-- Schermknoppen (niet geprint) -->
+        <div class="no-print" style="display:flex; gap:8px; padding:16px; background:#f9fafb; border-bottom:1px solid #e5e7eb; align-items:center;">
+            <strong style="font-size:14px; color:#374151; margin-right:8px;" id="print-mode-label">Overzicht</strong>
+            <button onclick="window.print()"
+                style="background:#4f46e5;color:white;border:none;padding:8px 18px;border-radius:8px;cursor:pointer;font-weight:600;font-size:13px;">
+                🖨️ Afdrukken
+            </button>
+            <button onclick="closePrintSection()"
+                style="background:#f3f4f6;color:#374151;border:1px solid #d1d5db;padding:8px 18px;border-radius:8px;cursor:pointer;font-weight:600;font-size:13px;">
+                ✕ Sluiten
+            </button>
+        </div>
+
+        <!-- Inhoud wordt via JS gevuld -->
+        <div id="print-content" style="padding:20px;"></div>
+    </div>
+
+    <!-- ============ SCRIPTS ============ -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="./static/js/admin-auth.js?v=5.0"></script>
-    <script src="./static/js/admin.js?v=5.0"></script>
+    <script src="./static/js/config.js"></script>
+    <script>
+        const SUPABASE_URL = window.SUPABASE_URL || 'https://vdeipnqyesduiohxvuvu.supabase.co';
+        const SUPABASE_KEY = window.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZkZWlwbnF5ZXNkdWlvaHh2dXZ1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc1MjY5NTEsImV4cCI6MjA4MzEwMjk1MX0.IknEZ-GQvspcppJxLR00ayBDq1DbL0HiUKy9RDb59DU';
+        const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        let allAttendance = [];
+        let companies = [];
+        let students = [];
+        let currentUser = null;
+
+        // Modal state
+        let editingStudentId = null;
+        let editingDate = null;
+        let editingExistingRecord = null;
+        let selectedModalStatus = '';
+
+        // ========================
+        // AUTH
+        // ========================
+        function handleLogout() {
+            db.auth.signOut();
+            localStorage.removeItem('stageconnect_admin_session');
+            localStorage.removeItem('admin_email');
+            localStorage.removeItem('admin_name');
+            localStorage.removeItem('auth_user_id');
+            window.location.href = 'admin-login.html';
+        }
+
+        async function checkAuth() {
+            const { data: { session }, error } = await db.auth.getSession();
+            if (error || !session) {
+                window.location.href = 'admin-login.html';
+                return false;
+            }
+            currentUser = session.user;
+            if (currentUser.user_metadata?.role !== 'admin') {
+                alert('Je hebt geen admin rechten!');
+                window.location.href = 'admin-login.html';
+                return false;
+            }
+            return true;
+        }
+
+        // ========================
+        // INIT
+        // ========================
+        async function init() {
+            const isAuthenticated = await checkAuth();
+            if (!isAuthenticated) return;
+
+            await Promise.all([loadCompanies(), loadStudents(), loadAttendance()]);
+            setupRealtimeSubscription();
+            setupFilters();
+            updateDashboard();
+        }
+
+        // ========================
+        // DATA LADEN
+        // ========================
+        async function loadCompanies() {
+            const { data } = await db.from('Bedrijven').select('*');
+            companies = data || [];
+            const sel = document.getElementById('filter-company');
+            companies.forEach(c => {
+                sel.innerHTML += `<option value="${c.id}">${c.company_name}</option>`;
+            });
+        }
+
+        async function loadStudents() {
+            const { data } = await db.from('Students').select('*');
+            students = data || [];
+        }
+
+        async function loadAttendance() {
+            const { data } = await db.from('Attendance').select('*').order('date', { ascending: false });
+            allAttendance = data || [];
+        }
+
+        function setupRealtimeSubscription() {
+            db.channel('public:Attendance')
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'Attendance' }, () => {
+                    loadAttendance().then(updateDashboard);
+                })
+                .subscribe();
+        }
+
+        function setupFilters() {
+            ['filter-date', 'filter-company', 'filter-status', 'show-missing'].forEach(id => {
+                document.getElementById(id).addEventListener('change', updateDashboard);
+            });
+            document.getElementById('filter-date').valueAsDate = new Date();
+        }
+
+        // ========================
+        // DASHBOARD UPDATEN
+        // ========================
+        function updateDashboard() {
+            const dateFilter = document.getElementById('filter-date').value;
+            const companyFilter = document.getElementById('filter-company').value;
+            const statusFilter = document.getElementById('filter-status').value;
+            const showMissing = document.getElementById('show-missing').checked;
+
+            // Bepaal welke leerlingen op deze dag een stagegdag hebben
+            const dayCode = getDayCode(dateFilter);
+            const scheduledStudents = students.filter(s =>
+                !s.scheduled_days || s.scheduled_days.length === 0 || s.scheduled_days.includes(dayCode)
+            );
+
+            // Bestaande records op deze datum
+            let existingOnDate = allAttendance.filter(a => a.date === dateFilter);
+
+            // Ontbrekende leerlingen (geen record voor deze datum)
+            const missingStudents = scheduledStudents.filter(s =>
+                !existingOnDate.find(a => a.student_id === s.id)
+            );
+
+            // Filter bestaande records
+            let filtered = existingOnDate;
+            if (companyFilter) {
+                filtered = filtered.filter(a => {
+                    const st = students.find(s => s.id === a.student_id);
+                    return st && st.company_id === companyFilter;
+                });
+            }
+            if (statusFilter && statusFilter !== 'missing') {
+                filtered = filtered.filter(a => a.student_status === statusFilter);
+            }
+
+            // Stats
+            const allOnDate = allAttendance.filter(a => a.date === dateFilter);
+            updateStats(allOnDate, missingStudents.length);
+
+            // Render
+            if (statusFilter === 'missing') {
+                renderTable([], showMissing ? missingStudents : [], dateFilter, companyFilter);
+            } else {
+                renderTable(filtered, showMissing ? missingStudents.filter(s =>
+                    !companyFilter || s.company_id === companyFilter
+                ) : [], dateFilter, companyFilter);
+            }
+        }
+
+        function getDayCode(dateStr) {
+            if (!dateStr) return '';
+            const d = new Date(dateStr);
+            // 0=Zo, 1=Ma, 2=Di, 3=Wo, 4=Do, 5=Vr, 6=Za
+            const map = ['', 'Ma', 'Di', 'Wo', 'Do', 'Vr', ''];
+            return map[d.getDay()] || '';
+        }
+
+        function updateStats(attendance, missingCount) {
+            document.getElementById('stat-present').textContent = attendance.filter(a => a.student_status === 'present').length;
+            document.getElementById('stat-absent').textContent = attendance.filter(a => a.student_status === 'absent').length;
+            document.getElementById('stat-sick').textContent = attendance.filter(a => a.student_status === 'sick').length;
+            document.getElementById('stat-late').textContent = attendance.filter(a => a.student_status === 'late').length;
+            document.getElementById('stat-missing').textContent = missingCount;
+        }
+
+        function renderTable(attendance, missingStudents, dateFilter, companyFilter) {
+            const tbody = document.getElementById('attendance-table-body');
+            tbody.innerHTML = '';
+
+            const statusClasses = {
+                'present': 'bg-green-100 text-green-800',
+                'absent': 'bg-red-100 text-red-800',
+                'sick': 'bg-orange-100 text-orange-800',
+                'late': 'bg-yellow-100 text-yellow-800'
+            };
+            const statusLabels = {
+                'present': '✅ Aanwezig',
+                'absent': '❌ Afwezig',
+                'sick': '🤒 Ziek',
+                'late': '⏱️ Te laat'
+            };
+
+            let rowsAdded = 0;
+
+            // Ingevulde records
+            attendance.forEach(record => {
+                const student = students.find(s => s.id === record.student_id);
+                const company = companies.find(c => c.id === (student?.company_id));
+                const studentName = student ? student.name : `ID: ${record.student_id}`;
+                const companyName = company ? company.company_name : '–';
+                const hours = record.student_hours > 0 && record.student_status !== 'absent'
+                    ? `${record.student_hours} uur` : '–';
+
+                tbody.innerHTML += `
+                    <tr class="hover:bg-gray-50 transition">
+                        <td class="px-6 py-4 text-sm font-semibold text-gray-900">${studentName}</td>
+                        <td class="px-6 py-4 text-sm text-gray-500">${companyName}</td>
+                        <td class="px-6 py-4 text-sm text-gray-500">${record.date}</td>
+                        <td class="px-6 py-4">
+                            <span class="px-2.5 py-1 inline-flex text-xs font-semibold rounded-full ${statusClasses[record.student_status] || 'bg-gray-100 text-gray-600'}">
+                                ${statusLabels[record.student_status] || record.student_status}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 text-sm text-gray-500">${hours}</td>
+                        <td class="px-6 py-4 text-right">
+                            <button onclick="openEditModal('${record.student_id}', '${record.date}', true)"
+                                class="text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-lg text-xs font-medium transition">
+                                ✏️ Bewerk
+                            </button>
+                        </td>
+                    </tr>
+                `;
+                rowsAdded++;
+            });
+
+            // Ontbrekende leerlingen
+            missingStudents.forEach(student => {
+                const company = companies.find(c => c.id === student.company_id);
+                const companyName = company ? company.company_name : '–';
+
+                tbody.innerHTML += `
+                    <tr class="hover:bg-orange-50/50 transition bg-orange-50/20">
+                        <td class="px-6 py-4 text-sm font-semibold text-gray-800">${student.name}</td>
+                        <td class="px-6 py-4 text-sm text-gray-500">${companyName}</td>
+                        <td class="px-6 py-4 text-sm text-gray-500">${dateFilter || '–'}</td>
+                        <td class="px-6 py-4">
+                            <span class="px-2.5 py-1 inline-flex text-xs font-semibold rounded-full bg-orange-100 text-orange-700">
+                                ⚠️ Niet ingevuld
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 text-sm text-gray-400">–</td>
+                        <td class="px-6 py-4 text-right">
+                            <button onclick="openEditModal('${student.id}', '${dateFilter}', false)"
+                                class="text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-lg text-xs font-medium transition">
+                                + Invullen
+                            </button>
+                        </td>
+                    </tr>
+                `;
+                rowsAdded++;
+            });
+
+            if (rowsAdded === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="px-6 py-10 text-center text-gray-400">
+                            Geen gegevens gevonden voor de geselecteerde filters.
+                        </td>
+                    </tr>
+                `;
+            }
+        }
+
+        // ========================
+        // EDIT MODAL
+        // ========================
+        function openEditModal(studentId, date, hasExistingRecord) {
+            editingStudentId = studentId;
+            editingDate = date;
+            selectedModalStatus = '';
+
+            const student = students.find(s => s.id === studentId);
+            document.getElementById('modal-student-name').textContent = student ? student.name : 'Student';
+
+            const dateObj = new Date(date);
+            document.getElementById('modal-date-label').textContent =
+                dateObj.toLocaleDateString('nl-NL', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+
+            // Reset knoppen
+            resetModalButtons();
+
+            if (hasExistingRecord) {
+                editingExistingRecord = allAttendance.find(a => a.student_id === studentId && a.date === date);
+                if (editingExistingRecord) {
+                    selectModalStatus(editingExistingRecord.student_status);
+                    document.getElementById('modal-hours').value = editingExistingRecord.student_hours || 0;
+                }
+                document.getElementById('modal-delete-btn').classList.remove('hidden');
+            } else {
+                editingExistingRecord = null;
+                document.getElementById('modal-hours').value = 8;
+                document.getElementById('modal-delete-btn').classList.add('hidden');
+            }
+
+            document.getElementById('modal-note').value = '';
+            document.getElementById('edit-modal').classList.remove('hidden');
+        }
+
+        function closeEditModal() {
+            document.getElementById('edit-modal').classList.add('hidden');
+            editingStudentId = null;
+            editingDate = null;
+            editingExistingRecord = null;
+            selectedModalStatus = '';
+        }
+
+        function resetModalButtons() {
+            ['present', 'absent', 'sick', 'late'].forEach(s => {
+                const btn = document.getElementById(`modal-btn-${s}`);
+                btn.className = 'modal-status-btn flex items-center gap-2 p-3 rounded-xl border-2 border-gray-200 text-gray-600 font-medium text-sm transition hover:border-gray-300 hover:bg-gray-50';
+            });
+        }
+
+        function selectModalStatus(status) {
+            selectedModalStatus = status;
+            resetModalButtons();
+
+            const colors = {
+                present: 'border-green-400 bg-green-50 text-green-700',
+                absent: 'border-red-400 bg-red-50 text-red-700',
+                sick: 'border-orange-400 bg-orange-50 text-orange-700',
+                late: 'border-yellow-400 bg-yellow-50 text-yellow-700'
+            };
+            const btn = document.getElementById(`modal-btn-${status}`);
+            btn.className = `modal-status-btn flex items-center gap-2 p-3 rounded-xl border-2 ${colors[status]} font-bold text-sm transition scale-[1.02]`;
+
+            // Verberg uren bij afwezig
+            const hoursRow = document.getElementById('modal-hours-row');
+            if (status === 'absent') {
+                hoursRow.classList.add('hidden');
+                document.getElementById('modal-hours').value = 0;
+            } else {
+                hoursRow.classList.remove('hidden');
+                if (document.getElementById('modal-hours').value == 0) {
+                    document.getElementById('modal-hours').value = 8;
+                }
+            }
+        }
+
+        async function saveAttendance() {
+            if (!selectedModalStatus) {
+                alert('Kies eerst een status.');
+                return;
+            }
+            if (!editingStudentId || !editingDate) return;
+
+            const hours = parseFloat(document.getElementById('modal-hours').value) || 0;
+
+            const record = {
+                student_id: editingStudentId,
+                date: editingDate,
+                student_status: selectedModalStatus,
+                student_hours: selectedModalStatus === 'absent' ? 0 : hours,
+                updated_at: new Date().toISOString()
+            };
+
+            const { error } = await db.from('Attendance').upsert(record, { onConflict: 'student_id,date' });
+
+            if (error) {
+                alert('Fout bij opslaan: ' + error.message);
+                return;
+            }
+
+            closeEditModal();
+            await loadAttendance();
+            updateDashboard();
+        }
+
+        async function deleteAttendance() {
+            if (!editingStudentId || !editingDate) return;
+            if (!confirm('Weet je zeker dat je deze registratie wilt verwijderen?')) return;
+
+            const { error } = await db.from('Attendance')
+                .delete()
+                .eq('student_id', editingStudentId)
+                .eq('date', editingDate);
+
+            if (error) {
+                alert('Fout bij verwijderen: ' + error.message);
+                return;
+            }
+
+            closeEditModal();
+            await loadAttendance();
+            updateDashboard();
+        }
+
+        // ========================
+        // PRINT OVERZICHT
+        // ========================
+        function getWeekDays(dateFilter) {
+            const selected = new Date(dateFilter);
+            const day = selected.getDay();
+            const diff = selected.getDate() - day + (day === 0 ? -6 : 1);
+            const monday = new Date(selected);
+            monday.setDate(selected.getDate() - day + (day === 0 ? -6 : 1));
+
+            const weekDays = [];
+            for (let i = 0; i < 5; i++) {
+                const d = new Date(monday);
+                d.setDate(monday.getDate() + i);
+                weekDays.push({
+                    label: d.toLocaleDateString('nl-NL', { weekday: 'short', day: 'numeric', month: 'numeric' }),
+                    fullLabel: d.toLocaleDateString('nl-NL', { weekday: 'long', day: 'numeric', month: 'long' }),
+                    dateStr: d.toISOString().split('T')[0],
+                    dayCode: ['', 'Ma', 'Di', 'Wo', 'Do', 'Vr', ''][d.getDay()]
+                });
+            }
+            return weekDays;
+        }
+
+        function openPrintSection(mode) {
+            const dateFilter = document.getElementById('filter-date').value;
+            if (!dateFilter) {
+                alert('Selecteer eerst een datum.');
+                return;
+            }
+
+            const weekDays = getWeekDays(dateFilter);
+            const wStart = weekDays[0].label;
+            const wEnd = weekDays[4].label;
+            const weekLabel = `Week van ${wStart} t/m ${wEnd}`;
+            const printDate = new Date().toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' });
+            const statusAbbr = { present: 'A', absent: 'AF', sick: 'Z', late: 'TL' };
+            const printStudents = [...students].sort((a, b) => a.name.localeCompare(b.name));
+            const printContent = document.getElementById('print-content');
+
+            if (mode === 'overview') {
+                // ── TOTAALOVERZICHT ──
+                document.getElementById('print-mode-label').textContent = `📋 Totaaloverzicht – ${weekLabel}`;
+                printContent.innerHTML = `
+                    <div style="margin-bottom:14px;">
+                        <h1 style="font-size:17px; font-weight:700; margin:0;">StageConnectie – Aanwezigheidsoverzicht</h1>
+                        <p style="font-size:12px; color:#555; margin:4px 0 0;">${weekLabel}</p>
+                        <p style="font-size:10px; color:#999; margin:2px 0 0;">Afdruk: ${printDate}</p>
+                    </div>
+                    <table class="print-table">
+                        <thead>
+                            <tr>
+                                <th>Naam leerling</th>
+                                <th>Stageplek</th>
+                                ${weekDays.map(d => `<th>${d.label}</th>`).join('')}
+                                <th>Handtekening</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${printStudents.map(student => {
+                                const company = companies.find(c => c.id === student.company_id);
+                                const companyName = company ? company.company_name : '–';
+                                const cells = weekDays.map(wd => {
+                                    const isScheduled = !student.scheduled_days || student.scheduled_days.length === 0 || student.scheduled_days.includes(wd.dayCode);
+                                    if (!isScheduled) return `<td style="background:#f0f0f0; color:#bbb; font-size:9px; text-align:center;">school</td>`;
+                                    const record = allAttendance.find(a => a.student_id === student.id && a.date === wd.dateStr);
+                                    if (record && record.student_status) {
+                                        const abbr = statusAbbr[record.student_status] || '?';
+                                        const color = { A: '#bbf7d0', AF: '#fecaca', Z: '#fed7aa', TL: '#fef08a' }[abbr] || '#f3f4f6';
+                                        return `<td style="background:${color}; font-weight:700; text-align:center;">${abbr}</td>`;
+                                    }
+                                    return `<td>&nbsp;</td>`;
+                                }).join('');
+                                return `<tr>
+                                    <td style="text-align:left; font-weight:600;">${student.name}</td>
+                                    <td style="text-align:left;">${companyName}</td>
+                                    ${cells}
+                                    <td style="min-width:80px;">&nbsp;</td>
+                                </tr>`;
+                            }).join('')}
+                        </tbody>
+                    </table>
+                    <div style="margin-top:14px; font-size:10px; color:#666; border-top:1px solid #ccc; padding-top:6px;">
+                        A = Aanwezig &nbsp;|&nbsp; AF = Afwezig &nbsp;|&nbsp; Z = Ziek &nbsp;|&nbsp; TL = Te laat
+                    </div>
+                `;
+
+            } else {
+                // ── FORMULIER PER LEERLING ──
+                document.getElementById('print-mode-label').textContent = `🖨️ Formulieren per leerling – ${weekLabel}`;
+                printContent.innerHTML = printStudents.map(student => {
+                    const company = companies.find(c => c.id === student.company_id);
+                    const companyName = company ? company.company_name : '–';
+                    const supervisor = student.supervisor_id ? '(zie stagebegeleider)' : '';
+
+                    const rows = weekDays.map(wd => {
+                        const isScheduled = !student.scheduled_days || student.scheduled_days.length === 0 || student.scheduled_days.includes(wd.dayCode);
+                        if (!isScheduled) {
+                            return `<tr style="background:#f8f8f8; color:#aaa;">
+                                <td>${wd.fullLabel}</td>
+                                <td colspan="3" style="text-align:center; font-style:italic; font-size:11px;">Schooldag</td>
+                                <td>&nbsp;</td>
+                            </tr>`;
+                        }
+                        const record = allAttendance.find(a => a.student_id === student.id && a.date === wd.dateStr);
+                        let statusCell = '☐ A &nbsp; ☐ AF &nbsp; ☐ Z &nbsp; ☐ TL';
+                        let hoursCell = '&nbsp;';
+                        if (record && record.student_status) {
+                            const abbr = statusAbbr[record.student_status] || '?';
+                            const color = { A: '#bbf7d0', AF: '#fecaca', Z: '#fed7aa', TL: '#fef08a' }[abbr] || '#f3f4f6';
+                            statusCell = `<span style="background:${color}; padding:2px 8px; border-radius:4px; font-weight:700;">${abbr}</span>`;
+                            hoursCell = record.student_hours > 0 ? `${record.student_hours} uur` : '–';
+                        }
+                        return `<tr>
+                            <td>${wd.fullLabel}</td>
+                            <td style="text-align:center;">${statusCell}</td>
+                            <td style="text-align:center;">${hoursCell}</td>
+                            <td style="min-width:120px;">&nbsp;</td>
+                        </tr>`;
+                    }).join('');
+
+                    return `
+                        <div class="student-form-card">
+                            <div class="form-header">
+                                <h2 style="font-size:16px; font-weight:700; margin:0 0 4px;">${student.name}</h2>
+                                <div style="display:flex; gap:24px; font-size:12px; color:#444;">
+                                    <span>🏢 <strong>Stageplek:</strong> ${companyName}</span>
+                                    <span>📅 <strong>Periode:</strong> ${weekLabel}</span>
+                                </div>
+                                <div style="font-size:11px; color:#888; margin-top:4px;">
+                                    StageConnectie &nbsp;·&nbsp; Afdruk: ${printDate}
+                                </div>
+                            </div>
+                            <table class="student-form-table">
+                                <thead>
+                                    <tr>
+                                        <th style="min-width:140px;">Dag</th>
+                                        <th style="min-width:180px; text-align:center;">Status</th>
+                                        <th style="min-width:80px; text-align:center;">Uren</th>
+                                        <th style="min-width:160px;">Handtekening werkgever</th>
+                                    </tr>
+                                </thead>
+                                <tbody>${rows}</tbody>
+                            </table>
+                            <div style="margin-top:14px; font-size:10px; color:#666;">
+                                A = Aanwezig &nbsp;|&nbsp; AF = Afwezig &nbsp;|&nbsp; Z = Ziek &nbsp;|&nbsp; TL = Te laat &nbsp;·&nbsp;
+                                Ingeleverd bij stagebegeleider: ______________ &nbsp; Datum: ______________
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            // Toon print sectie
+            document.getElementById('print-section').style.display = 'block';
+            document.querySelector('main').style.display = 'none';
+            document.querySelector('header').style.display = 'none';
+        }
+
+        function closePrintSection() {
+            document.getElementById('print-section').style.display = 'none';
+            document.querySelector('main').style.display = '';
+            document.querySelector('header').style.display = '';
+        }
+
+        // Sluit modal bij klik buiten
+        document.getElementById('edit-modal').addEventListener('click', function (e) {
+            if (e.target === this) closeEditModal();
+        });
+
+        // Start
+        init();
+    </script>
 </body>
 
 </html>
