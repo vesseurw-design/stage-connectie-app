@@ -265,12 +265,18 @@
         <!-- Schermknoppen (niet geprint) -->
         <div class="no-print" style="display:flex; gap:12px; padding:16px; background:#f9fafb; border-bottom:1px solid #e5e7eb; align-items:center; flex-wrap:wrap;">
             <strong style="font-size:14px; color:#374151; margin-right:8px;" id="print-mode-label">Overzicht</strong>
-            <div style="display:flex; gap:8px; align-items:center; margin-right:16px; background:#f3f4f6; padding:4px 12px; border-radius:8px; border:1px solid #e5e7eb;">
-                <span style="font-size:12px; font-weight:600; color:#4b5563;">Periode aanpassen:</span>
+            <div style="display:flex; gap:8px; align-items:center; margin-right:16px; background:#f3f4f6; padding:4px 12px; border-radius:8px; border:1px solid #e5e7eb; flex-wrap:wrap;">
+                <span style="font-size:12px; font-weight:600; color:#4b5563;">Periode:</span>
                 <label style="font-size:12px; color:#4b5563;">Van</label>
                 <input type="date" id="print-start-date" style="border:1px solid #d1d5db; padding:4px 6px; border-radius:6px; font-size:12px; outline:none;">
                 <label style="font-size:12px; color:#4b5563;">Tot</label>
                 <input type="date" id="print-end-date" style="border:1px solid #d1d5db; padding:4px 6px; border-radius:6px; font-size:12px; outline:none;">
+                
+                <span style="font-size:12px; font-weight:600; color:#4b5563; margin-left:8px;">Leerling:</span>
+                <select id="print-student-select" style="border:1px solid #d1d5db; padding:4px 6px; border-radius:6px; font-size:12px; outline:none; background:white; max-width:180px;">
+                    <option value="all">Alle leerlingen</option>
+                </select>
+
                 <button onclick="regeneratePrintContent()" style="background:#0284c7;color:white;border:none;padding:5px 12px;border-radius:6px;cursor:pointer;font-weight:600;font-size:12px;transition:background 0.2s;">
                     Toepassen
                 </button>
@@ -710,6 +716,19 @@
             document.getElementById('print-start-date').value = monday.toISOString().split('T')[0];
             document.getElementById('print-end-date').value = friday.toISOString().split('T')[0];
 
+            // Vul studenten dropdown in print-section
+            const selectEl = document.getElementById('print-student-select');
+            if (selectEl) {
+                selectEl.innerHTML = '<option value="all">Alle leerlingen</option>';
+                const sortedStudents = [...students].sort((a, b) => a.name.localeCompare(b.name));
+                sortedStudents.forEach(s => {
+                    const opt = document.createElement('option');
+                    opt.value = s.id;
+                    opt.textContent = s.name;
+                    selectEl.appendChild(opt);
+                });
+            }
+
             regeneratePrintContent();
 
             // Toon print sectie
@@ -737,7 +756,14 @@
             const periodLabel = `Periode van ${wStart} t/m ${wEnd}`;
             const printDate = new Date().toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' });
             const statusAbbr = { present: 'A', absent: 'AF', sick: 'Z', late: 'TL' };
-            const printStudents = [...students].sort((a, b) => a.name.localeCompare(b.name));
+            
+            // Filter studenten op basis van dropdown
+            const selectedStudentId = document.getElementById('print-student-select').value;
+            let printStudents = [...students].sort((a, b) => a.name.localeCompare(b.name));
+            if (selectedStudentId !== 'all') {
+                printStudents = printStudents.filter(s => s.id === selectedStudentId);
+            }
+
             const printContent = document.getElementById('print-content');
 
             if (currentPrintMode === 'overview') {
