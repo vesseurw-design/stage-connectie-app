@@ -263,8 +263,18 @@
     <div id="print-section">
 
         <!-- Schermknoppen (niet geprint) -->
-        <div class="no-print" style="display:flex; gap:8px; padding:16px; background:#f9fafb; border-bottom:1px solid #e5e7eb; align-items:center;">
+        <div class="no-print" style="display:flex; gap:12px; padding:16px; background:#f9fafb; border-bottom:1px solid #e5e7eb; align-items:center; flex-wrap:wrap;">
             <strong style="font-size:14px; color:#374151; margin-right:8px;" id="print-mode-label">Overzicht</strong>
+            <div style="display:flex; gap:8px; align-items:center; margin-right:16px; background:#f3f4f6; padding:4px 12px; border-radius:8px; border:1px solid #e5e7eb;">
+                <span style="font-size:12px; font-weight:600; color:#4b5563;">Periode aanpassen:</span>
+                <label style="font-size:12px; color:#4b5563;">Van</label>
+                <input type="date" id="print-start-date" style="border:1px solid #d1d5db; padding:4px 6px; border-radius:6px; font-size:12px; outline:none;">
+                <label style="font-size:12px; color:#4b5563;">Tot</label>
+                <input type="date" id="print-end-date" style="border:1px solid #d1d5db; padding:4px 6px; border-radius:6px; font-size:12px; outline:none;">
+                <button onclick="regeneratePrintContent()" style="background:#0284c7;color:white;border:none;padding:5px 12px;border-radius:6px;cursor:pointer;font-weight:600;font-size:12px;transition:background 0.2s;">
+                    Toepassen
+                </button>
+            </div>
             <button onclick="window.print()"
                 style="background:#4f46e5;color:white;border:none;padding:8px 18px;border-radius:8px;cursor:pointer;font-weight:600;font-size:13px;">
                 🖨️ Afdrukken
@@ -655,25 +665,29 @@
         // ========================
         // PRINT OVERZICHT
         // ========================
-        function getWeekDays(dateFilter) {
-            const selected = new Date(dateFilter);
-            const day = selected.getDay();
-            const diff = selected.getDate() - day + (day === 0 ? -6 : 1);
-            const monday = new Date(selected);
-            monday.setDate(selected.getDate() - day + (day === 0 ? -6 : 1));
+        let currentPrintMode = 'overview';
 
-            const weekDays = [];
-            for (let i = 0; i < 5; i++) {
-                const d = new Date(monday);
-                d.setDate(monday.getDate() + i);
-                weekDays.push({
-                    label: d.toLocaleDateString('nl-NL', { weekday: 'short', day: 'numeric', month: 'numeric' }),
-                    fullLabel: d.toLocaleDateString('nl-NL', { weekday: 'long', day: 'numeric', month: 'long' }),
-                    dateStr: d.toISOString().split('T')[0],
-                    dayCode: ['', 'Ma', 'Di', 'Wo', 'Do', 'Vr', ''][d.getDay()]
-                });
+        function getDaysInRange(startDateStr, endDateStr) {
+            const start = new Date(startDateStr);
+            const end = new Date(endDateStr);
+            const days = [];
+            let current = new Date(start);
+            let count = 0;
+            while (current <= end && count < 200) {
+                const dayNum = current.getDay();
+                if (dayNum >= 1 && dayNum <= 5) {
+                    const d = new Date(current);
+                    days.push({
+                        label: d.toLocaleDateString('nl-NL', { weekday: 'short', day: 'numeric', month: 'numeric' }),
+                        fullLabel: d.toLocaleDateString('nl-NL', { weekday: 'long', day: 'numeric', month: 'long' }),
+                        dateStr: d.toISOString().split('T')[0],
+                        dayCode: ['', 'Ma', 'Di', 'Wo', 'Do', 'Vr', ''][d.getDay()]
+                    });
+                }
+                current.setDate(current.getDate() + 1);
+                count++;
             }
-            return weekDays;
+            return days;
         }
 
         function openPrintSection(mode) {
@@ -683,22 +697,56 @@
                 return;
             }
 
-            const weekDays = getWeekDays(dateFilter);
-            const wStart = weekDays[0].label;
-            const wEnd = weekDays[4].label;
-            const weekLabel = `Week van ${wStart} t/m ${wEnd}`;
+            currentPrintMode = mode;
+
+            // Bepaal standaard de week (maandag t/m vrijdag) op basis van de geselecteerde filterdatum
+            const current = new Date(dateFilter);
+            const day = current.getDay();
+            const monday = new Date(current);
+            monday.setDate(current.getDate() - day + (day === 0 ? -6 : 1));
+            const friday = new Date(monday);
+            friday.setDate(monday.getDate() + 4);
+
+            document.getElementById('print-start-date').value = monday.toISOString().split('T')[0];
+            document.getElementById('print-end-date').value = friday.toISOString().split('T')[0];
+
+            regeneratePrintContent();
+
+            // Toon print sectie
+            document.getElementById('print-section').style.display = 'block';
+            document.querySelector('main').style.display = 'none';
+            document.querySelector('header').style.display = 'none';
+        }
+
+        function regeneratePrintContent() {
+            const startVal = document.getElementById('print-start-date').value;
+            const endVal = document.getElementById('print-end-date').value;
+            if (!startVal || !endVal) {
+                alert('Selecteer een geldige start- en einddatum.');
+                return;
+            }
+
+            const days = getDaysInRange(startVal, endVal);
+            if (days.length === 0) {
+                alert('Geen werkdagen gevonden in deze periode.');
+                return;
+            }
+
+            const wStart = new Date(startVal).toLocaleDateString('nl-NL', { day: 'numeric', month: 'numeric' });
+            const wEnd = new Date(endVal).toLocaleDateString('nl-NL', { day: 'numeric', month: 'numeric' });
+            const periodLabel = `Periode van ${wStart} t/m ${wEnd}`;
             const printDate = new Date().toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' });
             const statusAbbr = { present: 'A', absent: 'AF', sick: 'Z', late: 'TL' };
             const printStudents = [...students].sort((a, b) => a.name.localeCompare(b.name));
             const printContent = document.getElementById('print-content');
 
-            if (mode === 'overview') {
+            if (currentPrintMode === 'overview') {
                 // ── TOTAALOVERZICHT ──
-                document.getElementById('print-mode-label').textContent = `📋 Totaaloverzicht – ${weekLabel}`;
+                document.getElementById('print-mode-label').textContent = `📋 Totaaloverzicht – ${periodLabel}`;
                 printContent.innerHTML = `
                     <div style="margin-bottom:14px;">
                         <h1 style="font-size:17px; font-weight:700; margin:0;">StageConnectie – Aanwezigheidsoverzicht</h1>
-                        <p style="font-size:12px; color:#555; margin:4px 0 0;">${weekLabel}</p>
+                        <p style="font-size:12px; color:#555; margin:4px 0 0;">${periodLabel}</p>
                         <p style="font-size:10px; color:#999; margin:2px 0 0;">Afdruk: ${printDate}</p>
                     </div>
                     <table class="print-table">
@@ -706,7 +754,7 @@
                             <tr>
                                 <th>Naam leerling</th>
                                 <th>Stageplek</th>
-                                ${weekDays.map(d => `<th>${d.label}</th>`).join('')}
+                                ${days.map(d => `<th>${d.label}</th>`).join('')}
                                 <th>Handtekening</th>
                             </tr>
                         </thead>
@@ -714,7 +762,7 @@
                             ${printStudents.map(student => {
                                 const company = companies.find(c => c.id === student.company_id);
                                 const companyName = company ? company.company_name : '–';
-                                const cells = weekDays.map(wd => {
+                                const cells = days.map(wd => {
                                     const isScheduled = !student.scheduled_days || student.scheduled_days.length === 0 || student.scheduled_days.includes(wd.dayCode);
                                     if (!isScheduled) return `<td style="background:#f0f0f0; color:#bbb; font-size:9px; text-align:center;">school</td>`;
                                     const record = allAttendance.find(a => a.student_id === student.id && a.date === wd.dateStr);
@@ -741,13 +789,12 @@
 
             } else {
                 // ── FORMULIER PER LEERLING ──
-                document.getElementById('print-mode-label').textContent = `🖨️ Formulieren per leerling – ${weekLabel}`;
+                document.getElementById('print-mode-label').textContent = `🖨️ Formulieren per leerling – ${periodLabel}`;
                 printContent.innerHTML = printStudents.map(student => {
                     const company = companies.find(c => c.id === student.company_id);
                     const companyName = company ? company.company_name : '–';
-                    const supervisor = student.supervisor_id ? '(zie stagebegeleider)' : '';
 
-                    const rows = weekDays.map(wd => {
+                    const rows = days.map(wd => {
                         const isScheduled = !student.scheduled_days || student.scheduled_days.length === 0 || student.scheduled_days.includes(wd.dayCode);
                         if (!isScheduled) {
                             return `<tr style="background:#f8f8f8; color:#aaa;">
@@ -779,7 +826,7 @@
                                 <h2 style="font-size:16px; font-weight:700; margin:0 0 4px;">${student.name}</h2>
                                 <div style="display:flex; gap:24px; font-size:12px; color:#444;">
                                     <span>🏢 <strong>Stageplek:</strong> ${companyName}</span>
-                                    <span>📅 <strong>Periode:</strong> ${weekLabel}</span>
+                                    <span>📅 <strong>Periode:</strong> ${periodLabel}</span>
                                 </div>
                                 <div style="font-size:11px; color:#888; margin-top:4px;">
                                     StageConnectie &nbsp;·&nbsp; Afdruk: ${printDate}
