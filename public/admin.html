@@ -830,15 +830,21 @@
                             </tr>`;
                         }
                         const record = allAttendance.find(a => a.student_id === student.id && a.date === wd.dateStr);
-                        let statusCell = '☐ A &nbsp; ☐ AF &nbsp; ☐ Z &nbsp; ☐ TL';
-                        let hoursCell = '&nbsp;';
+                        const statusLabels = { present: 'Aanwezig', absent: 'Afwezig', sick: 'Ziek', late: 'Te laat' };
+                        const statusBgColors = { present: '#bbf7d0', absent: '#fecaca', sick: '#fed7aa', late: '#fef08a' };
+                        let statusCell, hoursCell, rowBg;
                         if (record && record.student_status) {
-                            const abbr = statusAbbr[record.student_status] || '?';
-                            const color = { A: '#bbf7d0', AF: '#fecaca', Z: '#fed7aa', TL: '#fef08a' }[abbr] || '#f3f4f6';
-                            statusCell = `<span style="background:${color}; padding:2px 8px; border-radius:4px; font-weight:700;">${abbr}</span>`;
-                            hoursCell = record.student_hours > 0 ? `${record.student_hours} uur` : '–';
+                            const label = statusLabels[record.student_status] || record.student_status;
+                            const bg = statusBgColors[record.student_status] || '#f3f4f6';
+                            rowBg = bg;
+                            statusCell = `<span style="background:${bg}; padding:4px 14px; border-radius:6px; font-weight:700; font-size:13px; border:1.5px solid rgba(0,0,0,0.1);">${label}</span>`;
+                            hoursCell = record.student_hours > 0 ? `<strong>${record.student_hours} uur</strong>` : '<span style="color:#aaa;">–</span>';
+                        } else {
+                            rowBg = 'white';
+                            statusCell = `<span style="color:#bbb; font-size:11px;">☐ Aanwezig &nbsp; ☐ Afwezig &nbsp; ☐ Ziek &nbsp; ☐ Te laat</span>`;
+                            hoursCell = '<span style="display:inline-block; width:60px; border-bottom:1px solid #999;">&nbsp;</span>';
                         }
-                        return `<tr>
+                        return `<tr style="background:${rowBg};">
                             <td>${wd.fullLabel}</td>
                             <td style="text-align:center;">${statusCell}</td>
                             <td style="text-align:center;">${hoursCell}</td>
