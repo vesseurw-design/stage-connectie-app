@@ -204,6 +204,14 @@
             <p class="text-sm text-gray-500 mb-6" id="modal-date-label"></p>
 
             <div class="space-y-5">
+                <!-- Info van werkgever -->
+                <div id="modal-employer-info" class="hidden bg-blue-50 border border-blue-100 p-3.5 rounded-xl text-xs text-blue-800 flex items-center gap-2 mb-4">
+                    <span class="text-base">🏢</span>
+                    <div>
+                        <strong>Invoer werkgever:</strong> <span id="modal-employer-status-text">–</span>
+                    </div>
+                </div>
+
                 <!-- Status knoppen -->
                 <div>
                     <label class="block text-sm font-semibold text-gray-700 mb-2">Status</label>
@@ -481,6 +489,26 @@
                 const company = companies.find(c => c.id === (student?.company_id));
                 const studentName = student ? student.name : `ID: ${record.student_id}`;
                 const companyName = company ? company.company_name : '–';
+                const studentStatusHtml = record.student_status ? `
+                    <span class="px-2 py-0.5 inline-flex items-center gap-1 text-[11px] font-semibold rounded-full ${statusClasses[record.student_status] || 'bg-gray-100 text-gray-600'}">
+                        🎓 Student: ${statusLabels[record.student_status] || record.student_status}
+                    </span>
+                ` : '';
+
+                const employerStatusHtml = record.status ? `
+                    <span class="px-2 py-0.5 inline-flex items-center gap-1 text-[11px] font-semibold rounded-full ${statusClasses[record.status] || 'bg-gray-100 text-gray-600'}">
+                        🏢 Werkgever: ${statusLabels[record.status] || record.status}${record.status === 'late' && record.minutes_late > 0 ? ` (${record.minutes_late}m)` : ''}
+                    </span>
+                ` : '';
+
+                const statusCellContent = `
+                    <div class="flex flex-col gap-1 items-start">
+                        ${studentStatusHtml}
+                        ${employerStatusHtml}
+                        ${(!studentStatusHtml && !employerStatusHtml) ? '<span class="text-gray-400 text-xs italic">Geen invoer</span>' : ''}
+                    </div>
+                `;
+
                 const hours = record.student_hours > 0 && record.student_status !== 'absent'
                     ? `${record.student_hours} uur` : '–';
 
@@ -489,11 +517,7 @@
                         <td class="px-6 py-4 text-sm font-semibold text-gray-900">${studentName}</td>
                         <td class="px-6 py-4 text-sm text-gray-500">${companyName}</td>
                         <td class="px-6 py-4 text-sm text-gray-500">${record.date}</td>
-                        <td class="px-6 py-4">
-                            <span class="px-2.5 py-1 inline-flex text-xs font-semibold rounded-full ${statusClasses[record.student_status] || 'bg-gray-100 text-gray-600'}">
-                                ${statusLabels[record.student_status] || record.student_status}
-                            </span>
-                        </td>
+                        <td class="px-6 py-4">${statusCellContent}</td>
                         <td class="px-6 py-4 text-sm text-gray-500">${hours}</td>
                         <td class="px-6 py-4 text-right">
                             <button onclick="openEditModal('${record.student_id}', '${record.date}', true)"
@@ -562,8 +586,23 @@
             // Reset knoppen
             resetModalButtons();
 
+            // Werkgever info laden
+            const record = allAttendance.find(a => a.student_id === studentId && a.date === date);
+            const empInfoBox = document.getElementById('modal-employer-info');
+            const empStatusText = document.getElementById('modal-employer-status-text');
+            const statusLabelsRaw = { present: 'Aanwezig', absent: 'Afwezig', sick: 'Ziek', late: 'Te laat' };
+            if (record && record.status) {
+                const empLabel = statusLabelsRaw[record.status] || record.status;
+                const lateStr = (record.status === 'late' && record.minutes_late > 0) ? ` (${record.minutes_late} min te laat)` : '';
+                empStatusText.innerHTML = `<span class="font-bold text-blue-900">${empLabel}</span>${lateStr}`;
+                empInfoBox.classList.remove('hidden');
+            } else {
+                empStatusText.textContent = 'Nog geen invoer';
+                empInfoBox.classList.add('hidden');
+            }
+
             if (hasExistingRecord) {
-                editingExistingRecord = allAttendance.find(a => a.student_id === studentId && a.date === date);
+                editingExistingRecord = record;
                 if (editingExistingRecord) {
                     selectModalStatus(editingExistingRecord.student_status);
                     document.getElementById('modal-hours').value = editingExistingRecord.student_hours || 0;
@@ -792,10 +831,25 @@
                                     const isScheduled = !student.scheduled_days || student.scheduled_days.length === 0 || student.scheduled_days.includes(wd.dayCode);
                                     if (!isScheduled) return `<td style="background:#f0f0f0; color:#bbb; font-size:9px; text-align:center;">school</td>`;
                                     const record = allAttendance.find(a => a.student_id === student.id && a.date === wd.dateStr);
-                                    if (record && record.student_status) {
-                                        const abbr = statusAbbr[record.student_status] || '?';
-                                        const color = { A: '#bbf7d0', AF: '#fecaca', Z: '#fed7aa', TL: '#fef08a' }[abbr] || '#f3f4f6';
-                                        return `<td style="background:${color}; font-weight:700; text-align:center;">${abbr}</td>`;
+                                    if (record) {
+                                        const sAbbr = record.student_status ? (statusAbbr[record.student_status] || '?') : '';
+                                        const eAbbr = record.status ? (statusAbbr[record.status] || '?') : '';
+                                        
+                                        if (eAbbr && sAbbr) {
+                                            if (eAbbr === sAbbr) {
+                                                const color = { A: '#bbf7d0', AF: '#fecaca', Z: '#fed7aa', TL: '#fef08a' }[eAbbr] || '#f3f4f6';
+                                                return `<td style="background:${color}; font-weight:700; text-align:center; font-size:11px;" title="Beide: ${eAbbr}">${eAbbr}</td>`;
+                                            } else {
+                                                const color = { A: '#bbf7d0', AF: '#fecaca', Z: '#fed7aa', TL: '#fef08a' }[eAbbr] || '#f3f4f6';
+                                                return `<td style="background:${color}; font-weight:700; text-align:center; font-size:10px; border:1.5px solid #ef4444;" title="Student: ${sAbbr}, Werkgever: ${eAbbr}">${sAbbr}/${eAbbr}</td>`;
+                                            }
+                                        } else if (eAbbr) {
+                                            const color = { A: '#bbf7d0', AF: '#fecaca', Z: '#fed7aa', TL: '#fef08a' }[eAbbr] || '#f3f4f6';
+                                            return `<td style="background:${color}; font-weight:700; text-align:center; font-size:11px; border-bottom:2px solid #16a34a;" title="Werkgever: ${eAbbr}">🏢${eAbbr}</td>`;
+                                        } else if (sAbbr) {
+                                            const color = { A: '#bbf7d0', AF: '#fecaca', Z: '#fed7aa', TL: '#fef08a' }[sAbbr] || '#f3f4f6';
+                                            return `<td style="background:${color}; font-weight:700; text-align:center; font-size:11px; border-bottom:2px dotted #8b5cf6;" title="Student: ${sAbbr}">🎓${sAbbr}</td>`;
+                                        }
                                     }
                                     return `<td>&nbsp;</td>`;
                                 }).join('');
@@ -840,12 +894,29 @@
                             ingevuldUren = record.student_hours > 0
                                 ? `<strong style="font-size:13px;">${record.student_hours}&thinsp;uur</strong>`
                                 : `<span style="color:#999;">–</span>`;
-                            werkgeverCheckCell = `☐ Akkoord &nbsp; ☐ Corrigeer: ________`;
+                            
+                            if (record.status) {
+                                const empLabel = statusLabelsFull[record.status] || record.status;
+                                const lateStr = (record.status === 'late' && record.minutes_late > 0) ? ` (${record.minutes_late}m)` : '';
+                                werkgeverCheckCell = `<span style="font-weight:700; color:#16a34a;">☑ ${empLabel}${lateStr}</span>`;
+                            } else {
+                                werkgeverCheckCell = `☐ Akkoord &nbsp; ☐ Corrigeer: ________`;
+                            }
                         } else {
-                            rowBg = 'white';
-                            ingevuldCell = `<span style="color:#bbb; font-size:11px; font-style:italic;">Geen invoer</span>`;
-                            ingevuldUren = `<span style="display:inline-block; width:50px; border-bottom:1px solid #999;">&nbsp;</span> uur`;
-                            werkgeverCheckCell = `☐ A &nbsp; ☐ AF &nbsp; &nbsp; ☐ Z &nbsp; &nbsp; ☐ TL`;
+                            if (record && record.status) {
+                                const empLabel = statusLabelsFull[record.status] || record.status;
+                                const lateStr = (record.status === 'late' && record.minutes_late > 0) ? ` (${record.minutes_late}m)` : '';
+                                const bg = statusBgColors[record.status] || '#f3f4f6';
+                                rowBg = bg + '22'; // licht transparant
+                                ingevuldCell = `<span style="color:#bbb; font-size:11px; font-style:italic;">Geen invoer</span>`;
+                                ingevuldUren = `<span style="color:#999;">–</span>`;
+                                werkgeverCheckCell = `<span style="font-weight:700; color:#16a34a;">☑ ${empLabel}${lateStr}</span>`;
+                            } else {
+                                rowBg = 'white';
+                                ingevuldCell = `<span style="color:#bbb; font-size:11px; font-style:italic;">Geen invoer</span>`;
+                                ingevuldUren = `<span style="display:inline-block; width:50px; border-bottom:1px solid #999;">&nbsp;</span> uur`;
+                                werkgeverCheckCell = `☐ A &nbsp; ☐ AF &nbsp; &nbsp; ☐ Z &nbsp; &nbsp; ☐ TL`;
+                            }
                         }
                         return `<tr style="background:${rowBg};">
                             <td style="font-size:12px;">${wd.fullLabel}</td>
