@@ -823,32 +823,36 @@
                     const rows = days.map(wd => {
                         const isScheduled = !student.scheduled_days || student.scheduled_days.length === 0 || student.scheduled_days.includes(wd.dayCode);
                         if (!isScheduled) {
-                            return `<tr style="background:#f8f8f8; color:#aaa;">
+                            return `<tr style="background:#f0f0f0; color:#aaa;">
                                 <td>${wd.fullLabel}</td>
-                                <td colspan="3" style="text-align:center; font-style:italic; font-size:11px;">Schooldag</td>
-                                <td>&nbsp;</td>
+                                <td colspan="4" style="text-align:center; font-style:italic; font-size:11px;">Schooldag – geen stage</td>
                             </tr>`;
                         }
                         const record = allAttendance.find(a => a.student_id === student.id && a.date === wd.dateStr);
-                        const statusLabels = { present: 'Aanwezig', absent: 'Afwezig', sick: 'Ziek', late: 'Te laat' };
+                        const statusLabelsFull = { present: 'Aanwezig', absent: 'Afwezig', sick: 'Ziek', late: 'Te laat' };
                         const statusBgColors = { present: '#bbf7d0', absent: '#fecaca', sick: '#fed7aa', late: '#fef08a' };
-                        let statusCell, hoursCell, rowBg;
+                        let ingevuldCell, ingevuldUren, werkgeverCheckCell, rowBg;
                         if (record && record.student_status) {
-                            const label = statusLabels[record.student_status] || record.student_status;
+                            const label = statusLabelsFull[record.student_status] || record.student_status;
                             const bg = statusBgColors[record.student_status] || '#f3f4f6';
-                            rowBg = bg;
-                            statusCell = `<span style="background:${bg}; padding:4px 14px; border-radius:6px; font-weight:700; font-size:13px; border:1.5px solid rgba(0,0,0,0.1);">${label}</span>`;
-                            hoursCell = record.student_hours > 0 ? `<strong>${record.student_hours} uur</strong>` : '<span style="color:#aaa;">–</span>';
+                            rowBg = bg + '22'; // licht transparant
+                            ingevuldCell = `<span style="background:${bg}; padding:3px 12px; border-radius:5px; font-weight:700; font-size:12px; border:1px solid rgba(0,0,0,0.12);">${label}</span>`;
+                            ingevuldUren = record.student_hours > 0
+                                ? `<strong style="font-size:13px;">${record.student_hours}&thinsp;uur</strong>`
+                                : `<span style="color:#999;">–</span>`;
+                            werkgeverCheckCell = `☐ Akkoord &nbsp; ☐ Corrigeer: ________`;
                         } else {
                             rowBg = 'white';
-                            statusCell = `<span style="color:#bbb; font-size:11px;">☐ Aanwezig &nbsp; ☐ Afwezig &nbsp; ☐ Ziek &nbsp; ☐ Te laat</span>`;
-                            hoursCell = '<span style="display:inline-block; width:60px; border-bottom:1px solid #999;">&nbsp;</span>';
+                            ingevuldCell = `<span style="color:#bbb; font-size:11px; font-style:italic;">Geen invoer</span>`;
+                            ingevuldUren = `<span style="display:inline-block; width:50px; border-bottom:1px solid #999;">&nbsp;</span> uur`;
+                            werkgeverCheckCell = `☐ A &nbsp; ☐ AF &nbsp; &nbsp; ☐ Z &nbsp; &nbsp; ☐ TL`;
                         }
                         return `<tr style="background:${rowBg};">
-                            <td>${wd.fullLabel}</td>
-                            <td style="text-align:center;">${statusCell}</td>
-                            <td style="text-align:center;">${hoursCell}</td>
-                            <td style="min-width:120px;">&nbsp;</td>
+                            <td style="font-size:12px;">${wd.fullLabel}</td>
+                            <td style="text-align:center;">${ingevuldCell}</td>
+                            <td style="text-align:center;">${ingevuldUren}</td>
+                            <td style="text-align:center; font-size:11px; color:#444;">${werkgeverCheckCell}</td>
+                            <td style="min-width:110px;">&nbsp;</td>
                         </tr>`;
                     }).join('');
 
@@ -867,10 +871,11 @@
                             <table class="student-form-table">
                                 <thead>
                                     <tr>
-                                        <th style="min-width:140px;">Dag</th>
-                                        <th style="min-width:180px; text-align:center;">Status</th>
-                                        <th style="min-width:80px; text-align:center;">Uren</th>
-                                        <th style="min-width:160px;">Handtekening werkgever</th>
+                                        <th style="min-width:130px;">Dag</th>
+                                        <th style="min-width:160px; text-align:center; background:#e0f2fe;">✏️ Ingevuld (app)</th>
+                                        <th style="min-width:70px; text-align:center; background:#e0f2fe;">Uren</th>
+                                        <th style="min-width:130px; text-align:center;">Werkgever check</th>
+                                        <th style="min-width:110px;">Handtekening</th>
                                     </tr>
                                 </thead>
                                 <tbody>${rows}</tbody>
