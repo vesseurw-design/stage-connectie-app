@@ -1,6 +1,15 @@
 <!DOCTYPE html>
 <html lang="nl">
 <head>
+    <script>
+        // Als de bezoeker op een subdomein (school) zit, stuur ze dan direct door naar de inlogpagina
+        (function() {
+            const hostname = window.location.hostname.toLowerCase();
+            if (hostname !== 'stageconnectie.nl' && hostname !== 'www.stageconnectie.nl' && hostname !== 'localhost' && hostname !== '127.0.0.1') {
+                window.location.replace('/login.html');
+            }
+        })();
+    </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>StageConnectie — Digitale stageregistratie voor het praktijkonderwijs</title>
