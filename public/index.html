@@ -1,125 +1,512 @@
 <!DOCTYPE html>
 <html lang="nl">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - StageConnect</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <title>StageConnectie — De slimme verbinding tussen school, leerling en bedrijf</title>
+    <meta name="description" content="StageConnectie digitaliseert de stageregistratie voor praktijkscholen. Realtime aanwezigheid, directe controle voor begeleiders en minder papierwerk voor bedrijven.">
     <link rel="icon" type="image/png" href="icon-v3.png">
     <link rel="apple-touch-icon" href="icon-v3.png">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
-        body {
-            font-family: "Inter", sans-serif;
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --indigo:   #4f46e5;
+            --indigo-d: #3730a3;
+            --indigo-l: #e0e7ff;
+            --teal:     #0d9488;
+            --amber:    #d97706;
+            --purple:   #7c3aed;
+            --slate:    #0f172a;
+            --slate-m:  #334155;
+            --slate-l:  #64748b;
+            --bg:       #f8fafc;
+        }
+
+        html { scroll-behavior: smooth; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--slate); overflow-x: hidden; }
+
+        /* ── NAV ─────────────────────────────────────── */
+        nav {
+            position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 1rem 2rem;
+            background: rgba(255,255,255,0.85);
+            backdrop-filter: blur(16px);
+            border-bottom: 1px solid rgba(79,70,229,0.08);
+            box-shadow: 0 1px 20px rgba(0,0,0,0.06);
+        }
+        .nav-logo { display: flex; align-items: center; gap: 0.6rem; text-decoration: none; }
+        .nav-logo img { height: 34px; }
+        .nav-logo span { font-size: 1.15rem; font-weight: 800; color: var(--indigo); letter-spacing: -0.5px; }
+        .nav-links { display: flex; gap: 0.4rem; align-items: center; }
+        .nav-links a {
+            padding: 0.45rem 0.9rem; border-radius: 8px;
+            font-size: 0.875rem; font-weight: 500; color: var(--slate-m);
+            text-decoration: none; transition: background 0.2s, color 0.2s;
+        }
+        .nav-links a:hover { background: var(--indigo-l); color: var(--indigo); }
+        .nav-cta {
+            padding: 0.5rem 1.2rem !important;
+            background: var(--indigo) !important; color: #fff !important;
+            border-radius: 10px !important; font-weight: 600 !important;
+            box-shadow: 0 2px 12px rgba(79,70,229,0.3);
+            transition: transform 0.15s, box-shadow 0.15s !important;
+        }
+        .nav-cta:hover { transform: translateY(-1px); box-shadow: 0 4px 20px rgba(79,70,229,0.4) !important; background: var(--indigo) !important; }
+
+        /* ── HERO ────────────────────────────────────── */
+        .hero {
+            min-height: 100vh;
+            display: flex; align-items: center; justify-content: center;
+            padding: 7rem 1.5rem 4rem;
+            background: linear-gradient(135deg, #eef2ff 0%, #f0fdf4 50%, #faf5ff 100%);
+            position: relative; overflow: hidden;
+        }
+        .hero::before {
+            content: '';
+            position: absolute; top: -200px; right: -200px;
+            width: 700px; height: 700px; border-radius: 50%;
+            background: radial-gradient(circle, rgba(79,70,229,0.08) 0%, transparent 70%);
+        }
+        .hero::after {
+            content: '';
+            position: absolute; bottom: -100px; left: -100px;
+            width: 500px; height: 500px; border-radius: 50%;
+            background: radial-gradient(circle, rgba(13,148,136,0.07) 0%, transparent 70%);
+        }
+        .hero-inner { max-width: 900px; text-align: center; position: relative; z-index: 1; }
+        .hero-badge {
+            display: inline-flex; align-items: center; gap: 0.5rem;
+            background: white; border: 1px solid var(--indigo-l);
+            color: var(--indigo); font-size: 0.8rem; font-weight: 600;
+            padding: 0.4rem 1rem; border-radius: 99px;
+            margin-bottom: 2rem;
+            box-shadow: 0 2px 8px rgba(79,70,229,0.1);
+            animation: fadeDown 0.6s ease both;
+        }
+        .hero-badge span { width: 7px; height: 7px; border-radius: 50%; background: var(--indigo); display: inline-block; animation: pulse 2s infinite; }
+        .hero h1 {
+            font-size: clamp(2.4rem, 6vw, 4.2rem);
+            font-weight: 900; line-height: 1.1; letter-spacing: -2px;
+            color: var(--slate);
+            animation: fadeUp 0.6s 0.1s ease both;
+            margin-bottom: 1.5rem;
+        }
+        .hero h1 em { font-style: normal; color: var(--indigo); }
+        .hero p {
+            font-size: clamp(1rem, 2.5vw, 1.25rem); color: var(--slate-l);
+            max-width: 640px; margin: 0 auto 2.5rem; line-height: 1.7;
+            animation: fadeUp 0.6s 0.2s ease both;
+        }
+        .hero-btns {
+            display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;
+            animation: fadeUp 0.6s 0.3s ease both;
+        }
+        .btn-primary {
+            display: inline-flex; align-items: center; gap: 0.5rem;
+            background: var(--indigo); color: #fff;
+            padding: 0.9rem 2rem; border-radius: 12px; font-weight: 700; font-size: 1rem;
+            text-decoration: none; border: none; cursor: pointer;
+            box-shadow: 0 4px 20px rgba(79,70,229,0.35);
+            transition: transform 0.15s, box-shadow 0.15s;
+        }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(79,70,229,0.45); }
+        .btn-outline {
+            display: inline-flex; align-items: center; gap: 0.5rem;
+            background: white; color: var(--slate);
+            padding: 0.9rem 2rem; border-radius: 12px; font-weight: 600; font-size: 1rem;
+            text-decoration: none; border: 1.5px solid #e2e8f0; cursor: pointer;
+            transition: border-color 0.2s, background 0.2s;
+        }
+        .btn-outline:hover { border-color: var(--indigo); background: var(--indigo-l); color: var(--indigo); }
+        .hero-stats {
+            display: flex; gap: 2.5rem; justify-content: center; margin-top: 4rem; flex-wrap: wrap;
+            animation: fadeUp 0.6s 0.4s ease both;
+        }
+        .stat { text-align: center; }
+        .stat-num { font-size: 2rem; font-weight: 900; color: var(--indigo); letter-spacing: -1px; }
+        .stat-label { font-size: 0.8rem; color: var(--slate-l); font-weight: 500; margin-top: 0.25rem; }
+
+        /* ── SECTION BASE ───────────────────────────── */
+        section { padding: 5rem 1.5rem; }
+        .section-label {
+            display: inline-block;
+            font-size: 0.78rem; font-weight: 700; letter-spacing: 1.5px;
+            text-transform: uppercase; color: var(--indigo);
+            background: var(--indigo-l); padding: 0.3rem 0.8rem; border-radius: 99px;
+            margin-bottom: 1rem;
+        }
+        .section-title {
+            font-size: clamp(1.8rem, 4vw, 2.8rem); font-weight: 800;
+            color: var(--slate); letter-spacing: -1px; line-height: 1.2;
+            margin-bottom: 1rem;
+        }
+        .section-sub { font-size: 1.05rem; color: var(--slate-l); max-width: 560px; line-height: 1.7; }
+        .center { text-align: center; margin-left: auto; margin-right: auto; }
+        .max-w { max-width: 1200px; margin-left: auto; margin-right: auto; }
+
+        /* ── HOW IT WORKS ───────────────────────────── */
+        #hoe-het-werkt { background: white; }
+        .steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 2rem; margin-top: 3.5rem; }
+        .step {
+            padding: 2rem; border-radius: 20px; border: 1.5px solid #f1f5f9;
+            background: #fafbff; position: relative; overflow: hidden;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .step:hover { transform: translateY(-4px); box-shadow: 0 16px 40px rgba(79,70,229,0.1); }
+        .step-num {
+            width: 44px; height: 44px; border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 900; font-size: 1.1rem; margin-bottom: 1.2rem;
+        }
+        .step h3 { font-size: 1.05rem; font-weight: 700; color: var(--slate); margin-bottom: 0.5rem; }
+        .step p { font-size: 0.9rem; color: var(--slate-l); line-height: 1.6; }
+
+        /* ── THREE ROLES ────────────────────────────── */
+        #wie-het-helpt { background: var(--bg); }
+        .roles { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; margin-top: 3.5rem; }
+        .role-card {
+            border-radius: 24px; padding: 2.5rem;
+            position: relative; overflow: hidden;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .role-card:hover { transform: translateY(-5px); }
+        .role-card.school { background: linear-gradient(135deg, #eef2ff, #dde6ff); }
+        .role-card.bedrijf { background: linear-gradient(135deg, #f0fdf4, #d1fae5); }
+        .role-card.leerling { background: linear-gradient(135deg, #faf5ff, #ede9fe); }
+        .role-icon {
+            width: 56px; height: 56px; border-radius: 16px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.6rem; margin-bottom: 1.5rem;
+        }
+        .school .role-icon { background: rgba(79,70,229,0.12); }
+        .bedrijf .role-icon { background: rgba(13,148,136,0.12); }
+        .leerling .role-icon { background: rgba(124,58,237,0.12); }
+        .role-card h3 { font-size: 1.2rem; font-weight: 800; margin-bottom: 0.4rem; color: var(--slate); }
+        .role-card .role-sub { font-size: 0.8rem; font-weight: 600; color: var(--slate-l); margin-bottom: 1.2rem; text-transform: uppercase; letter-spacing: 0.5px; }
+        .role-card ul { list-style: none; display: flex; flex-direction: column; gap: 0.6rem; }
+        .role-card ul li { display: flex; align-items: flex-start; gap: 0.6rem; font-size: 0.9rem; color: var(--slate-m); }
+        .role-card ul li::before { content: '✓'; font-weight: 800; font-size: 0.85rem; flex-shrink: 0; padding-top: 1px; }
+        .school ul li::before { color: var(--indigo); }
+        .bedrijf ul li::before { color: var(--teal); }
+        .leerling ul li::before { color: var(--purple); }
+
+        /* ── LOGIN PORTAL ───────────────────────────── */
+        #inloggen { background: linear-gradient(135deg, var(--slate) 0%, #1e1b4b 100%); }
+        #inloggen .section-label { background: rgba(255,255,255,0.1); color: #a5b4fc; }
+        #inloggen .section-title { color: white; }
+        #inloggen .section-sub { color: #94a3b8; }
+        .portals { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.2rem; margin-top: 3rem; }
+        .portal-card {
+            background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 20px; padding: 2rem; text-align: center;
+            text-decoration: none; color: white;
+            transition: background 0.2s, transform 0.2s, border-color 0.2s;
+            position: relative; overflow: hidden;
+        }
+        .portal-card:hover { background: rgba(255,255,255,0.12); transform: translateY(-4px); border-color: rgba(255,255,255,0.2); }
+        .portal-card::after {
+            content: '→';
+            position: absolute; bottom: 1.2rem; right: 1.5rem;
+            font-size: 1.1rem; opacity: 0.4;
+            transition: opacity 0.2s, right 0.2s;
+        }
+        .portal-card:hover::after { opacity: 1; right: 1.2rem; }
+        .portal-icon {
+            width: 64px; height: 64px; border-radius: 20px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.8rem; margin: 0 auto 1.2rem;
+        }
+        .portal-card h3 { font-size: 1.05rem; font-weight: 700; margin-bottom: 0.3rem; }
+        .portal-card p { font-size: 0.82rem; color: #94a3b8; }
+
+        /* ── CONTACT ────────────────────────────────── */
+        #contact { background: white; }
+        .contact-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items: center; }
+        @media (max-width: 768px) { .contact-grid { grid-template-columns: 1fr; gap: 2.5rem; } }
+        .contact-form { display: flex; flex-direction: column; gap: 1rem; }
+        .form-group { display: flex; flex-direction: column; gap: 0.4rem; }
+        .form-group label { font-size: 0.85rem; font-weight: 600; color: var(--slate-m); }
+        .form-group input, .form-group textarea, .form-group select {
+            padding: 0.75rem 1rem; border: 1.5px solid #e2e8f0; border-radius: 10px;
+            font-family: 'Inter', sans-serif; font-size: 0.9rem; color: var(--slate);
+            background: #fafbff; outline: none;
+            transition: border-color 0.2s;
+        }
+        .form-group input:focus, .form-group textarea:focus, .form-group select:focus {
+            border-color: var(--indigo);
+        }
+        .form-group textarea { resize: vertical; min-height: 120px; }
+        .form-success {
+            display: none; background: #d1fae5; border: 1.5px solid #6ee7b7;
+            color: #065f46; border-radius: 10px; padding: 1rem; font-weight: 600; font-size: 0.9rem;
+        }
+
+        /* ── FOOTER ─────────────────────────────────── */
+        footer {
+            background: var(--slate); color: #94a3b8;
+            padding: 2.5rem 1.5rem; text-align: center;
+        }
+        footer a { color: #a5b4fc; text-decoration: none; }
+        footer a:hover { text-decoration: underline; }
+        .footer-links { display: flex; gap: 1.5rem; justify-content: center; margin-bottom: 1rem; flex-wrap: wrap; }
+        .footer-links a { font-size: 0.85rem; }
+        .footer-copy { font-size: 0.8rem; }
+
+        /* ── ANIMATIONS ─────────────────────────────── */
+        @keyframes fadeUp   { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: none; } }
+        @keyframes fadeDown { from { opacity: 0; transform: translateY(-12px); } to { opacity: 1; transform: none; } }
+        @keyframes pulse    { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+        /* ── RESPONSIVE ─────────────────────────────── */
+        @media (max-width: 640px) {
+            nav { padding: 0.75rem 1rem; }
+            .nav-links a:not(.nav-cta) { display: none; }
         }
     </style>
 </head>
+<body>
 
-<body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen flex flex-col">
-    <div class="flex-1 flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md">
-            <div class="text-center mb-8">
-                <h1 class="text-3xl font-bold text-gray-800 mb-2">Werkgever Login</h1>
-                <img src="logo.png" alt="StageConnectie Logo" class="h-16 mx-auto mb-2 object-contain">
+<!-- ── NAVIGATIE ──────────────────────────────────────── -->
+<nav>
+    <a href="/" class="nav-logo">
+        <img src="stageconnectie-logo.png" alt="StageConnectie Logo" onerror="this.style.display='none'">
+        <span>StageConnectie</span>
+    </a>
+    <div class="nav-links">
+        <a href="#hoe-het-werkt">Hoe het werkt</a>
+        <a href="#wie-het-helpt">Voordelen</a>
+        <a href="#contact">Demo aanvragen</a>
+        <a href="#inloggen" class="nav-cta">Inloggen →</a>
+    </div>
+</nav>
+
+<!-- ── HERO ──────────────────────────────────────────── -->
+<section class="hero">
+    <div class="hero-inner">
+        <div class="hero-badge">
+            <span></span>
+            Speciaal voor het Praktijkonderwijs &amp; VSO
+        </div>
+        <h1>De slimste manier om<br><em>stageregistratie</em> te regelen</h1>
+        <p>Geen papieren urenstaten meer. Met StageConnectie registreren leerlingen hun aanwezigheid digitaal, ziet de school het realtime en geven werkgevers met één tik akkoord.</p>
+        <div class="hero-btns">
+            <a href="#inloggen" class="btn-primary">🔐 Portaal inloggen</a>
+            <a href="#contact" class="btn-outline">📩 Demo aanvragen</a>
+        </div>
+        <div class="hero-stats">
+            <div class="stat">
+                <div class="stat-num">100%</div>
+                <div class="stat-label">Papierloos</div>
             </div>
-            <form id="login-form" class="space-y-6">
-                <div>
-                    <label for="email" class="block text-sm font-medium text-gray-700 mb-2">Email</label>
-                    <input type="email" id="email" required placeholder="naam@bedrijf.nl"
-                        class="w-full px-4 py-3 bg-gray-50 border-2 border-gray-400 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:bg-white outline-none transition">
-                </div>
-                <div>
-                    <label for="password" class="block text-sm font-medium text-gray-700 mb-2">Wachtwoord</label>
-                    <div class="relative">
-                        <input type="password" id="password" required placeholder="••••••••"
-                            class="w-full px-4 py-3 bg-gray-50 border-2 border-gray-400 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:bg-white outline-none transition pr-10">
-                        <button type="button" onclick="togglePasswordVisibility('password', this)"
-                            class="absolute inset-y-0 right-0 px-3 flex items-center text-gray-500 hover:text-gray-700 focus:outline-none">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
-                                stroke="currentColor" class="w-5 h-5 eye-icon">
-                                <path stroke-linecap="round" stroke-linejoin="round"
-                                    d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
-                                <path stroke-linecap="round" stroke-linejoin="round"
-                                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                            </svg>
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
-                                stroke="currentColor" class="w-5 h-5 eye-slash-icon hidden">
-                                <path stroke-linecap="round" stroke-linejoin="round"
-                                    d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88" />
-                            </svg>
-                        </button>
-                    </div>
-                </div>
-
-
-                <div class="flex items-center justify-between mb-4">
-                    <div class="flex items-center">
-                        <input type="checkbox" id="remember-me"
-                            class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
-                        <label for="remember-me" class="ml-2 text-sm text-gray-600">Onthoud mij</label>
-                    </div>
-                    <a href="password-reset.html" class="text-sm text-blue-600 hover:text-blue-700">
-                        Wachtwoord vergeten?
-                    </a>
-                </div>
-
-                <div id="error-message"
-                    class="hidden bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm"></div>
-                <button type="submit"
-                    class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-lg transition duration-200 shadow-lg hover:shadow-xl">
-                    Inloggen
-                </button>
-            </form>
-
-            <div class="mt-6 text-center space-y-2">
-                <a href="supervisor-login.html" class="block text-sm text-green-600 hover:text-green-700">
-                    Stagebegeleider? Klik hier →
-                </a>
-                <a href="student-login.html" class="block text-sm text-purple-600 hover:text-purple-700">
-                    Leerling? Klik hier →
-                </a>
-                <a href="admin-login.html" class="block text-xs text-gray-400 hover:text-gray-600 mt-4">
-                    Admin Login
-                </a>
-                <p class="text-[10px] text-gray-300 mt-4">v4.1</p>
+            <div class="stat">
+                <div class="stat-num">Realtime</div>
+                <div class="stat-label">Aanwezigheidsoverzicht</div>
+            </div>
+            <div class="stat">
+                <div class="stat-num">48u</div>
+                <div class="stat-label">Opstarttijd nieuwe school</div>
+            </div>
+            <div class="stat">
+                <div class="stat-num">GDPR</div>
+                <div class="stat-label">Privacy-compliant</div>
             </div>
         </div>
     </div>
+</section>
 
-    <!-- Footer - Fixed at bottom -->
-    <footer class="py-3 text-center text-xs text-gray-600 bg-white/50 backdrop-blur-sm">
-        <div class="flex justify-center gap-3 flex-wrap px-4">
-            <a href="privacy-policy.html" class="hover:text-gray-900">Privacybeleid</a>
-            <span>•</span>
-            <a href="cookie-policy.html" class="hover:text-gray-900">Cookiebeleid</a>
-            <span>•</span>
-            <a href="terms.html" class="hover:text-gray-900">Algemene Voorwaarden</a>
+<!-- ── HOE HET WERKT ──────────────────────────────────── -->
+<section id="hoe-het-werkt">
+    <div class="max-w">
+        <div class="center" style="max-width: 600px;">
+            <div class="section-label">Hoe het werkt</div>
+            <h2 class="section-title center">Drie stappen, elke werkdag</h2>
+            <p class="section-sub center">Van leerling tot examendossier — alles geregeld zonder rondbellen of papier.</p>
         </div>
-        <p class="mt-1 text-gray-500">© 2025 StageConnectie</p>
-    </footer>
+        <div class="steps">
+            <div class="step">
+                <div class="step-num" style="background:#eef2ff; color:#4f46e5;">1</div>
+                <h3>🎓 Leerling meldt zich</h3>
+                <p>De leerling logt in op de telefoon en klikt op "Aanwezig" of "Afwezig". Bij afwezigheid toont de app direct de contactgegevens van het bedrijf en de begeleider om te bellen.</p>
+            </div>
+            <div class="step">
+                <div class="step-num" style="background:#f0fdf4; color:#0d9488;">2</div>
+                <h3>🏢 Werkgever keurt goed</h3>
+                <p>De werkgever logt in op zijn telefoon of laptop en ziet een helder weekoverzicht van zijn stagiair. Met één tik geeft hij akkoord op de uren of past hij ze aan.</p>
+            </div>
+            <div class="step">
+                <div class="step-num" style="background:#faf5ff; color:#7c3aed;">3</div>
+                <h3>📊 School heeft direct overzicht</h3>
+                <p>De begeleider ziet in het dashboard direct óf beide partijen akkoord zijn. Rode balk? Direct actie! Alles klopt? Rapport printen voor het dossier met één klik.</p>
+            </div>
+            <div class="step">
+                <div class="step-num" style="background:#fffbeb; color:#d97706;">4</div>
+                <h3>📬 Automatische herinnering</h3>
+                <p>Elke vrijdagmiddag stuurt het systeem automatisch een herinneringsmail aan bedrijven die de uren nog niet hebben ingevuld. Nooit meer nabellen!</p>
+            </div>
+        </div>
+    </div>
+</section>
 
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="./static/js/config.js"></script>
-    <script src="./static/js/auth_v2.js"></script>
-    <script>
-        function togglePasswordVisibility(inputId, button) {
-            const input = document.getElementById(inputId);
-            const type = input.type === 'password' ? 'text' : 'password';
-            input.type = type;
+<!-- ── DRIE ROLLEN ────────────────────────────────────── -->
+<section id="wie-het-helpt">
+    <div class="max-w">
+        <div class="center" style="max-width: 600px;">
+            <div class="section-label">Voor wie</div>
+            <h2 class="section-title center">Voordelen voor alle betrokkenen</h2>
+            <p class="section-sub center">StageConnectie maakt het leven makkelijker voor iedereen rondom de stage.</p>
+        </div>
+        <div class="roles">
+            <div class="role-card school">
+                <div class="role-icon">🏫</div>
+                <h3>De School</h3>
+                <div class="role-sub">Begeleider &amp; Admin</div>
+                <ul>
+                    <li>Realtime dashboard van alle leerlingen</li>
+                    <li>Discrepanties lichten direct rood op</li>
+                    <li>1-klik PDF voor het examendossier</li>
+                    <li>Eigen beveiligd subdomein &amp; database</li>
+                    <li>Automatische vrijdagherinneringen</li>
+                </ul>
+            </div>
+            <div class="role-card bedrijf">
+                <div class="role-icon">🏢</div>
+                <h3>Het Bedrijf</h3>
+                <div class="role-sub">Werkgever</div>
+                <ul>
+                    <li>Geen app te installeren — gewoon inloggen</li>
+                    <li>Alleen eigen stagiair(s) zichtbaar</li>
+                    <li>Uren goedkeuren met één tik</li>
+                    <li>Helder weekoverzicht op de telefoon</li>
+                    <li>Automatische herinnering via e-mail</li>
+                </ul>
+            </div>
+            <div class="role-card leerling">
+                <div class="role-icon">🎓</div>
+                <h3>De Leerling</h3>
+                <div class="role-sub">Student</div>
+                <ul>
+                    <li>Simpel inloggen met geboortedatum</li>
+                    <li>Aanwezigheid in 2 tikken geregeld</li>
+                    <li>Checklist bij afwezigheid: weet wat te doen</li>
+                    <li>Inzage in eigen aanwezigheidshistorie</li>
+                    <li>Telefoonnummer werkgever direct zichtbaar</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</section>
 
-            const eyeIcon = button.querySelector('.eye-icon');
-            const eyeSlashIcon = button.querySelector('.eye-slash-icon');
+<!-- ── INLOGGEN ───────────────────────────────────────── -->
+<section id="inloggen">
+    <div class="max-w">
+        <div class="center" style="max-width: 600px;">
+            <div class="section-label">Portaal</div>
+            <h2 class="section-title center">Kies jouw inlogpagina</h2>
+            <p class="section-sub center">Selecteer hieronder wie je bent om direct naar jouw portaal te gaan.</p>
+        </div>
+        <div class="portals">
+            <a href="student-login.html" class="portal-card" id="portal-leerling">
+                <div class="portal-icon" style="background: rgba(124,58,237,0.15);">🎓</div>
+                <h3>Leerling</h3>
+                <p>Meld aanwezigheid en vul uren in</p>
+            </a>
+            <a href="login.html" class="portal-card" id="portal-werkgever">
+                <div class="portal-icon" style="background: rgba(13,148,136,0.15);">🏢</div>
+                <h3>Werkgever</h3>
+                <p>Bekijk en keur uren goed</p>
+            </a>
+            <a href="supervisor-login.html" class="portal-card" id="portal-begeleider">
+                <div class="portal-icon" style="background: rgba(79,70,229,0.15);">👨‍🏫</div>
+                <h3>Stagebegeleider</h3>
+                <p>Overzicht en begeleiding van leerlingen</p>
+            </a>
+            <a href="admin-login.html" class="portal-card" id="portal-admin">
+                <div class="portal-icon" style="background: rgba(217,119,6,0.15);">⚙️</div>
+                <h3>School Admin</h3>
+                <p>Volledig beheer van het platform</p>
+            </a>
+        </div>
+    </div>
+</section>
 
-            if (type === 'password') {
-                eyeIcon.classList.remove('hidden');
-                eyeSlashIcon.classList.add('hidden');
-            } else {
-                eyeIcon.classList.add('hidden');
-                eyeSlashIcon.classList.remove('hidden');
-            }
-        }
-    </script>
+<!-- ── CONTACT ────────────────────────────────────────── -->
+<section id="contact">
+    <div class="max-w">
+        <div class="contact-grid">
+            <div>
+                <div class="section-label">Contact</div>
+                <h2 class="section-title">Interesse? Plan een gratis demo in.</h2>
+                <p class="section-sub" style="margin-bottom: 1.5rem;">Wij laten je in 15 minuten zien hoe StageConnectie werkt voor jouw school. Daarna staat de omgeving binnen 48 uur live met jullie eigen subdomein en logo.</p>
+                <div style="display:flex; flex-direction:column; gap:0.8rem;">
+                    <div style="display:flex; align-items:center; gap:0.7rem; font-size:0.9rem; color:var(--slate-m);">
+                        <span style="font-size:1.2rem;">✅</span> Gratis demo zonder verplichtingen
+                    </div>
+                    <div style="display:flex; align-items:center; gap:0.7rem; font-size:0.9rem; color:var(--slate-m);">
+                        <span style="font-size:1.2rem;">✅</span> Eigen subdomein &amp; database binnen 48 uur
+                    </div>
+                    <div style="display:flex; align-items:center; gap:0.7rem; font-size:0.9rem; color:var(--slate-m);">
+                        <span style="font-size:1.2rem;">✅</span> Vaste jaarprijs, geen verborgen kosten
+                    </div>
+                    <div style="display:flex; align-items:center; gap:0.7rem; font-size:0.9rem; color:var(--slate-m);">
+                        <span style="font-size:1.2rem;">✅</span> GDPR-compliant &amp; privacy-proof
+                    </div>
+                </div>
+            </div>
+            <div>
+                <form class="contact-form" id="contact-form" onsubmit="handleContactForm(event)">
+                    <div class="form-group">
+                        <label for="contact-naam">Naam</label>
+                        <input type="text" id="contact-naam" placeholder="Jouw naam" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="contact-school">School / Organisatie</label>
+                        <input type="text" id="contact-school" placeholder="Naam van de school" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="contact-email">E-mailadres</label>
+                        <input type="email" id="contact-email" placeholder="naam@school.nl" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="contact-bericht">Bericht (optioneel)</label>
+                        <textarea id="contact-bericht" placeholder="Vertel iets over jullie situatie..."></textarea>
+                    </div>
+                    <button type="submit" class="btn-primary" style="justify-content:center;">
+                        📩 Verstuur aanvraag
+                    </button>
+                    <div class="form-success" id="form-success">
+                        ✅ Bedankt! We nemen zo snel mogelijk contact met je op.
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ── FOOTER ─────────────────────────────────────────── -->
+<footer>
+    <div class="footer-links">
+        <a href="privacy-policy.html">Privacyverklaring</a>
+        <a href="#contact">Contact</a>
+        <a href="#inloggen">Inloggen</a>
+    </div>
+    <div class="footer-copy">© 2026 StageConnectie — Alle rechten voorbehouden.</div>
+</footer>
+
+<script>
+    function handleContactForm(e) {
+        e.preventDefault();
+        const btn = e.target.querySelector('button[type=submit]');
+        btn.textContent = '⏳ Verzenden...';
+        btn.disabled = true;
+        // Simulate send — hier later echte mailto of API koppeling
+        setTimeout(() => {
+            document.getElementById('contact-form').style.opacity = '0.5';
+            document.getElementById('form-success').style.display = 'block';
+        }, 1000);
+    }
+</script>
 </body>
-
 </html>
