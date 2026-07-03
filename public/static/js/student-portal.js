@@ -34,10 +34,31 @@ async function init() {
         if (currentStudent.company_id) {
             const { data: company } = await supabaseClient
                 .from('Bedrijven')
-                .select('company_name')
+                .select('company_name, phone')
                 .eq('id', currentStudent.company_id)
                 .single();
-            if (company) currentStudent.Bedrijven = company;
+            if (company) {
+                currentStudent.Bedrijven = company;
+                // Toon telefoonnummer in header
+                if (company.phone) {
+                    const phoneBlock = document.getElementById('company-phone-block');
+                    const phoneLink = document.getElementById('company-phone-link');
+                    const phoneText = document.getElementById('company-phone-text');
+                    if (phoneBlock && phoneLink && phoneText) {
+                        phoneText.textContent = company.phone;
+                        phoneLink.href = `tel:${company.phone}`;
+                        phoneBlock.classList.remove('hidden');
+                    }
+                    // Toon ook in afwezigheidsmodal
+                    const absentBlock = document.getElementById('absent-phone-block');
+                    const absentLink = document.getElementById('absent-phone-link');
+                    if (absentBlock && absentLink) {
+                        absentLink.textContent = company.phone;
+                        absentLink.href = `tel:${company.phone}`;
+                        absentBlock.classList.remove('hidden');
+                    }
+                }
+            }
         }
 
         renderHeader();
@@ -439,6 +460,71 @@ function logout() {
     localStorage.removeItem('stageconnect_student_session');
     localStorage.removeItem('student_email');
     window.location.href = 'student-login.html';
+}
+
+// ── GESCHIEDENIS TOGGLE ──
+let historyLoaded = false;
+
+function toggleHistory() {
+    const panel = document.getElementById('attendance-history-panel');
+    const chevron = document.getElementById('history-chevron');
+    const isHidden = panel.classList.contains('hidden');
+
+    if (isHidden) {
+        panel.classList.remove('hidden');
+        chevron.style.transform = 'rotate(180deg)';
+        if (!historyLoaded) loadAttendanceHistory();
+    } else {
+        panel.classList.add('hidden');
+        chevron.style.transform = 'rotate(0deg)';
+    }
+}
+
+async function loadAttendanceHistory() {
+    const container = document.getElementById('attendance-history');
+    container.innerHTML = '<div class="text-center text-gray-400 text-sm py-4">Laden...</div>';
+
+    const { data, error } = await supabaseClient
+        .from('Attendance')
+        .select('*')
+        .eq('student_id', currentStudent.id)
+        .not('student_status', 'is', null)
+        .order('date', { ascending: false })
+        .limit(60);
+
+    if (error || !data || data.length === 0) {
+        container.innerHTML = '<div class="text-center text-gray-400 text-sm py-4">Nog geen registraties gevonden.</div>';
+        historyLoaded = true;
+        return;
+    }
+
+    const statusConfig = {
+        present: { label: 'Aanwezig', icon: '✅', bg: 'bg-green-50', border: 'border-green-200', text: 'text-green-800' },
+        absent:  { label: 'Afwezig',  icon: '❌', bg: 'bg-red-50',   border: 'border-red-200',   text: 'text-red-800'   },
+        sick:    { label: 'Ziek',     icon: '🤒', bg: 'bg-orange-50',border: 'border-orange-200',text: 'text-orange-800' },
+        late:    { label: 'Te laat',  icon: '⏱️', bg: 'bg-yellow-50',border: 'border-yellow-200',text: 'text-yellow-800' },
+    };
+
+    container.innerHTML = data.map(record => {
+        const cfg = statusConfig[record.student_status] || { label: record.student_status, icon: '❓', bg: 'bg-gray-50', border: 'border-gray-200', text: 'text-gray-700' };
+        const dateObj = new Date(record.date);
+        const dateLabel = dateObj.toLocaleDateString('nl-NL', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+        const hoursStr = record.student_hours > 0 && record.student_status !== 'absent'
+            ? `<span class="ml-auto text-xs font-bold text-purple-700 bg-purple-100 px-2 py-0.5 rounded-full">${record.student_hours} uur</span>`
+            : '';
+        return `
+            <div class="flex items-center gap-3 px-4 py-3 rounded-xl border ${cfg.bg} ${cfg.border}">
+                <span class="text-xl flex-shrink-0">${cfg.icon}</span>
+                <div class="flex-1 min-w-0">
+                    <div class="text-xs text-gray-500 capitalize">${dateLabel}</div>
+                    <div class="font-bold ${cfg.text} text-sm">${cfg.label}</div>
+                </div>
+                ${hoursStr}
+            </div>
+        `;
+    }).join('');
+
+    historyLoaded = true;
 }
 
 init();
