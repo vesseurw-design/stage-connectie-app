@@ -412,15 +412,44 @@
 </footer>
 
 <script>
-    function sendForm(e) {
+    async function sendForm(e) {
         e.preventDefault();
         const btn = e.target.querySelector('button[type=submit]');
-        btn.textContent = 'Bezig...';
+        const originalText = btn.textContent;
+        btn.textContent = 'Verzenden...';
         btn.disabled = true;
-        setTimeout(() => {
-            e.target.style.opacity = '0.5';
-            document.getElementById('form-success').style.display = 'block';
-        }, 800);
+
+        const naam = document.getElementById('naam').value;
+        const school = document.getElementById('school').value;
+        const email = document.getElementById('email').value;
+        const bericht = document.getElementById('bericht').value;
+
+        try {
+            const response = await fetch('/api/contact', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ naam, school, email, bericht })
+            });
+
+            const result = await response.json();
+
+            if (response.ok && result.success) {
+                e.target.style.opacity = '0.5';
+                document.getElementById('form-success').style.display = 'block';
+                e.target.reset(); // Maak formulier leeg na succes
+            } else {
+                alert(result.error || 'Er is iets misgegaan bij het verzenden. Probeer het later opnieuw.');
+                btn.textContent = originalText;
+                btn.disabled = false;
+            }
+        } catch (error) {
+            console.error('Fout bij verzenden formulier:', error);
+            alert('Er is een netwerkfout opgetreden. Controleer je verbinding en probeer het opnieuw.');
+            btn.textContent = originalText;
+            btn.disabled = false;
+        }
     }
 </script>
 </body>
