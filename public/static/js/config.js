@@ -5,15 +5,11 @@
 
 const DB_CONFIGS = {
     // Groene Hart Pro College
-    'groenehartpro.stageconnectie.nl': {
+    'ghpc.stageconnectie.nl': {
         url: 'https://vdeipnqyesduiohxvuvu.supabase.co',
         key: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZkZWlwbnF5ZXNkdWlvaHh2dXZ1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc1MjY5NTEsImV4cCI6MjA4MzEwMjk1MX0.IknEZ-GQvspcppJxLR00ayBDq1DbL0HiUKy9RDb59DU'
     },
-    'groenehart.stageconnectie.nl': {
-        url: 'https://vdeipnqyesduiohxvuvu.supabase.co',
-        key: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZkZWlwbnF5ZXNkdWlvaHh2dXZ1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc1MjY5NTEsImV4cCI6MjA4MzEwMjk1MX0.IknEZ-GQvspcppJxLR00ayBDq1DbL0HiUKy9RDb59DU'
-    },
-    // Huidige hoofddomeinen (verwijzen tot 15 juli naar Groene Hart)
+    // Huidige hoofddomeinen
     'stageconnectie.nl': {
         url: 'https://vdeipnqyesduiohxvuvu.supabase.co',
         key: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZkZWlwbnF5ZXNkdWlvaHh2dXZ1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc1MjY5NTEsImV4cCI6MjA4MzEwMjk1MX0.IknEZ-GQvspcppJxLR00ayBDq1DbL0HiUKy9RDb59DU'
@@ -24,8 +20,8 @@ const DB_CONFIGS = {
     },
     // ProZoetermeer (Nieuwe school)
     'prozoetermeer.stageconnectie.nl': {
-        url: 'https://your-prozoetermeer-project.supabase.co', // TODO: Vervangen door daadwerkelijke Supabase URL zodra aangemaakt
-        key: 'hier-komt-de-anon-key-van-de-nieuwe-school'     // TODO: Vervangen door daadwerkelijke Supabase Anon Key
+        url: 'https://your-prozoetermeer-project.supabase.co', // TODO: Vervangen door daadwerkelijke Supabase URL
+        key: 'hier-komt-de-anon-key-van-de-nieuwe-school'
     },
     // Lokale ontwikkelomgeving fallback
     'localhost': {
@@ -40,14 +36,14 @@ const DB_CONFIGS = {
     // Selecteer de juiste configuratie
     let config = DB_CONFIGS[hostname];
     
-    // Als er geen exacte match is, controleer op subdomeinen (bijv. prozoetermeer.stageconnectie.nl)
+    // Als er geen exacte match is, controleer op subdomeinen
     if (!config) {
-        if (hostname.includes('prozoetermeer')) {
+        if (hostname.includes('ghpc')) {
+            config = DB_CONFIGS['ghpc.stageconnectie.nl'];
+        } else if (hostname.includes('prozoetermeer')) {
             config = DB_CONFIGS['prozoetermeer.stageconnectie.nl'];
-        } else if (hostname.includes('groenehart')) {
-            config = DB_CONFIGS['groenehartpro.stageconnectie.nl'];
         } else {
-            // Fallback naar localhost/Groene Hart
+            // Fallback
             config = DB_CONFIGS['localhost'];
         }
     }
