@@ -42,7 +42,7 @@ Er zijn **3 soorten gebruikers** in StageConnectie:
 -- Stel wachtwoord en role in
 UPDATE auth.users
 SET 
-    encrypted_password = crypt('JouwWachtwoord2025!', gen_salt('bf')),
+    encrypted_password = crypt('WelkomGHPC2026!', gen_salt('bf')),
     raw_user_meta_data = jsonb_build_object(
         'role', 'employer',  -- of 'supervisor' of 'admin'
         'name', 'Bedrijfsnaam'
@@ -227,9 +227,9 @@ WHERE b.email = 'email@example.nl';
 - Minimaal 1 speciaal teken (!, @, #, etc.)
 
 **Aanbevolen format:**
-- `WelkomBedrijf2025!`
-- `AdminNaam2025!`
-- `SupervisorNaam2025!`
+- `WelkomGHPC2026!`
+- `WelkomGHPC2026!`
+- `WelkomGHPC2026!`
 
 ---
 

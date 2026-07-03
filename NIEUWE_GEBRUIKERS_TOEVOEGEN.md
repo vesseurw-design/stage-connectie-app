@@ -26,7 +26,7 @@ INSERT INTO auth.users (
     'authenticated',
     'authenticated',
     'info@bedrijf.nl',                    -- ← Zelfde email als hierboven
-    crypt('WelkomBedrijfsnaam', gen_salt('bf')),  -- ← Wachtwoord
+    crypt('WelkomGHPC2026!', gen_salt('bf')),  -- ← Standaard tijdelijk wachtwoord
     now(),
     jsonb_build_object('role', 'employer'),
     now(),
@@ -63,7 +63,7 @@ INSERT INTO auth.users (
     'authenticated',
     'authenticated',
     'naam@youscope.nl',                   -- ← Zelfde email
-    crypt('WelkomStagebegeleider', gen_salt('bf')),
+    crypt('WelkomGHPC2026!', gen_salt('bf')), -- ← Standaard tijdelijk wachtwoord
     now(),
     jsonb_build_object('role', 'supervisor'),  -- ← Tijdelijk zonder supervisor_id
     now(),
@@ -97,7 +97,7 @@ INSERT INTO auth.users (
     'authenticated',
     'authenticated',
     'admin@school.nl',                    -- ← Vervang
-    crypt('WelkomAdmin', gen_salt('bf')),
+    crypt('WelkomGHPC2026!', gen_salt('bf')), -- ← Standaard tijdelijk wachtwoord
     now(),
     jsonb_build_object('role', 'admin'),
     now(),
@@ -110,9 +110,7 @@ INSERT INTO auth.users (
 
 ## 🔑 Standaard Wachtwoorden
 
-- **Bedrijven**: `Welkom[BedrijfsNaam]` (zonder spaties)
-- **Supervisors**: `WelkomStagebegeleider`
-- **Admins**: `WelkomAdmin`
+- **Standaard tijdelijk wachtwoord voor iedereen**: `WelkomGHPC2026!`
 
 **Gebruikers kunnen hun wachtwoord later wijzigen via "Wachtwoord vergeten"!**
 
