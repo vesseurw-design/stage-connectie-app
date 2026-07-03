@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inloggen - StageConnectie</title>
+    <link rel="icon" type="image/png" href="icon-v3.png">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #f8faff;
+            color: #1e293b;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem;
+        }
+
+        .card {
+            background: white;
+            border: 1.5px solid #e9eef5;
+            border-radius: 16px;
+            padding: 2.5rem 2rem;
+            width: 100%;
+            max-width: 440px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.03);
+            text-align: center;
+        }
+
+        .logo {
+            height: 56px;
+            margin-bottom: 1.5rem;
+            object-fit: contain;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: #0f172a;
+            margin-bottom: 0.5rem;
+            letter-spacing: -0.5px;
+        }
+
+        p {
+            font-size: 0.9rem;
+            color: #64748b;
+            margin-bottom: 2rem;
+            line-height: 1.5;
+        }
+
+        .school-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.85rem;
+        }
+
+        .school-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 0.25rem;
+            padding: 1.1rem;
+            background: #fafbff;
+            border: 1.5px solid #e9eef5;
+            border-radius: 12px;
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: #0f172a;
+            cursor: pointer;
+            transition: border-color 0.15s, background 0.15s, transform 0.1s;
+            text-decoration: none;
+        }
+
+        .school-btn:hover {
+            border-color: #8fb584;
+            background: #f2f7f1;
+            transform: translateY(-1px);
+        }
+
+        .school-btn span {
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: #94a3b8;
+        }
+
+        .footer {
+            margin-top: 2rem;
+            font-size: 0.8rem;
+            color: #94a3b8;
+        }
+
+        .footer a {
+            color: #8fb584;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .footer a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <img src="logo-stageconnectie.png" alt="StageConnectie Logo" class="logo">
+        <h1>Kies je school</h1>
+        <p>Selecteer de schoolomgeving waar je wilt inloggen om toegang te krijgen tot jouw portaal.</p>
+
+        <div class="school-list">
+            <!-- Groene Hart Praktijkschool -->
+            <a href="https://ghpc.stageconnectie.nl" class="school-btn">
+                🏫 Groene Hart College
+                <span>ghpc.stageconnectie.nl</span>
+            </a>
+
+            <!-- Demo Omgeving -->
+            <a href="login.html" class="school-btn">
+                🧪 StageConnectie Demo
+                <span>demo / testomgeving</span>
+            </a>
+        </div>
+
+        <div class="footer">
+            Staat jouw school er niet tussen?<br>
+            Neem contact op met je <a href="mailto:support@stageconnectie.nl">stagecoördinator</a>.
+        </div>
+    </div>
+
+</body>
+</html>
