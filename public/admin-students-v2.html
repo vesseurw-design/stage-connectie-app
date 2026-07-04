@@ -380,15 +380,27 @@
 
                 // Stap 3: Verwijder auth account via Edge Function (indien email bekend is)
                 if (student.email) {
-                    const { data: authResult, error: authError } = await supabaseClient.functions.invoke('delete-auth-account', {
-                        body: { email: student.email }
-                    });
+                    const functionUrl = `${SUPABASE_URL}/functions/v1/delete-auth-account`;
+                    
+                    try {
+                        const authRes = await fetch(functionUrl, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${SUPABASE_KEY}`
+                            },
+                            body: JSON.stringify({ email: student.email })
+                        });
 
-                    if (authError || (authResult && !authResult.success)) {
-                        console.warn('Auth account delete failed:', authError || authResult.error);
-                        alert('✅ Student verwijderd uit database!\n\n⚠️ Let op: Het inlog-account kon niet automatisch worden verwijderd.\nGa naar Supabase → Authentication → Users en verwijder handmatig indien nodig.');
-                    } else {
+                        const authResult = await authRes.json();
+                        if (!authRes.ok || !authResult.success) {
+                            throw new Error(authResult?.error || 'Auth account delete failed');
+                        }
+                        
                         alert('✅ Student en inlog-account succesvol verwijderd!');
+                    } catch (authError) {
+                        console.warn('Auth account delete failed:', authError);
+                        alert('✅ Student verwijderd uit database!\n\n⚠️ Let op: Het inlog-account kon niet automatisch worden verwijderd.\nGa naar Supabase → Authentication → Users en verwijder handmatig indien nodig.');
                     }
                 } else {
                     alert('✅ Student verwijderd!');
@@ -440,19 +452,26 @@
                     submitBtn.textContent = 'Account aanmaken...';
 
                     try {
-                        const { data: authResult, error: authError } = await supabaseClient.functions.invoke('create-auth-account', {
-                            body: {
+                        const functionUrl = `${SUPABASE_URL}/functions/v1/create-auth-account`;
+                        const authRes = await fetch(functionUrl, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${SUPABASE_KEY}`
+                            },
+                            body: JSON.stringify({
                                 email: data.email,
                                 password: password,
                                 role: 'student',
                                 name: data.name,
                                 loginUrl: 'https://stageconnectie.nl/student-login.html',
                                 sendEmail: false // Welkomstmail sturen we nu niet automatisch om verwarring te voorkomen bij tests
-                            }
+                            })
                         });
 
-                        if (authError || (authResult && !authResult.success)) {
-                            throw new Error(authError?.message || authResult?.error || 'Auth account creation failed');
+                        const authResult = await authRes.json();
+                        if (!authRes.ok || !authResult.success) {
+                            throw new Error(authResult?.error || 'Aanmaken account mislukt');
                         }
 
                         // Gebruik de ID van het gemaakte Auth-account om te matchen
