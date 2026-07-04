@@ -188,7 +188,7 @@ window.deleteCompany = async function (id) {
                 alert('✅ Bedrijf en login account succesvol verwijderd!');
             } catch (authError) {
                 console.warn('Auth account delete failed:', authError);
-                alert('✅ Bedrijf verwijderd!\n\n⚠️ Let op: Het login account kon niet automatisch worden verwijderd.\nGa naar Supabase → Authentication → Users en verwijder handmatig.');
+                alert('✅ Bedrijf verwijderd!\n\n⚠️ Let op: Het login account kon niet automatisch worden verwijderd. (Fout: ' + authError.message + ')\nGa naar Supabase → Authentication → Users en verwijder handmatig.');
             }
         } else {
             alert('✅ Bedrijf verwijderd!\n\n⚠️ Geen email gevonden.');

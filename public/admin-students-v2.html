@@ -400,7 +400,7 @@
                         alert('✅ Student en inlog-account succesvol verwijderd!');
                     } catch (authError) {
                         console.warn('Auth account delete failed:', authError);
-                        alert('✅ Student verwijderd uit database!\n\n⚠️ Let op: Het inlog-account kon niet automatisch worden verwijderd.\nGa naar Supabase → Authentication → Users en verwijder handmatig indien nodig.');
+                        alert('✅ Student verwijderd uit database!\n\n⚠️ Let op: Het inlog-account kon niet automatisch worden verwijderd. (Fout: ' + authError.message + ')\nGa naar Supabase → Authentication → Users en verwijder handmatig indien nodig.');
                     }
                 } else {
                     alert('✅ Student verwijderd!');
