@@ -168,7 +168,7 @@ window.deleteCompany = async function (id) {
         }
 
         // Step 3: Delete auth account via Edge Function
-        if (company.email) {
+        if (company.email || id) {
             const functionUrl = `${window.SUPABASE_URL}/functions/v1/delete-auth-account`;
             try {
                 const authRes = await fetch(functionUrl, {
@@ -177,7 +177,10 @@ window.deleteCompany = async function (id) {
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${window.SUPABASE_KEY}`
                     },
-                    body: JSON.stringify({ email: company.email })
+                    body: JSON.stringify({ 
+                        email: company.email,
+                        userId: id
+                    })
                 });
 
                 const authResult = await authRes.json();
