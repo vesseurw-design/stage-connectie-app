@@ -205,7 +205,7 @@
                         alert('✅ Begeleider en login account succesvol verwijderd!');
                     } catch (authError) {
                         console.warn('Auth account deletion failed:', authError);
-                        alert('⚠️ Begeleider verwijderd, maar login account kon niet worden verwijderd. Neem contact op met beheerder.');
+                        alert('⚠️ Begeleider verwijderd, maar login account kon niet worden verwijderd. (Fout: ' + authError.message + ') Neem contact op met beheerder.');
                     }
                 } else {
                     alert('✅ Begeleider verwijderd (geen email gevonden).');
