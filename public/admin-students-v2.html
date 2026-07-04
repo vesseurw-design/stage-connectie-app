@@ -358,10 +358,10 @@
             if (!confirm(`Weet je zeker dat je ${name} wilt verwijderen?`)) return;
 
             try {
-                // Stap 1: Haal student gegevens op (voor het emailadres)
+                // Stap 1: Haal student gegevens op (voor het emailadres en id)
                 const { data: student, error: fetchError } = await supabaseClient
                     .from('Students')
-                    .select('email')
+                    .select('id, email')
                     .eq('name', name)
                     .single();
 
@@ -378,8 +378,8 @@
                     return;
                 }
 
-                // Stap 3: Verwijder auth account via Edge Function (indien email bekend is)
-                if (student.email) {
+                // Stap 3: Verwijder auth account via Edge Function (indien email of id bekend is)
+                if (student.email || student.id) {
                     const functionUrl = `${SUPABASE_URL}/functions/v1/delete-auth-account`;
                     
                     try {
@@ -389,7 +389,10 @@
                                 'Content-Type': 'application/json',
                                 'Authorization': `Bearer ${SUPABASE_KEY}`
                             },
-                            body: JSON.stringify({ email: student.email })
+                            body: JSON.stringify({ 
+                                email: student.email,
+                                userId: student.id
+                            })
                         });
 
                         const authResult = await authRes.json();
