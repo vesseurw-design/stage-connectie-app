@@ -19,7 +19,7 @@ serve(async (req) => {
         // Get Supabase Admin client
         const supabaseAdmin = createClient(
             Deno.env.get('SUPABASE_URL') ?? '',
-            Deno.env.get('SERVICE_ROLE_KEY') ?? '',
+            Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
             {
                 auth: {
                     autoRefreshToken: false,
@@ -29,35 +29,40 @@ serve(async (req) => {
         )
 
         // Get request data
-        const { email } = await req.json()
+        const { email, userId } = await req.json()
 
         // Validate
-        if (!email) {
-            throw new Error('Email is required')
+        if (!email && !userId) {
+            throw new Error('Email or userId is required')
         }
 
-        // Find the user by email
-        const { data: users, error: listError } = await supabaseAdmin.auth.admin.listUsers()
+        let targetUserId = userId
 
-        if (listError) throw listError
+        // If no userId is provided, find the user by email
+        if (!targetUserId) {
+            const { data: users, error: listError } = await supabaseAdmin.auth.admin.listUsers()
 
-        const user = users.users.find(u => u.email === email)
+            if (listError) throw listError
 
-        if (!user) {
-            return new Response(
-                JSON.stringify({
-                    success: false,
-                    error: 'User not found'
-                }),
-                {
-                    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-                    status: 404
-                }
-            )
+            const user = users.users.find(u => u.email === email)
+
+            if (!user) {
+                return new Response(
+                    JSON.stringify({
+                        success: false,
+                        error: 'User not found'
+                    }),
+                    {
+                        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+                        status: 404
+                    }
+                )
+            }
+            targetUserId = user.id
         }
 
         // Delete the auth user
-        const { error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(user.id)
+        const { error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(targetUserId)
 
         if (deleteError) throw deleteError
 
@@ -78,7 +83,7 @@ serve(async (req) => {
         return new Response(
             JSON.stringify({
                 success: false,
-                error: error.message || 'Unknown error'
+                error: error?.message || String(error) || 'Unknown error'
             }),
             {
                 headers: { ...corsHeaders, 'Content-Type': 'application/json' },
