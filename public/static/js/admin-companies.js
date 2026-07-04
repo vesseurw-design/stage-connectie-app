@@ -169,17 +169,26 @@ window.deleteCompany = async function (id) {
 
         // Step 3: Delete auth account via Edge Function
         if (company.email) {
-            const { data: authResult, error: authError } = await supabaseClient.functions.invoke('delete-auth-account', {
-                body: {
-                    email: company.email
-                }
-            });
+            const functionUrl = `${window.SUPABASE_URL}/functions/v1/delete-auth-account`;
+            try {
+                const authRes = await fetch(functionUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${window.SUPABASE_KEY}`
+                    },
+                    body: JSON.stringify({ email: company.email })
+                });
 
-            if (authError || (authResult && !authResult.success)) {
-                console.warn('Auth account delete failed:', authError || authResult.error);
-                alert('✅ Bedrijf verwijderd!\n\n⚠️ Let op: Het login account kon niet automatisch worden verwijderd.\nGa naar Supabase → Authentication → Users en verwijder handmatig.');
-            } else {
+                const authResult = await authRes.json();
+                if (!authRes.ok || !authResult.success) {
+                    throw new Error(authResult?.error || 'Auth account delete failed');
+                }
+
                 alert('✅ Bedrijf en login account succesvol verwijderd!');
+            } catch (authError) {
+                console.warn('Auth account delete failed:', authError);
+                alert('✅ Bedrijf verwijderd!\n\n⚠️ Let op: Het login account kon niet automatisch worden verwijderd.\nGa naar Supabase → Authentication → Users en verwijder handmatig.');
             }
         } else {
             alert('✅ Bedrijf verwijderd!\n\n⚠️ Geen email gevonden.');
@@ -245,31 +254,33 @@ document.getElementById('company-form').addEventListener('submit', async (e) => 
             }
 
             // Step 2: Create auth account via Edge Function
-            const { data: authResult, error: authError } = await supabaseClient.functions.invoke('create-auth-account', {
-                body: {
-                    email: email,
-                    password: password,
-                    role: 'employer',
-                    metadata: {
-                        company_name: companyName
-                    }
+            try {
+                const functionUrl = `${window.SUPABASE_URL}/functions/v1/create-auth-account`;
+                const authRes = await fetch(functionUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${window.SUPABASE_KEY}`
+                    },
+                    body: JSON.stringify({
+                        email: email,
+                        password: password,
+                        role: 'employer',
+                        metadata: {
+                            company_name: companyName
+                        }
+                    })
+                });
+
+                const authResult = await authRes.json();
+                if (!authRes.ok || !authResult.success) {
+                    throw new Error(authResult?.error || 'Auth account creation failed');
                 }
-            });
-
-            // Check for errors - but be careful, sometimes it works despite errors
-            if (authError) {
-                console.warn('Edge Function error (but might have succeeded):', authError);
-                // Don't rollback - the account might have been created
-                alert('⚠️ Bedrijf toegevoegd!\n\nEr was een melding van de server, maar het bedrijf is aangemaakt.\n\nLogin gegevens:\nEmail: ' + email + '\nWachtwoord: ' + password + '\n\n✅ Refresh de pagina en test of het bedrijf kan inloggen.');
-                closeModal();
-                loadData();
-                return;
-            }
-
-            if (authResult && !authResult.success) {
-                // Real error from Edge Function
+            } catch (authError) {
+                console.warn('Edge Function error:', authError);
+                // Rollback: delete company
                 await supabaseClient.from('Bedrijven').delete().eq('id', companyResult[0].id);
-                alert('Fout bij aanmaken login account: ' + (authResult.error || 'Onbekende fout'));
+                alert('Fout bij aanmaken login account: ' + authError.message);
                 return;
             }
 
