@@ -337,12 +337,20 @@
         async function checkAuth() {
             const { data: { session }, error } = await db.auth.getSession();
             if (error || !session) {
+                localStorage.removeItem('stageconnect_admin_session');
+                localStorage.removeItem('admin_email');
+                localStorage.removeItem('admin_name');
+                localStorage.removeItem('auth_user_id');
                 window.location.href = 'admin-login.html';
                 return false;
             }
             currentUser = session.user;
             if (currentUser.user_metadata?.role !== 'admin') {
                 alert('Je hebt geen admin rechten!');
+                localStorage.removeItem('stageconnect_admin_session');
+                localStorage.removeItem('admin_email');
+                localStorage.removeItem('admin_name');
+                localStorage.removeItem('auth_user_id');
                 window.location.href = 'admin-login.html';
                 return false;
             }
