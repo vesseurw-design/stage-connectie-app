@@ -476,22 +476,26 @@ function showToast() {
 }
 
 async function logout() {
+    console.log('logout() function called!');
+    alert('Uitloggen gestart...');
+    
     try {
-        // Sign out from Supabase Auth (but don't block redirect if it fails)
+        console.log('Calling Supabase signOut...');
         await supabaseClient.auth.signOut();
     } catch (e) {
         console.warn('Error signing out of Supabase:', e);
     }
 
-    // Clear localStorage
+    console.log('Clearing localStorage...');
     localStorage.removeItem('stageconnect_session');
     localStorage.removeItem('user_email');
     localStorage.removeItem('company_name');
     localStorage.removeItem('company_id');
 
-    // Redirect to login
+    console.log('Redirecting to index.html...');
     window.location.href = 'index.html';
 }
+window.logout = logout;
 
 
 // Setup realtime subscription for live updates across devices
