@@ -99,10 +99,19 @@ if (loginForm) {
             }
 
             let errorDetails = '';
-            if (typeof error === 'string') {
-                errorDetails = error;
-            } else if (error && typeof error === 'object') {
-                errorDetails = error.message || error.error_description || JSON.stringify(error);
+            if (error && typeof error === 'object') {
+                try {
+                    const propNames = Object.getOwnPropertyNames(error);
+                    errorDetails = propNames.map(k => {
+                        let val = error[k];
+                        if (val && typeof val === 'object') {
+                            try { val = JSON.stringify(val); } catch(je) { val = String(val); }
+                        }
+                        return k + ': ' + val;
+                    }).join(' | ');
+                } catch (e) {
+                    errorDetails = error.message || String(error);
+                }
             } else {
                 errorDetails = String(error);
             }
