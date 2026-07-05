@@ -119,7 +119,7 @@ function openModal(company = null) {
         document.getElementById('branche').value = company.branche || '';
         document.getElementById('contact_person').value = company.contact_person || '';
         document.getElementById('email').value = company.email || '';
-        document.getElementById('phone_number').value = company.phone_number || '';
+        document.getElementById('phone_number').value = company.phone || '';
     } else {
         title.textContent = 'Bedrijf Toevoegen';
         form.reset();
