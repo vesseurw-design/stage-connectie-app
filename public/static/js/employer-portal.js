@@ -477,8 +477,6 @@ function showToast() {
 
 async function logout() {
     console.log('logout() function called!');
-    alert('Uitloggen gestart...');
-    
     try {
         console.log('Calling Supabase signOut...');
         await supabaseClient.auth.signOut();
