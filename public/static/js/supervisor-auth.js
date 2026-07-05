@@ -98,7 +98,7 @@ if (loginForm) {
                 errorMsg = error.message;
             }
 
-            errorMessage.textContent = errorMsg;
+            errorMessage.textContent = errorMsg + ' (Fout: ' + error.message + ')';
             errorMessage.classList.remove('hidden');
         }
     });
