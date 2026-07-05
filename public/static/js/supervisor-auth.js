@@ -88,17 +88,26 @@ if (loginForm) {
 
             let errorMsg = 'Inloggen mislukt. Controleer je gegevens.';
 
-            if (error.message.includes('Invalid login credentials')) {
+            if (error.message && error.message.includes('Invalid login credentials')) {
                 errorMsg = 'Onjuist email adres of wachtwoord.';
-            } else if (error.message.includes('Email not confirmed')) {
+            } else if (error.message && error.message.includes('Email not confirmed')) {
                 errorMsg = 'Je email adres is nog niet bevestigd. Check je inbox.';
-            } else if (error.message.includes('geen stagebegeleider')) {
+            } else if (error.message && error.message.includes('geen stagebegeleider')) {
                 errorMsg = error.message;
-            } else if (error.message.includes('Supervisor')) {
+            } else if (error.message && error.message.includes('Supervisor')) {
                 errorMsg = error.message;
             }
 
-            errorMessage.textContent = errorMsg + ' (Fout: ' + error.message + ')';
+            let errorDetails = '';
+            if (typeof error === 'string') {
+                errorDetails = error;
+            } else if (error && typeof error === 'object') {
+                errorDetails = error.message || error.error_description || JSON.stringify(error);
+            } else {
+                errorDetails = String(error);
+            }
+
+            errorMessage.textContent = errorMsg + ' (Fout: ' + errorDetails + ')';
             errorMessage.classList.remove('hidden');
         }
     });
