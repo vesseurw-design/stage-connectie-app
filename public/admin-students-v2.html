@@ -500,7 +500,11 @@
         });
 
         async function logout() {
-            await supabaseClient.auth.signOut();
+            try {
+                await supabaseClient.auth.signOut();
+            } catch (e) {
+                console.warn('Error signing out of Supabase:', e);
+            }
             localStorage.removeItem('stageconnect_admin_session');
             localStorage.removeItem('admin_email');
             localStorage.removeItem('admin_name');

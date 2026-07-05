@@ -476,8 +476,12 @@ function showToast() {
 }
 
 async function logout() {
-    // Sign out from Supabase Auth
-    await supabaseClient.auth.signOut();
+    try {
+        // Sign out from Supabase Auth (but don't block redirect if it fails)
+        await supabaseClient.auth.signOut();
+    } catch (e) {
+        console.warn('Error signing out of Supabase:', e);
+    }
 
     // Clear localStorage
     localStorage.removeItem('stageconnect_session');
