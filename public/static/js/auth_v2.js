@@ -133,8 +133,20 @@ async function checkSession() {
                 return;
             }
 
+            // If the user explicitly logged out (localStorage keys are missing),
+            // sign out of Supabase as well to prevent auto-login loop!
+            if (!localStorage.getItem('stageconnect_session')) {
+                console.log('⚠️ localStorage session is missing but Supabase session is active. Signing out to sync state...');
+                await supabaseClient.auth.signOut();
+                localStorage.removeItem('stageconnect_session');
+                localStorage.removeItem('user_email');
+                localStorage.removeItem('company_id');
+                localStorage.removeItem('company_name');
+                return;
+            }
+
             // Ensure localStorage session is set
-            if (!localStorage.getItem('stageconnect_session') || !localStorage.getItem('company_id')) {
+            if (!localStorage.getItem('company_id')) {
                 console.log('🔄 Restoring employer session keys in localStorage...');
                 const email = user.email;
 
