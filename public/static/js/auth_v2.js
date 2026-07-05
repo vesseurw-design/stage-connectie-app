@@ -115,11 +115,60 @@ window.addEventListener('DOMContentLoaded', () => {
 
 // Check if already logged in
 async function checkSession() {
-    const { data: { session } } = await supabaseClient.auth.getSession();
+    try {
+        const { data: { session } } = await supabaseClient.auth.getSession();
 
-    if (session && window.location.pathname.includes('login.html')) {
-        // Already logged in, redirect to portal
-        window.location.href = 'employer-portal.html';
+        if (session) {
+            const user = session.user;
+            const userRole = user.user_metadata?.role || user.app_metadata?.role;
+
+            if (userRole !== 'employer') {
+                // If logged in but not an employer, sign out to prevent loops
+                console.log('⚠️ Logged in user is not an employer, signing out...');
+                await supabaseClient.auth.signOut();
+                localStorage.removeItem('stageconnect_session');
+                localStorage.removeItem('user_email');
+                localStorage.removeItem('company_id');
+                localStorage.removeItem('company_name');
+                return;
+            }
+
+            // Ensure localStorage session is set
+            if (!localStorage.getItem('stageconnect_session') || !localStorage.getItem('company_id')) {
+                console.log('🔄 Restoring employer session keys in localStorage...');
+                const email = user.email;
+
+                // Haal bedrijfsgegevens op
+                const { data: companyData } = await supabaseClient
+                    .from('Bedrijven')
+                    .select('*')
+                    .ilike('email', email)
+                    .single();
+
+                if (companyData) {
+                    localStorage.setItem('stageconnect_session', 'true');
+                    localStorage.setItem('user_email', email);
+                    localStorage.setItem('company_id', companyData.id);
+                    localStorage.setItem('company_name', companyData.company_name);
+                } else {
+                    console.error('❌ Employer company data not found, signing out...');
+                    await supabaseClient.auth.signOut();
+                    localStorage.removeItem('stageconnect_session');
+                    localStorage.removeItem('user_email');
+                    localStorage.removeItem('company_id');
+                    localStorage.removeItem('company_name');
+                    return;
+                }
+            }
+
+            if (window.location.pathname.includes('login.html')) {
+                // Already logged in, redirect to portal
+                console.log('✅ Active session found, redirecting to employer portal...');
+                window.location.href = 'employer-portal.html';
+            }
+        }
+    } catch (err) {
+        console.error('Error in checkSession:', err);
     }
 }
 
