@@ -8,7 +8,7 @@ const DB_CONFIGS = {
     'ghpc.stageconnectie.nl': {
         url: 'https://ukqogebsengneaqrlhrr.supabase.co',
         key: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVrcW9nZWJzZW5nbmVhcXJsaHJyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMwNzMzMzksImV4cCI6MjA5ODY0OTMzOX0.KJ_B8cinUY7b6OtUkF1EPmySw9GqGhQ1XvWj7SPh30s',
-        maxStudents: 150
+        maxStudents: 250
     },
     // Huidige hoofddomeinen
     'stageconnectie.nl': {
