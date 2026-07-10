@@ -34,11 +34,11 @@
                 margin-top: 15px;
             }
             .print-table th, .print-table td {
-                border: 1px solid #cbd5e1;
+                border: 1px solid #94a3b8;
                 padding: 6px 8px;
                 text-align: center;
             }
-            .print-table th { background: #f8fafc; font-weight: 700; color: #1e293b; border-bottom: 2px solid #94a3b8; }
+            .print-table th { background: #f8fafc; font-weight: 700; color: #1e293b; border-bottom: 2px solid #64748b; }
             .print-table td:first-child, .print-table th:first-child { text-align: left; min-width: 130px; }
             .print-table td:nth-child(2), .print-table th:nth-child(2) { text-align: left; min-width: 120px; }
             /* Losse leerlingformulieren */
@@ -55,10 +55,10 @@
                 margin-top: 15px;
             }
             .student-form-table th, .student-form-table td {
-                border: 1px solid #cbd5e1;
+                border: 1px solid #94a3b8;
                 padding: 7px 10px;
             }
-            .student-form-table th { background: #f8fafc; font-weight: 700; text-align: left; color: #1e293b; border-bottom: 2px solid #94a3b8; }
+            .student-form-table th { background: #f8fafc; font-weight: 700; text-align: left; color: #1e293b; border-bottom: 2px solid #64748b; }
             .student-form-table td { min-height: 36px; }
             .form-header { margin-bottom: 12px; padding-bottom: 8px; }
         }
@@ -955,7 +955,9 @@
                             <td style="text-align:center;">${ingevuldCell}</td>
                             <td style="text-align:center;">${ingevuldUren}</td>
                             <td style="text-align:center;">${werkgeverCheckCell}</td>
-                            <td style="min-width:100px;">&nbsp;</td>
+                            <td style="min-width:110px; padding:5px; text-align:center; vertical-align:middle;">
+                                <div style="border:1px dashed #94a3b8; border-radius:4px; height:22px; display:flex; align-items:center; justify-content:center; color:#64748b; font-size:9px; font-weight:500; background:#ffffff;">Paraaf</div>
+                            </td>
                         </tr>`;
                     }).join('');
 
