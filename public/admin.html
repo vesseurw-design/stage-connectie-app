@@ -19,8 +19,7 @@
             body * { visibility: hidden; }
             #print-section, #print-section * { visibility: visible; }
             #print-section {
-                position: absolute;
-                top: 0; left: 0;
+                position: relative;
                 width: 100%;
                 padding: 0px;
                 background: white;
@@ -44,10 +43,11 @@
             /* Losse leerlingformulieren */
             .student-form-card {
                 page-break-after: always;
+                break-after: page;
                 padding: 10px 0;
                 margin-bottom: 0;
             }
-            .student-form-card:last-child { page-break-after: auto; }
+            .student-form-card:last-child { page-break-after: auto; break-after: auto; }
             .student-form-table {
                 width: 100%;
                 border-collapse: collapse;
@@ -963,9 +963,9 @@
 
                     return `
                         <!-- PAGINA 1: SAMENVATTING & DECLARATIE (EXAMENDOSSIER) -->
-                        <div class="student-form-card" style="font-family:'Inter', sans-serif; page-break-after:always;">
+                        <div class="student-form-card" style="font-family:'Inter', sans-serif; page-break-after:always; break-after:page;">
                             <!-- School/Document Header -->
-                            <div style="display:flex; justify-content:space-between; align-items:flex-start; border-bottom:3px solid #1e3a8a; padding-bottom:12px; margin-bottom:20px;">
+                            <div style="display:flex; justify-content:space-between; align-items:flex-start; border-bottom:3px solid #1e3a8a; padding-bottom:10px; margin-bottom:15px;">
                                 <div>
                                     <h1 style="font-size:20px; font-weight:800; color:#1e3a8a; margin:0; text-transform:uppercase; letter-spacing:0.5px;">Verklaring Stage-uren & Aanwezigheid</h1>
                                     <p style="font-size:11px; color:#475569; margin:4px 0 0; font-weight:500;">Officiële samenvatting ten behoeve van het examendossier</p>
@@ -977,7 +977,7 @@
                             </div>
 
                             <!-- Metadata Card -->
-                            <div style="display:grid; grid-template-columns: repeat(2, 1fr); gap:12px; background:#f8fafc; padding:15px; border-radius:8px; border:1px solid #e2e8f0; margin-bottom:25px; font-size:11px; color:#334155; line-height:1.5;">
+                            <div style="display:grid; grid-template-columns: repeat(2, 1fr); gap:12px; background:#f8fafc; padding:12px; border-radius:8px; border:1px solid #e2e8f0; margin-bottom:15px; font-size:11px; color:#334155; line-height:1.5;">
                                 <div>
                                     <p style="margin:2px 0;"><strong>Naam leerling:</strong> <span style="font-size:12px; font-weight:700; color:#1e293b;">${student.name}</span></p>
                                     <p style="margin:2px 0;"><strong>Leerlingnummer:</strong> ${student.student_number || '–'}</p>
@@ -993,51 +993,51 @@
                             </div>
 
                             <!-- Stats Summary Grid -->
-                            <div style="margin-top:20px; margin-bottom:30px;">
-                                <h3 style="font-size:12px; font-weight:700; color:#475569; text-transform:uppercase; margin:0 0 12px; letter-spacing:0.5px;">Geregistreerde resultaten</h3>
+                            <div style="margin-top:15px; margin-bottom:20px;">
+                                <h3 style="font-size:12px; font-weight:700; color:#475569; text-transform:uppercase; margin:0 0 10px; letter-spacing:0.5px;">Geregistreerde resultaten</h3>
                                 <div style="display:grid; grid-template-columns: repeat(5, 1fr); gap:10px; text-align:center;">
-                                    <div style="background:#eff6ff; border:1.5px solid #bfdbfe; padding:12px 6px; border-radius:8px;">
+                                    <div style="background:#eff6ff; border:1.5px solid #bfdbfe; padding:10px 4px; border-radius:8px;">
                                         <span style="font-size:9px; color:#2563eb; font-weight:700; text-transform:uppercase; display:block; margin-bottom:4px;">Totaal Uren</span>
-                                        <div style="font-size:18px; font-weight:800; color:#1d4ed8;">${totalHours} uur</div>
+                                        <div style="font-size:16px; font-weight:800; color:#1d4ed8;">${totalHours} uur</div>
                                     </div>
-                                    <div style="background:#f0fdf4; border:1.5px solid #bbf7d0; padding:12px 6px; border-radius:8px;">
+                                    <div style="background:#f0fdf4; border:1.5px solid #bbf7d0; padding:10px 4px; border-radius:8px;">
                                         <span style="font-size:9px; color:#16a34a; font-weight:700; text-transform:uppercase; display:block; margin-bottom:4px;">Aanwezig</span>
-                                        <div style="font-size:18px; font-weight:800; color:#15803d;">${stats.present} dgn</div>
+                                        <div style="font-size:16px; font-weight:800; color:#15803d;">${stats.present} dgn</div>
                                     </div>
-                                    <div style="background:#fef2f2; border:1.5px solid #fecaca; padding:12px 6px; border-radius:8px;">
+                                    <div style="background:#fef2f2; border:1.5px solid #fecaca; padding:10px 4px; border-radius:8px;">
                                         <span style="font-size:9px; color:#dc2626; font-weight:700; text-transform:uppercase; display:block; margin-bottom:4px;">Afwezig</span>
-                                        <div style="font-size:18px; font-weight:800; color:#b91c1c;">${stats.absent} dgn</div>
+                                        <div style="font-size:16px; font-weight:800; color:#b91c1c;">${stats.absent} dgn</div>
                                     </div>
-                                    <div style="background:#fff7ed; border:1.5px solid #fed7aa; padding:12px 6px; border-radius:8px;">
+                                    <div style="background:#fff7ed; border:1.5px solid #fed7aa; padding:10px 4px; border-radius:8px;">
                                         <span style="font-size:9px; color:#ea580c; font-weight:700; text-transform:uppercase; display:block; margin-bottom:4px;">Ziek</span>
-                                        <div style="font-size:18px; font-weight:800; color:#c2410c;">${stats.sick} dgn</div>
+                                        <div style="font-size:16px; font-weight:800; color:#c2410c;">${stats.sick} dgn</div>
                                     </div>
-                                    <div style="background:#fefce8; border:1.5px solid #fef08a; padding:12px 6px; border-radius:8px;">
+                                    <div style="background:#fefce8; border:1.5px solid #fef08a; padding:10px 4px; border-radius:8px;">
                                         <span style="font-size:9px; color:#ca8a04; font-weight:700; text-transform:uppercase; display:block; margin-bottom:4px;">Te laat</span>
-                                        <div style="font-size:18px; font-weight:800; color:#a16207;">${stats.late} dgn</div>
+                                        <div style="font-size:16px; font-weight:800; color:#a16207;">${stats.late} dgn</div>
                                     </div>
                                 </div>
                             </div>
 
                             <!-- Signatures Box -->
-                            <div style="margin-top:60px; border-top:2px solid #cbd5e1; padding-top:25px; page-break-inside:avoid;">
-                                <h3 style="font-size:12px; font-weight:700; color:#475569; text-transform:uppercase; margin:0 0 15px; letter-spacing:0.5px;">Officiële ondertekening</h3>
-                                <p style="font-size:11px; color:#64748b; margin-bottom:30px; line-height:1.4;">
+                            <div style="margin-top:30px; border-top:2px solid #cbd5e1; padding-top:15px; page-break-inside:avoid; break-inside:avoid;">
+                                <h3 style="font-size:12px; font-weight:700; color:#475569; text-transform:uppercase; margin:0 0 10px; letter-spacing:0.5px;">Officiële ondertekening</h3>
+                                <p style="font-size:11px; color:#64748b; margin-bottom:20px; line-height:1.4;">
                                     Ondergetekenden verklaren hierbij dat de bovenstaande urenregistratie en aanwezigheidsstatistieken naar waarheid zijn ingevuld en gecontroleerd.
                                 </p>
-                                <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:25px; font-size:11px;">
+                                <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:20px; font-size:11px;">
                                     <div>
-                                        <p style="font-weight:700; margin:0 0 35px 0; color:#334155;">1. Handtekening student</p>
+                                        <p style="font-weight:700; margin:0 0 25px 0; color:#334155;">1. Handtekening student</p>
                                         <div style="border-bottom:1px solid #94a3b8; height:20px; margin-bottom:6px;"></div>
                                         <p style="color:#64748b; margin:0;">Datum: ___________________</p>
                                     </div>
                                     <div>
-                                        <p style="font-weight:700; margin:0 0 35px 0; color:#334155;">2. Handtekening praktijkopleider</p>
+                                        <p style="font-weight:700; margin:0 0 25px 0; color:#334155;">2. Handtekening praktijkopleider</p>
                                         <div style="border-bottom:1px solid #94a3b8; height:20px; margin-bottom:6px;"></div>
                                         <p style="color:#64748b; margin:0;">Datum: ___________________</p>
                                     </div>
                                     <div>
-                                        <p style="font-weight:700; margin:0 0 35px 0; color:#334155;">3. Handtekening stagebegeleider</p>
+                                        <p style="font-weight:700; margin:0 0 25px 0; color:#334155;">3. Handtekening stagebegeleider</p>
                                         <div style="border-bottom:1px solid #94a3b8; height:20px; margin-bottom:6px;"></div>
                                         <p style="color:#64748b; margin:0;">Datum: ___________________</p>
                                     </div>
@@ -1045,7 +1045,7 @@
                             </div>
 
                             <!-- Footer disclaimer -->
-                            <div style="margin-top:80px; text-align:center; font-size:9px; color:#94a3b8; border-top:1px solid #f1f5f9; padding-top:8px;">
+                            <div style="margin-top:40px; text-align:center; font-size:9px; color:#94a3b8; border-top:1px solid #f1f5f9; padding-top:8px;">
                                 Gegenereerd via StageConnectie &nbsp;·&nbsp; www.stageconnectie.nl &nbsp;·&nbsp; Document-ID: SC-DECL-${student.id.substring(0,8).toUpperCase()}
                             </div>
                         </div>
