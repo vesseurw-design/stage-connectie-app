@@ -21,7 +21,7 @@
         <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md">
             <div class="text-center mb-8">
                 <h1 class="text-3xl font-bold text-gray-800 mb-2">Werkgever Login</h1>
-                <img src="logo.png" alt="StageConnectie Logo" class="h-16 mx-auto mb-2 object-contain">
+                <img id="school-logo-img" src="logo.png" alt="School Logo" class="h-16 mx-auto mb-2 object-contain">
             </div>
             <form id="login-form" class="space-y-6">
                 <div>
@@ -103,6 +103,12 @@
     <script src="./static/js/config.js"></script>
     <script src="./static/js/auth_v2.js?v=4"></script>
     <script>
+        // Dynamisch schoollogo instellen
+        if (window.SCHOOL_LOGO) {
+            const logoImg = document.getElementById('school-logo-img');
+            if (logoImg) logoImg.src = window.SCHOOL_LOGO;
+        }
+
         function togglePasswordVisibility(inputId, button) {
             const input = document.getElementById(inputId);
             const type = input.type === 'password' ? 'text' : 'password';
