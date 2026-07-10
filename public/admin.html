@@ -19,10 +19,10 @@
             body * { visibility: hidden; }
             #print-section, #print-section * { visibility: visible; }
             #print-section {
-                position: fixed;
+                position: absolute;
                 top: 0; left: 0;
                 width: 100%;
-                padding: 20px;
+                padding: 0px;
                 background: white;
             }
             .no-print { display: none !important; }
@@ -30,36 +30,37 @@
             .print-table {
                 width: 100%;
                 border-collapse: collapse;
-                font-size: 11px;
+                font-size: 10px;
+                margin-top: 15px;
             }
             .print-table th, .print-table td {
-                border: 1px solid #333;
-                padding: 5px 7px;
+                border: 1px solid #cbd5e1;
+                padding: 6px 8px;
                 text-align: center;
             }
-            .print-table th { background: #f0f0f0; font-weight: 700; }
+            .print-table th { background: #f8fafc; font-weight: 700; color: #1e293b; border-bottom: 2px solid #94a3b8; }
             .print-table td:first-child, .print-table th:first-child { text-align: left; min-width: 130px; }
             .print-table td:nth-child(2), .print-table th:nth-child(2) { text-align: left; min-width: 120px; }
             /* Losse leerlingformulieren */
             .student-form-card {
                 page-break-after: always;
-                padding: 0;
+                padding: 10px 0;
                 margin-bottom: 0;
             }
             .student-form-card:last-child { page-break-after: auto; }
             .student-form-table {
                 width: 100%;
                 border-collapse: collapse;
-                font-size: 12px;
-                margin-top: 10px;
+                font-size: 11px;
+                margin-top: 15px;
             }
             .student-form-table th, .student-form-table td {
-                border: 1px solid #333;
-                padding: 8px 10px;
+                border: 1px solid #cbd5e1;
+                padding: 7px 10px;
             }
-            .student-form-table th { background: #f0f0f0; font-weight: 700; text-align: left; }
+            .student-form-table th { background: #f8fafc; font-weight: 700; text-align: left; color: #1e293b; border-bottom: 2px solid #94a3b8; }
             .student-form-table td { min-height: 36px; }
-            .form-header { margin-bottom: 12px; border-bottom: 2px solid #333; padding-bottom: 8px; }
+            .form-header { margin-bottom: 12px; padding-bottom: 8px; }
         }
         @media screen {
             #print-section { display: none; }
@@ -817,10 +818,17 @@
                 // ── TOTAALOVERZICHT ──
                 document.getElementById('print-mode-label').textContent = `📋 Totaaloverzicht – ${periodLabel}`;
                 printContent.innerHTML = `
-                    <div style="margin-bottom:14px;">
-                        <h1 style="font-size:17px; font-weight:700; margin:0;">StageConnectie – Aanwezigheidsoverzicht</h1>
-                        <p style="font-size:12px; color:#555; margin:4px 0 0;">${periodLabel}</p>
-                        <p style="font-size:10px; color:#999; margin:2px 0 0;">Afdruk: ${printDate}</p>
+                    <div style="display:flex; justify-content:space-between; align-items:flex-start; border-bottom:3px solid #1e3a8a; padding-bottom:12px; margin-bottom:20px; font-family:'Inter', sans-serif;">
+                        <div>
+                            <h1 style="font-size:20px; font-weight:800; color:#1e3a8a; margin:0; text-transform:uppercase; letter-spacing:0.5px;">Aanwezigheidsoverzicht Stage</h1>
+                            <p style="font-size:13px; color:#475569; margin:4px 0 0;">School: <strong>${window.SCHOOL_NAME}</strong></p>
+                            <p style="font-size:12px; color:#475569; margin:2px 0 0;">Periode: <strong>${periodLabel}</strong></p>
+                        </div>
+                        <div style="text-align:right;">
+                            <img src="${window.SCHOOL_LOGO}" onerror="this.style.display='none'; document.getElementById('school-text-fallback-overview').style.display='block';" style="max-height:55px; max-width:180px; object-fit:contain; display:block; margin-left:auto;">
+                            <span id="school-text-fallback-overview" style="display:none; font-size:15px; font-weight:700; color:#1e3a8a; text-transform:uppercase;">${window.SCHOOL_NAME}</span>
+                            <p style="font-size:10px; color:#94a3b8; margin:6px 0 0;">Afdrukdatum: ${printDate}</p>
+                        </div>
                     </div>
                     <table class="print-table">
                         <thead>
@@ -837,7 +845,7 @@
                                 const companyName = company ? company.company_name : '–';
                                 const cells = days.map(wd => {
                                     const isScheduled = !student.scheduled_days || student.scheduled_days.length === 0 || student.scheduled_days.includes(wd.dayCode);
-                                    if (!isScheduled) return `<td style="background:#f0f0f0; color:#bbb; font-size:9px; text-align:center;">school</td>`;
+                                    if (!isScheduled) return `<td style="background:#f1f5f9; color:#94a3b8; font-size:9px; text-align:center; font-weight:500;">school</td>`;
                                     const record = allAttendance.find(a => a.student_id === student.id && a.date === wd.dateStr);
                                     if (record) {
                                         const sAbbr = record.student_status ? (statusAbbr[record.student_status] || '?') : '';
@@ -862,16 +870,20 @@
                                     return `<td>&nbsp;</td>`;
                                 }).join('');
                                 return `<tr>
-                                    <td style="text-align:left; font-weight:600;">${student.name}</td>
-                                    <td style="text-align:left;">${companyName}</td>
+                                    <td style="text-align:left; font-weight:600; color:#1e293b;">${student.name}</td>
+                                    <td style="text-align:left; color:#334155;">${companyName}</td>
                                     ${cells}
                                     <td style="min-width:80px;">&nbsp;</td>
                                 </tr>`;
                             }).join('')}
                         </tbody>
                     </table>
-                    <div style="margin-top:14px; font-size:10px; color:#666; border-top:1px solid #ccc; padding-top:6px;">
-                        A = Aanwezig &nbsp;|&nbsp; AF = Afwezig &nbsp;|&nbsp; Z = Ziek &nbsp;|&nbsp; TL = Te laat
+                    <div style="margin-top:20px; font-size:10px; color:#475569; border-top:1px solid #cbd5e1; padding-top:10px; display:flex; gap:15px; justify-content:center;">
+                        <span><strong>Legenda:</strong></span>
+                        <span><span style="background:#bbf7d0; padding:1px 6px; border-radius:3px; font-weight:bold; font-size:9px;">A</span> Aanwezig</span>
+                        <span><span style="background:#fecaca; padding:1px 6px; border-radius:3px; font-weight:bold; font-size:9px;">AF</span> Afwezig</span>
+                        <span><span style="background:#fed7aa; padding:1px 6px; border-radius:3px; font-weight:bold; font-size:9px;">Z</span> Ziek</span>
+                        <span><span style="background:#fef08a; padding:1px 6px; border-radius:3px; font-weight:bold; font-size:9px;">TL</span> Te laat</span>
                     </div>
                 `;
 
@@ -881,13 +893,23 @@
                 printContent.innerHTML = printStudents.map(student => {
                     const company = companies.find(c => c.id === student.company_id);
                     const companyName = company ? company.company_name : '–';
+                    const supervisor = supervisors.find(s => s.id === student.supervisor_id);
+
+                    // Bereken statistieken voor deze leerling
+                    const studentRecords = allAttendance.filter(a => a.student_id === student.id && days.some(wd => wd.dateStr === a.date));
+                    const stats = {
+                        present: studentRecords.filter(a => a.status === 'present' || (!a.status && a.student_status === 'present')).length,
+                        absent: studentRecords.filter(a => a.status === 'absent' || (!a.status && a.student_status === 'absent')).length,
+                        sick: studentRecords.filter(a => a.status === 'sick' || (!a.status && a.student_status === 'sick')).length,
+                        late: studentRecords.filter(a => a.status === 'late' || (!a.status && a.student_status === 'late')).length
+                    };
 
                     const rows = days.map(wd => {
                         const isScheduled = !student.scheduled_days || student.scheduled_days.length === 0 || student.scheduled_days.includes(wd.dayCode);
                         if (!isScheduled) {
-                            return `<tr style="background:#f0f0f0; color:#aaa;">
-                                <td>${wd.fullLabel}</td>
-                                <td colspan="4" style="text-align:center; font-style:italic; font-size:11px;">Schooldag – geen stage</td>
+                            return `<tr style="background:#f8fafc; color:#94a3b8;">
+                                <td style="font-weight:500;">${wd.fullLabel}</td>
+                                <td colspan="4" style="text-align:center; font-style:italic; font-size:10px; color:#94a3b8; font-weight:500;">Schooldag – geen stage</td>
                             </tr>`;
                         }
                         const record = allAttendance.find(a => a.student_id === student.id && a.date === wd.dateStr);
@@ -897,71 +919,133 @@
                         if (record && record.student_status) {
                             const label = statusLabelsFull[record.student_status] || record.student_status;
                             const bg = statusBgColors[record.student_status] || '#f3f4f6';
-                            rowBg = bg + '22'; // licht transparant
-                            ingevuldCell = `<span style="background:${bg}; padding:3px 12px; border-radius:5px; font-weight:700; font-size:12px; border:1px solid rgba(0,0,0,0.12);">${label}</span>`;
+                            rowBg = bg + '15'; // super licht transparant
+                            ingevuldCell = `<span style="background:${bg}; padding:3px 12px; border-radius:5px; font-weight:700; font-size:11px; border:1px solid rgba(0,0,0,0.08);">${label}</span>`;
                             ingevuldUren = record.student_hours > 0
-                                ? `<strong style="font-size:13px;">${record.student_hours}&thinsp;uur</strong>`
-                                : `<span style="color:#999;">–</span>`;
+                                ? `<strong style="font-size:12px; color:#1e293b;">${record.student_hours}&thinsp;uur</strong>`
+                                : `<span style="color:#94a3b8;">–</span>`;
                             
                             if (record.status) {
                                 const empLabel = statusLabelsFull[record.status] || record.status;
                                 const lateStr = (record.status === 'late' && record.minutes_late > 0) ? ` (${record.minutes_late}m)` : '';
-                                werkgeverCheckCell = `<span style="font-weight:700; color:#16a34a;">☑ ${empLabel}${lateStr}</span>`;
+                                werkgeverCheckCell = `<span style="font-weight:700; color:#16a34a; font-size:12px;">☑ ${empLabel}${lateStr}</span>`;
                             } else {
-                                werkgeverCheckCell = `☐ Akkoord &nbsp; ☐ Corrigeer: ________`;
+                                werkgeverCheckCell = `<span style="color:#64748b; font-size:11px;">☐ Akkoord &nbsp; ☐ Corrigeer: ________</span>`;
                             }
                         } else {
                             if (record && record.status) {
                                 const empLabel = statusLabelsFull[record.status] || record.status;
                                 const lateStr = (record.status === 'late' && record.minutes_late > 0) ? ` (${record.minutes_late}m)` : '';
                                 const bg = statusBgColors[record.status] || '#f3f4f6';
-                                rowBg = bg + '22'; // licht transparant
-                                ingevuldCell = `<span style="color:#bbb; font-size:11px; font-style:italic;">Geen invoer</span>`;
-                                ingevuldUren = `<span style="color:#999;">–</span>`;
-                                werkgeverCheckCell = `<span style="font-weight:700; color:#16a34a;">☑ ${empLabel}${lateStr}</span>`;
+                                rowBg = bg + '15'; // super licht transparant
+                                ingevuldCell = `<span style="color:#94a3b8; font-size:11px; font-style:italic;">Geen invoer</span>`;
+                                ingevuldUren = `<span style="color:#94a3b8;">–</span>`;
+                                werkgeverCheckCell = `<span style="font-weight:700; color:#16a34a; font-size:12px;">☑ ${empLabel}${lateStr}</span>`;
                             } else {
                                 rowBg = 'white';
-                                ingevuldCell = `<span style="color:#bbb; font-size:11px; font-style:italic;">Geen invoer</span>`;
-                                ingevuldUren = `<span style="display:inline-block; width:50px; border-bottom:1px solid #999;">&nbsp;</span> uur`;
-                                werkgeverCheckCell = `☐ A &nbsp; ☐ AF &nbsp; &nbsp; ☐ Z &nbsp; &nbsp; ☐ TL`;
+                                ingevuldCell = `<span style="color:#94a3b8; font-size:10px; font-style:italic;">Geen invoer</span>`;
+                                ingevuldUren = `<span style="display:inline-block; width:30px; border-bottom:1px solid #cbd5e1;">&nbsp;</span> uur`;
+                                werkgeverCheckCell = `<span style="color:#64748b; font-size:11px;">☐ A &nbsp;&nbsp; ☐ AF &nbsp;&nbsp; ☐ Z &nbsp;&nbsp; ☐ TL</span>`;
                             }
                         }
                         return `<tr style="background:${rowBg};">
-                            <td style="font-size:12px;">${wd.fullLabel}</td>
+                            <td style="font-size:11px; font-weight:600; color:#334155;">${wd.fullLabel}</td>
                             <td style="text-align:center;">${ingevuldCell}</td>
                             <td style="text-align:center;">${ingevuldUren}</td>
-                            <td style="text-align:center; font-size:11px; color:#444;">${werkgeverCheckCell}</td>
-                            <td style="min-width:110px;">&nbsp;</td>
+                            <td style="text-align:center;">${werkgeverCheckCell}</td>
+                            <td style="min-width:100px;">&nbsp;</td>
                         </tr>`;
                     }).join('');
 
                     return `
-                        <div class="student-form-card">
-                            <div class="form-header">
-                                <h2 style="font-size:16px; font-weight:700; margin:0 0 4px;">${student.name}</h2>
-                                <div style="display:flex; gap:24px; font-size:12px; color:#444;">
-                                    <span>🏢 <strong>Stageplek:</strong> ${companyName}</span>
-                                    <span>📅 <strong>Periode:</strong> ${periodLabel}</span>
+                        <div class="student-form-card" style="font-family:'Inter', sans-serif;">
+                            <!-- School/Document Header -->
+                            <div style="display:flex; justify-content:space-between; align-items:flex-start; border-bottom:3px solid #1e3a8a; padding-bottom:12px; margin-bottom:20px;">
+                                <div>
+                                    <h1 style="font-size:18px; font-weight:800; color:#1e3a8a; margin:0; text-transform:uppercase; letter-spacing:0.5px;">Stage-aanwezigheidsdossier</h1>
+                                    <p style="font-size:11px; color:#475569; margin:4px 0 0; font-weight:500;">Officiële bijlage ten behoeve van het examendossier</p>
                                 </div>
-                                <div style="font-size:11px; color:#888; margin-top:4px;">
-                                    StageConnectie &nbsp;·&nbsp; Afdruk: ${printDate}
+                                <div style="text-align:right;">
+                                    <img src="${window.SCHOOL_LOGO}" onerror="this.style.display='none'; document.getElementById('school-text-fallback-${student.id}').style.display='block';" style="max-height:48px; max-width:180px; object-fit:contain; display:block; margin-left:auto;">
+                                    <span id="school-text-fallback-${student.id}" style="display:none; font-size:14px; font-weight:700; color:#1e3a8a; text-transform:uppercase;">${window.SCHOOL_NAME}</span>
                                 </div>
                             </div>
+
+                            <!-- Metadata Card -->
+                            <div style="display:grid; grid-template-columns: repeat(2, 1fr); gap:12px; background:#f8fafc; padding:15px; border-radius:8px; border:1px solid #e2e8f0; margin-bottom:20px; font-size:11px; color:#334155; line-height:1.5;">
+                                <div>
+                                    <p style="margin:2px 0;">👤 <strong>Naam leerling:</strong> <span style="font-size:12px; font-weight:700; color:#1e293b;">${student.name}</span></p>
+                                    <p style="margin:2px 0;">🆔 <strong>Leerlingnummer:</strong> ${student.student_number || '–'}</p>
+                                    <p style="margin:2px 0;">🏫 <strong>Onderwijsinstelling:</strong> ${window.SCHOOL_NAME}</p>
+                                    <p style="margin:2px 0;">📅 <strong>Schooljaar / Klas:</strong> ${student.school_year || '–'} &nbsp;/&nbsp; ${student.class || '–'}</p>
+                                </div>
+                                <div>
+                                    <p style="margin:2px 0;">🏢 <strong>Stagebedrijf:</strong> ${companyName}</p>
+                                    <p style="margin:2px 0;">👔 <strong>Praktijkopleider:</strong> ${supervisor?.name || '–'}</p>
+                                    <p style="margin:2px 0;">📅 <strong>Rapportageperiode:</strong> ${periodLabel}</p>
+                                    <p style="margin:2px 0;">🖨️ <strong>Afdrukdatum:</strong> ${printDate}</p>
+                                </div>
+                            </div>
+
+                            <!-- Table -->
                             <table class="student-form-table">
                                 <thead>
                                     <tr>
-                                        <th style="min-width:130px;">Dag</th>
-                                        <th style="min-width:160px; text-align:center; background:#e0f2fe;">✏️ Ingevuld (app)</th>
-                                        <th style="min-width:70px; text-align:center; background:#e0f2fe;">Uren</th>
-                                        <th style="min-width:130px; text-align:center;">Werkgever check</th>
-                                        <th style="min-width:110px;">Handtekening</th>
+                                        <th style="min-width:130px; font-size:11px;">Stagedag</th>
+                                        <th style="min-width:140px; text-align:center; font-size:11px; background:#f1f5f9;">✏️ Ingevuld (app)</th>
+                                        <th style="min-width:70px; text-align:center; font-size:11px; background:#f1f5f9;">Uren</th>
+                                        <th style="min-width:140px; text-align:center; font-size:11px;">Verificatie Werkgever</th>
+                                        <th style="min-width:100px; font-size:11px;">Handtekening/Paraaf</th>
                                     </tr>
                                 </thead>
                                 <tbody>${rows}</tbody>
                             </table>
-                            <div style="margin-top:14px; font-size:10px; color:#666;">
-                                A = Aanwezig &nbsp;|&nbsp; AF = Afwezig &nbsp;|&nbsp; Z = Ziek &nbsp;|&nbsp; TL = Te laat &nbsp;·&nbsp;
-                                Ingeleverd bij stagebegeleider: ______________ &nbsp; Datum: ______________
+
+                            <!-- Stats Summary Grid -->
+                            <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:8px; margin-top:20px; margin-bottom:25px; text-align:center; font-family:'Inter', sans-serif;">
+                                <div style="background:#f0fdf4; border:1px solid #bbf7d0; padding:6px 4px; border-radius:6px;">
+                                    <span style="font-size:9px; color:#16a34a; font-weight:700; text-transform:uppercase;">Aanwezig</span>
+                                    <div style="font-size:15px; font-weight:800; color:#15803d; margin-top:1px;">${stats.present} dagen</div>
+                                </div>
+                                <div style="background:#fef2f2; border:1px solid #fecaca; padding:6px 4px; border-radius:6px;">
+                                    <span style="font-size:9px; color:#dc2626; font-weight:700; text-transform:uppercase;">Afwezig</span>
+                                    <div style="font-size:15px; font-weight:800; color:#b91c1c; margin-top:1px;">${stats.absent} dagen</div>
+                                </div>
+                                <div style="background:#fff7ed; border:1px solid #fed7aa; padding:6px 4px; border-radius:6px;">
+                                    <span style="font-size:9px; color:#ea580c; font-weight:700; text-transform:uppercase;">Ziek</span>
+                                    <div style="font-size:15px; font-weight:800; color:#c2410c; margin-top:1px;">${stats.sick} dagen</div>
+                                </div>
+                                <div style="background:#fefce8; border:1px solid #fef08a; padding:6px 4px; border-radius:6px;">
+                                    <span style="font-size:9px; color:#ca8a04; font-weight:700; text-transform:uppercase;">Te laat</span>
+                                    <div style="font-size:15px; font-weight:800; color:#a16207; margin-top:1px;">${stats.late} dagen</div>
+                                </div>
+                            </div>
+
+                            <!-- Signatures Box -->
+                            <div style="margin-top:30px; border-top:2px solid #cbd5e1; padding-top:15px; page-break-inside:avoid;">
+                                <h3 style="font-size:11px; font-weight:700; color:#475569; text-transform:uppercase; margin:0 0 12px; letter-spacing:0.5px;">Officiële ondertekening ten behoeve van het examendossier</h3>
+                                <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:20px; font-size:10px;">
+                                    <div>
+                                        <p style="font-weight:700; margin:0 0 25px 0; color:#334155;">1. Handtekening student</p>
+                                        <div style="border-bottom:1px solid #94a3b8; height:15px; margin-bottom:4px;"></div>
+                                        <p style="color:#64748b; margin:0;">Datum: ___________________</p>
+                                    </div>
+                                    <div>
+                                        <p style="font-weight:700; margin:0 0 25px 0; color:#334155;">2. Handtekening praktijkopleider</p>
+                                        <div style="border-bottom:1px solid #94a3b8; height:15px; margin-bottom:4px;"></div>
+                                        <p style="color:#64748b; margin:0;">Datum: ___________________</p>
+                                    </div>
+                                    <div>
+                                        <p style="font-weight:700; margin:0 0 25px 0; color:#334155;">3. Handtekening stagebegeleider</p>
+                                        <div style="border-bottom:1px solid #94a3b8; height:15px; margin-bottom:4px;"></div>
+                                        <p style="color:#64748b; margin:0;">Datum: ___________________</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Footer disclaimer -->
+                            <div style="margin-top:20px; text-align:center; font-size:9px; color:#94a3b8; border-top:1px solid #f1f5f9; padding-top:6px;">
+                                Gegenereerd via StageConnectie &nbsp;·&nbsp; www.stageconnectie.nl &nbsp;·&nbsp; Document-ID: SC-EX-${student.id.substring(0,8).toUpperCase()}
                             </div>
                         </div>
                     `;
