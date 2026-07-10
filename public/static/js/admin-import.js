@@ -107,6 +107,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 name: getCol('naam') || 'Onbekend',
                                 email: email.trim().toLowerCase(),
                                 class: getCol('klas') || null,
+                                school_year: getCol('schooljaar') || getCol('school_year') || null,
                                 company_id: bedrijfId ? bedrijfId : null
                             }]);
                             if (dbError) throw dbError;
