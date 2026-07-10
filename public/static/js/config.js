@@ -10,7 +10,7 @@ const DB_CONFIGS = {
         key: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVrcW9nZWJzZW5nbmVhcXJsaHJyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMwNzMzMzksImV4cCI6MjA5ODY0OTMzOX0.KJ_B8cinUY7b6OtUkF1EPmySw9GqGhQ1XvWj7SPh30s',
         maxStudents: 250,
         schoolName: 'Groene Hart Praktijkschool',
-        logo: 'logo-ghpc.png'
+        logo: 'logo-ghpc-v2.png'
     },
     // Huidige hoofddomeinen
     'stageconnectie.nl': {
