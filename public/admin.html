@@ -819,7 +819,7 @@
 
             if (currentPrintMode === 'overview') {
                 // ── TOTAALOVERZICHT ──
-                document.getElementById('print-mode-label').textContent = `📋 Totaaloverzicht – ${periodLabel}`;
+                document.getElementById('print-mode-label').textContent = `Totaaloverzicht – ${periodLabel}`;
                 printContent.innerHTML = `
                     <div style="display:flex; justify-content:space-between; align-items:flex-start; border-bottom:3px solid #1e3a8a; padding-bottom:12px; margin-bottom:20px; font-family:'Inter', sans-serif;">
                         <div>
@@ -890,7 +890,7 @@
 
             } else {
                 // ── FORMULIER PER LEERLING ──
-                document.getElementById('print-mode-label').textContent = `🖨️ Formulieren per leerling – ${periodLabel}`;
+                document.getElementById('print-mode-label').textContent = `Formulieren per leerling – ${periodLabel}`;
                 printContent.innerHTML = printStudents.map(student => {
                     const company = companies.find(c => c.id === student.company_id);
                     const companyName = company ? company.company_name : '–';
@@ -977,16 +977,16 @@
                             <!-- Metadata Card -->
                             <div style="display:grid; grid-template-columns: repeat(2, 1fr); gap:12px; background:#f8fafc; padding:15px; border-radius:8px; border:1px solid #e2e8f0; margin-bottom:25px; font-size:11px; color:#334155; line-height:1.5;">
                                 <div>
-                                    <p style="margin:2px 0;">👤 <strong>Naam leerling:</strong> <span style="font-size:12px; font-weight:700; color:#1e293b;">${student.name}</span></p>
-                                    <p style="margin:2px 0;">🆔 <strong>Leerlingnummer:</strong> ${student.student_number || '–'}</p>
-                                    <p style="margin:2px 0;">🏫 <strong>Onderwijsinstelling:</strong> ${window.SCHOOL_NAME}</p>
-                                    <p style="margin:2px 0;">📅 <strong>Schooljaar / Klas:</strong> ${student.school_year || '–'} &nbsp;/&nbsp; ${student.class || '–'}</p>
+                                    <p style="margin:2px 0;"><strong>Naam leerling:</strong> <span style="font-size:12px; font-weight:700; color:#1e293b;">${student.name}</span></p>
+                                    <p style="margin:2px 0;"><strong>Leerlingnummer:</strong> ${student.student_number || '–'}</p>
+                                    <p style="margin:2px 0;"><strong>Onderwijsinstelling:</strong> ${window.SCHOOL_NAME}</p>
+                                    <p style="margin:2px 0;"><strong>Schooljaar / Klas:</strong> ${student.school_year || '–'} &nbsp;/&nbsp; ${student.class || '–'}</p>
                                 </div>
                                 <div>
-                                    <p style="margin:2px 0;">🏢 <strong>Stagebedrijf:</strong> ${companyName}</p>
-                                    <p style="margin:2px 0;">👔 <strong>Praktijkopleider:</strong> ${supervisor?.name || '–'}</p>
-                                    <p style="margin:2px 0;">📅 <strong>Rapportageperiode:</strong> ${periodLabel}</p>
-                                    <p style="margin:2px 0;">🖨️ <strong>Afdrukdatum:</strong> ${printDate}</p>
+                                    <p style="margin:2px 0;"><strong>Stagebedrijf:</strong> ${companyName}</p>
+                                    <p style="margin:2px 0;"><strong>Praktijkopleider:</strong> ${supervisor?.name || '–'}</p>
+                                    <p style="margin:2px 0;"><strong>Rapportageperiode:</strong> ${periodLabel}</p>
+                                    <p style="margin:2px 0;"><strong>Afdrukdatum:</strong> ${printDate}</p>
                                 </div>
                             </div>
 
@@ -1064,9 +1064,9 @@
 
                             <!-- Student Info Summary line -->
                             <div style="background:#f8fafc; padding:8px 12px; border-radius:6px; border:1px solid #e2e8f0; margin-bottom:15px; font-size:11px; color:#334155; display:flex; justify-content:space-between;">
-                                <span>👤 <strong>Leerling:</strong> ${student.name}</span>
-                                <span>📅 <strong>Periode:</strong> ${periodLabel}</span>
-                                <span>🏢 <strong>Bedrijf:</strong> ${companyName}</span>
+                                <span><strong>Leerling:</strong> ${student.name}</span>
+                                <span><strong>Periode:</strong> ${periodLabel}</span>
+                                <span><strong>Bedrijf:</strong> ${companyName}</span>
                             </div>
 
                             <!-- Table -->
@@ -1074,7 +1074,7 @@
                                 <thead>
                                     <tr>
                                         <th style="min-width:130px; font-size:11px;">Stagedag</th>
-                                        <th style="min-width:140px; text-align:center; font-size:11px; background:#f1f5f9;">✏️ Ingevuld (app)</th>
+                                        <th style="min-width:140px; text-align:center; font-size:11px; background:#f1f5f9;">Ingevuld (app)</th>
                                         <th style="min-width:70px; text-align:center; font-size:11px; background:#f1f5f9;">Uren</th>
                                         <th style="min-width:140px; text-align:center; font-size:11px;">Verificatie Werkgever</th>
                                         <th style="min-width:100px; font-size:11px;">Handtekening/Paraaf</th>
