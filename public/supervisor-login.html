@@ -21,13 +21,7 @@
     <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md">
         <!-- Header -->
         <div class="text-center mb-8">
-            <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-green-600" fill="none" viewBox="0 0 24 24"
-                    stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                </svg>
-            </div>
+            <img id="school-logo-img" src="logo.png" alt="School Logo" class="h-16 mx-auto mb-2 object-contain">
             <h1 class="text-3xl font-bold text-gray-800 mb-2">Begeleider Portal</h1>
             <p class="text-gray-600">Stage Connectie App</p>
         </div>
@@ -100,6 +94,12 @@
     <script src="./static/js/config.js"></script>
     <script src="./static/js/supervisor-auth.js?v=5"></script>
     <script>
+        // Dynamisch schoollogo instellen
+        if (window.SCHOOL_LOGO) {
+            const logoImg = document.getElementById('school-logo-img');
+            if (logoImg) logoImg.src = window.SCHOOL_LOGO;
+        }
+
         function togglePasswordVisibility(inputId, button) {
             const input = document.getElementById(inputId);
             const type = input.type === 'password' ? 'text' : 'password';

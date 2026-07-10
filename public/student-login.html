@@ -20,6 +20,7 @@
     <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md">
         <div class="text-center mb-8">
             <h1 class="text-3xl font-bold text-gray-800 mb-2">Student Login</h1>
+            <img id="school-logo-img" src="logo.png" alt="School Logo" class="h-16 mx-auto mb-2 object-contain">
             <p class="text-gray-500">Meld je aan- of afwezig en geef je uren door</p>
         </div>
         <form id="student-login-form" class="space-y-6">
@@ -62,6 +63,12 @@
     <script src="./static/js/config.js"></script>
     <script src="./static/js/student-auth.js"></script>
     <script>
+        // Dynamisch schoollogo instellen
+        if (window.SCHOOL_LOGO) {
+            const logoImg = document.getElementById('school-logo-img');
+            if (logoImg) logoImg.src = window.SCHOOL_LOGO;
+        }
+
         function togglePasswordVisibility(inputId, button) {
             const input = document.getElementById(inputId);
             const type = input.type === 'password' ? 'text' : 'password';
