@@ -64,70 +64,136 @@ document.addEventListener('DOMContentLoaded', () => {
                         let email = getCol('email');
                         let wachtwoord = getCol('wachtwoord');
                         
-                        if (!email || !wachtwoord) {
-                            throw new Error("Rij mist 'email' of 'wachtwoord' kolom.");
+                        if (!email) {
+                            throw new Error("Rij mist 'email' kolom.");
                         }
 
-                        // 1. Maak Auth Account aan via Edge Function
-                        const functionUrl = `${supabaseUrl}/functions/v1/create-auth-account`;
-                        
-                        let role = type === 'student' ? 'student' : 'employer';
-                        let name = type === 'student' ? getCol('naam') : getCol('bedrijfsnaam');
-                        let loginUrl = type === 'student' ? 'https://stageconnectie.nl/student-login.html' : 'https://stageconnectie.nl/employer-login.html';
-                        
-                        const authRes = await fetch(functionUrl, {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'Authorization': `Bearer ${supabaseKey}`
-                            },
-                            body: JSON.stringify({
-                                email: email.trim().toLowerCase(),
-                                password: wachtwoord,
-                                role: role,
-                                metadata: { source: 'csv_import' },
-                                sendEmail: sendEmailCheckbox.checked,
-                                name: name || '',
-                                loginUrl: loginUrl
-                            })
-                        });
+                        // Check of record al bestaat in database
+                        let user_id = null;
+                        let exists = false;
 
-                        const authData = await authRes.json();
-                        if (!authRes.ok || !authData.success) {
-                            throw new Error(authData.error || 'Aanmaken account mislukt');
-                        }
-
-                        const user_id = authData.user_id;
-
-                        // 2. Voeg toe aan database tabel
                         if (type === 'student') {
-                            const bedrijfId = getCol('bedrijf_id') || getCol('bedrijfs_id');
-                            const { error: dbError } = await supabase.from('Students').insert([{
-                                id: user_id,
-                                name: getCol('naam') || 'Onbekend',
-                                email: email.trim().toLowerCase(),
-                                class: getCol('klas') || null,
-                                school_year: getCol('schooljaar') || getCol('school_year') || null,
-                                company_id: bedrijfId ? bedrijfId : null
-                            }]);
-                            if (dbError) throw dbError;
-
+                            const { data: existingStudent, error: checkError } = await supabase
+                                .from('Students')
+                                .select('id')
+                                .eq('email', email.trim().toLowerCase())
+                                .maybeSingle();
+                            
+                            if (checkError) throw checkError;
+                            if (existingStudent) {
+                                user_id = existingStudent.id;
+                                exists = true;
+                            }
                         } else if (type === 'company') {
-                            const { error: dbError } = await supabase.from('Bedrijven').insert([{
-                                id: user_id,
-                                company_name: getCol('bedrijfsnaam') || 'Onbekend',
-                                email: email.trim().toLowerCase(),
-                                contact_person: getCol('contactpersoon') || null,
-                                phone: getCol('telefoonnummer') || null,
-                                address: getCol('adres') || null,
-                                postal_code: getCol('postcode') || null,
-                                city: getCol('plaats') || null
-                            }]);
-                            if (dbError) throw dbError;
+                            const { data: existingCompany, error: checkError } = await supabase
+                                .from('Bedrijven')
+                                .select('id')
+                                .eq('email', email.trim().toLowerCase())
+                                .maybeSingle();
+                            
+                            if (checkError) throw checkError;
+                            if (existingCompany) {
+                                user_id = existingCompany.id;
+                                exists = true;
+                            }
                         }
 
-                        successCount++;
-                        resultsElement.innerHTML += `<div class="text-green-600 border-b border-gray-100 py-1">✅ ${email}: Succesvol toegevoegd</div>`;
+                        if (exists) {
+                            // Bestaande gebruiker: update gegevens
+                            if (type === 'student') {
+                                const bedrijfId = getCol('bedrijf_id') || getCol('bedrijfs_id');
+                                const { error: dbError } = await supabase
+                                    .from('Students')
+                                    .update({
+                                        name: getCol('naam') || 'Onbekend',
+                                        class: getCol('klas') || null,
+                                        school_year: getCol('schooljaar') || getCol('school_year') || null,
+                                        company_id: bedrijfId ? bedrijfId : null
+                                    })
+                                    .eq('id', user_id);
+                                if (dbError) throw dbError;
+                            } else if (type === 'company') {
+                                const { error: dbError } = await supabase
+                                    .from('Bedrijven')
+                                    .update({
+                                        company_name: getCol('bedrijfsnaam') || 'Onbekend',
+                                        contact_person: getCol('contactpersoon') || null,
+                                        phone: getCol('telefoonnummer') || null,
+                                        address: getCol('adres') || null,
+                                        postal_code: getCol('postcode') || null,
+                                        city: getCol('plaats') || null
+                                    })
+                                    .eq('id', user_id);
+                                if (dbError) throw dbError;
+                            }
+                            successCount++;
+                            resultsElement.innerHTML += `<div class="text-green-600 border-b border-gray-100 py-1">🔄 ${email}: Succesvol bijgewerkt</div>`;
+                        } else {
+                            // Nieuwe gebruiker: vereist wachtwoord
+                            if (!wachtwoord) {
+                                throw new Error("Nieuwe rij mist 'wachtwoord' kolom.");
+                            }
+
+                            // 1. Maak Auth Account aan via Edge Function
+                            const functionUrl = `${supabaseUrl}/functions/v1/create-auth-account`;
+                            let role = type === 'student' ? 'student' : 'employer';
+                            let name = type === 'student' ? getCol('naam') : getCol('bedrijfsnaam');
+                            let loginUrl = type === 'student' ? 'https://stageconnectie.nl/student-login.html' : 'https://stageconnectie.nl/employer-login.html';
+                            
+                            const authRes = await fetch(functionUrl, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'Authorization': `Bearer ${supabaseKey}`
+                                },
+                                body: JSON.stringify({
+                                    email: email.trim().toLowerCase(),
+                                    password: wachtwoord,
+                                    role: role,
+                                    metadata: { source: 'csv_import' },
+                                    sendEmail: sendEmailCheckbox.checked,
+                                    name: name || '',
+                                    loginUrl: loginUrl
+                                })
+                            });
+
+                            const authData = await authRes.json();
+                            if (!authRes.ok || !authData.success) {
+                                throw new Error(authData.error || 'Aanmaken account mislukt');
+                            }
+
+                            user_id = authData.user_id;
+
+                            // 2. Voeg toe aan database tabel
+                            if (type === 'student') {
+                                const bedrijfId = getCol('bedrijf_id') || getCol('bedrijfs_id');
+                                const { error: dbError } = await supabase.from('Students').insert([{
+                                    id: user_id,
+                                    name: getCol('naam') || 'Onbekend',
+                                    email: email.trim().toLowerCase(),
+                                    class: getCol('klas') || null,
+                                    school_year: getCol('schooljaar') || getCol('school_year') || null,
+                                    company_id: bedrijfId ? bedrijfId : null
+                                }]);
+                                if (dbError) throw dbError;
+
+                            } else if (type === 'company') {
+                                const { error: dbError } = await supabase.from('Bedrijven').insert([{
+                                    id: user_id,
+                                    company_name: getCol('bedrijfsnaam') || 'Onbekend',
+                                    email: email.trim().toLowerCase(),
+                                    contact_person: getCol('contactpersoon') || null,
+                                    phone: getCol('telefoonnummer') || null,
+                                    address: getCol('adres') || null,
+                                    postal_code: getCol('postcode') || null,
+                                    city: getCol('plaats') || null
+                                }]);
+                                if (dbError) throw dbError;
+                            }
+
+                            successCount++;
+                            resultsElement.innerHTML += `<div class="text-green-600 border-b border-gray-100 py-1">✅ ${email}: Succesvol toegevoegd</div>`;
+                        }
                     } catch (error) {
                         failCount++;
                         let emailDisplay = row.email || row.Email || 'Onbekend';
