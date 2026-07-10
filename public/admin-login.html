@@ -19,6 +19,7 @@
 <body class="bg-gray-100 min-h-screen flex items-center justify-center p-4">
     <div class="bg-white rounded-xl shadow-lg p-8 w-full max-w-md">
         <div class="text-center mb-8">
+            <img id="school-logo-img" src="logo.png" alt="School Logo" class="h-16 mx-auto mb-2 object-contain">
             <h1 class="text-2xl font-bold text-gray-800">Admin Portal</h1>
             <p class="text-gray-600">Alleen voor schoolmedewerkers</p>
         </div>
@@ -83,6 +84,12 @@
     <script src="./static/js/cookie-consent.js"></script>
     <script src="./static/js/admin-auth.js"></script>
     <script>
+        // Dynamisch schoollogo instellen
+        if (window.SCHOOL_LOGO) {
+            const logoImg = document.getElementById('school-logo-img');
+            if (logoImg) logoImg.src = window.SCHOOL_LOGO;
+        }
+
         function togglePasswordVisibility(inputId, button) {
             const input = document.getElementById(inputId);
             const type = input.type === 'password' ? 'text' : 'password';
