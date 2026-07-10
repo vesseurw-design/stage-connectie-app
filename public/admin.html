@@ -315,6 +315,7 @@
         let allAttendance = [];
         let companies = [];
         let students = [];
+        let supervisors = [];
         let currentUser = null;
 
         // Modal state
@@ -365,7 +366,7 @@
             const isAuthenticated = await checkAuth();
             if (!isAuthenticated) return;
 
-            await Promise.all([loadCompanies(), loadStudents(), loadAttendance()]);
+            await Promise.all([loadCompanies(), loadStudents(), loadAttendance(), loadSupervisors()]);
             setupRealtimeSubscription();
             setupFilters();
             updateDashboard();
@@ -391,6 +392,11 @@
         async function loadAttendance() {
             const { data } = await db.from('Attendance').select('*').order('date', { ascending: false });
             allAttendance = data || [];
+        }
+
+        async function loadSupervisors() {
+            const { data } = await db.from('stagebegeleiders').select('*');
+            supervisors = data || [];
         }
 
         function setupRealtimeSubscription() {
@@ -745,16 +751,13 @@
         }
 
         function openPrintSection(mode) {
-            const dateFilter = document.getElementById('filter-date').value;
-            if (!dateFilter) {
-                alert('Selecteer eerst een datum.');
-                return;
-            }
+            const dateInput = document.getElementById('filter-date');
+            const dateFilter = dateInput ? dateInput.value : '';
 
             currentPrintMode = mode;
 
-            // Bepaal standaard de week (maandag t/m vrijdag) op basis van de geselecteerde filterdatum
-            const current = new Date(dateFilter);
+            // Bepaal standaard de week (maandag t/m vrijdag) op basis van de geselecteerde filterdatum of vandaag
+            const current = dateFilter ? new Date(dateFilter) : new Date();
             const day = current.getDay();
             const monday = new Date(current);
             monday.setDate(current.getDate() - day + (day === 0 ? -6 : 1));
