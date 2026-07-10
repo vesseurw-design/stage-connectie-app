@@ -837,6 +837,7 @@
                                 <th style="text-align:left; padding:8px; background:#f8fafc; border:1px solid #cbd5e1; font-weight:700;">Stageplek</th>
                                 <th style="text-align:center; padding:8px; background:#f8fafc; border:1px solid #cbd5e1; font-weight:700;">Klas</th>
                                 <th style="text-align:center; padding:8px; background:#f8fafc; border:1px solid #cbd5e1; font-weight:700;">Verwachte stagedagen</th>
+                                <th style="text-align:center; padding:8px; background:#f8fafc; border:1px solid #cbd5e1; font-weight:700;">Totaal uren</th>
                                 <th style="text-align:center; padding:8px; background:#f0fdf4; color:#15803d; border:1px solid #cbd5e1; font-weight:700;">Aanwezig</th>
                                 <th style="text-align:center; padding:8px; background:#fef2f2; color:#b91c1c; border:1px solid #cbd5e1; font-weight:700;">Afwezig</th>
                                 <th style="text-align:center; padding:8px; background:#fff7ed; color:#c2410c; border:1px solid #cbd5e1; font-weight:700;">Ziek</th>
@@ -858,12 +859,14 @@
                                     late: studentRecords.filter(a => a.status === 'late' || (!a.status && a.student_status === 'late')).length
                                 };
                                 const totalScheduled = days.filter(wd => !student.scheduled_days || student.scheduled_days.length === 0 || student.scheduled_days.includes(wd.dayCode)).length;
+                                const totalHours = studentRecords.reduce((sum, r) => sum + (r.student_hours || 0), 0);
 
                                 return `<tr>
                                     <td style="text-align:left; padding:8px; border:1px solid #cbd5e1; font-weight:600; color:#1e293b;">${student.name}</td>
                                     <td style="text-align:left; padding:8px; border:1px solid #cbd5e1; color:#334155;">${companyName}</td>
                                     <td style="text-align:center; padding:8px; border:1px solid #cbd5e1; color:#334155;">${student.class || '–'}</td>
                                     <td style="text-align:center; padding:8px; border:1px solid #cbd5e1; font-weight:600; color:#334155;">${totalScheduled}</td>
+                                    <td style="text-align:center; padding:8px; border:1px solid #cbd5e1; font-weight:700; color:#1e3a8a;">${totalHours} uur</td>
                                     <td style="text-align:center; padding:8px; border:1px solid #cbd5e1; font-weight:700; color:#16a34a; background:#f0fdf4;">${stats.present}</td>
                                     <td style="text-align:center; padding:8px; border:1px solid #cbd5e1; font-weight:700; color:#dc2626; background:#fef2f2;">${stats.absent}</td>
                                     <td style="text-align:center; padding:8px; border:1px solid #cbd5e1; font-weight:700; color:#ea580c; background:#fff7ed;">${stats.sick}</td>
