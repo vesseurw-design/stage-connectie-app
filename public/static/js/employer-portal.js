@@ -43,14 +43,16 @@ async function init() {
             document.getElementById('company-name').textContent = currentCompany.company_name;
         }
 
-        await loadStudents();
-        await loadSupervisors(); // Load supervisors after students
-        updateWeekDisplay();
-        await loadAttendance();
+        // Check gebruikersvoorwaarden akkoord (Click-wrap)
+        if (currentCompany && !currentCompany.terms_accepted_at && currentCompany.id !== 'demo-company') {
+            checkTermsAcceptance('Bedrijven', currentCompany.id, currentCompany.terms_accepted_at, (acceptedAt) => {
+                currentCompany.terms_accepted_at = acceptedAt;
+                continueEmployerInit();
+            });
+            return;
+        }
 
-        // Setup realtime subscription for live updates
-        setupRealtimeSubscription();
-
+        await continueEmployerInit();
     } catch (err) {
         console.error('Init error:', err);
         document.getElementById('students-grid').innerHTML = `
@@ -61,6 +63,16 @@ async function init() {
             </div>
         `;
     }
+}
+
+async function continueEmployerInit() {
+    await loadStudents();
+    await loadSupervisors(); // Load supervisors after students
+    updateWeekDisplay();
+    await loadAttendance();
+
+    // Setup realtime subscription for live updates
+    setupRealtimeSubscription();
 }
 
 async function loadStudents() {

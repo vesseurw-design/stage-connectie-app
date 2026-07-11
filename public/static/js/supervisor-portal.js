@@ -37,6 +37,30 @@ async function init() {
         return;
     }
 
+    try {
+        const { data: supervisor, error: supervisorError } = await supabaseClient
+            .from('Stagebegeleiders')
+            .select('terms_accepted_at')
+            .eq('id', supervisorId)
+            .single();
+
+        if (!supervisorError && supervisor) {
+            // Check gebruikersvoorwaarden akkoord (Click-wrap)
+            if (!supervisor.terms_accepted_at) {
+                checkTermsAcceptance('Stagebegeleiders', supervisorId, supervisor.terms_accepted_at, (acceptedAt) => {
+                    continueSupervisorInit(supervisorName);
+                });
+                return;
+            }
+        }
+    } catch (err) {
+        console.error('Error checking supervisor terms:', err);
+    }
+
+    await continueSupervisorInit(supervisorName);
+}
+
+async function continueSupervisorInit(supervisorName) {
     document.getElementById('supervisor-name').textContent = `Hallo, ${supervisorName}`;
 
     // Set today's date as default filter
