@@ -38,6 +38,21 @@ if (resetForm) {
         hideMessages();
 
         try {
+            // Check of het emailadres bij een student hoort (studenten mogen niet zelf resetten)
+            const { data: student } = await supabaseClient
+                .from('Students')
+                .select('id')
+                .eq('email', email.toLowerCase())
+                .maybeSingle();
+
+            if (student) {
+                showError('Studenten kunnen hun wachtwoord niet zelf resetten. Neem contact op met je stagebegeleider om je wachtwoord te laten wijzigen.');
+                submitBtn.disabled = false;
+                btnText.classList.remove('hidden');
+                btnLoading.classList.add('hidden');
+                return;
+            }
+
             // Verstuur password reset email via Supabase Auth
             const { data, error } = await supabaseClient.auth.resetPasswordForEmail(email, {
                 redirectTo: `${window.location.origin}/reset-password.html`
