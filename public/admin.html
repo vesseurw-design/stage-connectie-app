@@ -682,12 +682,15 @@
             if (!editingStudentId || !editingDate) return;
 
             const hours = parseFloat(document.getElementById('modal-hours').value) || 0;
+            const student = students.find(s => s.id === editingStudentId);
 
             const record = {
                 student_id: editingStudentId,
                 date: editingDate,
                 student_status: selectedModalStatus,
                 student_hours: selectedModalStatus === 'absent' ? 0 : hours,
+                status: selectedModalStatus, // Admin stelt ook de verificatie-status in
+                employer_id: student ? student.company_id : null,
                 updated_at: new Date().toISOString()
             };
 
