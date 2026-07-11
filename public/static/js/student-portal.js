@@ -31,6 +31,23 @@ async function init() {
         }
         currentStudent = student;
 
+        // Check gebruikersvoorwaarden akkoord (Click-wrap)
+        if (!currentStudent.terms_accepted_at) {
+            checkTermsAcceptance('Students', currentStudent.id, currentStudent.terms_accepted_at, (acceptedAt) => {
+                currentStudent.terms_accepted_at = acceptedAt;
+                continueStudentInit();
+            });
+            return;
+        }
+
+        await continueStudentInit();
+    } catch (err) {
+        console.error('Init error:', err);
+    }
+}
+
+async function continueStudentInit() {
+    try {
         if (currentStudent.company_id) {
             const { data: company } = await supabaseClient
                 .from('Bedrijven')
@@ -72,9 +89,8 @@ async function init() {
 
         document.getElementById('loading').classList.add('hidden');
         document.getElementById('content').classList.remove('hidden');
-
     } catch (err) {
-        console.error('Init error:', err);
+        console.error('continueStudentInit error:', err);
     }
 }
 
