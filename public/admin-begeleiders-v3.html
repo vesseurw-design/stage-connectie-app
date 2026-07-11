@@ -256,7 +256,6 @@
                     }
 
                     // Step 2: Create auth account via Edge Function
-                    const password = 'Welkom' + name.replace(/\s+/g, '');
                     try {
                         const functionUrl = `${SUPABASE_URL}/functions/v1/create-auth-account`;
                         const authRes = await fetch(functionUrl, {
@@ -267,8 +266,11 @@
                             },
                             body: JSON.stringify({
                                 email: email,
-                                password: password,
+                                password: '', // Leeg laten om een uitnodigingslink te sturen
                                 role: 'supervisor',
+                                sendEmail: true,
+                                name: name,
+                                loginUrl: 'https://ghpc.stageconnectie.nl/supervisor-login.html',
                                 metadata: {
                                     supervisor_id: supervisorResult[0].id
                                 }
