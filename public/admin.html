@@ -727,21 +727,41 @@
         // ========================
         let currentPrintMode = 'overview';
 
-        function getDaysInRange(startDateStr, endDateStr) {
-            const start = new Date(startDateStr);
-            const end = new Date(endDateStr);
+        function formatDateLocal(d) {
+            const year = d.getFullYear();
+            const month = String(d.getMonth() + 1).padStart(2, '0');
+            const day = String(d.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
+        function getDaysInRange(startDateStr, endDateStr, selectedStudentId = 'all') {
+            const [sYear, sMonth, sDay] = startDateStr.split('-').map(Number);
+            const [eYear, eMonth, eDay] = endDateStr.split('-').map(Number);
+            
+            const start = new Date(sYear, sMonth - 1, sDay);
+            const end = new Date(eYear, eMonth - 1, eDay);
+            
             const days = [];
             let current = new Date(start);
             let count = 0;
             while (current <= end && count < 200) {
                 const dayNum = current.getDay();
-                if (dayNum >= 1 && dayNum <= 5) {
-                    const d = new Date(current);
+                const d = new Date(current);
+                const dStr = formatDateLocal(d);
+                
+                // Controleer of er voor deze dag een registratie bestaat (voor de geselecteerde leerling of voor álle leerlingen)
+                const hasWeekendRecord = allAttendance.some(a => {
+                    const matchStudent = selectedStudentId === 'all' || a.student_id === selectedStudentId;
+                    return matchStudent && a.date === dStr && (a.student_status || a.status);
+                });
+                
+                const isWeekday = dayNum >= 1 && dayNum <= 5;
+                if (isWeekday || hasWeekendRecord) {
                     days.push({
                         label: d.toLocaleDateString('nl-NL', { weekday: 'short', day: 'numeric', month: 'numeric' }),
                         fullLabel: d.toLocaleDateString('nl-NL', { weekday: 'long', day: 'numeric', month: 'long' }),
-                        dateStr: d.toISOString().split('T')[0],
-                        dayCode: ['', 'Ma', 'Di', 'Wo', 'Do', 'Vr', ''][d.getDay()]
+                        dateStr: dStr,
+                        dayCode: ['Zo', 'Ma', 'Di', 'Wo', 'Do', 'Vr', 'Za'][d.getDay()]
                     });
                 }
                 current.setDate(current.getDate() + 1);
@@ -764,8 +784,8 @@
             const friday = new Date(monday);
             friday.setDate(monday.getDate() + 4);
 
-            document.getElementById('print-start-date').value = monday.toISOString().split('T')[0];
-            document.getElementById('print-end-date').value = friday.toISOString().split('T')[0];
+            document.getElementById('print-start-date').value = formatDateLocal(monday);
+            document.getElementById('print-end-date').value = formatDateLocal(friday);
 
             // Vul studenten dropdown in print-section
             const selectEl = document.getElementById('print-student-select');
@@ -796,9 +816,10 @@
                 return;
             }
 
-            const days = getDaysInRange(startVal, endVal);
+            const selectedStudentId = document.getElementById('print-student-select').value;
+            const days = getDaysInRange(startVal, endVal, selectedStudentId);
             if (days.length === 0) {
-                alert('Geen werkdagen gevonden in deze periode.');
+                alert('Geen stagedagen gevonden in deze periode.');
                 return;
             }
 
@@ -809,7 +830,6 @@
             const statusAbbr = { present: 'A', absent: 'AF', sick: 'Z', late: 'TL' };
             
             // Filter studenten op basis van dropdown
-            const selectedStudentId = document.getElementById('print-student-select').value;
             let printStudents = [...students].sort((a, b) => a.name.localeCompare(b.name));
             if (selectedStudentId !== 'all') {
                 printStudents = printStudents.filter(s => s.id === selectedStudentId);
