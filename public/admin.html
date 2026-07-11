@@ -840,10 +840,35 @@
 
             const printContent = document.getElementById('print-content');
 
+            // Controleer op conflicten in de geselecteerde periode
+            let conflictCount = 0;
+            printStudents.forEach(student => {
+                const studentRecords = allAttendance.filter(a => a.student_id === student.id && days.some(wd => wd.dateStr === a.date));
+                studentRecords.forEach(r => {
+                    if (r.status && r.student_status && r.status !== r.student_status) {
+                        conflictCount++;
+                    }
+                });
+            });
+
+            let conflictWarningHtml = '';
+            if (conflictCount > 0) {
+                conflictWarningHtml = `
+                    <div class="no-print" style="background:#fffbeb; border:1px solid #fef3c7; padding:16px; border-radius:12px; margin-bottom:20px; color:#b45309; font-family:'Inter', sans-serif; font-size:13px; line-height:1.5; display:flex; gap:12px; align-items:flex-start; box-shadow:0 1px 2px 0 rgba(0,0,0,0.05);">
+                        <span style="font-size:20px; margin-top:2px;">⚠️</span>
+                        <div>
+                            <strong style="font-weight:700; color:#92400e; display:block; margin-bottom:4px;">Let op: Er zijn ${conflictCount} onopgeloste conflicten in deze periode!</strong>
+                            Er zijn dagen waarop de invoer van de leerling afwijkt van de verificatie van de werkgever (bijvoorbeeld: de leerling meldt zich aanwezig, maar de werkgever meldt hem afwezig). 
+                            Het is belangrijk om deze conflicten eerst op te lossen in het dashboard (klik op de stagedag en kies de juiste status) voordat je het definitieve examendossier afdrukt.
+                        </div>
+                    </div>
+                `;
+            }
+
             if (currentPrintMode === 'overview') {
                 // ── TOTAALOVERZICHT ──
                 document.getElementById('print-mode-label').textContent = `Totaaloverzicht – ${periodLabel}`;
-                printContent.innerHTML = `
+                printContent.innerHTML = conflictWarningHtml + `
                     <div style="display:flex; justify-content:space-between; align-items:flex-start; border-bottom:3px solid #1e3a8a; padding-bottom:12px; margin-bottom:20px; font-family:'Inter', sans-serif;">
                         <div>
                             <h1 style="font-size:20px; font-weight:800; color:#1e3a8a; margin:0; text-transform:uppercase; letter-spacing:0.5px;">Aanwezigheidsoverzicht Stage</h1>
@@ -919,7 +944,7 @@
             } else {
                 // ── FORMULIER PER LEERLING ──
                 document.getElementById('print-mode-label').textContent = `Formulieren per leerling – ${periodLabel}`;
-                printContent.innerHTML = printStudents.map(student => {
+                printContent.innerHTML = conflictWarningHtml + printStudents.map(student => {
                     const company = companies.find(c => c.id === student.company_id);
                     const companyName = company ? company.company_name : '–';
                     const supervisor = supervisors.find(s => s.id === student.supervisor_id);
