@@ -241,9 +241,6 @@ document.getElementById('company-form').addEventListener('submit', async (e) => 
             return;
         }
 
-        // Generate password: Welkom + CompanyName (without spaces)
-        const password = 'Welkom' + companyName.replace(/\s+/g, '');
-
         try {
             // Step 1: Insert company first
             const { data: companyResult, error: companyError } = await supabaseClient
@@ -259,6 +256,7 @@ document.getElementById('company-form').addEventListener('submit', async (e) => 
             // Step 2: Create auth account via Edge Function
             try {
                 const functionUrl = `${window.SUPABASE_URL}/functions/v1/create-auth-account`;
+                const contactPerson = document.getElementById('contact_person').value || '';
                 const authRes = await fetch(functionUrl, {
                     method: 'POST',
                     headers: {
@@ -267,8 +265,11 @@ document.getElementById('company-form').addEventListener('submit', async (e) => 
                     },
                     body: JSON.stringify({
                         email: email,
-                        password: password,
+                        password: '', // Leeg laten om een uitnodigingslink te sturen
                         role: 'employer',
+                        sendEmail: true,
+                        name: contactPerson || companyName,
+                        loginUrl: 'https://ghpc.stageconnectie.nl/employer-portal.html',
                         metadata: {
                             company_name: companyName
                         }

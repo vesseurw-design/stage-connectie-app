@@ -129,16 +129,18 @@ document.addEventListener('DOMContentLoaded', () => {
                             successCount++;
                             resultsElement.innerHTML += `<div class="text-green-600 border-b border-gray-100 py-1">🔄 ${email}: Succesvol bijgewerkt</div>`;
                         } else {
-                            // Nieuwe gebruiker: vereist wachtwoord
-                            if (!wachtwoord) {
-                                throw new Error("Nieuwe rij mist 'wachtwoord' kolom.");
+                            // Nieuwe gebruiker: vereist wachtwoord voor studenten
+                            if (!wachtwoord && type === 'student') {
+                                throw new Error("Nieuwe student mist 'wachtwoord' kolom.");
                             }
 
                             // 1. Maak Auth Account aan via Edge Function
                             const functionUrl = `${supabaseUrl}/functions/v1/create-auth-account`;
                             let role = type === 'student' ? 'student' : 'employer';
-                            let name = type === 'student' ? getCol('naam') : getCol('bedrijfsnaam');
-                            let loginUrl = type === 'student' ? 'https://stageconnectie.nl/student-login.html' : 'https://stageconnectie.nl/employer-login.html';
+                            let name = type === 'student' ? getCol('naam') : (getCol('contactpersoon') || getCol('bedrijfsnaam'));
+                            let loginUrl = type === 'student' 
+                                ? 'https://ghpc.stageconnectie.nl/student-portal.html' 
+                                : 'https://ghpc.stageconnectie.nl/employer-portal.html';
                             
                             const authRes = await fetch(functionUrl, {
                                 method: 'POST',
@@ -148,10 +150,10 @@ document.addEventListener('DOMContentLoaded', () => {
                                 },
                                 body: JSON.stringify({
                                     email: email.trim().toLowerCase(),
-                                    password: wachtwoord,
+                                    password: wachtwoord || '',
                                     role: role,
                                     metadata: { source: 'csv_import' },
-                                    sendEmail: sendEmailCheckbox.checked,
+                                    sendEmail: type === 'company' ? true : sendEmailCheckbox.checked,
                                     name: name || '',
                                     loginUrl: loginUrl
                                 })
@@ -159,7 +161,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                             const authData = await authRes.json();
                             if (!authRes.ok || !authData.success) {
-                                throw new Error(authData.error || 'Aanmaken account mislukt');
+                                throw new Error(authData.error || 'Aanmaken account/uitnodiging mislukt');
                             }
 
                             user_id = authData.user_id;
