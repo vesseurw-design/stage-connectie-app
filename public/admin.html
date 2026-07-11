@@ -883,8 +883,7 @@
                                 };
                                 const totalScheduled = days.filter(wd => !student.scheduled_days || student.scheduled_days.length === 0 || student.scheduled_days.includes(wd.dayCode)).length;
                                 const totalHours = studentRecords.reduce((sum, r) => {
-                                    const finalStatus = r.status || r.student_status;
-                                    if (finalStatus === 'present' || finalStatus === 'late') {
+                                    if (r.student_status === 'present' || r.student_status === 'late') {
                                         return sum + (r.student_hours || 0);
                                     }
                                     return sum;
@@ -931,8 +930,7 @@
                         late: studentRecords.filter(a => a.status === 'late' || (!a.status && a.student_status === 'late')).length
                     };
                     const totalHours = studentRecords.reduce((sum, r) => {
-                        const finalStatus = r.status || r.student_status;
-                        if (finalStatus === 'present' || finalStatus === 'late') {
+                        if (r.student_status === 'present' || r.student_status === 'late') {
                             return sum + (r.student_hours || 0);
                         }
                         return sum;
