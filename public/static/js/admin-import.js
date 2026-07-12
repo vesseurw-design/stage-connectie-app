@@ -15,6 +15,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const companiesProgressText = document.getElementById('companies-progress-text');
     const companiesResults = document.getElementById('companies-results');
 
+    const btnImportSupervisors = document.getElementById('btn-import-supervisors');
+    const fileInputSupervisors = document.getElementById('supervisors-csv');
+    const sendWelcomeSupervisors = document.getElementById('send-welcome-supervisors');
+    const supervisorsProgress = document.getElementById('supervisors-progress');
+    const supervisorsProgressBar = document.getElementById('supervisors-progress-bar');
+    const supervisorsProgressText = document.getElementById('supervisors-progress-text');
+    const supervisorsResults = document.getElementById('supervisors-results');
+
     // Initialiseer Supabase client (gebruikt window.supabase uit auth scripts)
     const supabaseUrl = window.SUPABASE_URL || window.ENV_SUPABASE_URL || localStorage.getItem('supabaseUrl');
     const supabaseKey = window.SUPABASE_KEY || window.ENV_SUPABASE_KEY || localStorage.getItem('supabaseKey');
@@ -96,6 +104,18 @@ document.addEventListener('DOMContentLoaded', () => {
                                 user_id = existingCompany.id;
                                 exists = true;
                             }
+                        } else if (type === 'supervisor') {
+                            const { data: existingSupervisor, error: checkError } = await supabase
+                                .from('stagebegeleiders')
+                                .select('id')
+                                .eq('email', email.trim().toLowerCase())
+                                .maybeSingle();
+                            
+                            if (checkError) throw checkError;
+                            if (existingSupervisor) {
+                                user_id = existingSupervisor.id;
+                                exists = true;
+                            }
                         }
 
                         if (exists) {
@@ -125,6 +145,15 @@ document.addEventListener('DOMContentLoaded', () => {
                                     })
                                     .eq('id', user_id);
                                 if (dbError) throw dbError;
+                            } else if (type === 'supervisor') {
+                                const { error: dbError } = await supabase
+                                    .from('stagebegeleiders')
+                                    .update({
+                                        name: getCol('naam') || 'Onbekend',
+                                        phone: getCol('telefoonnummer') || null
+                                    })
+                                    .eq('id', user_id);
+                                if (dbError) throw dbError;
                             }
                             successCount++;
                             resultsElement.innerHTML += `<div class="text-green-600 border-b border-gray-100 py-1">🔄 ${email}: Succesvol bijgewerkt</div>`;
@@ -136,11 +165,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
                             // 1. Maak Auth Account aan via Edge Function
                             const functionUrl = `${supabaseUrl}/functions/v1/create-auth-account`;
-                            let role = type === 'student' ? 'student' : 'employer';
-                            let name = type === 'student' ? getCol('naam') : (getCol('contactpersoon') || getCol('bedrijfsnaam'));
+                            let role = type === 'student' ? 'student' : (type === 'company' ? 'employer' : 'supervisor');
+                            let name = type === 'student' ? getCol('naam') : (type === 'company' ? (getCol('contactpersoon') || getCol('bedrijfsnaam')) : getCol('naam'));
                             let loginUrl = type === 'student' 
                                 ? 'https://ghpc.stageconnectie.nl/student-portal.html' 
-                                : 'https://ghpc.stageconnectie.nl/employer-portal.html';
+                                : (type === 'company' ? 'https://ghpc.stageconnectie.nl/employer-portal.html' : 'https://ghpc.stageconnectie.nl/supervisor-portal.html');
                             
                             const authRes = await fetch(functionUrl, {
                                 method: 'POST',
@@ -153,7 +182,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                     password: wachtwoord || '',
                                     role: role,
                                     metadata: { source: 'csv_import' },
-                                    sendEmail: type === 'company' ? true : sendEmailCheckbox.checked,
+                                    sendEmail: (type === 'company' || type === 'supervisor') ? true : sendEmailCheckbox.checked,
                                     name: name || '',
                                     loginUrl: loginUrl
                                 })
@@ -189,6 +218,14 @@ document.addEventListener('DOMContentLoaded', () => {
                                     address: getCol('adres') || null,
                                     postal_code: getCol('postcode') || null,
                                     city: getCol('plaats') || null
+                                }]);
+                                if (dbError) throw dbError;
+                            } else if (type === 'supervisor') {
+                                const { error: dbError } = await supabase.from('stagebegeleiders').insert([{
+                                    id: user_id,
+                                    name: getCol('naam') || 'Onbekend',
+                                    email: email.trim().toLowerCase(),
+                                    phone: getCol('telefoonnummer') || null
                                 }]);
                                 if (dbError) throw dbError;
                             }
@@ -236,6 +273,17 @@ document.addEventListener('DOMContentLoaded', () => {
             { container: companiesProgress, bar: companiesProgressBar, text: companiesProgressText },
             companiesResults,
             btnImportCompanies
+        );
+    });
+
+    btnImportSupervisors.addEventListener('click', () => {
+        handleImport(
+            fileInputSupervisors, 
+            'supervisor', 
+            sendWelcomeSupervisors, 
+            { container: supervisorsProgress, bar: supervisorsProgressBar, text: supervisorsProgressText },
+            supervisorsResults,
+            btnImportSupervisors
         );
     });
 });
