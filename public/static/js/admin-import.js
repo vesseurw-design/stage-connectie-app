@@ -69,6 +69,18 @@ document.addEventListener('DOMContentLoaded', () => {
                             return key ? row[key] : null;
                         };
 
+                        const getName = () => {
+                            const nameVal = getCol('naam') || getCol('name');
+                            if (nameVal) return nameVal;
+                            
+                            const voornaam = getCol('voornaam') || getCol('first_name') || getCol('firstname');
+                            const achternaam = getCol('achternaam') || getCol('last_name') || getCol('lastname');
+                            if (voornaam || achternaam) {
+                                return `${voornaam || ''} ${achternaam || ''}`.trim();
+                            }
+                            return 'Onbekend';
+                        };
+
                         let email = getCol('email');
                         let wachtwoord = getCol('wachtwoord');
                         
@@ -125,7 +137,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 const { error: dbError } = await supabase
                                     .from('Students')
                                     .update({
-                                        name: getCol('naam') || 'Onbekend',
+                                        name: getName(),
                                         class: getCol('klas') || null,
                                         school_year: getCol('schooljaar') || getCol('school_year') || null,
                                         company_id: bedrijfId ? bedrijfId : null
@@ -149,7 +161,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 const { error: dbError } = await supabase
                                     .from('stagebegeleiders')
                                     .update({
-                                        name: getCol('naam') || 'Onbekend',
+                                        name: getName(),
                                         phone: getCol('telefoonnummer') || null
                                     })
                                     .eq('id', user_id);
@@ -163,10 +175,9 @@ document.addEventListener('DOMContentLoaded', () => {
                                 throw new Error("Nieuwe student mist 'wachtwoord' kolom.");
                             }
 
-                            // 1. Maak Auth Account aan via Edge Function
                             const functionUrl = `${supabaseUrl}/functions/v1/create-auth-account`;
                             let role = type === 'student' ? 'student' : (type === 'company' ? 'employer' : 'supervisor');
-                            let name = type === 'student' ? getCol('naam') : (type === 'company' ? (getCol('contactpersoon') || getCol('bedrijfsnaam')) : getCol('naam'));
+                            let name = type === 'student' ? getName() : (type === 'company' ? (getCol('contactpersoon') || getCol('bedrijfsnaam')) : getName());
                             let loginUrl = type === 'student' 
                                 ? 'https://ghpc.stageconnectie.nl/student-portal.html' 
                                 : (type === 'company' ? 'https://ghpc.stageconnectie.nl/employer-portal.html' : 'https://ghpc.stageconnectie.nl/supervisor-portal.html');
@@ -200,7 +211,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 const bedrijfId = getCol('bedrijf_id') || getCol('bedrijfs_id');
                                 const { error: dbError } = await supabase.from('Students').insert([{
                                     id: user_id,
-                                    name: getCol('naam') || 'Onbekend',
+                                    name: getName(),
                                     email: email.trim().toLowerCase(),
                                     class: getCol('klas') || null,
                                     school_year: getCol('schooljaar') || getCol('school_year') || null,
@@ -223,7 +234,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             } else if (type === 'supervisor') {
                                 const { error: dbError } = await supabase.from('stagebegeleiders').insert([{
                                     id: user_id,
-                                    name: getCol('naam') || 'Onbekend',
+                                    name: getName(),
                                     email: email.trim().toLowerCase(),
                                     phone: getCol('telefoonnummer') || null
                                 }]);
