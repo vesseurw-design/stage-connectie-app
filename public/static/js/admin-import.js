@@ -57,6 +57,20 @@ document.addEventListener('DOMContentLoaded', () => {
                 let successCount = 0;
                 let failCount = 0;
 
+                // Pre-load all companies and supervisors to match names/emails to IDs
+                let allCompanies = [];
+                let allSupervisors = [];
+                if (type === 'student') {
+                    try {
+                        const { data: compData } = await supabase.from('Bedrijven').select('id, company_name, email');
+                        allCompanies = compData || [];
+                        const { data: supData } = await supabase.from('stagebegeleiders').select('id, name, email');
+                        allSupervisors = supData || [];
+                    } catch (err) {
+                        console.error('Error pre-loading companies/supervisors:', err);
+                    }
+                }
+
                 progressElements.text.textContent = `0 / ${total} verwerkt`;
                 progressElements.bar.style.width = '0%';
 
@@ -87,6 +101,78 @@ document.addEventListener('DOMContentLoaded', () => {
                         if (!email) {
                             throw new Error("Rij mist 'email' kolom.");
                         }
+
+                        // Helper for matching UUID
+                        const isUuid = (val) => val && /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(val);
+
+                        // Find company ID
+                        let bedrijfId = getCol('bedrijf_id') || getCol('bedrijfs_id') || getCol('company_id');
+                        if (bedrijfId && !isUuid(bedrijfId)) {
+                            const matchedCompany = allCompanies.find(c => 
+                                c.email?.toLowerCase().trim() === bedrijfId.toLowerCase().trim() ||
+                                c.company_name?.toLowerCase().trim() === bedrijfId.toLowerCase().trim()
+                            );
+                            bedrijfId = matchedCompany ? matchedCompany.id : null;
+                        } else if (!bedrijfId) {
+                            const companySearch = getCol('stagebedrijf') || getCol('bedrijf') || getCol('company') || getCol('stagebedrijf_naam') || getCol('company_name');
+                            const companyEmail = getCol('stagebedrijf_email') || getCol('bedrijf_email') || getCol('company_email');
+                            
+                            if (companyEmail) {
+                                const matchedCompany = allCompanies.find(c => c.email?.toLowerCase().trim() === companyEmail.toLowerCase().trim());
+                                if (matchedCompany) bedrijfId = matchedCompany.id;
+                            }
+                            if (!bedrijfId && companySearch) {
+                                const matchedCompany = allCompanies.find(c => c.company_name?.toLowerCase().trim() === companySearch.toLowerCase().trim());
+                                if (matchedCompany) bedrijfId = matchedCompany.id;
+                            }
+                        }
+
+                        // Find supervisor ID
+                        let supervisorId = getCol('supervisor_id') || getCol('begeleider_id');
+                        if (supervisorId && !isUuid(supervisorId)) {
+                            const matchedSupervisor = allSupervisors.find(s => 
+                                s.email?.toLowerCase().trim() === supervisorId.toLowerCase().trim() ||
+                                s.name?.toLowerCase().trim() === supervisorId.toLowerCase().trim()
+                            );
+                            supervisorId = matchedSupervisor ? matchedSupervisor.id : null;
+                        } else if (!supervisorId) {
+                            const supervisorSearch = getCol('begeleider') || getCol('stagebegeleider') || getCol('supervisor') || getCol('begeleider_naam');
+                            const supervisorEmail = getCol('begeleider_email') || getCol('stagebegeleider_email') || getCol('supervisor_email');
+                            
+                            if (supervisorEmail) {
+                                const matchedSupervisor = allSupervisors.find(s => s.email?.toLowerCase().trim() === supervisorEmail.toLowerCase().trim());
+                                if (matchedSupervisor) supervisorId = matchedSupervisor.id;
+                            }
+                            if (!supervisorId && supervisorSearch) {
+                                const matchedSupervisor = allSupervisors.find(s => s.name?.toLowerCase().trim() === supervisorSearch.toLowerCase().trim());
+                                if (matchedSupervisor) supervisorId = matchedSupervisor.id;
+                            }
+                        }
+
+                        // Parse start and end dates
+                        const formatDateISO = (dateStr) => {
+                            if (!dateStr) return null;
+                            dateStr = dateStr.trim();
+                            const dmyRegex = /^(\d{1,2})[-/](\d{1,2})[-/](\d{4})$/;
+                            const match = dateStr.match(dmyRegex);
+                            if (match) {
+                                const day = match[1].padStart(2, '0');
+                                const month = match[2].padStart(2, '0');
+                                const year = match[3];
+                                return `${year}-${month}-${day}`;
+                            }
+                            if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+                                return dateStr;
+                            }
+                            const parsed = new Date(dateStr);
+                            if (!isNaN(parsed.getTime())) {
+                                return parsed.toISOString().split('T')[0];
+                            }
+                            return null;
+                        };
+
+                        const startDate = formatDateISO(getCol('stage_start_date') || getCol('startdatum_stage') || getCol('startdatum') || getCol('stage_start') || getCol('start_date'));
+                        const endDate = formatDateISO(getCol('stage_end_date') || getCol('einddatum_stage') || getCol('einddatum') || getCol('stage_end') || getCol('end_date'));
 
                         // Check of record al bestaat in database
                         let user_id = null;
@@ -133,16 +219,14 @@ document.addEventListener('DOMContentLoaded', () => {
                         if (exists) {
                             // Bestaande gebruiker: update gegevens
                             if (type === 'student') {
-                                const bedrijfId = getCol('bedrijf_id') || getCol('bedrijfs_id');
-                                const startDate = getCol('stage_start_date') || getCol('startdatum_stage') || getCol('startdatum') || getCol('stage_start');
-                                const endDate = getCol('stage_end_date') || getCol('einddatum_stage') || getCol('einddatum') || getCol('stage_end');
                                 const { error: dbError } = await supabase
                                     .from('Students')
                                     .update({
                                         name: getName(),
                                         class: getCol('klas') || null,
                                         school_year: getCol('schooljaar') || getCol('school_year') || null,
-                                        company_id: bedrijfId ? bedrijfId : null,
+                                        company_id: bedrijfId || null,
+                                        supervisor_id: supervisorId || null,
                                         stage_start_date: startDate || null,
                                         stage_end_date: endDate || null
                                     })
@@ -212,16 +296,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
                             // 2. Voeg toe aan database tabel
                             if (type === 'student') {
-                                const bedrijfId = getCol('bedrijf_id') || getCol('bedrijfs_id');
-                                const startDate = getCol('stage_start_date') || getCol('startdatum_stage') || getCol('startdatum') || getCol('stage_start');
-                                const endDate = getCol('stage_end_date') || getCol('einddatum_stage') || getCol('einddatum') || getCol('stage_end');
                                 const { error: dbError } = await supabase.from('Students').insert([{
                                     id: user_id,
                                     name: getName(),
                                     email: email.trim().toLowerCase(),
                                     class: getCol('klas') || null,
                                     school_year: getCol('schooljaar') || getCol('school_year') || null,
-                                    company_id: bedrijfId ? bedrijfId : null,
+                                    company_id: bedrijfId || null,
+                                    supervisor_id: supervisorId || null,
                                     stage_start_date: startDate || null,
                                     stage_end_date: endDate || null
                                 }]);
