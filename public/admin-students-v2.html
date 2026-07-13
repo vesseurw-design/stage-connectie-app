@@ -133,6 +133,16 @@
                         <option value="">Geen begeleider</option>
                     </select>
                 </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Startdatum stage</label>
+                        <input type="date" id="stage_start_date" class="w-full px-3 py-2 border rounded-lg">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Einddatum stage</label>
+                        <input type="date" id="stage_end_date" class="w-full px-3 py-2 border rounded-lg">
+                    </div>
+                </div>
                 <div>
                     <label class="block text-sm font-medium mb-1">Uitschrijfdatum</label>
                     <input type="date" id="unenrollment_date" class="w-full px-3 py-2 border rounded-lg">
@@ -329,6 +339,8 @@
                 document.getElementById('class').value = student.class || '';
                 document.getElementById('school_year').value = student.school_year || '';
                 document.getElementById('unenrollment_date').value = student.unenrollment_date || '';
+                document.getElementById('stage_start_date').value = student.stage_start_date || '';
+                document.getElementById('stage_end_date').value = student.stage_end_date || '';
                 document.querySelectorAll('input[name="days"]').forEach(cb => cb.checked = false);
                 (student.scheduled_days || []).forEach(day => {
                     const cb = document.querySelector(`input[value="${day}"]`);
@@ -342,6 +354,8 @@
                 document.getElementById('modal-title').textContent = 'Student Toevoegen';
                 document.getElementById('form').reset();
                 document.getElementById('student-id').value = '';
+                document.getElementById('stage_start_date').value = '';
+                document.getElementById('stage_end_date').value = '';
                 
                 // Show password field during add
                 document.getElementById('password-container').classList.remove('hidden');
@@ -428,6 +442,8 @@
                 class: document.getElementById('class').value || null,
                 school_year: document.getElementById('school_year').value || null,
                 unenrollment_date: document.getElementById('unenrollment_date').value || null,
+                stage_start_date: document.getElementById('stage_start_date').value || null,
+                stage_end_date: document.getElementById('stage_end_date').value || null,
                 scheduled_days: Array.from(document.querySelectorAll('input[name="days"]:checked')).map(cb => cb.value)
             };
 

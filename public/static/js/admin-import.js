@@ -134,13 +134,17 @@ document.addEventListener('DOMContentLoaded', () => {
                             // Bestaande gebruiker: update gegevens
                             if (type === 'student') {
                                 const bedrijfId = getCol('bedrijf_id') || getCol('bedrijfs_id');
+                                const startDate = getCol('stage_start_date') || getCol('startdatum_stage') || getCol('startdatum') || getCol('stage_start');
+                                const endDate = getCol('stage_end_date') || getCol('einddatum_stage') || getCol('einddatum') || getCol('stage_end');
                                 const { error: dbError } = await supabase
                                     .from('Students')
                                     .update({
                                         name: getName(),
                                         class: getCol('klas') || null,
                                         school_year: getCol('schooljaar') || getCol('school_year') || null,
-                                        company_id: bedrijfId ? bedrijfId : null
+                                        company_id: bedrijfId ? bedrijfId : null,
+                                        stage_start_date: startDate || null,
+                                        stage_end_date: endDate || null
                                     })
                                     .eq('id', user_id);
                                 if (dbError) throw dbError;
@@ -209,13 +213,17 @@ document.addEventListener('DOMContentLoaded', () => {
                             // 2. Voeg toe aan database tabel
                             if (type === 'student') {
                                 const bedrijfId = getCol('bedrijf_id') || getCol('bedrijfs_id');
+                                const startDate = getCol('stage_start_date') || getCol('startdatum_stage') || getCol('startdatum') || getCol('stage_start');
+                                const endDate = getCol('stage_end_date') || getCol('einddatum_stage') || getCol('einddatum') || getCol('stage_end');
                                 const { error: dbError } = await supabase.from('Students').insert([{
                                     id: user_id,
                                     name: getName(),
                                     email: email.trim().toLowerCase(),
                                     class: getCol('klas') || null,
                                     school_year: getCol('schooljaar') || getCol('school_year') || null,
-                                    company_id: bedrijfId ? bedrijfId : null
+                                    company_id: bedrijfId ? bedrijfId : null,
+                                    stage_start_date: startDate || null,
+                                    stage_end_date: endDate || null
                                 }]);
                                 if (dbError) throw dbError;
 
