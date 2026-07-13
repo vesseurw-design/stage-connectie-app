@@ -416,7 +416,7 @@ function renderStudentCards(attendance) {
                     <p class="mb-1 text-xs px-2 py-0.5 bg-gray-100 rounded inline-block">
                         ${student.class || '-'} • ${student.school_year || '-'}
                     </p>
-                    <p class="mb-1">📍 ${company?.company_name || 'Geen bedrijf'}</p>
+                    <p class="mb-1">📍 ${company?.company_name || 'Geen stagebedrijf'}</p>
                     <p>📅 ${(student.scheduled_days || []).join(', ') || 'Geen dagen'}</p>
                 </div>
             </div>
@@ -538,11 +538,11 @@ function renderAttendanceHistory(attendance, monthFilter) {
                     </div>
                     
                     <div class="flex flex-wrap gap-2 text-[11px]">
-                        ${a.hours_worked ? `<div class="bg-blue-100 text-blue-800 px-2 py-0.5 rounded-md">🏢 Werkgever: ${a.hours_worked}u</div>` : ''}
+                        ${a.hours_worked ? `<div class="bg-blue-100 text-blue-800 px-2 py-0.5 rounded-md">🏢 Stagebedrijf: ${a.hours_worked}u</div>` : ''}
                         
                         ${a.student_status || a.student_hours > 0 ? `
-                            <div class="bg-purple-100 text-purple-800 px-2 py-0.5 rounded-md flex items-center gap-1" title="Invoer student">
-                                <span>🎓 Student: ${a.student_status || 'ingevuld'}</span>
+                            <div class="bg-purple-100 text-purple-800 px-2 py-0.5 rounded-md flex items-center gap-1" title="Invoer stagiair">
+                                <span>🎓 Stagiair: ${a.student_status || 'ingevuld'}</span>
                                 ${a.student_hours > 0 ? `<span class="font-black border-l border-purple-300 pl-1 ml-1">${a.student_hours}u</span>` : ''}
                             </div>
                         ` : ''}

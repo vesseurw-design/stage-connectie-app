@@ -176,7 +176,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         } else {
                             // Nieuwe gebruiker: vereist wachtwoord voor studenten
                             if (!wachtwoord && type === 'student') {
-                                throw new Error("Nieuwe student mist 'wachtwoord' kolom.");
+                                throw new Error("Nieuwe stagiair mist 'wachtwoord' kolom.");
                             }
 
                             const functionUrl = `${supabaseUrl}/functions/v1/create-auth-account`;

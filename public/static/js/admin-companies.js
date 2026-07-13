@@ -75,7 +75,7 @@ async function loadData() {
         tbody.innerHTML = `
             <tr>
                 <td colspan="5" class="px-6 py-8 text-center text-gray-500">
-                    ${currentFilter ? 'Geen bedrijven gevonden in deze branche' : 'Nog geen bedrijven toegevoegd'}
+                    ${currentFilter ? 'Geen stagebedrijven gevonden in deze branche' : 'Nog geen stagebedrijven toegevoegd'}
                 </td>
             </tr>
         `;
@@ -113,7 +113,7 @@ function openModal(company = null) {
     modal.classList.remove('hidden');
 
     if (company) {
-        title.textContent = 'Bedrijf Bewerken';
+        title.textContent = 'Stagebedrijf Bewerken';
         document.getElementById('company-id').value = company.id;
         document.getElementById('company_name').value = company.company_name;
         document.getElementById('branche').value = company.branche || '';
@@ -121,7 +121,7 @@ function openModal(company = null) {
         document.getElementById('email').value = company.email || '';
         document.getElementById('phone_number').value = company.phone || '';
     } else {
-        title.textContent = 'Bedrijf Toevoegen';
+        title.textContent = 'Stagebedrijf Toevoegen';
         form.reset();
         document.getElementById('company-id').value = '';
     }
@@ -139,7 +139,7 @@ window.editCompany = function (company) {
 
 // Delete company
 window.deleteCompany = async function (id) {
-    if (!confirm('Weet je zeker dat je dit bedrijf wilt verwijderen?\n\nLet op: gekoppelde studenten verliezen hun koppeling.')) {
+    if (!confirm('Weet je zeker dat je dit stagebedrijf wilt verwijderen?\n\nLet op: gekoppelde stagiairs verliezen hun koppeling.')) {
         return;
     }
 
@@ -152,7 +152,7 @@ window.deleteCompany = async function (id) {
             .single();
 
         if (fetchError) {
-            alert('Fout bij ophalen bedrijf: ' + fetchError.message);
+            alert('Fout bij ophalen stagebedrijf: ' + fetchError.message);
             return;
         }
 
@@ -188,13 +188,13 @@ window.deleteCompany = async function (id) {
                     throw new Error(authResult?.error || 'Auth account delete failed');
                 }
 
-                alert('✅ Bedrijf en login account succesvol verwijderd!');
+                alert('✅ Stagebedrijf en login account succesvol verwijderd!');
             } catch (authError) {
                 console.warn('Auth account delete failed:', authError);
-                alert('✅ Bedrijf verwijderd!\n\n⚠️ Let op: Het login account kon niet automatisch worden verwijderd. (Fout: ' + authError.message + ')\nGa naar Supabase → Authentication → Users en verwijder handmatig.');
+                alert('✅ Stagebedrijf verwijderd!\n\n⚠️ Let op: Het login account kon niet automatisch worden verwijderd. (Fout: ' + authError.message + ')\nGa naar Supabase → Authentication → Users en verwijder handmatig.');
             }
         } else {
-            alert('✅ Bedrijf verwijderd!\n\n⚠️ Geen email gevonden.');
+            alert('✅ Stagebedrijf verwijderd!\n\n⚠️ Geen email gevonden.');
         }
 
         loadData();
@@ -237,7 +237,7 @@ document.getElementById('company-form').addEventListener('submit', async (e) => 
     } else {
         // Insert new company
         if (!email) {
-            alert('Email is verplicht voor nieuwe bedrijven (voor login)');
+            alert('Email is verplicht voor nieuwe stagebedrijven (voor login)');
             return;
         }
 
@@ -249,7 +249,7 @@ document.getElementById('company-form').addEventListener('submit', async (e) => 
                 .select();
 
             if (companyError) {
-                alert('Fout bij opslaan bedrijf: ' + companyError.message);
+                alert('Fout bij opslaan stagebedrijf: ' + companyError.message);
                 return;
             }
 
@@ -289,7 +289,7 @@ document.getElementById('company-form').addEventListener('submit', async (e) => 
             }
 
             // Success!
-            alert('✅ Bedrijf aangemaakt!\n\nLogin gegevens:\nEmail: ' + email + '\nWachtwoord: ' + password + '\n\n⚠️ BELANGRIJK:\nKopieer dit wachtwoord en stuur het naar het bedrijf.\n\nHet bedrijf kan direct inloggen op:\nhttps://stageconnectie.nl');
+            alert('✅ Stagebedrijf aangemaakt!\n\nLogin gegevens:\nEmail: ' + email + '\nWachtwoord: ' + password + '\n\n⚠️ BELANGRIJK:\nKopieer dit wachtwoord en stuur het naar het stagebedrijf.\n\nHet stagebedrijf kan direct inloggen op:\nhttps://stageconnectie.nl');
 
             closeModal();
             loadData();

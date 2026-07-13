@@ -96,7 +96,7 @@ async function continueStudentInit() {
 
 function renderHeader() {
     document.getElementById('student-name').textContent = `Hoi ${currentStudent.name.split(' ')[0]}!`;
-    const company = currentStudent.Bedrijven?.company_name || 'Geen bedrijf gekoppeld';
+    const company = currentStudent.Bedrijven?.company_name || 'Geen stagebedrijf gekoppeld';
     document.getElementById('student-info').textContent = `${company} • ${currentStudent.student_number || ''}`;
 }
 
