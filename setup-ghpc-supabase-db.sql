@@ -41,6 +41,8 @@ CREATE TABLE IF NOT EXISTS public."Students" (
     class TEXT,
     school_year TEXT,
     email TEXT UNIQUE,
+    stage_start_date DATE,
+    stage_end_date DATE,
     terms_accepted_at TIMESTAMP WITH TIME ZONE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
