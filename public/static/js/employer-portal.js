@@ -33,7 +33,7 @@ async function init() {
             } else if (userEmail !== 'test@test.nl') {
                 document.getElementById('company-name').textContent = 'Niet gevonden';
                 document.getElementById('supervisor-select').innerHTML = '<option>Geen toegang</option>';
-                document.getElementById('students-grid').innerHTML = '<div class="p-12 text-center text-red-500 font-bold">Geen bedrijfsprofiel gevonden. Controleer of u bent ingelogd met het juiste emailadres of neem contact op met de beheerder.</div>';
+                document.getElementById('students-grid').innerHTML = '<div class="p-12 text-center text-red-500 font-bold">Geen stagebedrijf profiel gevonden. Controleer of u bent ingelogd met het juiste emailadres of neem contact op met de beheerder.</div>';
                 return;
             } else {
                 currentCompany = { id: 'demo-company', company_name: 'Demo Bedrijf' };
@@ -92,7 +92,7 @@ async function loadStudents() {
 
     if (error || !data) {
         console.error('Error loading students:', error);
-        throw new Error('Kon studenten niet laden: ' + (error?.message || 'Onbekende fout'));
+        throw new Error('Kon stagiairs niet laden: ' + (error?.message || 'Onbekende fout'));
     }
 
     if (currentCompany.id === 'demo-company') {
@@ -256,7 +256,7 @@ function renderGrid(existingAttendance) {
     container.innerHTML = '';
 
     if (students.length === 0) {
-        container.innerHTML = '<div class="p-12 text-center text-gray-500">Geen studenten gevonden voor dit bedrijf.</div>';
+        container.innerHTML = '<div class="p-12 text-center text-gray-500">Geen stagiairs gevonden voor dit stagebedrijf.</div>';
         return;
     }
 

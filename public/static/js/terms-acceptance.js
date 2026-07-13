@@ -38,7 +38,7 @@ async function checkTermsAcceptance(table, userId, termsAcceptedAt, continueCall
             <!-- Content (scrollable) -->
             <div style="padding: 24px; overflow-y: auto; flex: 1; font-size: 13.5px; line-height: 1.6; color: #334155;">
                 <div style="margin-bottom: 18px; padding: 14px; background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 12px; color: #1e40af; font-weight: 600; font-size: 13px;">
-                    ⚠️ StageConnectie verwerkt persoonsgegevens van leerlingen (minderjarigen) en stagebedrijven conform de AVG. Lees de onderstaande voorwaarden zorgvuldig door.
+                    ⚠️ StageConnectie verwerkt persoonsgegevens van stagiairs (minderjarigen) en stagebedrijven conform de AVG. Lees de onderstaande voorwaarden zorgvuldig door.
                 </div>
                 
                 <div id="terms-text-container" style="border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; background: #f8fafc; max-height: 250px; overflow-y: auto; font-family: system-ui, sans-serif;">
@@ -54,7 +54,7 @@ async function checkTermsAcceptance(table, userId, termsAcceptedAt, continueCall
                     De gebruiker draagt zorg voor een veilig gebruik van de apparatuur waarmee wordt ingelogd (bijvoorbeeld het vergrendelen van het scherm bij weglopen) en houdt wachtwoorden strikt geheim.
                     
                     <strong style="color: #1e293b; display: block; margin-top: 12px;">4. Privacy & AVG-rechten</strong>
-                    StageConnectie verwerkt persoonsgegevens in opdracht van de school (de Verwerkingsverantwoordelijke). Verzoeken omtrent AVG-rechten (zoals inzien, corrigeren of wissen van leerlingdata) dienen rechtstreeks bij de school te worden ingediend.
+                    StageConnectie verwerkt persoonsgegevens in opdracht van de school (de Verwerkingsverantwoordelijke). Verzoeken omtrent AVG-rechten (zoals inzien, corrigeren of wissen van stagiairdata) dienen rechtstreeks bij de school te worden ingediend.
                 </div>
             </div>
             

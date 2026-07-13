@@ -80,11 +80,11 @@
             <div class="flex gap-3 flex-wrap">
                 <a href="admin-students-v2.html"
                     class="px-4 py-2 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-lg transition font-medium text-sm">
-                    Studenten Beheer
+                    Stagiairs Beheer
                 </a>
                 <a href="admin-companies.html"
                     class="px-4 py-2 bg-purple-50 text-purple-600 hover:bg-purple-100 rounded-lg transition font-medium text-sm">
-                    Bedrijven Beheer
+                    Stagebedrijven Beheer
                 </a>
                 <a href="admin-begeleiders-v3.html"
                     class="px-4 py-2 bg-green-50 text-green-600 hover:bg-green-100 rounded-lg transition font-medium text-sm">
@@ -145,9 +145,9 @@
                     <input type="date" id="filter-date" class="px-3 py-2 border border-gray-200 rounded-lg text-sm">
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Bedrijf</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Stagebedrijf</label>
                     <select id="filter-company" class="px-3 py-2 border border-gray-200 rounded-lg text-sm min-w-[180px]">
-                        <option value="">Alle bedrijven</option>
+                        <option value="">Alle stagebedrijven</option>
                     </select>
                 </div>
                 <div>
@@ -175,7 +175,7 @@
                 </button>
                 <button onclick="openPrintSection('perStudent')"
                     class="flex items-center gap-2 px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white font-medium rounded-lg transition shadow-sm text-sm">
-                    🖨️ Formulier per leerling
+                    🖨️ Formulier per stagiair
                 </button>
             </div>
         </div>
@@ -185,8 +185,8 @@
             <table class="w-full">
                 <thead class="bg-gray-50 border-b border-gray-200">
                     <tr>
-                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Student</th>
-                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Bedrijf</th>
+                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Stagiair</th>
+                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Stagebedrijf</th>
                         <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Datum</th>
                         <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
                         <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Uren</th>
@@ -201,15 +201,15 @@
     <!-- ============ ADMIN INVOER MODAL ============ -->
     <div id="edit-modal" class="hidden fixed inset-0 bg-gray-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8">
-            <h2 class="text-xl font-bold text-gray-800 mb-1" id="modal-student-name">Student</h2>
+            <h2 class="text-xl font-bold text-gray-800 mb-1" id="modal-student-name">Stagiair</h2>
             <p class="text-sm text-gray-500 mb-6" id="modal-date-label"></p>
 
             <div class="space-y-5">
-                <!-- Info van werkgever -->
+                <!-- Info van stagebedrijf -->
                 <div id="modal-employer-info" class="hidden bg-blue-50 border border-blue-100 p-3.5 rounded-xl text-xs text-blue-800 flex items-center gap-2 mb-4">
                     <span class="text-base">🏢</span>
                     <div>
-                        <strong>Invoer werkgever:</strong> <span id="modal-employer-status-text">–</span>
+                        <strong>Invoer stagebedrijf:</strong> <span id="modal-employer-status-text">–</span>
                     </div>
                 </div>
 
@@ -281,9 +281,9 @@
                 <label style="font-size:12px; color:#4b5563;">Tot</label>
                 <input type="date" id="print-end-date" style="border:1px solid #d1d5db; padding:4px 6px; border-radius:6px; font-size:12px; outline:none;">
                 
-                <span style="font-size:12px; font-weight:600; color:#4b5563; margin-left:8px;">Leerling:</span>
+                <span style="font-size:12px; font-weight:600; color:#4b5563; margin-left:8px;">Stagiair:</span>
                 <select id="print-student-select" style="border:1px solid #d1d5db; padding:4px 6px; border-radius:6px; font-size:12px; outline:none; background:white; max-width:180px;">
-                    <option value="all">Alle leerlingen</option>
+                    <option value="all">Alle stagiairs</option>
                 </select>
 
                 <button onclick="regeneratePrintContent()" style="background:#0284c7;color:white;border:none;padding:5px 12px;border-radius:6px;cursor:pointer;font-weight:600;font-size:12px;transition:background 0.2s;">
@@ -423,7 +423,7 @@
             const statusFilter = document.getElementById('filter-status').value;
             const showMissing = document.getElementById('show-missing').checked;
 
-            // Bepaal welke leerlingen op deze dag een stagegdag hebben
+            // Bepaal welke stagiairs op deze dag een stagegdag hebben
             const dayCode = getDayCode(dateFilter);
             const scheduledStudents = students.filter(s =>
                 !s.scheduled_days || s.scheduled_days.length === 0 || s.scheduled_days.includes(dayCode)
@@ -432,7 +432,7 @@
             // Bestaande records op deze datum
             let existingOnDate = allAttendance.filter(a => a.date === dateFilter);
 
-            // Ontbrekende leerlingen (geen record voor deze datum)
+            // Ontbrekende stagiairs (geen record voor deze datum)
             const missingStudents = scheduledStudents.filter(s =>
                 !existingOnDate.find(a => a.student_id === s.id)
             );
@@ -506,13 +506,13 @@
                 const companyName = company ? company.company_name : '–';
                 const studentStatusHtml = record.student_status ? `
                     <span class="px-2 py-0.5 inline-flex items-center gap-1 text-[11px] font-semibold rounded-full ${statusClasses[record.student_status] || 'bg-gray-100 text-gray-600'}">
-                        🎓 Student: ${statusLabels[record.student_status] || record.student_status}
+                        🎓 Stagiair: ${statusLabels[record.student_status] || record.student_status}
                     </span>
                 ` : '';
 
                 const employerStatusHtml = record.status ? `
                     <span class="px-2 py-0.5 inline-flex items-center gap-1 text-[11px] font-semibold rounded-full ${statusClasses[record.status] || 'bg-gray-100 text-gray-600'}">
-                        🏢 Werkgever: ${statusLabels[record.status] || record.status}${record.status === 'late' && record.minutes_late > 0 ? ` (${record.minutes_late}m)` : ''}
+                        🏢 Stagebedrijf: ${statusLabels[record.status] || record.status}${record.status === 'late' && record.minutes_late > 0 ? ` (${record.minutes_late}m)` : ''}
                     </span>
                 ` : '';
 
@@ -545,7 +545,7 @@
                 rowsAdded++;
             });
 
-            // Ontbrekende leerlingen
+            // Ontbrekende stagiairs
             missingStudents.forEach(student => {
                 const company = companies.find(c => c.id === student.company_id);
                 const companyName = company ? company.company_name : '–';
@@ -592,7 +592,7 @@
             selectedModalStatus = '';
 
             const student = students.find(s => s.id === studentId);
-            document.getElementById('modal-student-name').textContent = student ? student.name : 'Student';
+            document.getElementById('modal-student-name').textContent = student ? student.name : 'Stagiair';
 
             const dateObj = new Date(date);
             document.getElementById('modal-date-label').textContent =
@@ -761,10 +761,10 @@
                 const isWeekday = dayNum >= 1 && dayNum <= 5;
                 if (isWeekday || hasWeekendRecord) {
                     days.push({
-                        label: d.toLocaleDateString('nl-NL', { weekday: 'short', day: 'numeric', month: 'numeric' }),
-                        fullLabel: d.toLocaleDateString('nl-NL', { weekday: 'long', day: 'numeric', month: 'long' }),
+                        label: current.toLocaleDateString('nl-NL', { weekday: 'short', day: 'numeric', month: 'numeric' }),
+                        fullLabel: current.toLocaleDateString('nl-NL', { weekday: 'long', day: 'numeric', month: 'long' }),
                         dateStr: dStr,
-                        dayCode: ['Zo', 'Ma', 'Di', 'Wo', 'Do', 'Vr', 'Za'][d.getDay()]
+                        dayCode: ['Zo', 'Ma', 'Di', 'Wo', 'Do', 'Vr', 'Za'][current.getDay()]
                     });
                 }
                 current.setDate(current.getDate() + 1);
@@ -793,7 +793,7 @@
             // Vul studenten dropdown in print-section
             const selectEl = document.getElementById('print-student-select');
             if (selectEl) {
-                selectEl.innerHTML = '<option value="all">Alle leerlingen</option>';
+                selectEl.innerHTML = '<option value="all">Alle stagiairs</option>';
                 const sortedStudents = [...students].sort((a, b) => a.name.localeCompare(b.name));
                 sortedStudents.forEach(s => {
                     const opt = document.createElement('option');
@@ -858,7 +858,7 @@
                         <span style="font-size:20px; margin-top:2px;">⚠️</span>
                         <div>
                             <strong style="font-weight:700; color:#92400e; display:block; margin-bottom:4px;">Let op: Er zijn ${conflictCount} onopgeloste conflicten in deze periode!</strong>
-                            Er zijn dagen waarop de invoer van de leerling afwijkt van de verificatie van de werkgever (bijvoorbeeld: de leerling meldt zich aanwezig, maar de werkgever meldt hem afwezig). 
+                            Er zijn dagen waarop de invoer van de stagiair afwijkt van de verificatie van het stagebedrijf (bijvoorbeeld: de stagiair meldt zich aanwezig, maar het stagebedrijf meldt hem afwezig). 
                             Het is belangrijk om deze conflicten eerst op te lossen in het dashboard (klik op de stagedag en kies de juiste status) voordat je het definitieve examendossier afdrukt.
                         </div>
                     </div>
@@ -884,8 +884,8 @@
                     <table class="print-table" style="width:100%; border-collapse:collapse; font-size:11px; font-family:'Inter', sans-serif;">
                         <thead>
                             <tr>
-                                <th style="text-align:left; padding:8px; background:#f8fafc; border:1px solid #cbd5e1; font-weight:700;">Naam leerling</th>
-                                <th style="text-align:left; padding:8px; background:#f8fafc; border:1px solid #cbd5e1; font-weight:700;">Stageplek</th>
+                                <th style="text-align:left; padding:8px; background:#f8fafc; border:1px solid #cbd5e1; font-weight:700;">Naam stagiair</th>
+                                <th style="text-align:left; padding:8px; background:#f8fafc; border:1px solid #cbd5e1; font-weight:700;">Stagebedrijf</th>
                                 <th style="text-align:center; padding:8px; background:#f8fafc; border:1px solid #cbd5e1; font-weight:700;">Klas</th>
                                 <th style="text-align:center; padding:8px; background:#f8fafc; border:1px solid #cbd5e1; font-weight:700;">Verwachte stagedagen</th>
                                 <th style="text-align:center; padding:8px; background:#f8fafc; border:1px solid #cbd5e1; font-weight:700;">Totaal uren</th>
@@ -943,13 +943,13 @@
 
             } else {
                 // ── FORMULIER PER LEERLING ──
-                document.getElementById('print-mode-label').textContent = `Formulieren per leerling – ${periodLabel}`;
+                document.getElementById('print-mode-label').textContent = `Formulieren per stagiair – ${periodLabel}`;
                 printContent.innerHTML = conflictWarningHtml + printStudents.map(student => {
                     const company = companies.find(c => c.id === student.company_id);
                     const companyName = company ? company.company_name : '–';
                     const supervisor = supervisors.find(s => s.id === student.supervisor_id);
 
-                    // Bereken statistieken en uren voor deze leerling
+                    // Bereken statistieken en uren voor deze stagiair
                     const studentRecords = allAttendance.filter(a => a.student_id === student.id && days.some(wd => wd.dateStr === a.date));
                     const stats = {
                         present: studentRecords.filter(a => a.status === 'present' || (!a.status && a.student_status === 'present')).length,
@@ -1037,8 +1037,8 @@
                             <!-- Metadata Card -->
                             <div style="display:grid; grid-template-columns: repeat(2, 1fr); gap:12px; background:#f8fafc; padding:12px; border-radius:8px; border:1px solid #e2e8f0; margin-bottom:15px; font-size:11px; color:#334155; line-height:1.5;">
                                 <div>
-                                    <p style="margin:2px 0;"><strong>Naam leerling:</strong> <span style="font-size:12px; font-weight:700; color:#1e293b;">${student.name}</span></p>
-                                    <p style="margin:2px 0;"><strong>Leerlingnummer:</strong> ${student.student_number || '–'}</p>
+                                    <p style="margin:2px 0;"><strong>Naam stagiair:</strong> <span style="font-size:12px; font-weight:700; color:#1e293b;">${student.name}</span></p>
+                                    <p style="margin:2px 0;"><strong>Stagiairnummer:</strong> ${student.student_number || '–'}</p>
                                     <p style="margin:2px 0;"><strong>Onderwijsinstelling:</strong> ${window.SCHOOL_NAME}</p>
                                     <p style="margin:2px 0;"><strong>Schooljaar / Klas:</strong> ${student.school_year || '–'} &nbsp;/&nbsp; ${student.class || '–'}</p>
                                 </div>
@@ -1085,7 +1085,7 @@
                                 </p>
                                 <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:20px; font-size:11px;">
                                     <div>
-                                        <p style="font-weight:700; margin:0 0 25px 0; color:#334155;">1. Handtekening student</p>
+                                        <p style="font-weight:700; margin:0 0 25px 0; color:#334155;">1. Handtekening stagiair</p>
                                         <div style="border-bottom:1px solid #94a3b8; height:20px; margin-bottom:6px;"></div>
                                         <p style="color:#64748b; margin:0;">Datum: ___________________</p>
                                     </div>
@@ -1124,7 +1124,7 @@
 
                             <!-- Student Info Summary line -->
                             <div style="background:#f8fafc; padding:8px 12px; border-radius:6px; border:1px solid #e2e8f0; margin-bottom:15px; font-size:11px; color:#334155; display:flex; justify-content:space-between;">
-                                <span><strong>Leerling:</strong> ${student.name}</span>
+                                <span><strong>Stagiair:</strong> ${student.name}</span>
                                 <span><strong>Periode:</strong> ${periodLabel}</span>
                                 <span><strong>Bedrijf:</strong> ${companyName}</span>
                             </div>
@@ -1136,7 +1136,7 @@
                                         <th style="min-width:130px; font-size:11px;">Stagedag</th>
                                         <th style="min-width:140px; text-align:center; font-size:11px; background:#f1f5f9;">Ingevuld (app)</th>
                                         <th style="min-width:70px; text-align:center; font-size:11px; background:#f1f5f9;">Uren</th>
-                                        <th style="min-width:140px; text-align:center; font-size:11px;">Verificatie Werkgever</th>
+                                        <th style="min-width:140px; text-align:center; font-size:11px;">Verificatie Stagebedrijf</th>
                                         <th style="min-width:100px; font-size:11px;">Handtekening/Paraaf</th>
                                     </tr>
                                 </thead>
