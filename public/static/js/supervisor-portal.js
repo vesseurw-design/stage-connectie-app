@@ -439,6 +439,12 @@ function openStudentDetail(student) {
     if (classEl) classEl.textContent = student.class || '-';
     if (yearEl) yearEl.textContent = student.school_year || '-';
 
+    // Update current date label
+    const filterDate = document.getElementById('filter-date').value || new Date().toISOString().split('T')[0];
+    const dateObj = new Date(filterDate);
+    const dateStrFormatted = dateObj.toLocaleDateString('nl-NL', { weekday: 'short', day: 'numeric', month: 'short' });
+    document.getElementById('modal-current-date-label').textContent = `Datum: ${dateStrFormatted}`;
+
     // Get all attendance for this student (support both ID and name fallback)
     const studentAttendance = allAttendance.filter(a => a.student_id === student.id || a.student_id === student.name);
 
@@ -532,9 +538,14 @@ function renderAttendanceHistory(attendance, monthFilter) {
                 <div class="p-3 bg-gray-50 rounded-xl space-y-2 border border-blue-50">
                     <div class="flex justify-between items-center">
                         <span class="text-sm font-bold text-gray-800">${formattedDate}</span>
-                        <span class="px-2 py-1 text-[10px] font-bold uppercase rounded-full ${statusColors[a.status]}">
-                            ${statusLabels[a.status]}
-                        </span>
+                        <div class="flex items-center gap-2">
+                            <span class="px-2 py-0.5 text-[9px] font-bold uppercase rounded-full ${statusColors[a.status] || 'bg-gray-100 text-gray-500'}">
+                                ${statusLabels[a.status] || 'Geen status'}
+                            </span>
+                            <button onclick="openSupervisorActionSheet('${a.student_id}', '${a.date}')" class="text-xs font-black text-blue-600 hover:text-blue-800 transition">
+                                Aanpassen
+                            </button>
+                        </div>
                     </div>
                     
                     <div class="flex flex-wrap gap-2 text-[11px]">
@@ -556,6 +567,115 @@ function renderAttendanceHistory(attendance, monthFilter) {
 function closeModal() {
     document.getElementById('student-modal').classList.add('hidden');
     currentStudent = null;
+}
+
+let activeEdit = null;
+
+function editCurrentFilteredDateStatus() {
+    if (!currentStudent) return;
+    const filterDate = document.getElementById('filter-date').value || new Date().toISOString().split('T')[0];
+    openSupervisorActionSheet(currentStudent.id, filterDate);
+}
+window.editCurrentFilteredDateStatus = editCurrentFilteredDateStatus;
+
+function openSupervisorActionSheet(studentId, date) {
+    activeEdit = { studentId, date };
+    
+    // Reset late input container
+    document.getElementById('late-input-container').classList.add('hidden');
+    document.getElementById('supervisor-late-minutes').value = 15;
+
+    // Show modal & overlay
+    document.getElementById('action-overlay').classList.remove('hidden');
+    const sheet = document.getElementById('action-sheet');
+    sheet.classList.remove('hidden');
+    setTimeout(() => sheet.classList.remove('translate-y-full'), 10);
+}
+window.openSupervisorActionSheet = openSupervisorActionSheet;
+
+function openSupervisorLateInput() {
+    document.getElementById('late-input-container').classList.remove('hidden');
+}
+window.openSupervisorLateInput = openSupervisorLateInput;
+
+function closeActions() {
+    const sheet = document.getElementById('action-sheet');
+    sheet.classList.add('translate-y-full');
+    setTimeout(() => {
+        sheet.classList.add('hidden');
+        document.getElementById('action-overlay').classList.add('hidden');
+        activeEdit = null;
+    }, 300);
+}
+window.closeActions = closeActions;
+
+async function saveSupervisorAttendance(status) {
+    if (!activeEdit) return;
+
+    let minutesLate = 0;
+    if (status === 'late') {
+        minutesLate = parseInt(document.getElementById('supervisor-late-minutes').value) || 15;
+    }
+
+    const { studentId, date } = activeEdit;
+    
+    // Find matching student's company (for employer_id if exists)
+    const student = students.find(s => s.id === studentId);
+    const companyId = student ? student.company_id : null;
+
+    const record = {
+        student_id: studentId,
+        date: date,
+        status: status,
+        minutes_late: minutesLate,
+        employer_id: companyId,
+        updated_at: new Date().toISOString()
+    };
+
+    try {
+        const { error } = await supabaseClient.from('Attendance').upsert(record, { onConflict: 'student_id,date' });
+        if (error) throw error;
+
+        // Show toast
+        showToast('Wijziging opgeslagen!');
+
+        // Update local state
+        const existingIdx = allAttendance.findIndex(a => a.student_id === studentId && a.date === date);
+        if (existingIdx !== -1) {
+            if (status === '') {
+                allAttendance.splice(existingIdx, 1);
+            } else {
+                allAttendance[existingIdx] = { ...allAttendance[existingIdx], status, minutes_late: minutesLate };
+            }
+        } else if (status !== '') {
+            allAttendance.push(record);
+        }
+
+        // Refresh UI
+        closeActions();
+        
+        // Refresh student list and open modal details
+        await loadAttendance();
+        renderStudents();
+        if (currentStudent && currentStudent.id === studentId) {
+            openStudentDetail(currentStudent);
+        }
+    } catch (err) {
+        console.error('Error saving supervisor attendance:', err);
+        alert('Fout bij opslaan: ' + err.message);
+    }
+}
+window.saveSupervisorAttendance = saveSupervisorAttendance;
+
+function showToast(message) {
+    const toast = document.getElementById('toast');
+    document.getElementById('toast-message').textContent = message;
+    toast.style.opacity = '1';
+    toast.style.transform = 'translate(-50%, 0) scale(1)';
+    setTimeout(() => { 
+        toast.style.opacity = '0'; 
+        toast.style.transform = 'translate(-50%, 0) scale(0.9)'; 
+    }, 2000);
 }
 
 // Initialize on load
