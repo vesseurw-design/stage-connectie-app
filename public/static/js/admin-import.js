@@ -125,6 +125,74 @@ document.addEventListener('DOMContentLoaded', () => {
                                 const matchedCompany = allCompanies.find(c => c.company_name?.toLowerCase().trim() === companySearch.toLowerCase().trim());
                                 if (matchedCompany) bedrijfId = matchedCompany.id;
                             }
+
+                            // Auto-create company if name is provided but not found
+                            if (!bedrijfId && companySearch) {
+                                try {
+                                    let newCompanyId = null;
+                                    let emailToUse = companyEmail ? companyEmail.trim().toLowerCase() : null;
+
+                                    // 1. Create auth account if email is provided
+                                    if (emailToUse) {
+                                        const functionUrl = `${supabaseUrl}/functions/v1/create-auth-account`;
+                                        const authRes = await fetch(functionUrl, {
+                                            method: 'POST',
+                                            headers: {
+                                                'Content-Type': 'application/json',
+                                                'Authorization': `Bearer ${supabaseKey}`
+                                            },
+                                            body: JSON.stringify({
+                                                email: emailToUse,
+                                                password: '', // Leeg laten om uitnodigingslink te sturen
+                                                role: 'employer',
+                                                sendEmail: true,
+                                                name: companySearch,
+                                                loginUrl: 'https://ghpc.stageconnectie.nl/employer-portal.html',
+                                                metadata: { company_name: companySearch }
+                                            })
+                                        });
+
+                                        const authResult = await authRes.json();
+                                        if (authRes.ok && authResult.success) {
+                                            newCompanyId = authResult.user_id;
+                                        } else {
+                                            console.warn('Could not create auth account for auto-provisioned company:', authResult?.error);
+                                        }
+                                    }
+
+                                    // 2. Insert company into the 'Bedrijven' table
+                                    const insertData = {
+                                        company_name: companySearch,
+                                        email: emailToUse
+                                    };
+                                    if (newCompanyId) {
+                                        insertData.id = newCompanyId;
+                                    }
+
+                                    const { data: newCompResult, error: insertError } = await supabase
+                                        .from('Bedrijven')
+                                        .insert([insertData])
+                                        .select();
+
+                                    if (insertError) {
+                                        throw insertError;
+                                    }
+
+                                    if (newCompResult && newCompResult[0]) {
+                                        bedrijfId = newCompResult[0].id;
+                                        // Cache in-memory
+                                        allCompanies.push({
+                                            id: bedrijfId,
+                                            company_name: companySearch,
+                                            email: emailToUse
+                                        });
+                                        resultsElement.innerHTML += `<div class="text-blue-600 border-b border-gray-100 py-1">🏢 Nieuw stagebedrijf aangemaakt: ${companySearch}</div>`;
+                                    }
+                                } catch (compErr) {
+                                    console.error('Error auto-creating company:', compErr);
+                                    resultsElement.innerHTML += `<div class="text-amber-600 border-b border-gray-100 py-1">⚠️ Kon stagebedrijf "${companySearch}" niet automatisch aanmaken: ${compErr.message}</div>`;
+                                }
+                            }
                         }
 
                         // Find supervisor ID
@@ -146,6 +214,73 @@ document.addEventListener('DOMContentLoaded', () => {
                             if (!supervisorId && supervisorSearch) {
                                 const matchedSupervisor = allSupervisors.find(s => s.name?.toLowerCase().trim() === supervisorSearch.toLowerCase().trim());
                                 if (matchedSupervisor) supervisorId = matchedSupervisor.id;
+                            }
+
+                            // Auto-create supervisor if not found
+                            if (!supervisorId && supervisorSearch) {
+                                try {
+                                    let newSupervisorId = null;
+                                    let emailToUse = supervisorEmail ? supervisorEmail.trim().toLowerCase() : null;
+
+                                    // 1. Create auth account if email is provided
+                                    if (emailToUse) {
+                                        const functionUrl = `${supabaseUrl}/functions/v1/create-auth-account`;
+                                        const authRes = await fetch(functionUrl, {
+                                            method: 'POST',
+                                            headers: {
+                                                'Content-Type': 'application/json',
+                                                'Authorization': `Bearer ${supabaseKey}`
+                                            },
+                                            body: JSON.stringify({
+                                                email: emailToUse,
+                                                password: '', // Leeg laten om uitnodigingslink te sturen
+                                                role: 'supervisor',
+                                                sendEmail: true,
+                                                name: supervisorSearch,
+                                                loginUrl: 'https://ghpc.stageconnectie.nl/supervisor-portal.html'
+                                            })
+                                        });
+
+                                        const authResult = await authRes.json();
+                                        if (authRes.ok && authResult.success) {
+                                            newSupervisorId = authResult.user_id;
+                                        } else {
+                                            console.warn('Could not create auth account for auto-provisioned supervisor:', authResult?.error);
+                                        }
+                                    }
+
+                                    // 2. Insert supervisor into 'stagebegeleiders' table
+                                    const insertData = {
+                                        name: supervisorSearch,
+                                        email: emailToUse
+                                    };
+                                    if (newSupervisorId) {
+                                        insertData.id = newSupervisorId;
+                                    }
+
+                                    const { data: newSupResult, error: insertError } = await supabase
+                                        .from('stagebegeleiders')
+                                        .insert([insertData])
+                                        .select();
+
+                                    if (insertError) {
+                                        throw insertError;
+                                    }
+
+                                    if (newSupResult && newSupResult[0]) {
+                                        supervisorId = newSupResult[0].id;
+                                        // Cache in-memory
+                                        allSupervisors.push({
+                                            id: supervisorId,
+                                            name: supervisorSearch,
+                                            email: emailToUse
+                                        });
+                                        resultsElement.innerHTML += `<div class="text-green-600 border-b border-gray-100 py-1">🏫 Nieuwe stagebegeleider aangemaakt: ${supervisorSearch}</div>`;
+                                    }
+                                } catch (supErr) {
+                                    console.error('Error auto-creating supervisor:', supErr);
+                                    resultsElement.innerHTML += `<div class="text-amber-600 border-b border-gray-100 py-1">⚠️ Kon stagebegeleider "${supervisorSearch}" niet automatisch aanmaken: ${supErr.message}</div>`;
+                                }
                             }
                         }
 
