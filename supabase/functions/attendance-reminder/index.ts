@@ -106,7 +106,7 @@ serve(async (req) => {
                     to: email,
                     subject: 'Herinnering: Aanwezigheidsregistratie invullen',
                     html: `
-                        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 8px;">
+                        <div style="font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 8px;">
                             <h2 style="color: #1e293b;">Beste ${info.name},</h2>
                             <p>Dit is een herinnering dat de aanwezigheid voor deze week nog niet volledig is ingevoerd voor de volgende student(en):</p>
                             <ul style="background: #f8fafc; padding: 15px; border-radius: 6px; list-style: none;">

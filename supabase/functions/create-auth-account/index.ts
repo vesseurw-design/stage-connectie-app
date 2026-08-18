@@ -80,7 +80,7 @@ serve(async (req) => {
                 if (isInvite) {
                     subjectLine = 'Uitnodiging voor StageConnectie - Activeer je account';
                     htmlContent = `
-                        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 8px;">
+                        <div style="font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 8px;">
                             <h2 style="color: #1e293b;">Beste ${name || 'gebruiker'},</h2>
                             <p>Welkom bij StageConnectie! Er is een account voor je klaargezet in ons systeem.</p>
                             <p>Klik op de onderstaande knop om je account te activeren en je eigen wachtwoord in te stellen:</p>
@@ -97,7 +97,7 @@ serve(async (req) => {
                 } else {
                     subjectLine = 'Welkom bij StageConnectie - Jouw Inloggegevens';
                     htmlContent = `
-                        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 8px;">
+                        <div style="font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 8px;">
                             <h2 style="color: #1e293b;">Beste ${name || 'gebruiker'},</h2>
                             <p>Welkom bij StageConnectie! Er is een account voor je aangemaakt in ons systeem.</p>
                             <p>Hieronder vind je jouw inloggegevens:</p>
