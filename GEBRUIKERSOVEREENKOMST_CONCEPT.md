@@ -44,9 +44,14 @@ Conform de Algemene Verordening Gegevensbescherming (AVG) worden gegevens niet l
 2.  Wachtwoorden: Wachtwoorden moeten veilig worden gekozen en geheim worden gehouden. Bij vermoeden van misbruik dient direct contact opgenomen te worden met De Eigenaar of de systeembeheerder.
 3.  Datalekken: Indien de gebruiker vermoedt dat onbevoegden toegang hebben gekregen tot de gegevens (een datalek), moet dit onmiddellijk gemeld worden bij De Eigenaar.
 
+6. DOORONTWIKKELING & WIJZIGINGEN
+1.  Uitbreiding en aanpassingen: De Eigenaar is te allen tijde gerechtigd de Applicatie tussentijds te wijzigen, uit te breiden of aan te passen ten behoeve van de functionaliteit, de gebruikerservaring en/of de (informatie)veiligheid.
+2.  Ondersteuning van functies: De Eigenaar streeft naar continue verbetering. De Eigenaar is echter niet gehouden tot het handhaven, ondersteunen of beschikbaar houden van specifieke oudere functies of eigenschappen van de Applicatie na het doorvoeren van updates.
+3.  Aankondiging van wijzigingen: Wijzigingen die geen wezenlijke invloed hebben op de kernfunctionaliteiten kunnen zonder voorafgaande aankondiging worden doorgevoerd. Grote wijzigingen die van invloed zijn op de dagelijkse werkwijze van de school, worden (voor zover redelijkerwijs mogelijk) vooraf gecommuniceerd.
+
 --------------------------------------------------------------------------------
 
-6. AANSPRAKELIJKHEID & BEËINDIGING
+7. AANSPRAKELIJKHEID & BEËINDIGING
 1.  De Eigenaar behoudt zich het recht voor om de toegang tot de Applicatie per direct te ontzeggen bij misbruik of schending van deze overeenkomst.
 2.  De Eigenaar is niet aansprakelijk voor schade voortvloeiend uit tijdelijke onbeschikbaarheid van de Applicatie.
 
