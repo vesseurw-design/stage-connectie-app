@@ -368,15 +368,21 @@ document.addEventListener('DOMContentLoaded', () => {
                                     .eq('id', user_id);
                                 if (dbError) throw dbError;
                             } else if (type === 'company') {
+                                const street = getCol('adres') || '';
+                                const postcode = getCol('postcode') || '';
+                                const city = getCol('plaats') || '';
+                                let fullAddress = street;
+                                if (postcode || city) {
+                                    fullAddress += (fullAddress ? ', ' : '') + [postcode, city].filter(Boolean).join(' ');
+                                }
+
                                 const { error: dbError } = await supabase
                                     .from('Bedrijven')
                                     .update({
                                         company_name: getCol('bedrijfsnaam') || 'Onbekend',
                                         contact_person: getCol('contactpersoon') || null,
                                         phone: getCol('telefoonnummer') || null,
-                                        address: getCol('adres') || null,
-                                        postal_code: getCol('postcode') || null,
-                                        city: getCol('plaats') || null
+                                        address: fullAddress || null
                                     })
                                     .eq('id', user_id);
                                 if (dbError) throw dbError;
@@ -446,15 +452,21 @@ document.addEventListener('DOMContentLoaded', () => {
                                 if (dbError) throw dbError;
 
                             } else if (type === 'company') {
+                                const street = getCol('adres') || '';
+                                const postcode = getCol('postcode') || '';
+                                const city = getCol('plaats') || '';
+                                let fullAddress = street;
+                                if (postcode || city) {
+                                    fullAddress += (fullAddress ? ', ' : '') + [postcode, city].filter(Boolean).join(' ');
+                                }
+
                                 const { error: dbError } = await supabase.from('Bedrijven').insert([{
                                     id: user_id,
                                     company_name: getCol('bedrijfsnaam') || 'Onbekend',
                                     email: email.trim().toLowerCase(),
                                     contact_person: getCol('contactpersoon') || null,
                                     phone: getCol('telefoonnummer') || null,
-                                    address: getCol('adres') || null,
-                                    postal_code: getCol('postcode') || null,
-                                    city: getCol('plaats') || null
+                                    address: fullAddress || null
                                 }]);
                                 if (dbError) throw dbError;
                             } else if (type === 'supervisor') {
