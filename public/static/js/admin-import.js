@@ -599,8 +599,8 @@ document.addEventListener('DOMContentLoaded', () => {
                             name: name || '',
                             loginUrl: loginUrl,
                             metadata: type === 'company' 
-                                ? { company_name: item.company_name } 
-                                : (type === 'student' ? { class: item.class || '' } : { supervisor_name: item.name })
+                                ? { company_name: item.company_name, company_id: item.id } 
+                                : (type === 'student' ? { class: item.class || '', student_id: item.id } : { supervisor_name: item.name, supervisor_id: item.id })
                         })
                     });
 
