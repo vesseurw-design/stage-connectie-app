@@ -50,7 +50,9 @@ Importeer docenten of stagecoaches.
 * **Optionele kolommen**: `whatsapp` (vul in: `true` of `false` om WhatsApp-contact direct toe te staan).
 
 > [!IMPORTANT]
-> Vink bij het importeren **"Stuur direct uitnodiging/welkomstmail"** aan. Het systeem stuurt hen dan automatisch een e-mail met een uitnodigingslink waarmee ze hun eigen wachtwoord kunnen instellen.
+> **Uitnodigingen direct of achteraf sturen**:
+> * **Direct sturen (Standaard)**: Vink bij het importeren de optie **"Stuur direct uitnodiging/welkomstmail"** aan. Het systeem stuurt de gebruikers dan direct een e-mail om hun account te activeren of inloggegevens te ontvangen.
+> * **Achteraf sturen (Handig tijdens vakanties)**: Vink deze optie **uit** tijdens het importeren. De accounts en koppelingen worden aangemaakt in het systeem, maar er wordt nog geen e-mail verzonden. Wanneer de school begint, opent u de pagina **"Importeer CSV"** en klikt u onderin bij de sectie **"Uitnodigingen Achteraf Versturen"** op de knoppen om de e-mails alsnog in bulk te verzenden naar de stagiairs, stagebedrijven of stagebegeleiders.
 
 ---
 
