@@ -534,11 +534,11 @@ document.addEventListener('DOMContentLoaded', () => {
         progressElement.textContent = "🔍 Ophalen van gebruikers...";
 
         try {
-            const table = type === 'company' ? 'Bedrijven' : 'stagebegeleiders';
-            const role = type === 'company' ? 'employer' : 'supervisor';
+            const table = type === 'company' ? 'Bedrijven' : (type === 'student' ? 'Students' : 'stagebegeleiders');
+            const role = type === 'company' ? 'employer' : (type === 'student' ? 'student' : 'supervisor');
             const loginUrl = type === 'company' 
                 ? 'https://ghpc.stageconnectie.nl/employer-portal.html' 
-                : 'https://ghpc.stageconnectie.nl/supervisor-portal.html';
+                : (type === 'student' ? 'https://ghpc.stageconnectie.nl/student-portal.html' : 'https://ghpc.stageconnectie.nl/supervisor-portal.html');
 
             // Query users who have NOT accepted terms yet (meaning they haven't logged in)
             const { data: list, error: fetchError } = await supabase
@@ -586,7 +586,9 @@ document.addEventListener('DOMContentLoaded', () => {
                             sendEmail: true,
                             name: name || '',
                             loginUrl: loginUrl,
-                            metadata: type === 'company' ? { company_name: item.company_name } : { supervisor_name: item.name }
+                            metadata: type === 'company' 
+                                ? { company_name: item.company_name } 
+                                : (type === 'student' ? { class: item.class || '' } : { supervisor_name: item.name })
                         })
                     });
 
@@ -604,7 +606,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             progressElement.className = "mt-3 text-xs text-green-600 font-semibold block";
-            progressElement.textContent = `🎉 Voltooid! Succesvol uitgenodigd: ${success}, Mislukt: ${failed}.`;
+            progressElement.textContent = `🎉 Voltooid! Welkomstmails verzonden: ${success}, Mislukt: ${failed}.`;
 
         } catch (err) {
             console.error('Error in bulk invite:', err);
@@ -616,10 +618,18 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    const btnInviteStudents = document.getElementById('btn-invite-students');
+    const inviteStudentsProgress = document.getElementById('invite-students-progress');
     const btnInviteCompanies = document.getElementById('btn-invite-companies');
     const inviteCompaniesProgress = document.getElementById('invite-companies-progress');
     const btnInviteSupervisors = document.getElementById('btn-invite-supervisors');
     const inviteSupervisorsProgress = document.getElementById('invite-supervisors-progress');
+
+    if (btnInviteStudents) {
+        btnInviteStudents.addEventListener('click', () => {
+            handleBulkInvite('student', inviteStudentsProgress, btnInviteStudents);
+        });
+    }
 
     if (btnInviteCompanies) {
         btnInviteCompanies.addEventListener('click', () => {
