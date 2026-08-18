@@ -145,7 +145,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                                 email: emailToUse,
                                                 password: '', // Leeg laten om uitnodigingslink te sturen
                                                 role: 'employer',
-                                                sendEmail: true,
+                                                sendEmail: sendEmailCheckbox.checked,
                                                 name: companySearch,
                                                 loginUrl: 'https://ghpc.stageconnectie.nl/employer-portal.html',
                                                 metadata: { company_name: companySearch }
@@ -235,7 +235,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                                 email: emailToUse,
                                                 password: '', // Leeg laten om uitnodigingslink te sturen
                                                 role: 'supervisor',
-                                                sendEmail: true,
+                                                sendEmail: sendEmailCheckbox.checked,
                                                 name: supervisorSearch,
                                                 loginUrl: 'https://ghpc.stageconnectie.nl/supervisor-portal.html'
                                             })
@@ -385,7 +385,8 @@ document.addEventListener('DOMContentLoaded', () => {
                                     .from('stagebegeleiders')
                                     .update({
                                         name: getName(),
-                                        phone: getCol('telefoonnummer') || null
+                                        phone: getCol('telefoonnummer') || null,
+                                        whatsapp_enabled: getCol('whatsapp') === 'true' || getCol('whatsapp') === 'ja' || getCol('whatsapp_enabled') === 'true' || false
                                     })
                                     .eq('id', user_id);
                                 if (dbError) throw dbError;
@@ -416,7 +417,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                     password: wachtwoord || '',
                                     role: role,
                                     metadata: { source: 'csv_import' },
-                                    sendEmail: (type === 'company' || type === 'supervisor') ? true : sendEmailCheckbox.checked,
+                                    sendEmail: sendEmailCheckbox.checked,
                                     name: name || '',
                                     loginUrl: loginUrl
                                 })
@@ -461,7 +462,8 @@ document.addEventListener('DOMContentLoaded', () => {
                                     id: user_id,
                                     name: getName(),
                                     email: email.trim().toLowerCase(),
-                                    phone: getCol('telefoonnummer') || null
+                                    phone: getCol('telefoonnummer') || null,
+                                    whatsapp_enabled: getCol('whatsapp') === 'true' || getCol('whatsapp') === 'ja' || getCol('whatsapp_enabled') === 'true' || false
                                 }]);
                                 if (dbError) throw dbError;
                             }
@@ -522,4 +524,112 @@ document.addEventListener('DOMContentLoaded', () => {
             btnImportSupervisors
         );
     });
+
+    // Bulk invitation handler
+    async function handleBulkInvite(type, progressElement, button) {
+        button.disabled = true;
+        button.classList.add('opacity-50');
+        progressElement.classList.remove('hidden');
+        progressElement.className = "mt-3 text-xs text-blue-600 block";
+        progressElement.textContent = "🔍 Ophalen van gebruikers...";
+
+        try {
+            const table = type === 'company' ? 'Bedrijven' : 'stagebegeleiders';
+            const role = type === 'company' ? 'employer' : 'supervisor';
+            const loginUrl = type === 'company' 
+                ? 'https://ghpc.stageconnectie.nl/employer-portal.html' 
+                : 'https://ghpc.stageconnectie.nl/supervisor-portal.html';
+
+            // Query users who have NOT accepted terms yet (meaning they haven't logged in)
+            const { data: list, error: fetchError } = await supabase
+                .from(table)
+                .select('*')
+                .is('terms_accepted_at', null);
+
+            if (fetchError) throw fetchError;
+
+            if (!list || list.length === 0) {
+                progressElement.className = "mt-3 text-xs text-amber-600 block";
+                progressElement.textContent = "Geen gebruikers gevonden die nog uitgenodigd moeten worden (iedereen heeft al ingelogd of er zijn geen records).";
+                button.disabled = false;
+                button.classList.remove('opacity-50');
+                return;
+            }
+
+            const total = list.length;
+            progressElement.textContent = `✉️ Bezig met verzenden: 0 / ${total} verwerkt...`;
+
+            let success = 0;
+            let failed = 0;
+
+            for (let i = 0; i < total; i++) {
+                const item = list[i];
+                if (!item.email) {
+                    failed++;
+                    continue;
+                }
+
+                try {
+                    const name = type === 'company' ? (item.contact_person || item.company_name) : item.name;
+                    const functionUrl = `${supabaseUrl}/functions/v1/create-auth-account`;
+                    
+                    const authRes = await fetch(functionUrl, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${supabaseKey}`
+                        },
+                        body: JSON.stringify({
+                            email: item.email.trim().toLowerCase(),
+                            password: '',
+                            role: role,
+                            sendEmail: true,
+                            name: name || '',
+                            loginUrl: loginUrl,
+                            metadata: type === 'company' ? { company_name: item.company_name } : { supervisor_name: item.name }
+                        })
+                    });
+
+                    const authData = await authRes.json();
+                    if (!authRes.ok || !authData.success) {
+                        throw new Error(authData.error || 'Failed invitation');
+                    }
+                    success++;
+                } catch (err) {
+                    console.error(`Failed to invite ${item.email}:`, err);
+                    failed++;
+                }
+
+                progressElement.textContent = `✉️ Bezig met verzenden: ${i + 1} / ${total} verwerkt...`;
+            }
+
+            progressElement.className = "mt-3 text-xs text-green-600 font-semibold block";
+            progressElement.textContent = `🎉 Voltooid! Succesvol uitgenodigd: ${success}, Mislukt: ${failed}.`;
+
+        } catch (err) {
+            console.error('Error in bulk invite:', err);
+            progressElement.className = "mt-3 text-xs text-red-600 block";
+            progressElement.textContent = "Fout bij het ophalen/verzenden: " + err.message;
+        } finally {
+            button.disabled = false;
+            button.classList.remove('opacity-50');
+        }
+    }
+
+    const btnInviteCompanies = document.getElementById('btn-invite-companies');
+    const inviteCompaniesProgress = document.getElementById('invite-companies-progress');
+    const btnInviteSupervisors = document.getElementById('btn-invite-supervisors');
+    const inviteSupervisorsProgress = document.getElementById('invite-supervisors-progress');
+
+    if (btnInviteCompanies) {
+        btnInviteCompanies.addEventListener('click', () => {
+            handleBulkInvite('company', inviteCompaniesProgress, btnInviteCompanies);
+        });
+    }
+
+    if (btnInviteSupervisors) {
+        btnInviteSupervisors.addEventListener('click', () => {
+            handleBulkInvite('supervisor', inviteSupervisorsProgress, btnInviteSupervisors);
+        });
+    }
 });

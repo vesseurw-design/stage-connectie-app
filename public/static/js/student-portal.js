@@ -51,7 +51,7 @@ async function continueStudentInit() {
         if (currentStudent.company_id) {
             const { data: company } = await supabaseClient
                 .from('Bedrijven')
-                .select('company_name, phone')
+                .select('company_name, phone, contact_person')
                 .eq('id', currentStudent.company_id)
                 .single();
             if (company) {
@@ -62,7 +62,7 @@ async function continueStudentInit() {
                     const phoneLink = document.getElementById('company-phone-link');
                     const phoneText = document.getElementById('company-phone-text');
                     if (phoneBlock && phoneLink && phoneText) {
-                        phoneText.textContent = company.phone;
+                        phoneText.textContent = `Bel stagebedrijf: ${company.phone}`;
                         phoneLink.href = `tel:${company.phone}`;
                         phoneBlock.classList.remove('hidden');
                     }
@@ -70,7 +70,7 @@ async function continueStudentInit() {
                     const absentBlock = document.getElementById('absent-phone-block');
                     const absentLink = document.getElementById('absent-phone-link');
                     if (absentBlock && absentLink) {
-                        absentLink.textContent = company.phone;
+                        absentLink.textContent = `Bel stagebedrijf (${company.phone})`;
                         absentLink.href = `tel:${company.phone}`;
                         absentBlock.classList.remove('hidden');
                     }
@@ -97,7 +97,8 @@ async function continueStudentInit() {
 function renderHeader() {
     document.getElementById('student-name').textContent = `Hoi ${currentStudent.name.split(' ')[0]}!`;
     const company = currentStudent.Bedrijven?.company_name || 'Geen stagebedrijf gekoppeld';
-    document.getElementById('student-info').textContent = `${company} • ${currentStudent.student_number || ''}`;
+    const classInfo = currentStudent.class ? ` • Klas: ${currentStudent.class}` : '';
+    document.getElementById('student-info').textContent = `${company}${classInfo}`;
 }
 
 function getMonday(d) {
@@ -277,19 +278,23 @@ function updateActionSheetButtons(status) {
     // Reset buttons
     ['present', 'absent', 'sick', 'late'].forEach(s => {
         const btn = document.getElementById(`action-btn-${s}`);
-        btn.classList.remove('bg-green-50', 'border-green-200', 'text-green-700', 'bg-red-50', 'border-red-200', 'text-red-700', 'bg-orange-50', 'border-orange-200', 'text-orange-700', 'bg-yellow-50', 'border-yellow-200', 'text-yellow-700', 'border-gray-300', 'scale-[1.02]');
-        btn.classList.add('bg-gray-50', 'border-gray-100', 'text-gray-700');
+        if (btn) {
+            btn.classList.remove('bg-green-50', 'border-green-200', 'text-green-700', 'bg-red-50', 'border-red-200', 'text-red-700', 'bg-orange-50', 'border-orange-200', 'text-orange-700', 'bg-yellow-50', 'border-yellow-200', 'text-yellow-700', 'border-gray-300', 'scale-[1.02]');
+            btn.classList.add('bg-gray-50', 'border-gray-100', 'text-gray-700');
+        }
     });
 
     if (status) {
         const activeBtn = document.getElementById(`action-btn-${status}`);
-        activeBtn.classList.remove('bg-gray-50', 'border-gray-100', 'text-gray-700');
-        activeBtn.classList.add('scale-[1.02]');
-        
-        if (status === 'present') activeBtn.classList.add('bg-green-50', 'border-green-300', 'text-green-700');
-        else if (status === 'absent') activeBtn.classList.add('bg-red-50', 'border-red-300', 'text-red-700');
-        else if (status === 'sick') activeBtn.classList.add('bg-orange-50', 'border-orange-300', 'text-orange-700');
-        else if (status === 'late') activeBtn.classList.add('bg-yellow-50', 'border-yellow-300', 'text-yellow-700');
+        if (activeBtn) {
+            activeBtn.classList.remove('bg-gray-50', 'border-gray-100', 'text-gray-700');
+            activeBtn.classList.add('scale-[1.02]');
+            
+            if (status === 'present') activeBtn.classList.add('bg-green-50', 'border-green-300', 'text-green-700');
+            else if (status === 'absent') activeBtn.classList.add('bg-red-50', 'border-red-300', 'text-red-700');
+            else if (status === 'sick') activeBtn.classList.add('bg-orange-50', 'border-orange-300', 'text-orange-700');
+            else if (status === 'late') activeBtn.classList.add('bg-yellow-50', 'border-yellow-300', 'text-yellow-700');
+        }
     }
 
     const hoursContainer = document.getElementById('action-hours-container');
@@ -315,12 +320,16 @@ function setStatus(status) {
 
 function confirmAction() {
     if (!activeCell) return;
-    const status = activeCell.tempStatus || (activeCell.element.dataset.status && document.getElementById(`action-btn-${activeCell.element.dataset.status}`).classList.contains('scale-[1.02]') ? activeCell.element.dataset.status : '');
+    
+    let activeBtnDataset = activeCell.element.dataset.status;
+    let activeBtn = activeBtnDataset ? document.getElementById(`action-btn-${activeBtnDataset}`) : null;
+    const status = activeCell.tempStatus || (activeBtn && activeBtn.classList.contains('scale-[1.02]') ? activeBtnDataset : '');
     
     let finalStatus = status;
     
     ['present', 'absent', 'sick', 'late'].forEach(s => {
-        if(document.getElementById(`action-btn-${s}`).classList.contains('scale-[1.02]')) {
+        const btn = document.getElementById(`action-btn-${s}`);
+        if(btn && btn.classList.contains('scale-[1.02]')) {
             finalStatus = s;
         }
     });

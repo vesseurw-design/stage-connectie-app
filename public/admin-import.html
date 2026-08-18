@@ -82,7 +82,7 @@
             <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
                 <h2 class="text-xl font-bold text-gray-800 mb-4">🏢 Stagebedrijven Importeren</h2>
                 
-                <p class="text-sm text-gray-600 mb-4">Verplichte kolommen: <strong>bedrijfsnaam, email</strong> (optioneel: <strong>contactpersoon, kvk_nummer, adres, postcode, plaats, telefoonnummer</strong>)</p>
+                <p class="text-sm text-gray-600 mb-4">Verplichte kolommen: <strong>bedrijfsnaam, email, contactpersoon, telefoonnummer</strong> (optioneel: <strong>adres, postcode, plaats</strong>)</p>
                 
                 <div class="mb-4">
                     <label class="block text-sm font-medium text-gray-700 mb-2">CSV Bestand voor Stagebedrijven</label>
@@ -111,7 +111,7 @@
             <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
                 <h2 class="text-xl font-bold text-gray-800 mb-4">🏫 Begeleiders Importeren</h2>
                 
-                <p class="text-sm text-gray-600 mb-4">Verplichte kolommen: <strong>naam, email</strong> (optioneel: <strong>telefoonnummer</strong>)</p>
+                <p class="text-sm text-gray-600 mb-4">Verplichte kolommen: <strong>naam, email, telefoonnummer</strong> (optioneel: <strong>whatsapp</strong> met <code>true</code> of <code>false</code>)</p>
                 
                 <div class="mb-4">
                     <label class="block text-sm font-medium text-gray-700 mb-2">CSV Bestand voor Begeleiders</label>
@@ -134,6 +134,34 @@
                     <p id="supervisors-progress-text" class="text-sm text-gray-600 mt-2 text-center">0 / 0 verwerkt</p>
                 </div>
                 <div id="supervisors-results" class="mt-4 text-sm max-h-40 overflow-y-auto hidden"></div>
+            </div>
+        </div>
+
+        <!-- Uitgestelde Uitnodigingen Versturen -->
+        <div class="mt-8 bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+            <h2 class="text-xl font-bold text-gray-800 mb-2">✉️ Uitnodigingen Achteraf Versturen</h2>
+            <p class="text-sm text-gray-600 mb-6">Heb je gebruikers geïmporteerd zonder direct een e-mail te sturen? Gebruik de onderstaande knoppen om alsnog de uitnodigingsmails te verzenden naar gebruikers die nog niet hebben ingelogd (waarvan de gebruikersvoorwaarden nog niet zijn geaccepteerd).</p>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Bedrijven Uitnodigen -->
+                <div class="p-4 bg-purple-50 rounded-lg border border-purple-100">
+                    <h3 class="font-semibold text-purple-900 mb-2">🏢 Stagebedrijven Uitnodigen</h3>
+                    <p class="text-xs text-purple-700 mb-4">Verstuurt uitnodigingsmails naar alle stagebedrijven die nog niet eerder hebben ingelogd.</p>
+                    <button id="btn-invite-companies" class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white text-sm font-semibold rounded-lg transition">
+                        Verstuur uitnodigingen naar stagebedrijven
+                    </button>
+                    <div id="invite-companies-progress" class="mt-3 text-xs text-purple-800 hidden"></div>
+                </div>
+
+                <!-- Begeleiders Uitnodigen -->
+                <div class="p-4 bg-green-50 rounded-lg border border-green-100">
+                    <h3 class="font-semibold text-green-900 mb-2">🏫 Stagebegeleiders Uitnodigen</h3>
+                    <p class="text-xs text-green-700 mb-4">Verstuurt uitnodigingsmails naar alle stagebegeleiders die nog niet eerder hebben ingelogd.</p>
+                    <button id="btn-invite-supervisors" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-semibold rounded-lg transition">
+                        Verstuur uitnodigingen naar stagebegeleiders
+                    </button>
+                    <div id="invite-supervisors-progress" class="mt-3 text-xs text-green-800 hidden"></div>
+                </div>
             </div>
         </div>
     </main>
