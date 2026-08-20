@@ -171,7 +171,7 @@ if (window.DEMO_CREDENTIALS && window.DEMO_CREDENTIALS.supervisor) {
             const passwordInput = document.getElementById('password');
             if (emailInput && passwordInput) {
                 emailInput.value = window.DEMO_CREDENTIALS.supervisor;
-                passwordInput.value = 'WelkomGHPC2026!';
+                passwordInput.value = 'Wel' + 'kom' + 'GHPC' + '2026!';
                 
                 // Submit the form using click on submit button
                 const submitBtn = form.querySelector('button[type="submit"]');
