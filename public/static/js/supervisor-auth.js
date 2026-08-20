@@ -156,3 +156,38 @@ function logout() {
 
 // Maak logout beschikbaar globaal
 window.supervisorLogout = logout;
+
+// Add Demo button dynamically if credentials are set
+if (window.DEMO_CREDENTIALS && window.DEMO_CREDENTIALS.supervisor) {
+    const form = document.getElementById('supervisor-login-form');
+    if (form) {
+        const demoBtn = document.createElement('button');
+        demoBtn.type = 'button';
+        demoBtn.className = 'w-full mt-4 bg-green-100 hover:bg-green-200 text-green-700 font-semibold py-3 px-4 rounded-lg transition duration-200 border border-green-300 shadow hover:shadow-md flex items-center justify-center gap-2';
+        demoBtn.innerHTML = '⚡ Snel inloggen (Demo)';
+        demoBtn.id = 'demo-login-btn';
+        demoBtn.addEventListener('click', async () => {
+            const emailInput = document.getElementById('email');
+            const passwordInput = document.getElementById('password');
+            if (emailInput && passwordInput) {
+                emailInput.value = window.DEMO_CREDENTIALS.supervisor;
+                passwordInput.value = 'WelkomGHPC2026!';
+                
+                // Submit the form using click on submit button
+                const submitBtn = form.querySelector('button[type="submit"]');
+                if (submitBtn) {
+                    submitBtn.click();
+                }
+            }
+        });
+        
+        // Insert right after the submit button
+        const submitBtn = form.querySelector('button[type="submit"]');
+        if (submitBtn) {
+            submitBtn.parentNode.insertBefore(demoBtn, submitBtn.nextSibling);
+        } else {
+            form.appendChild(demoBtn);
+        }
+    }
+}
+
