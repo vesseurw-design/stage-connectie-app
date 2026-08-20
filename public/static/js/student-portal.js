@@ -336,7 +336,12 @@ function openActionSheet(dateStr, element, isUnscheduled) {
 
     // Pre-fill from cell dataset
     const currentStatus = element.dataset.status || '';
-    const currentHours = element.dataset.hours || (isUnscheduled ? 0 : 8);
+    let currentHours = parseFloat(element.dataset.hours) || 0;
+
+    // Fix: If status is empty and hours is 0, default to 8 hours for scheduled days
+    if (currentStatus === '' && currentHours === 0 && !isUnscheduled) {
+        currentHours = 8;
+    }
 
     document.getElementById('action-hours-worked').value = currentHours;
     updateActionSheetButtons(currentStatus);
