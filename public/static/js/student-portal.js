@@ -222,11 +222,24 @@ function renderGrid(existingAttendance) {
         const cell = document.createElement('div');
         
         if (holiday) {
-            cell.className = 'flex flex-col items-center justify-center p-4 bg-purple-50 rounded-xl border border-purple-100 text-center min-h-[120px] shadow-sm';
-            cell.innerHTML = `
-                <span class="text-3xl mb-1 filter drop-shadow-sm">🏖️</span>
-                <span class="text-xs font-bold text-purple-700 uppercase tracking-wider">Vakantie</span>
-            `;
+            const record = existingAttendance.find(a => a.date === dateStr);
+            const status = record ? record.student_status : '';
+            const hours = record ? record.student_hours : 0;
+
+            cell.className = 'flex flex-col items-center justify-center p-4 bg-purple-50 rounded-xl border border-purple-100 text-center min-h-[120px] shadow-sm cursor-pointer hover:bg-purple-100 transition';
+            cell.dataset.date = dateStr;
+            cell.onclick = () => {
+                const currentStatus = cell.dataset.status;
+                if (!currentStatus || currentStatus === '') {
+                    if (confirm('Het is momenteel vakantie volgens het schoolrooster. Wil je voor deze dag toch stage-aanwezigheid invullen (bijvoorbeeld om uren in te halen)?')) {
+                        openActionSheet(dateStr, cell, false);
+                    }
+                } else {
+                    openActionSheet(dateStr, cell, false);
+                }
+            };
+
+            updateCellContent(cell, status, hours);
         } else if (!isScheduled) {
             cell.className = 'flex flex-col items-center justify-center p-4 bg-gray-50 rounded-xl border border-gray-200 text-center min-h-[120px] cursor-pointer hover:bg-gray-100 transition shadow-sm hover:-translate-y-0.5';
             cell.onclick = () => openActionSheet(dateStr, cell, true);
@@ -260,6 +273,23 @@ function renderGrid(existingAttendance) {
 }
 
 function updateCellContent(cell, status, hours) {
+    const dateStr = cell.dataset.date;
+    const holiday = isHoliday(dateStr);
+
+    // Remove old borders and colors
+    cell.classList.remove('border-gray-100', 'border-gray-200', 'border-green-400', 'border-red-400', 'border-orange-400', 'border-yellow-400', 'hover:border-purple-400', 'hover:shadow-md', 'bg-gray-50', 'bg-white', 'bg-purple-50', 'border-purple-100', 'hover:bg-purple-100');
+
+    if (!status && holiday) {
+        cell.innerHTML = `
+            <span class="text-3xl mb-1 filter drop-shadow-sm">🏖️</span>
+            <span class="text-xs font-bold text-purple-700 uppercase tracking-wider">Vakantie</span>
+        `;
+        cell.className = 'flex flex-col items-center justify-center p-4 bg-purple-50 rounded-xl border border-purple-100 text-center min-h-[120px] shadow-sm cursor-pointer hover:bg-purple-100 transition';
+        cell.dataset.status = '';
+        cell.dataset.hours = 0;
+        return;
+    }
+
     const icons = { 'present': '✅', 'absent': '❌', 'sick': '🤒', 'late': '⏱️', '': '<span class="text-gray-300 text-3xl font-black">+</span>' };
     
     let content = icons[status] || icons[''];
@@ -270,19 +300,16 @@ function updateCellContent(cell, status, hours) {
         ${status ? `<span class="text-xs font-bold text-gray-700 uppercase tracking-wide mb-1">${getStatusLabel(status)}</span>` : '<span class="text-xs font-bold text-gray-400 uppercase tracking-wide">Vul in</span>'}
         ${hours > 0 && status !== 'absent' ? `<div class="bg-purple-100 text-purple-700 text-xs font-black px-2 py-0.5 rounded shadow-sm mt-auto">${hours} uur</div>` : ''}
     `;
-
-    // Remove old borders and colors
-    cell.classList.remove('border-gray-100', 'border-gray-200', 'border-green-400', 'border-red-400', 'border-orange-400', 'border-yellow-400', 'hover:border-purple-400', 'hover:shadow-md', 'bg-gray-50', 'bg-white');
     
     cell.classList.add('bg-white');
 
     if (status) {
-        if (status === 'present') cell.classList.add('border-green-400');
-        else if (status === 'absent') cell.classList.add('border-red-400');
-        else if (status === 'sick') cell.classList.add('border-orange-400');
-        else if (status === 'late') cell.classList.add('border-yellow-400');
+        if (status === 'present') cell.className = 'flex flex-col items-center justify-center p-4 bg-white rounded-xl border-2 border-green-400 cursor-pointer transition-all duration-200 hover:-translate-y-0.5 shadow-sm min-h-[120px]';
+        else if (status === 'absent') cell.className = 'flex flex-col items-center justify-center p-4 bg-white rounded-xl border-2 border-red-400 cursor-pointer transition-all duration-200 hover:-translate-y-0.5 shadow-sm min-h-[120px]';
+        else if (status === 'sick') cell.className = 'flex flex-col items-center justify-center p-4 bg-white rounded-xl border-2 border-orange-400 cursor-pointer transition-all duration-200 hover:-translate-y-0.5 shadow-sm min-h-[120px]';
+        else if (status === 'late') cell.className = 'flex flex-col items-center justify-center p-4 bg-white rounded-xl border-2 border-yellow-400 cursor-pointer transition-all duration-200 hover:-translate-y-0.5 shadow-sm min-h-[120px]';
     } else {
-        cell.classList.add('border-gray-200', 'hover:border-purple-400', 'hover:shadow-md');
+        cell.className = 'flex flex-col items-center justify-center p-4 bg-white rounded-xl border border-gray-200 hover:border-purple-400 hover:shadow-md cursor-pointer transition-all duration-200 hover:-translate-y-0.5 shadow-sm min-h-[120px]';
     }
 
     cell.dataset.status = status;
