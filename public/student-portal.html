@@ -55,9 +55,21 @@
 
             <!-- Week Controls -->
             <div class="bg-white/90 backdrop-blur rounded-2xl shadow-lg border border-gray-200 p-6 flex flex-col sm:flex-row justify-between items-center gap-6">
-                <div class="text-center sm:text-left">
-                    <h2 class="text-2xl font-black text-gray-800 tracking-tight" id="current-week-label">Week --</h2>
-                    <p class="text-md text-gray-500 font-bold uppercase tracking-wider" id="current-date-range">--</p>
+                <div class="flex items-center gap-4 text-center sm:text-left w-full sm:w-auto justify-between sm:justify-start">
+                    <button onclick="changeWeek(-1)" id="btn-prev-week" class="p-2 rounded-xl hover:bg-purple-50 text-purple-600 border border-purple-100 transition shadow-sm" title="Vorige week">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                        </svg>
+                    </button>
+                    <div class="min-w-[120px]">
+                        <h2 class="text-2xl font-black text-gray-800 tracking-tight" id="current-week-label">Week --</h2>
+                        <p class="text-md text-gray-500 font-bold uppercase tracking-wider" id="current-date-range">--</p>
+                    </div>
+                    <button onclick="changeWeek(1)" id="btn-next-week" class="p-2 rounded-xl hover:bg-purple-50 text-purple-600 border border-purple-100 transition shadow-sm" title="Volgende week">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                        </svg>
+                    </button>
                 </div>
                 <button onclick="saveWeek()" id="btn-save"
                     class="w-full sm:w-auto bg-purple-600 hover:bg-purple-700 text-white font-bold py-4 px-10 rounded-xl shadow-lg hover:shadow-xl transition transform hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-2 text-lg">

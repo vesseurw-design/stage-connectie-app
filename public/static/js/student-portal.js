@@ -85,6 +85,7 @@ async function continueStudentInit() {
         if (fetchedHolidays) holidays = fetchedHolidays;
 
         updateWeekDisplay();
+        updateNavigationButtons();
         await loadAttendance();
 
         document.getElementById('loading').classList.add('hidden');
@@ -107,11 +108,13 @@ function getMonday(d) {
     return new Date(d.setDate(diff));
 }
 
+let currentWeekOffset = 0;
+
 function getWeekDate(offsetDays) {
     const today = new Date();
     const monday = getMonday(today);
     const targetDate = new Date(monday);
-    targetDate.setDate(monday.getDate() + offsetDays);
+    targetDate.setDate(monday.getDate() + (currentWeekOffset * 7) + offsetDays);
     return targetDate.toISOString().split('T')[0];
 }
 
@@ -133,6 +136,57 @@ function updateWeekDisplay() {
         document.getElementById(`date-${day}`).textContent = date.toLocaleDateString('nl-NL', { day: 'numeric', month: 'numeric' });
     });
 }
+
+function changeWeek(direction) {
+    const newOffset = currentWeekOffset + direction;
+    
+    // Bepaal de limiet: op maandag (1) en dinsdag (2) mag je 1 week terug (-1).
+    // Op andere dagen is de limiet 0 (alleen de huidige week).
+    const today = new Date();
+    const dayOfWeek = today.getDay();
+    const maxPastWeeks = (dayOfWeek === 1 || dayOfWeek === 2) ? -1 : 0;
+    
+    if (newOffset < maxPastWeeks || newOffset > 0) return;
+    
+    currentWeekOffset = newOffset;
+    updateWeekDisplay();
+    loadAttendance();
+    updateNavigationButtons();
+}
+
+function updateNavigationButtons() {
+    const btnPrev = document.getElementById('btn-prev-week');
+    const btnNext = document.getElementById('btn-next-week');
+    
+    const today = new Date();
+    const dayOfWeek = today.getDay();
+    const maxPastWeeks = (dayOfWeek === 1 || dayOfWeek === 2) ? -1 : 0;
+    
+    const canGoPrev = (currentWeekOffset > maxPastWeeks);
+    const canGoNext = (currentWeekOffset < 0);
+    
+    if (btnPrev) {
+        btnPrev.disabled = !canGoPrev;
+        if (!canGoPrev) {
+            btnPrev.classList.add('opacity-30', 'cursor-not-allowed');
+        } else {
+            btnPrev.classList.remove('opacity-30', 'cursor-not-allowed');
+        }
+    }
+    if (btnNext) {
+        btnNext.disabled = !canGoNext;
+        if (!canGoNext) {
+            btnNext.classList.add('opacity-30', 'cursor-not-allowed');
+        } else {
+            btnNext.classList.remove('opacity-30', 'cursor-not-allowed');
+        }
+    }
+}
+
+// Make changeWeek globally accessible
+window.changeWeek = changeWeek;
+window.updateNavigationButtons = updateNavigationButtons;
+
 
 async function loadAttendance() {
     const container = document.getElementById('student-week-row');
