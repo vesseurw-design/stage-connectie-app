@@ -1,112 +1,96 @@
-# 📗 Gebruikershandleiding voor Stagebegeleiders
+# Gebruikershandleiding voor Stagebegeleiders
 ## StageConnect - Monitoring & Begeleiding
 
 ---
 
-## 📋 Inhoudsopgave
+## Inhoudsopgave
 
-1. [Inloggen](#inloggen)
-2. [Dashboard Overzicht](#dashboard-overzicht)
-3. [Studenten Monitoren](#studenten-monitoren)
-4. [Notificaties](#notificaties)
-5. [Rapporten & Statistieken](#rapporten--statistieken)
-6. [Studentdetails Bekijken](#studentdetails-bekijken)
-7. [Veelgestelde Vragen](#veelgestelde-vragen)
+1. Inloggen
+2. Dashboard Overzicht
+3. Studenten Monitoren
+4. Notificaties
+5. Rapporten & Statistieken
+6. Studentdetails Bekijken
+7. Veelgestelde Vragen
 
 ---
 
-## 🔐 Inloggen
+## Inloggen & Account Activeren
 
-### Eerste Keer Inloggen
+### Eerste Keer Inloggen (Account Activeren)
 
-1. **Ga naar:** https://stageconnectie.nl
-2. **Klik op:** "Stagebegeleider" (paarse knop)
-3. **Vul in:**
-   - **Email:** Het email adres dat u van de school heeft ontvangen
-   - **Wachtwoord:** `Welkom` + uw naam (zonder spaties)
-   - Voorbeeld: Als u "Jan de Vries" heet, is het wachtwoord: `WelkomJandeVries`
-4. **Klik op:** "Inloggen"
+Als nieuwe stagebegeleider maak je niet zelf een account aan. In plaats daarvan ontvang je een uitnodiging per e-mail zodra de schoolbeheerder je heeft toegevoegd.
+
+1. **Open de uitnodigingsmail** met het onderwerp: *Uitnodiging voor StageConnectie - Activeer je account* (of *Activeer uw account*).
+2. **Klik op de knop "Account Activeren"** in de e-mail.
+3. Je wordt doorgestuurd naar de website om een **eigen wachtwoord in te stellen**.
+4. Vul een sterk wachtwoord in (minimaal 8 tekens, waaronder ten minste 1 hoofdletter, 1 kleine letter en 1 cijfer) en klik op **"Wachtwoord Wijzigen"**.
+5. Hierna kun je inloggen via: https://stageconnectie.nl/supervisor-login.html met je **e-mailadres** en je **zelfgekozen wachtwoord**.
 
 ### Wachtwoord Vergeten?
 
-1. **Klik op:** "Wachtwoord vergeten?" (onder de login knop)
-2. **Vul uw email in**
-3. **Check uw inbox** voor een reset link
-4. **Klik op de link** en stel een nieuw wachtwoord in
+Mocht je je wachtwoord zijn vergeten, dan kun je dit eenvoudig zelf resetten:
 
-### Wachtwoord Wijzigen (Aanbevolen!)
-
-**Voor uw veiligheid raden we aan het standaard wachtwoord te wijzigen:**
-
-1. Login met uw huidige wachtwoord
-2. Ga naar: https://stageconnectie.nl/reset-password.html
-3. Vul een nieuw, sterk wachtwoord in
-4. Bewaar dit wachtwoord veilig
+1. **Ga naar de inlogpagina:** https://stageconnectie.nl/supervisor-login.html
+2. **Klik op:** "Wachtwoord vergeten?" (onder het formulier)
+3. **Vul je e-mailadres in** en klik op versturen.
+4. **Check je inbox** voor een e-mail met een reset-link.
+5. **Klik op de link** in de e-mail en stel een nieuw wachtwoord in.
 
 ---
 
-## 📊 Dashboard Overzicht
+## Dashboard Overzicht
 
-Na het inloggen ziet u het **Begeleider Portal Dashboard** met:
+Na het inloggen zie je het **Begeleider Portal Dashboard** met:
 
 ### Bovenaan (Header)
-- **Uw naam** - "Hallo, [Naam]"
-- **Notificatie badge** 🔵 - Aantal nieuwe aanwezigheden vandaag
+- **Je naam** - "Hallo, [Naam]"
+- **Notificatie badge** - Aantal nieuwe aanwezigheden vandaag
 - **Ververs knop** - Om de nieuwste data te laden
 - **Uitloggen knop** - Om veilig uit te loggen
 
 ### Statistieken (4 tegels)
-- **📊 Mijn Studenten** - Totaal aantal studenten onder uw begeleiding
-- **✅ Aanwezig Vandaag** - Hoeveel studenten er vandaag zijn
-- **❌ Afwezig** - Hoeveel studenten er vandaag afwezig zijn
-- **🤒 Ziek** - Hoeveel studenten er vandaag ziek zijn
+- **Mijn Studenten** - Totaal aantal studenten onder je begeleiding
+- **Aanwezig Vandaag** - Hoeveel studenten er vandaag zijn
+- **Afwezig** - Hoeveel studenten er vandaag afwezig zijn
+- **Ziek** - Hoeveel studenten er vandaag ziek zijn
 
 ### Filters
-- **📅 Datum filter** - Kies een specifieke datum om te bekijken
-- **🎯 Status filter** - Filter op aanwezig/afwezig/ziek/te laat
+- **Datum filter** - Kies een specifieke datum om te bekijken
+- **Status filter** - Filter op aanwezig/afwezig/ziek/te laat
 
 ### Studenten Lijst
-- **Studentkaarten** - Alle studenten onder uw begeleiding
+- **Studentkaarten** - Alle studenten onder je begeleiding
 - **Status badges** - Real-time status per student
 - **Bedrijfsinformatie** - Waar de student stage loopt
 - **Stagedagen** - Welke dagen de student stage loopt
 
 ---
 
-## 👥 Studenten Monitoren
+## Studenten Monitoren
 
 ### Real-Time Monitoring
 
-**De app werkt real-time!** Dit betekent:
+De app werkt real-time! Dit betekent:
 
-- ✅ **Automatische updates** - Elke 10 seconden wordt de data ververst
-- ✅ **Notificaties** - U krijgt een melding als een bedrijf aanwezigheid invult
-- ✅ **Geen handmatig verversen** - De app doet dit automatisch
-- ✅ **Altijd actueel** - U ziet direct wie er is en wie niet
+- **Automatische updates** - Elke 10 seconden wordt de data ververst
+- **Notificaties** - Je krijgt een melding als een bedrijf aanwezigheid invult
+- **Geen handmatig verversen** - De app doet dit automatisch
+- **Altijd actueel** - Je ziet direct wie er is en wie niet
 
 ### Studentkaart Kleuren
 
 De studentkaarten hebben verschillende kleuren om snel te scannen:
 
-- **🟢 Groen** - Student is aanwezig
-- **🔴 Rood** - Student is afwezig
-- **🟠 Oranje** - Student is ziek
-- **🟡 Geel** - Student was te laat (+ aantal minuten)
-- **⚪ Grijs** - Nog geen aanwezigheid ingevuld
+- **Groen** - Student is aanwezig
+- **Rood** - Student is afwezig
+- **Oranje** - Student is ziek
+- **Geel** - Student was te laat (+ aantal minuten)
+- **Grijs** - Nog geen aanwezigheid ingevuld
 
 ### Snel Overzicht
 
-**In één oogopslag ziet u:**
-
-```
-┌─────────────────────────────┐
-│ 👤 Jan Jansen              │
-│ 📍 ABC Bouw                │
-│ 📅 Ma, Di, Wo, Do          │
-│ ✅ Aanwezig                │
-└─────────────────────────────┘
-```
-
+In één oogopslag zie je:
 - **Naam** - Student
 - **Bedrijf** - Waar stage wordt gelopen
 - **Dagen** - Geplande stagedagen
@@ -114,22 +98,22 @@ De studentkaarten hebben verschillende kleuren om snel te scannen:
 
 ---
 
-## 🔔 Notificaties
+## Notificaties
 
 ### In-App Notificaties
 
-**Nieuw! Automatische meldingen als bedrijven aanwezigheid invullen.**
+Nieuw! Automatische meldingen als bedrijven aanwezigheid invullen.
 
 #### Hoe Werkt Het?
 
-1. **Laat de app open staan** in uw browser
+1. **Laat de app open staan** in je browser
 2. **Bedrijf vult aanwezigheid in** voor een student
-3. **Blauwe banner verschijnt** bovenaan uw scherm:
+3. **Blauwe banner verschijnt** bovenaan je scherm:
 
 ```
 ┌────────────────────────────────────────┐
-│ 🔔 Nieuwe aanwezigheid                │
-│ Jan Jansen is gemarkeerd als aanwezig │
+│ Nieuwe aanwezigheid                    │
+│ Jan Jansen is gemarkeerd als aanwezig  │
 │                                    [X] │
 └────────────────────────────────────────┘
 ```
@@ -139,28 +123,28 @@ De studentkaarten hebben verschillende kleuren om snel te scannen:
 
 #### Notificatie Badge
 
-**Blauw bolletje** naast "Begeleider Portal":
+Blauw bolletje naast "Begeleider Portal":
 - Toont **aantal aanwezigheden vandaag**
 - Voorbeeld: **"5"** = 5 studenten hebben vandaag aanwezigheid
-- **Blijft zichtbaar** totdat u de pagina ververst
+- **Blijft zichtbaar** totdat je de pagina ververst
 
 #### Tips voor Notificaties
 
-- ✅ **Houd tab open** - Notificaties werken alleen als de app open is
-- ✅ **Geluid** - U hoort een subtiel geluidje bij nieuwe aanwezigheid
-- ✅ **Werkt in alle browsers** - Safari, Chrome, Firefox, Edge
-- ✅ **Geen toestemming nodig** - Werkt direct!
+- **Houd tab open** - Notificaties werken alleen als de app open is
+- **Geluid** - Je hoort een subtiel geluidje bij nieuwe aanwezigheid
+- **Werkt in alle browsers** - Safari, Chrome, Firefox, Edge
+- **Geen toestemming nodig** - Werkt direct!
 
 ---
 
-## 📈 Rapporten & Statistieken
+## Rapporten & Statistieken
 
 ### Dagelijks Overzicht
 
-**Bovenaan ziet u 4 statistieken:**
+Bovenaan zie je 4 statistieken:
 
 1. **Mijn Studenten (Totaal)**
-   - Alle studenten onder uw begeleiding
+   - Alle studenten onder je begeleiding
    - Blijft constant (tenzij studenten worden toegevoegd/verwijderd)
 
 2. **Aanwezig Vandaag**
@@ -179,20 +163,20 @@ De studentkaarten hebben verschillende kleuren om snel te scannen:
 
 #### Datum Filter
 
-**Bekijk een specifieke dag:**
+Bekijk een specifieke dag:
 
 1. **Klik op de datum** (bovenaan)
 2. **Kies een datum** uit de kalender
 3. **Dashboard update** - Toont data van die dag
 
-**Gebruik dit voor:**
-- ✅ Controleren van gisteren
-- ✅ Weekoverzicht maken
-- ✅ Maandrapportage voorbereiden
+Gebruik dit voor:
+- Controleren van gisteren
+- Weekoverzicht maken
+- Maandrapportage voorbereiden
 
 #### Status Filter
 
-**Filter op specifieke status:**
+Filter op specifieke status:
 
 1. **Klik op het dropdown menu**
 2. **Kies een status:**
@@ -202,21 +186,21 @@ De studentkaarten hebben verschillende kleuren om snel te scannen:
    - **Ziek** - Alleen zieke studenten
    - **Te laat** - Alleen te late studenten
 
-**Gebruik dit voor:**
-- ✅ Snel zien wie er afwezig is
-- ✅ Opvolging van zieke studenten
-- ✅ Patroonherkenning (wie is vaak te laat?)
+Gebruik dit voor:
+- Snel zien wie er afwezig is
+- Opvolging van zieke studenten
+- Patroonherkenning (wie is vaak te laat?)
 
 ---
 
-## 🔍 Studentdetails Bekijken
+## Studentdetails Bekijken
 
 ### Student Popup Openen
 
 1. **Klik op een studentkaart** in de lijst
 2. **Popup verschijnt** met volledige informatie
 
-### Wat Ziet U?
+### Wat zie je?
 
 #### Algemene Info
 - **Naam** - Volledige naam student
@@ -226,12 +210,12 @@ De studentkaarten hebben verschillende kleuren om snel te scannen:
 
 #### Aanwezigheidshistorie
 
-**Volledige geschiedenis van de student:**
+Volledige geschiedenis van de student:
 
 ```
-📅 Aanwezigheidshistorie
+Aanwezigheidshistorie
 
-[Maand filter: Januari 2026 ▼]
+[Maand filter: Januari 2026]
 
 wo 8 jan 2026    [Aanwezig]
 di 7 jan 2026    [Te laat (15m)]
@@ -242,7 +226,7 @@ do 2 jan 2026    [Aanwezig]
 
 #### Maand Filter
 
-**Filter de geschiedenis per maand:**
+Filter de geschiedenis per maand:
 
 1. **Klik op het dropdown menu** (rechts van "Aanwezigheidshistorie")
 2. **Kies een maand** (bijv. "december 2025")
@@ -250,63 +234,61 @@ do 2 jan 2026    [Aanwezig]
 
 ### Gebruik van Studentdetails
 
-**Waarvoor gebruikt u dit?**
+Waarvoor gebruik je dit?
 
-- ✅ **Voortgangsgesprekken** - Bespreek aanwezigheid met student
-- ✅ **Rapportage** - Maak rapporten voor school
-- ✅ **Opvolging** - Identificeer patronen (vaak ziek/te laat?)
-- ✅ **Contact bedrijf** - Als er problemen zijn
+- **Voortgangsgesprekken** - Bespreek aanwezigheid met student
+- **Rapportage** - Maak rapporten voor school
+- **Opvolging** - Identificeer patronen (vaak ziek/te laat?)
+- **Contact bedrijf** - Als er problemen zijn
 
 ---
 
-## 🎯 Dagelijkse Workflow
+## Dagelijkse Workflow
 
 ### Ochtend Routine (Aanbevolen)
 
 **9:00 - 10:00**
 
-1. ✅ **Open StageConnect** in uw browser
-2. ✅ **Check dashboard** - Wie is er al ingevuld?
-3. ✅ **Laat tab open** - Voor notificaties
-4. ✅ **Werk verder** - App draait op de achtergrond
+1. **Open StageConnect** in je browser
+2. **Check dashboard** - Wie is er al ingevuld?
+3. **Laat tab open** - Voor notificaties
+4. **Werk verder** - App draait op de achtergrond
 
 ### Gedurende de Dag
 
-**Automatisch:**
+Automatisch:
+- **Notificaties** - Als bedrijven aanwezigheid invullen
+- **Auto-refresh** - Elke 10 seconden nieuwe data
+- **Badge update** - Aantal aanwezigheden stijgt
 
-- 🔔 **Notificaties** - Als bedrijven aanwezigheid invullen
-- 🔄 **Auto-refresh** - Elke 10 seconden nieuwe data
-- 📊 **Badge update** - Aantal aanwezigheden stijgt
-
-**Handmatig (optioneel):**
-
-- 🔍 **Check specifieke student** - Klik op kaart voor details
-- 📞 **Bel bedrijf** - Als student niet is ingevuld
-- 📧 **Email student** - Bij afwezigheid/ziekte
+Handmatig (optioneel):
+- **Check specifieke student** - Klik op kaart voor details
+- **Bel bedrijf** - Als student niet is ingevuld
+- **E-mail student** - Bij afwezigheid/ziekte
 
 ### Einde van de Dag
 
 **16:00 - 17:00**
 
-1. ✅ **Check finale status** - Zijn alle studenten ingevuld?
-2. ✅ **Opvolging** - Bel bedrijven die niet hebben ingevuld
-3. ✅ **Noteer bijzonderheden** - Voor rapportage
-4. ✅ **Sluit tab** - Of laat open voor morgen
+1. **Check finale status** - Zijn alle studenten ingevuld?
+2. **Opvolging** - Bel bedrijven die niet hebben ingevuld
+3. **Noteer bijzonderheden** - Voor rapportage
+4. **Sluit tab** - Of laat open voor morgen
 
 ---
 
-## 📱 Mobiel Gebruik
+## Mobiel Gebruik
 
 ### Werkt de App op Mijn Telefoon?
 
-**Ja!** De app is volledig responsive.
+Ja! De app is volledig responsive.
 
 ### Tips voor Mobiel
 
-- ✅ **Bookmark de website** - Voeg toe aan home screen
-- ✅ **Portretmodus** - Werkt het best verticaal
-- ✅ **Wifi/4G** - Zorg voor goede verbinding
-- ✅ **Notificaties** - Werken ook op mobiel!
+- **Bookmark de website** - Voeg toe aan home screen
+- **Portretmodus** - Werkt het best verticaal
+- **Wifi/4G** - Zorg voor goede verbinding
+- **Notificaties** - Werken ook op mobiel!
 
 ### Home Screen Toevoegen (iOS)
 
@@ -315,11 +297,11 @@ do 2 jan 2026    [Aanwezig]
 3. Klik op "Deel" knop (vierkant met pijl)
 4. Scroll naar "Zet op beginscherm"
 5. Klik "Voeg toe"
-6. **Nu heeft u een app icoon!** 📱
+6. **Nu heb je een app-icoon!**
 
 ---
 
-## ❓ Veelgestelde Vragen
+## Veelgestelde Vragen
 
 ### Algemeen
 
@@ -327,13 +309,13 @@ do 2 jan 2026    [Aanwezig]
 A: Minimaal 1x per dag (ochtend). Laat de tab open voor real-time updates.
 
 **Q: Kan ik aanwezigheid zelf invullen?**
-A: Nee, alleen bedrijven kunnen aanwezigheid invullen. U kunt alleen bekijken.
+A: Nee, alleen bedrijven kunnen aanwezigheid invullen. Je kunt alleen bekijken.
 
 **Q: Hoeveel studenten kan ik begeleiden?**
-A: Onbeperkt! Alle studenten die aan u zijn gekoppeld verschijnen automatisch.
+A: Onbeperkt! Alle studenten die aan jou zijn gekoppeld verschijnen automatisch.
 
 **Q: Blijf ik ingelogd?**
-A: Ja, 7 dagen lang. Daarna moet u opnieuw inloggen.
+A: Ja, 7 dagen lang. Daarna moet je opnieuw inloggen.
 
 ### Notificaties
 
@@ -344,7 +326,7 @@ A: Zorg dat de tab open staat. Notificaties werken alleen als de app actief is.
 A: Momenteel niet, maar ze verdwijnen automatisch na 5 seconden.
 
 **Q: Werken notificaties op mijn telefoon?**
-A: Ja! Zolang de app open is in uw browser.
+A: Ja! Zolang de app open is in je browser.
 
 ### Data & Rapportage
 
@@ -363,7 +345,7 @@ A: Kies "Alle maanden" in het filter om alles te zien.
 A: Chrome, Safari, Firefox, of Edge. Alle moderne browsers werken goed.
 
 **Q: Werkt de app offline?**
-A: Nee, u heeft internet nodig. Data wordt real-time opgehaald.
+A: Nee, je hebt internet nodig. Data wordt real-time opgehaald.
 
 **Q: Is mijn data veilig?**
 A: Ja! HTTPS versleuteling, EU hosting, GDPR compliant.
@@ -371,50 +353,50 @@ A: Ja! HTTPS versleuteling, EU hosting, GDPR compliant.
 ### Problemen
 
 **Q: Ik zie geen studenten**
-A: Neem contact op met de admin. Zij moeten studenten aan u koppelen.
+A: Neem contact op met de admin. Zij moeten studenten aan jou koppelen.
 
 **Q: Data klopt niet**
 A: Probeer de pagina te verversen (Cmd+R). Neem contact op met admin als het blijft.
 
 **Q: Student staat niet in de lijst**
-A: Check of de student aan u is gekoppeld in het admin panel.
+A: Check of de student aan jou is gekoppeld in het admin panel.
 
 ---
 
-## 📞 Contact & Support
+## Contact & Support
 
 ### Hulp Nodig?
 
 **Neem contact op met de school admin:**
 - Zij kunnen studenten toevoegen/verwijderen
-- Zij kunnen uw wachtwoord resetten
+- Zij kunnen je wachtwoord resetten
 - Zij kunnen technische problemen oplossen
 
 ### Tips voor Effectief Gebruik
 
-1. ✅ **Laat tab open** - Voor real-time updates
-2. ✅ **Check dagelijks** - Maak er een gewoonte van
-3. ✅ **Gebruik filters** - Voor specifieke analyses
-4. ✅ **Communiceer** - Met bedrijven én studenten
-5. ✅ **Documenteer** - Noteer bijzonderheden voor rapportage
+1. **Laat tab open** - Voor real-time updates
+2. **Check dagelijks** - Maak er een gewoonte van
+3. **Gebruik filters** - Voor specifieke analyses
+4. **Communiceer** - Met bedrijven én studenten
+5. **Documenteer** - Noteer bijzonderheden voor rapportage
 
 ---
 
-## 🎯 Snelstart Checklist
+## Snelstart Checklist
 
-- [ ] Inloggen met email en wachtwoord
+- [ ] Account activeren en wachtwoord instellen via de e-mail link
+- [ ] Inloggen met e-mailadres en gekozen wachtwoord
 - [ ] Dashboard bekijken
 - [ ] Eerste notificatie ontvangen
 - [ ] Studentdetails bekijken
 - [ ] Filters gebruiken (datum + status)
 - [ ] Geschiedenis raadplegen
-- [ ] Wachtwoord wijzigen (aanbevolen)
 - [ ] Bookmark de website
 - [ ] (Optioneel) Toevoegen aan home screen (mobiel)
 
 ---
 
-## 📊 Voorbeeld Gebruik: Weekrapport Maken
+## Voorbeeld Gebruik: Weekrapport Maken
 
 **Stap-voor-stap:**
 
@@ -443,8 +425,8 @@ A: Check of de student aan u is gekoppeld in het admin panel.
 
 ---
 
-**Bedankt voor het gebruik van StageConnect!** 🎉
+**Bedankt voor het gebruik van StageConnect!**
 
-**Veel succes met het begeleiden van uw studenten!** 📚
+**Veel succes met het begeleiden van je studenten!**
 
 *Versie 2.0 - Januari 2026*

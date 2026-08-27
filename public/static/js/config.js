@@ -15,7 +15,12 @@ const DB_CONFIGS = {
             student: 'fake@leerling.nl',
             supervisor: 'stage@begeleider.nl',
             employer: 'test@testbedrijf.nl'
-        }
+        },
+        absenceSteps: [
+            "📞 Ik heb mijn stagebedrijf gebeld om mijn afwezigheid door te geven.",
+            "💬 Ik heb een appje gestuurd naar mijn coach/stagebegeleider.",
+            "🏫 Mijn ouders hebben naar school gebeld voor ziekmelding."
+        ]
     },
     // Huidige hoofddomeinen
     'stageconnectie.nl': {
@@ -23,14 +28,24 @@ const DB_CONFIGS = {
         key: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVkZWlwbnF5ZXNkdWlvaHh2dXZ1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc1MjY5NTEsImV4cCI6MjA8MzEwMjk1MX0.IknEZ-GQvspcppJxLR00ayBDq1DbL0HiUKy9RDb59DU',
         maxStudents: 500,
         schoolName: 'StageConnectie',
-        logo: 'logo-stageconnectie.png'
+        logo: 'logo-stageconnectie.png',
+        absenceSteps: [
+            "📞 Ik heb mijn stagebedrijf gebeld om mijn afwezigheid door te geven.",
+            "💬 Ik heb een appje gestuurd naar mijn coach/stagebegeleider.",
+            "🏫 Mijn ouders hebben naar school gebeld voor ziekmelding."
+        ]
     },
     'www.stageconnectie.nl': {
         url: 'https://vdeipnqyesduiohxvuvu.supabase.co',
         key: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVkZWlwbnF5ZXNkdWlvaHh2dXZ1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc1MjY5NTEsImV4cCI6MjA8MzEwMjk1MX0.IknEZ-GQvspcppJxLR00ayBDq1DbL0HiUKy9RDb59DU',
         maxStudents: 500,
         schoolName: 'StageConnectie',
-        logo: 'logo-stageconnectie.png'
+        logo: 'logo-stageconnectie.png',
+        absenceSteps: [
+            "📞 Ik heb mijn stagebedrijf gebeld om mijn afwezigheid door te geven.",
+            "💬 Ik heb een appje gestuurd naar mijn coach/stagebegeleider.",
+            "🏫 Mijn ouders hebben naar school gebeld voor ziekmelding."
+        ]
     },
     // ProZoetermeer (Nieuwe school)
     'prozoetermeer.stageconnectie.nl': {
@@ -38,7 +53,12 @@ const DB_CONFIGS = {
         key: 'hier-komt-de-anon-key-van-de-nieuwe-school',
         maxStudents: 150,
         schoolName: 'Pro Zoetermeer',
-        logo: 'logo-prozoetermeer.png'
+        logo: 'logo-prozoetermeer.png',
+        absenceSteps: [
+            "📞 Ik heb mijn stagebedrijf gebeld om mijn afwezigheid te melden.",
+            "💬 Ik heb mijn stagebegeleider een bericht gestuurd via Teams/WhatsApp.",
+            "🏫 Ik heb me afgemeld via de school-app (Magister/SOM)."
+        ]
     },
     // Lokale ontwikkelomgeving fallback
     'localhost': {
@@ -51,7 +71,12 @@ const DB_CONFIGS = {
             student: 'fake@leerling.nl',
             supervisor: 'stage@begeleider.nl',
             employer: 'test@testbedrijf.nl'
-        }
+        },
+        absenceSteps: [
+            "📞 Ik heb mijn stagebedrijf gebeld om mijn afwezigheid door te geven.",
+            "💬 Ik heb een appje gestuurd naar mijn coach/stagebegeleider.",
+            "🏫 Mijn ouders hebben naar school gebeld voor ziekmelding."
+        ]
     }
 };
 
@@ -80,6 +105,7 @@ const DB_CONFIGS = {
     window.SCHOOL_NAME = config.schoolName || 'StageConnectie';
     window.SCHOOL_LOGO = config.logo || 'logo.png';
     window.DEMO_CREDENTIALS = config.demoCredentials || null;
+    window.ABSENCE_STEPS = config.absenceSteps || [];
     
     console.log(`🔌 StageConnectie geconfigureerd voor tenant: ${hostname} (Database: ${config.url}, School: ${window.SCHOOL_NAME})`);
 })();

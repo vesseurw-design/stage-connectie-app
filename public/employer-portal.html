@@ -179,15 +179,26 @@
             </div>
         </div>
 
-        <!-- Week Controls (Locked to Current) -->
+        <!-- Week Controls -->
         <div
             class="flex flex-col sm:flex-row justify-between items-center gap-6 mb-8 bg-white/90 backdrop-blur rounded-2xl shadow-lg border border-gray-200 p-6">
-            <div class="flex items-center gap-6">
-                <!-- Navigation removed -->
-                <div class="text-center pl-2">
+            <div class="flex items-center gap-4">
+                <button onclick="changeWeek(-1)" id="prev-week-btn"
+                    class="p-3 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-xl transition text-gray-600 focus:outline-none flex items-center justify-center">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                    </svg>
+                </button>
+                <div class="text-center px-4 min-w-[150px]">
                     <h2 class="text-2xl font-black text-gray-800 tracking-tight" id="current-week-label">Week --</h2>
                     <p class="text-md text-gray-500 font-bold uppercase tracking-wider" id="current-date-range">--</p>
                 </div>
+                <button onclick="changeWeek(1)" id="next-week-btn"
+                    class="p-3 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-xl transition text-gray-600 focus:outline-none flex items-center justify-center">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                    </svg>
+                </button>
             </div>
             <button onclick="saveWeek()"
                 class="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-10 rounded-xl shadow-lg hover:shadow-xl transition transform hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-2 text-lg">
