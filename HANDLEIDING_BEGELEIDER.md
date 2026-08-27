@@ -208,8 +208,8 @@ Ja, de app is volledig responsive en werkt op mobiele apparaten.
 **Q: Hoe vaak moet ik de app checken?**
 A: Minimaal één keer per dag (bijvoorbeeld in de ochtend). Laat het tabblad open voor automatische updates.
 
-**Q: Kan ik aanwezigheid zelf invullen?**
-A: Nee, alleen bedrijven (en stagiairs in hun eigen portaal) kunnen de aanwezigheid invullen. Je kunt de gegevens alleen bekijken.
+**Q: Kan ik de aanwezigheid zelf invullen of aanpassen?**
+A: Ja! Als je op een studentkaart klikt, opent de popup van die student. Daar kun je de aanwezigheid van de geselecteerde datum aanpassen, of in de aanwezigheidshistorie achter een specifieke dag op "aanpassen" klikken om de status te wijzigen of in te vullen.
 
 **Q: Hoeveel studenten kan ik begeleiden?**
 A: Onbeperkt. Alle studenten die aan jou gekoppeld zijn, verschijnen automatisch in je lijst.
