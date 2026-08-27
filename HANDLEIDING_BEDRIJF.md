@@ -1,5 +1,5 @@
 # Gebruikershandleiding voor Bedrijven
-## StageConnect - Aanwezigheidsregistratie
+## StageConnectie - Aanwezigheidsregistratie
 
 ---
 
@@ -165,6 +165,6 @@ A: Noteer de foutmelding en neem contact op met de school of support.
 
 ---
 
-**Bedankt voor het gebruik van StageConnect!**
+**Bedankt voor het gebruik van StageConnectie!**
 
 *Versie 2.0 - Januari 2026*
