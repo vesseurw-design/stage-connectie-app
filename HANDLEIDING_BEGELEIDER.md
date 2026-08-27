@@ -95,41 +95,7 @@ In één oogopslag zie je:
 - **Dagen** - Geplande stagedagen
 - **Status** - Huidige status vandaag
 
----
 
-## Notificaties
-
-### In-App Notificaties
-
-Nieuw! Automatische meldingen als bedrijven aanwezigheid invullen.
-
-#### Hoe Werkt Het?
-
-1. **Laat de app open staan** in je browser
-2. **Bedrijf vult aanwezigheid in** voor een student
-3. **Blauwe banner verschijnt** bovenaan je scherm:
-
-```
-┌────────────────────────────────────────┐
-│ Nieuwe aanwezigheid                    │
-│ Jan Jansen is gemarkeerd als aanwezig  │
-│                                    [X] │
-└────────────────────────────────────────┘
-```
-
-4. **Banner verdwijnt automatisch** na 5 seconden
-5. **Of klik op [X]** om direct te sluiten
-
-
-
-#### Tips voor Notificaties
-
-- **Houd tab open** - Notificaties werken alleen als de app open is
-- **Geluid** - Je hoort een subtiel geluidje bij nieuwe aanwezigheid
-- **Werkt in alle browsers** - Safari, Chrome, Firefox, Edge
-- **Geen toestemming nodig** - Werkt direct!
-
----
 
 ## Rapporten & Statistieken
 
