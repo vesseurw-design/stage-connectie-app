@@ -4,7 +4,7 @@ In deze handleiding lees je hoe je snel je stage-uren en aanwezigheid doorgeeft.
 
 ## Inloggen
 
-- Ga naar de inlogpagina voor stagiairs.
+- Ga naar de inlogpagina: https://stageconnectie.nl
 - Log in met je e-mailadres en wachtwoord.
 - Ga de eerste keer akkoord met de gebruikersovereenkomst.
 
