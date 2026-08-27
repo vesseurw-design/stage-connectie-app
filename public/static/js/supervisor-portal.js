@@ -20,8 +20,6 @@ let companies = [];
 let allAttendance = [];
 let currentStudent = null;
 let refreshInterval = null;
-let lastAttendanceCount = 0; // Track attendance count for notifications
-let notificationsEnabled = false;
 
 // Initialize
 async function init() {
@@ -67,14 +65,10 @@ async function continueSupervisorInit(supervisorName) {
     const today = new Date().toISOString().split('T')[0];
     document.getElementById('filter-date').value = today;
 
-    // Request notification permission
-    requestNotificationPermission();
-
     console.log('🚀 Final Force Version 4.1: Initializing...');
 
     // Load initial data
     await refreshData();
-    lastAttendanceCount = allAttendance.length;
 
     // Setup real-time and UI
     setupRealtimeSubscription();
@@ -87,61 +81,7 @@ async function continueSupervisorInit(supervisorName) {
     }, 30000);
 }
 
-// In-app notifications don't need permission
-function requestNotificationPermission() {
-    notificationsEnabled = true;
-    console.log('🔔 In-app notifications enabled');
-}
 
-// Show in-app notification banner
-function showNotification(title, body) {
-    const banner = document.getElementById('notification-banner');
-    const titleEl = document.getElementById('notification-title');
-    const messageEl = document.getElementById('notification-message');
-
-    titleEl.textContent = title;
-    messageEl.textContent = body;
-
-    // Show banner
-    banner.classList.remove('hidden');
-
-    // Play sound
-    playNotificationSound();
-
-    // Auto-hide after 5 seconds
-    setTimeout(() => {
-        banner.classList.add('hidden');
-    }, 5000);
-}
-
-// Close notification banner
-function closeNotificationBanner() {
-    document.getElementById('notification-banner').classList.add('hidden');
-}
-
-// Play notification sound
-function playNotificationSound() {
-    // Simple beep sound using Web Audio API
-    try {
-        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        const oscillator = audioContext.createOscillator();
-        const gainNode = audioContext.createGain();
-
-        oscillator.connect(gainNode);
-        gainNode.connect(audioContext.destination);
-
-        oscillator.frequency.value = 800;
-        oscillator.type = 'sine';
-
-        gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
-
-        oscillator.start(audioContext.currentTime);
-        oscillator.stop(audioContext.currentTime + 0.5);
-    } catch (e) {
-        console.warn('Could not play notification sound:', e);
-    }
-}
 
 async function refreshData() {
     // We load students first because attendance depends on the student list
@@ -251,28 +191,6 @@ function setupRealtimeSubscription() {
             table: 'Attendance'
         }, (payload) => {
             console.log('🔔 Real-time update:', payload);
-
-            // Check if this is a new INSERT
-            if (payload.eventType === 'INSERT') {
-                const newRecord = payload.new;
-                const student = students.find(s => s.name === newRecord.student_id);
-
-                if (student) {
-                    // Show notification
-                    const statusLabels = {
-                        present: 'Aanwezig',
-                        absent: 'Afwezig',
-                        sick: 'Ziek',
-                        late: 'Te laat'
-                    };
-
-                    showNotification(
-                        '📋 Nieuwe Aanwezigheid',
-                        `${student.name} is gemarkeerd als ${statusLabels[newRecord.status] || newRecord.status}`
-                    );
-                }
-            }
-
             loadAttendance().then(renderDashboard);
         })
         .subscribe();
@@ -305,25 +223,6 @@ function renderDashboard() {
     // Render student cards
     renderStudentCards(filteredAttendance);
 
-    // Update notification badge
-    updateNotificationBadge();
-}
-
-function updateNotificationBadge() {
-    const today = new Date().toISOString().split('T')[0];
-    const todayAttendance = allAttendance.filter(a => a.date === today);
-    const newCount = todayAttendance.length;
-
-    // Update badge in header (we'll add this to HTML)
-    const badge = document.getElementById('notification-badge');
-    if (badge) {
-        if (newCount > 0) {
-            badge.textContent = newCount;
-            badge.classList.remove('hidden');
-        } else {
-            badge.classList.add('hidden');
-        }
-    }
 }
 
 function updateStats(attendance) {
