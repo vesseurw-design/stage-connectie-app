@@ -199,6 +199,13 @@ Ja, de app is volledig responsive en werkt op mobiele apparaten.
 3. Tik op "Zet op beginscherm".
 4. Tik op "Voeg toe". Je hebt nu een snelkoppeling op je startscherm.
 
+### Toevoegen aan startscherm (Android)
+
+1. Open Google Chrome en ga naar https://stageconnectie.nl.
+2. Tik op de drie verticale puntjes in de rechterbovenhoek.
+3. Tik op "Toevoegen aan startscherm" (of "App installeren").
+4. Tik op "Toevoegen" (of "Installeren") om te bevestigen.
+
 ---
 
 ## Veelgestelde vragen
