@@ -10,7 +10,7 @@ In deze handleiding lees je hoe je snel je stage-uren en aanwezigheid doorgeeft.
 
 ## Aanwezigheid en uren invullen
 
-Je ziet het weekoverzicht van maandag tot en met vrijdag.
+Je ziet het weekoverzicht van maandag tot en met vrijdag. Vul je uren en status elke dag aan het eind van je stagedag in.
 
 1. Klik op de dag die je wilt invullen.
 2. Kies je status:
