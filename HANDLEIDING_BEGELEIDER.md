@@ -1,5 +1,5 @@
 # Gebruikershandleiding voor Stagebegeleiders
-## StageConnect - Monitoring & Begeleiding
+## StageConnectie - Monitoring & Begeleiding
 
 ---
 
@@ -249,7 +249,7 @@ Waarvoor gebruik je dit?
 
 **9:00 - 10:00**
 
-1. **Open StageConnect** in je browser
+1. **Open StageConnectie** in je browser
 2. **Check dashboard** - Wie is er al ingevuld?
 3. **Laat tab open** - Voor notificaties
 4. **Werk verder** - App draait op de achtergrond
@@ -425,7 +425,7 @@ A: Check of de student aan jou is gekoppeld in het admin panel.
 
 ---
 
-**Bedankt voor het gebruik van StageConnect!**
+**Bedankt voor het gebruik van StageConnectie!**
 
 **Veel succes met het begeleiden van je studenten!**
 
