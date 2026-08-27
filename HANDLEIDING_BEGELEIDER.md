@@ -224,6 +224,9 @@ A: Onbeperkt. Alle studenten die aan jou gekoppeld zijn, verschijnen automatisch
 **Q: Blijf ik ingelogd?**
 A: Ja, je blijft 7 dagen ingelogd op het apparaat. Daarna moet je opnieuw inloggen.
 
+**Q: Wat gebeurt er tijdens schoolvakanties?**
+A: Tijdens schoolvakanties hoeven leerlingen en bedrijven in principe niets in te vullen. Mocht een leerling tijdens een vakantie toch stage lopen (bijvoorbeeld om uren in te halen), dan kan dit wel gewoon geregistreerd worden.
+
 ### Data & rapportage
 
 **Q: Kan ik data exporteren naar Excel of PDF?**

@@ -25,3 +25,4 @@ Je ziet het weekoverzicht van maandag tot en met vrijdag. Vul je uren en status 
 - **Stagebedrijf bellen**: Klik op de knop bovenaan om direct telefonisch contact op te nemen met je stagebedrijf.
 - **Navigeren tussen weken**: Gebruik de pijltjesknoppen naast het weeknummer om terug te gaan naar een eerdere week of naar de volgende week te gaan.
 - **Geschiedenis bekijken**: Klik onderaan op **Mijn aanwezigheidsgeschiedenis** om je eerdere registraties in te zien.
+- **Uren inhalen in vakanties**: Tijdens schoolvakanties hoef je niets in te vullen. Mocht je uren inhalen, dan kun je de dag gewoon aanklikken, de melding bevestigen en je uren alsnog opslaan.

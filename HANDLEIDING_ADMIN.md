@@ -26,7 +26,7 @@ Om ervoor te zorgen dat gegevens in de juiste portalen verschijnen, moet u elke 
 U kunt deze koppelingen instellen door een leerling te bewerken in de lijst.
 
 ### Vakantieweken instellen
-Voeg schoolvakanties toe in het vakantiebeheer. Tijdens deze periodes hoeven leerlingen en bedrijven geen aanwezigheid in te vullen.
+Voeg schoolvakanties toe in het vakantiebeheer. Tijdens deze periodes hoeven leerlingen en bedrijven geen aanwezigheid in te vullen. Mocht een leerling uren inhalen tijdens een vakantie, dan kunnen deze uren wel gewoon geregistreerd worden.
 
 ### Rapporten uitdraaien
 Gebruik de knoppen op het hoofddashboard om overzichten en aanwezigheidsformulieren te printen of te exporteren voor de schooladministratie.
