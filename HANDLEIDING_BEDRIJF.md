@@ -106,6 +106,9 @@ A: Onbeperkt! Alle studenten die aan uw bedrijf zijn gekoppeld verschijnen autom
 **Q: Moet ik elke dag inloggen?**
 A: Nee, u blijft 7 dagen ingelogd. Daarna moet u opnieuw inloggen.
 
+**Q: Wat moet ik doen tijdens schoolvakanties?**
+A: Tijdens schoolvakanties hoeft u niets in te vullen. Mocht een leerling tijdens een vakantie toch stage lopen (bijvoorbeeld om uren in te halen), dan kunt u dit wel gewoon registreren in het overzicht.
+
 ### Technisch
 
 **Q: Werkt de app op mijn telefoon?**
