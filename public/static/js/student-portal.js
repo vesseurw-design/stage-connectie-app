@@ -140,13 +140,8 @@ function updateWeekDisplay() {
 function changeWeek(direction) {
     const newOffset = currentWeekOffset + direction;
     
-    // Bepaal de limiet: op maandag (1) en dinsdag (2) mag je 1 week terug (-1).
-    // Op andere dagen is de limiet 0 (alleen de huidige week).
-    const today = new Date();
-    const dayOfWeek = today.getDay();
-    const maxPastWeeks = (dayOfWeek === 1 || dayOfWeek === 2) ? -1 : 0;
-    
-    if (newOffset < maxPastWeeks || newOffset > 0) return;
+    // Altijd maximaal 1 week terug (-1) en huidige week (0) toegestaan
+    if (newOffset < -1 || newOffset > 0) return;
     
     currentWeekOffset = newOffset;
     updateWeekDisplay();
@@ -158,11 +153,8 @@ function updateNavigationButtons() {
     const btnPrev = document.getElementById('btn-prev-week');
     const btnNext = document.getElementById('btn-next-week');
     
-    const today = new Date();
-    const dayOfWeek = today.getDay();
-    const maxPastWeeks = (dayOfWeek === 1 || dayOfWeek === 2) ? -1 : 0;
-    
-    const canGoPrev = (currentWeekOffset > maxPastWeeks);
+    // Altijd maximaal 1 week terug (-1) en huidige week (0) toegestaan
+    const canGoPrev = (currentWeekOffset > -1);
     const canGoNext = (currentWeekOffset < 0);
     
     if (btnPrev) {
