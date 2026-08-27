@@ -1,9 +1,9 @@
-# 📘 Gebruikershandleiding voor Bedrijven
+# Gebruikershandleiding voor Bedrijven
 ## StageConnect - Aanwezigheidsregistratie
 
 ---
 
-## 📋 Inhoudsopgave
+## Inhoudsopgave
 
 1. [Inloggen](#inloggen)
 2. [Dashboard Overzicht](#dashboard-overzicht)
@@ -12,37 +12,31 @@
 
 ---
 
-## 🔐 Inloggen
+## Inloggen & Account Activeren
 
-### Eerste Keer Inloggen
+### Eerste Keer Inloggen (Account Activeren)
 
-1. **Ga naar:** https://stageconnectie.nl
-2. **Klik op:** "Bedrijf" (groene knop)
-3. **Vul in:**
-   - **Email:** Het email adres dat u van de school heeft ontvangen
-   - **Wachtwoord:** `Welkom` + uw bedrijfsnaam (zonder spaties)
-   - Voorbeeld: Als uw bedrijf "ABC Bouw" heet, is het wachtwoord: `WelkomABCBouw`
-4. **Klik op:** "Inloggen"
+Als nieuw stagebedrijf maakt u niet zelf een account aan. In plaats daarvan ontvangt u een uitnodiging per e-mail zodra de school uw bedrijf heeft geregistreerd.
+
+1. **Open de uitnodigingsmail** met het onderwerp: *Uitnodiging voor StageConnectie - Activeer je account* (of *Activeer uw account*).
+2. **Klik op de knop "Account Activeren"** in de e-mail.
+3. U wordt doorgestuurd naar de website om een **eigen wachtwoord in te stellen**.
+4. Vul een sterk wachtwoord in (minimaal 8 tekens, waaronder ten minste 1 hoofdletter, 1 kleine letter en 1 cijfer) en klik op **"Wachtwoord Wijzigen"**.
+5. Hierna kunt u inloggen via: https://stageconnectie.nl met uw **e-mailadres** en uw **zelfgekozen wachtwoord**.
 
 ### Wachtwoord Vergeten?
 
-1. **Klik op:** "Wachtwoord vergeten?" (onder de login knop)
-2. **Vul uw email in**
-3. **Check uw inbox** voor een reset link
-4. **Klik op de link** en stel een nieuw wachtwoord in
+Mocht u uw wachtwoord zijn vergeten, dan kunt u dit eenvoudig zelf resetten:
 
-### Wachtwoord Wijzigen (Aanbevolen!)
-
-**Voor uw veiligheid raden we aan het standaard wachtwoord te wijzigen:**
-
-1. Login met uw huidige wachtwoord
-2. Ga naar: https://stageconnectie.nl/reset-password.html
-3. Vul een nieuw, sterk wachtwoord in
-4. Bewaar dit wachtwoord veilig
+1. **Ga naar de inlogpagina:** https://stageconnectie.nl
+2. **Klik op:** "Wachtwoord vergeten?" (onder het formulier)
+3. **Vul uw e-mailadres in** en klik op versturen.
+4. **Check uw inbox** voor een e-mail met een reset-link.
+5. **Klik op de link** in de e-mail en stel een nieuw wachtwoord in.
 
 ---
 
-## 📊 Dashboard Overzicht
+## Dashboard Overzicht
 
 Na het inloggen ziet u het **Bedrijf Portal Dashboard** met:
 
@@ -51,81 +45,60 @@ Na het inloggen ziet u het **Bedrijf Portal Dashboard** met:
 - **Datum** - Vandaag
 - **Ververs knop** - Om de nieuwste data te laden
 - **Uitloggen knop** - Om veilig uit te loggen
+- **Contactgegevens Stagebegeleider** - Direct onder de header ziet u de naam en het telefoonnummer van de stagebegeleider. Als dit door de school is geactiveerd, kunt u ook direct via de knop een WhatsApp-bericht sturen.
 
-### Statistieken (4 tegels)
-- **📊 Mijn Studenten** - Totaal aantal studenten bij uw bedrijf
-- **✅ Aanwezig Vandaag** - Hoeveel studenten er vandaag zijn
-- **❌ Afwezig** - Hoeveel studenten er vandaag afwezig zijn
-- **🤒 Ziek** - Hoeveel studenten er vandaag ziek zijn
-
-### Filters
-- **Datum filter** - Kies een specifieke datum
-- **Status filter** - Filter op aanwezig/afwezig/ziek
-
-### Studenten Lijst
-- **Studentkaarten** - Alle studenten die bij uw bedrijf stage lopen
-- **Status badges** - Kleurcode per student (groen = aanwezig, rood = afwezig, etc.)
+### Wekelijks Overzicht (Rooster)
+- **Weeknummer en datum** - Toont de geselecteerde stageweek. Met de pijltjesknoppen naast het weeknummer kunt u navigeren naar de huidige week of tot 1 week teruggaan om aanwezigheid alsnog in te vullen of te bewerken.
+- **Stagiair** - Een overzicht van alle stagiairs die bij uw bedrijf stage lopen.
+- **Dagen van de week (Maandag t/m Vrijdag)** - Per dag ziet u een statusvakje per stagiair.
+- **Status badges** - Kleurcode per dag voor de status van de student:
+  - **Grijs (gestippeld)** - Nog geen status ingevuld.
+  - **Groen** - Aanwezig.
+  - **Rood** - Afwezig.
+  - **Oranje** - Ziek.
+  - **Geel** - Te laat (inclusief het aantal minuten).
 
 ---
 
-## ✅ Aanwezigheid Registreren
+## Aanwezigheid Registreren
 
 ### Dagelijkse Aanwezigheid Invullen
 
 **Dit doet u elke dag voor elke student:**
 
-1. **Klik op een studentkaart** in de lijst
-2. **Een popup verschijnt** met studentdetails
-3. **Vul de aanwezigheid in:**
-
-   **Optie 1: Aanwezig** ✅
-   - Klik op de **groene "Aanwezig" knop**
-   - Klik op **"Wijzigingen opslaan"**
-   - Klaar! De student is geregistreerd als aanwezig
-
-   **Optie 2: Afwezig** ❌
-   - Klik op de **rode "Afwezig" knop**
-   - Klik op **"Wijzigingen opslaan"**
-   - De student is geregistreerd als afwezig
-
-   **Optie 3: Ziek** 🤒
-   - Klik op de **oranje "Ziek" knop**
-   - Klik op **"Wijzigingen opslaan"**
-   - De student is geregistreerd als ziek
-
-   **Optie 4: Te laat** ⏰
-   - Klik op de **gele "Te laat" knop**
-   - **Vul het aantal minuten in** (bijv. 15)
-   - Klik op **"Wijzigingen opslaan"**
-
-4. **Bevestiging** - U ziet een groen vinkje ✅
-5. **Popup sluit automatisch** - De aanwezigheid is opgeslagen
+1. **Klik op het statusvakje** van de betreffende student onder de juiste dag (bijvoorbeeld onder 'Maandag').
+2. **Een statusmenu verschijnt** onderaan het scherm (of in het midden op een computer).
+3. **Kies de juiste status:**
+   - **Aanwezig:** Klik op de groene knop met het vinkje.
+   - **Afwezig:** Klik op de rode knop met het kruisje.
+   - **Ziek:** Klik op de oranje knop met de zieke emoji.
+   - **Te laat:** Klik op de gele knop met de klok, vul het aantal minuten in dat de student te laat was en klik op **"Opslaan"**.
+4. Het statusvakje in het overzicht verandert nu in de gekozen kleur.
+5. **Belangrijk:** Klik na het invullen van de aanwezigheid(en) op de grote blauwe knop **"Wijzigingen Opslaan"** (bovenaan de pagina). Pas dan worden de gegevens definitief in het systeem opgeslagen en ontvangt u de melding: *"Wijzigingen opgeslagen!"*.
 
 ### Tips voor Aanwezigheid
 
-- ✅ **Vul dagelijks in** - Bij voorkeur 's ochtends
-- ✅ **Controleer de datum** - Staat bovenaan de popup
-- ✅ **Wijzigen mogelijk** - Klik opnieuw op de student om te wijzigen
-- ✅ **Vergeet niet op te slaan** - Klik altijd op "Wijzigingen opslaan"
+- **Vul dagelijks in** - Bij voorkeur 's ochtends.
+- **Wijzigen mogelijk** - Klik opnieuw op het statusvakje om de status aan te passen of te wissen (via de knop *"Wissen / Geen status"*).
+- **Vergeet niet op te slaan** - De wijzigingen worden pas definitief bewaard als u op de grote blauwe knop *"Wijzigingen Opslaan"* heeft geklikt.
 
-### Wat Gebeurt Er Na Het Invullen?
+### Wat Gebeurt Er Na Het Opslaan?
 
-1. **Data wordt opgeslagen** in de database
-2. **Stagebegeleider krijgt notificatie** (als online)
-3. **School kan data inzien** voor rapportage
-4. **Student kan eigen aanwezigheid zien** (toekomstige feature)
+1. **De data wordt opgeslagen** in de database.
+2. **De stagebegeleider krijgt een melding** (als deze online is).
+3. **De school kan de data direct inzien** voor rapportage.
 
 ---
 
-## ❓ Veelgestelde Vragen
+## Veelgestelde Vragen
 
 ### Algemeen
 
-**Q: Kan ik aanwezigheid van gisteren nog invullen?**
-A: Ja! Gebruik de datum filter bovenaan om een eerdere datum te selecteren.
+**Q: Kan ik aanwezigheid van gisteren of vorige week nog invullen?**
+A: Ja! Voor gisteren klikt u direct op het statusvakje onder de gewenste dag. Als u de aanwezigheid van de vorige week wilt invullen of aanpassen, kunt u met de pijlknop naar links navigeren naar de vorige week.
 
 **Q: Kan ik een fout herstellen?**
-A: Ja! Klik opnieuw op de student en kies de juiste status. De oude wordt overschreven.
+A: Ja! Klik opnieuw op het statusvakje en kies de juiste status (of wis de status met de knop "Wissen / Geen status"). Vergeet daarna niet op "Wijzigingen Opslaan" te klikken.
 
 **Q: Hoeveel studenten kan ik hebben?**
 A: Onbeperkt! Alle studenten die aan uw bedrijf zijn gekoppeld verschijnen automatisch.
@@ -153,7 +126,7 @@ A: De app werkt alleen met internet. Vul de aanwezigheid in zodra u weer online 
 A: Neem contact op met de school. Zij moeten studenten aan uw bedrijf koppelen.
 
 **Q: Ik kan niet inloggen**
-A: Check of uw email en wachtwoord correct zijn. Gebruik "Wachtwoord vergeten" als nodig.
+A: Check of uw e-mailadres en wachtwoord correct zijn. Gebruik "Wachtwoord vergeten" als nodig.
 
 **Q: De app laadt niet**
 A: Probeer de pagina te verversen (Cmd+R of Ctrl+R). Check uw internetverbinding.
@@ -163,7 +136,7 @@ A: Noteer de foutmelding en neem contact op met de school of support.
 
 ---
 
-## 📞 Contact & Support
+## Contact & Support
 
 ### Hulp Nodig?
 
@@ -174,24 +147,24 @@ A: Noteer de foutmelding en neem contact op met de school of support.
 
 ### Tips voor Succesvol Gebruik
 
-1. ✅ **Vul dagelijks in** - Maak er een gewoonte van
-2. ✅ **Check 's ochtends** - Zo weet de school direct wie er is
-3. ✅ **Wees accuraat** - Correcte data helpt de student
-4. ✅ **Communiceer** - Bij twijfel, bel de stagebegeleider
+1. **Vul dagelijks in** - Maak er een gewoonte van
+2. **Check 's ochtends** - Zo weet de school direct wie er is
+3. **Wees accuraat** - Correcte data helpt de student
+4. **Communiceer** - Bij twijfel, bel de stagebegeleider
 
 ---
 
-## 🎯 Snelstart Checklist
+## Snelstart Checklist
 
-- [ ] Inloggen met email en wachtwoord
+- [ ] Account activeren en wachtwoord instellen via de e-mail link
+- [ ] Inloggen met e-mailadres en gekozen wachtwoord
 - [ ] Dashboard bekijken
 - [ ] Eerste student aanwezigheid invullen
 - [ ] Geschiedenis bekijken
-- [ ] Wachtwoord wijzigen (aanbevolen)
 - [ ] Bookmark de website voor snelle toegang
 
 ---
 
-**Bedankt voor het gebruik van StageConnect!** 🎉
+**Bedankt voor het gebruik van StageConnect!**
 
 *Versie 2.0 - Januari 2026*

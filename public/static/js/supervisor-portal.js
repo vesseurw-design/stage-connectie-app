@@ -656,7 +656,7 @@ async function saveSupervisorAttendance(status) {
         
         // Refresh student list and open modal details
         await loadAttendance();
-        renderStudents();
+        renderDashboard();
         if (currentStudent && currentStudent.id === studentId) {
             openStudentDetail(currentStudent);
         }

@@ -124,19 +124,8 @@
             <h3 class="text-xl font-bold text-gray-900 mb-2 text-center">Afwezig gemeld</h3>
             <p class="text-sm text-gray-500 text-center mb-5">Vink elke stap aan voordat je verder kunt.</p>
 
-            <div class="space-y-3 mb-6">
-                <label id="label-check-1" class="flex items-start gap-3 p-3 rounded-xl border-2 border-gray-200 cursor-pointer transition hover:border-red-300 hover:bg-red-50">
-                    <input type="checkbox" id="check-1" onchange="updateModalButton()" class="mt-0.5 h-5 w-5 accent-red-500 cursor-pointer flex-shrink-0">
-                    <span class="text-sm font-medium text-gray-800">📞 Ik heb mijn stageplek gebeld om mijn afwezigheid door te geven.</span>
-                </label>
-                <label id="label-check-2" class="flex items-start gap-3 p-3 rounded-xl border-2 border-gray-200 cursor-pointer transition hover:border-red-300 hover:bg-red-50">
-                    <input type="checkbox" id="check-2" onchange="updateModalButton()" class="mt-0.5 h-5 w-5 accent-red-500 cursor-pointer flex-shrink-0">
-                    <span class="text-sm font-medium text-gray-800">💬 Ik heb een appje gestuurd naar mijn coach/stagebegeleider.</span>
-                </label>
-                <label id="label-check-3" class="flex items-start gap-3 p-3 rounded-xl border-2 border-gray-200 cursor-pointer transition hover:border-red-300 hover:bg-red-50">
-                    <input type="checkbox" id="check-3" onchange="updateModalButton()" class="mt-0.5 h-5 w-5 accent-red-500 cursor-pointer flex-shrink-0">
-                    <span class="text-sm font-medium text-gray-800">🏫 Mijn ouders hebben naar school gebeld voor ziekmelding.</span>
-                </label>
+            <div id="absent-checklist-container" class="space-y-3 mb-6">
+                <!-- Wordt dynamisch gevuld op basis van de schoolconfiguratie -->
             </div>
 
             <button id="confirm-absent-btn" onclick="closeAbsentModal()" disabled

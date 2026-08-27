@@ -69,6 +69,7 @@ async function continueEmployerInit() {
     await loadStudents();
     await loadSupervisors(); // Load supervisors after students
     updateWeekDisplay();
+    updateWeekButtons();
     await loadAttendance();
 
     // Setup realtime subscription for live updates
@@ -211,7 +212,7 @@ function getWeekDate(offsetDays) {
     const today = new Date();
     const monday = getMonday(today);
     const targetDate = new Date(monday);
-    targetDate.setDate(monday.getDate() + offsetDays);
+    targetDate.setDate(monday.getDate() + offsetDays + (currentWeekOffset * 7));
     return targetDate.toISOString().split('T')[0];
 }
 
@@ -232,6 +233,31 @@ function updateWeekDisplay() {
         const date = new Date(getWeekDate(index));
         document.getElementById(`date-${day}`).textContent = date.toLocaleDateString('nl-NL', { day: 'numeric', month: 'numeric' });
     });
+}
+
+function changeWeek(direction) {
+    const newOffset = currentWeekOffset + direction;
+    if (newOffset < -1 || newOffset > 0) return; // Limit to previous week (-1) and current week (0)
+    currentWeekOffset = newOffset;
+    
+    updateWeekButtons();
+    updateWeekDisplay();
+    loadAttendance();
+}
+
+function updateWeekButtons() {
+    const prevBtn = document.getElementById('prev-week-btn');
+    const nextBtn = document.getElementById('next-week-btn');
+    if (prevBtn) {
+        prevBtn.disabled = (currentWeekOffset <= -1);
+        prevBtn.style.opacity = currentWeekOffset <= -1 ? '0.5' : '1';
+        prevBtn.style.cursor = currentWeekOffset <= -1 ? 'not-allowed' : 'pointer';
+    }
+    if (nextBtn) {
+        nextBtn.disabled = (currentWeekOffset >= 0);
+        nextBtn.style.opacity = currentWeekOffset >= 0 ? '0.5' : '1';
+        nextBtn.style.cursor = currentWeekOffset >= 0 ? 'not-allowed' : 'pointer';
+    }
 }
 
 async function loadAttendance() {

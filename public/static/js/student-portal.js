@@ -432,19 +432,36 @@ function confirmAction() {
     closeActions();
 }
 
+const DEFAULT_ABSENCE_STEPS = [
+    "📞 Ik heb mijn stagebedrijf gebeld om mijn afwezigheid door te geven.",
+    "💬 Ik heb een appje gestuurd naar mijn coach/stagebegeleider.",
+    "🏫 Mijn ouders hebben naar school gebeld voor ziekmelding."
+];
+
 function showAbsentModal() {
     const modal = document.getElementById('absent-modal');
     if (!modal) return;
     const content = document.getElementById('absent-modal-content');
 
-    ['check-1', 'check-2', 'check-3'].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.checked = false;
-    });
-    ['label-check-1', 'label-check-2', 'label-check-3'].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.classList.remove('border-red-400', 'bg-red-50', 'border-green-400', 'bg-green-50');
-    });
+    const container = document.getElementById('absent-checklist-container');
+    if (container) {
+        container.innerHTML = '';
+        const steps = window.ABSENCE_STEPS && window.ABSENCE_STEPS.length > 0 ? window.ABSENCE_STEPS : DEFAULT_ABSENCE_STEPS;
+        
+        steps.forEach((stepText, index) => {
+            const stepId = index + 1;
+            const label = document.createElement('label');
+            label.id = `label-check-${stepId}`;
+            label.className = 'flex items-start gap-3 p-3 rounded-xl border-2 border-gray-200 cursor-pointer transition hover:border-red-300 hover:bg-red-50';
+            
+            label.innerHTML = `
+                <input type="checkbox" id="check-${stepId}" onchange="updateModalButton()" class="mt-0.5 h-5 w-5 accent-red-500 cursor-pointer flex-shrink-0">
+                <span class="text-sm font-medium text-gray-800">${stepText}</span>
+            `;
+            container.appendChild(label);
+        });
+    }
+
     const confirmBtn = document.getElementById('confirm-absent-btn');
     if (confirmBtn) {
         confirmBtn.disabled = true;
@@ -460,15 +477,15 @@ function showAbsentModal() {
 }
 
 function updateModalButton() {
-    const allChecked = ['check-1', 'check-2', 'check-3'].every(id => {
-        const el = document.getElementById(id);
-        return el && el.checked;
-    });
+    const container = document.getElementById('absent-checklist-container');
+    if (!container) return;
 
-    ['check-1', 'check-2', 'check-3'].forEach(id => {
-        const checkbox = document.getElementById(id);
-        const label = document.getElementById('label-' + id);
-        if (label && checkbox) {
+    const checkboxes = container.querySelectorAll('input[type="checkbox"]');
+    const allChecked = checkboxes.length > 0 && Array.from(checkboxes).every(cb => cb.checked);
+
+    checkboxes.forEach(checkbox => {
+        const label = document.getElementById('label-' + checkbox.id);
+        if (label) {
             if (checkbox.checked) {
                 label.classList.remove('border-gray-200');
                 label.classList.add('border-green-400', 'bg-green-50');
@@ -496,7 +513,12 @@ function closeAbsentModal() {
     if (!modal) return;
     const content = document.getElementById('absent-modal-content');
     
-    const allChecked = ['check-1', 'check-2', 'check-3'].every(id => document.getElementById(id) && document.getElementById(id).checked);
+    const container = document.getElementById('absent-checklist-container');
+    let allChecked = false;
+    if (container) {
+        const checkboxes = container.querySelectorAll('input[type="checkbox"]');
+        allChecked = checkboxes.length > 0 && Array.from(checkboxes).every(cb => cb.checked);
+    }
     
     if (allChecked && pendingStatus === 'absent') {
         activeCell.tempStatus = 'absent';
