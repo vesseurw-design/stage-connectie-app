@@ -18,7 +18,7 @@ Je ziet het weekoverzicht van maandag tot en met vrijdag.
    - **Te laat**: Vul het aantal gelopen uren in.
    - **Afwezig**: Vink alle stappen in de checklist aan (zoals bellen naar je bedrijf en appen naar je begeleider) om je afmelding te bevestigen.
 3. Klik op **Opslaan voor deze dag**.
-4. Klik tot slot op de grote paarse knop **Week Opslaan** om je gegevens definitief te versturen.
+4. Klik tot slot op de grote paarse knop **Week opslaan** om je gegevens definitief te versturen.
 
 ## Extra functies
 
