@@ -45,7 +45,6 @@ Na het inloggen zie je het **Begeleider Portal Dashboard** met:
 
 ### Bovenaan (Header)
 - **Je naam** - "Hallo, [Naam]"
-- **Notificatie badge** - Aantal nieuwe aanwezigheden vandaag
 - **Ververs knop** - Om de nieuwste data te laden
 - **Uitloggen knop** - Om veilig uit te loggen
 
@@ -121,12 +120,7 @@ Nieuw! Automatische meldingen als bedrijven aanwezigheid invullen.
 4. **Banner verdwijnt automatisch** na 5 seconden
 5. **Of klik op [X]** om direct te sluiten
 
-#### Notificatie Badge
 
-Blauw bolletje naast "Begeleider Portal":
-- Toont **aantal aanwezigheden vandaag**
-- Voorbeeld: **"5"** = 5 studenten hebben vandaag aanwezigheid
-- **Blijft zichtbaar** totdat je de pagina ververst
 
 #### Tips voor Notificaties
 
