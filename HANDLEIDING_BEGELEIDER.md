@@ -97,7 +97,7 @@ In één oogopslag zie je:
 
 
 
-## Rapporten & Statistieken
+## Dashboard Statistieken & Filters
 
 ### Dagelijks Overzicht
 
@@ -130,9 +130,7 @@ Bekijk een specifieke dag:
 3. **Dashboard update** - Toont data van die dag
 
 Gebruik dit voor:
-- Controleren van gisteren
-- Weekoverzicht maken
-- Maandrapportage voorbereiden
+- Het controleren van de aanwezigheid op eerdere stagedagen
 
 #### Status Filter
 
