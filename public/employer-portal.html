@@ -139,8 +139,14 @@
                 <h1 class="text-2xl font-black text-gray-900 tracking-tight">Stagebedrijf Portaal</h1>
                 <p class="text-sm text-blue-600 font-bold" id="company-name">Laden...</p>
             </div>
-            <button onclick="logout()"
-                class="px-4 py-2 text-sm font-bold bg-white text-red-600 hover:bg-red-50 border-2 border-red-100 rounded-xl transition shadow-sm">Uitloggen</button>
+            <div class="flex items-center gap-3">
+                <button onclick="openInfoModal()"
+                    class="px-3.5 py-2 text-sm font-bold bg-purple-50 text-purple-700 hover:bg-purple-100 border-2 border-purple-100 rounded-xl transition shadow-sm flex items-center gap-1.5">
+                    📖 Info
+                </button>
+                <button onclick="logout()"
+                    class="px-4 py-2 text-sm font-bold bg-white text-red-600 hover:bg-red-50 border-2 border-red-100 rounded-xl transition shadow-sm">Uitloggen</button>
+            </div>
         </div>
     </header>
 
@@ -350,6 +356,7 @@
     <script src="./static/js/config.js"></script>
     <script src="./static/js/terms-acceptance.js"></script>
     <script src="./static/js/employer-portal.js?v=4.8"></script>
+    <script src="./static/js/info-modal-demo.js"></script>
     <style>
         .animate-slide-up {
             animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
