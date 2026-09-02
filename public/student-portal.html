@@ -23,8 +23,14 @@
                     <img src="icon-v3.png" class="h-8 w-8 rounded-lg shadow-sm" alt="Logo">
                     <h1 class="text-xl font-bold text-gray-800">Mijn Stage</h1>
                 </div>
-                <button onclick="logout()"
-                    class="text-sm font-medium text-red-500 hover:text-red-700 transition">Uitloggen</button>
+                <div class="flex items-center gap-3">
+                    <button onclick="openInfoModal()"
+                        class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 rounded-xl transition shadow-sm">
+                        📖 Info
+                    </button>
+                    <button onclick="logout()"
+                        class="text-sm font-medium text-red-500 hover:text-red-700 transition">Uitloggen</button>
+                </div>
             </div>
         </div>
     </nav>
@@ -217,6 +223,7 @@
     <script src="./static/js/config.js"></script>
     <script src="./static/js/terms-acceptance.js"></script>
     <script src="./static/js/student-portal.js?v=3"></script>
+    <script src="./static/js/info-modal-demo.js"></script>
 </body>
 
 </html>
