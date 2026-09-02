@@ -389,6 +389,8 @@ function openActionSheet(studentId, date, element) {
     const overlay = document.getElementById('action-overlay');
     sheet.classList.remove('hidden');
     overlay.classList.remove('hidden');
+    const grid = document.getElementById('status-buttons-grid');
+    if (grid) grid.classList.remove('hidden');
     document.getElementById('late-input-container').classList.add('hidden');
     setTimeout(() => { sheet.classList.remove('translate-y-full'); }, 10);
 }
@@ -397,7 +399,13 @@ function closeActions() {
     const sheet = document.getElementById('action-sheet');
     const overlay = document.getElementById('action-overlay');
     sheet.classList.add('translate-y-full');
-    setTimeout(() => { sheet.classList.add('hidden'); overlay.classList.add('hidden'); }, 300);
+    setTimeout(() => { 
+        sheet.classList.add('hidden'); 
+        overlay.classList.add('hidden'); 
+        const grid = document.getElementById('status-buttons-grid');
+        if (grid) grid.classList.remove('hidden');
+        document.getElementById('late-input-container').classList.add('hidden');
+    }, 300);
 }
 
 function setStatus(status) {
@@ -409,6 +417,8 @@ function setStatus(status) {
 let isCustomLate = false;
 
 function showLateInput() {
+    const grid = document.getElementById('status-buttons-grid');
+    if (grid) grid.classList.add('hidden');
     document.getElementById('late-input-container').classList.remove('hidden');
     document.getElementById('minute-input').value = 15;
     toggleCustomLate(false);
@@ -416,6 +426,8 @@ function showLateInput() {
 
 function hideLateInput() {
     document.getElementById('late-input-container').classList.add('hidden');
+    const grid = document.getElementById('status-buttons-grid');
+    if (grid) grid.classList.remove('hidden');
 }
 
 function toggleCustomLate(show) {

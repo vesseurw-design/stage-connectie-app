@@ -231,7 +231,7 @@ function renderGrid(existingAttendance) {
                 }
             };
 
-            updateCellContent(cell, status, hours);
+            updateCellContent(cell, status, hours, minutes);
         } else if (!isScheduled) {
             cell.className = 'flex flex-col items-center justify-center p-4 bg-gray-50 rounded-xl border border-gray-200 text-center min-h-[120px] cursor-pointer hover:bg-gray-100 transition shadow-sm hover:-translate-y-0.5';
             cell.onclick = () => openActionSheet(dateStr, cell, true);
@@ -242,29 +242,31 @@ function renderGrid(existingAttendance) {
             cell.dataset.date = dateStr;
             cell.dataset.status = '';
             cell.dataset.hours = 0;
+            cell.dataset.minutes = 0;
             
             // Check if there was an exception filled in
             const record = existingAttendance.find(a => a.date === dateStr);
             if (record && record.student_status) {
-                updateCellContent(cell, record.student_status, record.student_hours || 0);
+                updateCellContent(cell, record.student_status, record.student_hours || 0, record.minutes_late || 0);
             }
         } else {
             const record = existingAttendance.find(a => a.date === dateStr);
             const status = record ? record.student_status : '';
             const hours = record ? record.student_hours : 0;
+            const minutes = record ? (record.minutes_late || 0) : 0;
 
             cell.className = 'flex flex-col items-center justify-center p-4 bg-white rounded-xl border-2 cursor-pointer transition-all duration-200 hover:-translate-y-0.5 shadow-sm min-h-[120px]';
             cell.dataset.date = dateStr;
             cell.onclick = () => openActionSheet(dateStr, cell, false);
 
-            updateCellContent(cell, status, hours);
+            updateCellContent(cell, status, hours, minutes);
         }
 
         container.appendChild(cell);
     });
 }
 
-function updateCellContent(cell, status, hours) {
+function updateCellContent(cell, status, hours, minutes) {
     const dateStr = cell.dataset.date;
     const holiday = isHoliday(dateStr);
 
@@ -279,6 +281,7 @@ function updateCellContent(cell, status, hours) {
         cell.className = 'flex flex-col items-center justify-center p-4 bg-purple-50 rounded-xl border border-purple-100 text-center min-h-[120px] shadow-sm cursor-pointer hover:bg-purple-100 transition';
         cell.dataset.status = '';
         cell.dataset.hours = 0;
+        cell.dataset.minutes = 0;
         return;
     }
 
@@ -287,9 +290,11 @@ function updateCellContent(cell, status, hours) {
     let content = icons[status] || icons[''];
     if (status !== '') content = `<span class="text-4xl filter drop-shadow-sm">${content}</span>`;
 
+    const lateText = (status === 'late' && minutes > 0) ? ` (${minutes}m)` : '';
+
     cell.innerHTML = `
         <div class="mb-2">${content}</div>
-        ${status ? `<span class="text-xs font-bold text-gray-700 uppercase tracking-wide mb-1">${getStatusLabel(status)}</span>` : '<span class="text-xs font-bold text-gray-400 uppercase tracking-wide">Vul in</span>'}
+        ${status ? `<span class="text-xs font-bold text-gray-700 uppercase tracking-wide mb-1">${getStatusLabel(status)}${lateText}</span>` : '<span class="text-xs font-bold text-gray-400 uppercase tracking-wide">Vul in</span>'}
         ${hours > 0 && status !== 'absent' ? `<div class="bg-purple-100 text-purple-700 text-xs font-black px-2 py-0.5 rounded shadow-sm mt-auto">${hours} uur</div>` : ''}
     `;
     
@@ -306,6 +311,7 @@ function updateCellContent(cell, status, hours) {
 
     cell.dataset.status = status;
     cell.dataset.hours = hours;
+    cell.dataset.minutes = status === 'late' ? (minutes || 15) : 0;
 }
 
 function getStatusLabel(status) {
@@ -329,6 +335,7 @@ function openActionSheet(dateStr, element, isUnscheduled) {
     // Pre-fill from cell dataset
     const currentStatus = element.dataset.status || '';
     let currentHours = parseFloat(element.dataset.hours) || 0;
+    let currentMinutes = parseInt(element.dataset.minutes) || 15;
 
     // Fix: If status is empty and hours is 0, default to 8 hours for scheduled days
     if (currentStatus === '' && currentHours === 0 && !isUnscheduled) {
@@ -336,6 +343,9 @@ function openActionSheet(dateStr, element, isUnscheduled) {
     }
 
     document.getElementById('action-hours-worked').value = currentHours;
+    const lateInput = document.getElementById('action-minutes-late');
+    if (lateInput) lateInput.value = currentMinutes;
+
     updateActionSheetButtons(currentStatus);
 
     const sheet = document.getElementById('action-sheet');
@@ -382,6 +392,15 @@ function updateActionSheetButtons(status) {
     } else {
         hoursContainer.classList.remove('hidden');
     }
+
+    const lateContainer = document.getElementById('action-late-container');
+    if (lateContainer) {
+        if (status === 'late') {
+            lateContainer.classList.remove('hidden');
+        } else {
+            lateContainer.classList.add('hidden');
+        }
+    }
 }
 
 let pendingStatus = '';
@@ -420,7 +439,13 @@ function confirmAction() {
     let hours = parseFloat(document.getElementById('action-hours-worked').value) || 0;
     if (finalStatus === 'absent') hours = 0;
 
-    updateCellContent(activeCell.element, finalStatus, hours);
+    let minutes = 0;
+    if (finalStatus === 'late') {
+        const lateInput = document.getElementById('action-minutes-late');
+        minutes = lateInput ? (parseInt(lateInput.value) || 15) : 15;
+    }
+
+    updateCellContent(activeCell.element, finalStatus, hours, minutes);
     closeActions();
 }
 
@@ -545,6 +570,7 @@ async function saveWeek() {
                 date: cell.dataset.date,
                 student_status: status,
                 student_hours: parseFloat(cell.dataset.hours) || 0,
+                minutes_late: status === 'late' ? (parseInt(cell.dataset.minutes) || 0) : 0,
                 updated_at: new Date().toISOString()
             });
         }
@@ -637,12 +663,13 @@ async function loadAttendanceHistory() {
         const hoursStr = record.student_hours > 0 && record.student_status !== 'absent'
             ? `<span class="ml-auto text-xs font-bold text-purple-700 bg-purple-100 px-2 py-0.5 rounded-full">${record.student_hours} uur</span>`
             : '';
+        const displayLabel = record.student_status === 'late' && record.minutes_late ? `Te laat (${record.minutes_late}m)` : cfg.label;
         return `
             <div class="flex items-center gap-3 px-4 py-3 rounded-xl border ${cfg.bg} ${cfg.border}">
                 <span class="text-xl flex-shrink-0">${cfg.icon}</span>
                 <div class="flex-1 min-w-0">
                     <div class="text-xs text-gray-500 capitalize">${dateLabel}</div>
-                    <div class="font-bold ${cfg.text} text-sm">${cfg.label}</div>
+                    <div class="font-bold ${cfg.text} text-sm">${displayLabel}</div>
                 </div>
                 ${hoursStr}
             </div>
