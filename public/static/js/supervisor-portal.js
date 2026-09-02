@@ -59,7 +59,17 @@ async function init() {
 }
 
 async function continueSupervisorInit(supervisorName) {
-    document.getElementById('supervisor-name').textContent = `Hallo, ${supervisorName}`;
+    let formattedName = supervisorName || 'Stagebegeleider';
+    if (formattedName.trim().toLowerCase() === 'docent begeleider' || formattedName.trim().toLowerCase() === 'docent') {
+        formattedName = 'Stagebegeleider';
+    } else {
+        formattedName = formattedName.replace(/^Docent\s+/i, 'Stagebegeleider ');
+    }
+    
+    const supervisorElem = document.getElementById('supervisor-name');
+    if (supervisorElem) {
+        supervisorElem.textContent = `Hallo, ${formattedName}`;
+    }
 
     // Set today's date as default filter
     const today = new Date().toISOString().split('T')[0];
