@@ -286,7 +286,7 @@ function renderStudentCards(attendance) {
                     </span>
                     ${todayAttendance.student_status || todayAttendance.student_hours > 0 ? `
                         <div class="flex items-center gap-1 bg-purple-50 text-purple-700 text-[9px] px-1.5 py-0.5 rounded border border-purple-100" title="Eigen invoer student">
-                            <span>🎓 ${todayAttendance.student_status ? todayAttendance.student_status.charAt(0).toUpperCase() + todayAttendance.student_status.slice(1) : ''}</span>
+                            <span>🎓 ${todayAttendance.student_status === 'late' ? `Te laat (${todayAttendance.minutes_late || 0}m)` : (todayAttendance.student_status ? todayAttendance.student_status.charAt(0).toUpperCase() + todayAttendance.student_status.slice(1) : '')}</span>
                             ${todayAttendance.student_hours > 0 ? `<span class="font-bold border-l border-purple-200 pl-1 ml-1">${todayAttendance.student_hours}u</span>` : ''}
                         </div>
                     ` : ''}
@@ -452,7 +452,7 @@ function renderAttendanceHistory(attendance, monthFilter) {
                         
                         ${a.student_status || a.student_hours > 0 ? `
                             <div class="bg-purple-100 text-purple-800 px-2 py-0.5 rounded-md flex items-center gap-1" title="Invoer stagiair">
-                                <span>🎓 Stagiair: ${a.student_status || 'ingevuld'}</span>
+                                <span>🎓 Stagiair: ${a.student_status === 'late' ? `Te laat (${a.minutes_late || 0}m)` : (a.student_status === 'present' ? 'Aanwezig' : (a.student_status === 'absent' ? 'Afwezig' : (a.student_status === 'sick' ? 'Ziek' : a.student_status)))}</span>
                                 ${a.student_hours > 0 ? `<span class="font-black border-l border-purple-300 pl-1 ml-1">${a.student_hours}u</span>` : ''}
                             </div>
                         ` : ''}

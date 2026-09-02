@@ -25,7 +25,7 @@ const DB_CONFIGS = {
     // Huidige hoofddomeinen
     'stageconnectie.nl': {
         url: 'https://vdeipnqyesduiohxvuvu.supabase.co',
-        key: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVkZWlwbnF5ZXNkdWlvaHh2dXZ1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc1MjY5NTEsImV4cCI6MjA8MzEwMjk1MX0.IknEZ-GQvspcppJxLR00ayBDq1DbL0HiUKy9RDb59DU',
+        key: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZkZWlwbnF5ZXNkdWlvaHh2dXZ1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc1MjY5NTEsImV4cCI6MjA4MzEwMjk1MX0.IknEZ-GQvspcppJxLR00ayBDq1DbL0HiUKy9RDb59DU',
         maxStudents: 500,
         schoolName: 'StageConnectie',
         logo: 'logo-stageconnectie.png',
@@ -37,7 +37,7 @@ const DB_CONFIGS = {
     },
     'www.stageconnectie.nl': {
         url: 'https://vdeipnqyesduiohxvuvu.supabase.co',
-        key: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVkZWlwbnF5ZXNkdWlvaHh2dXZ1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc1MjY5NTEsImV4cCI6MjA8MzEwMjk1MX0.IknEZ-GQvspcppJxLR00ayBDq1DbL0HiUKy9RDb59DU',
+        key: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZkZWlwbnF5ZXNkdWlvaHh2dXZ1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc1MjY5NTEsImV4cCI6MjA8MzEwMjk1MX0.IknEZ-GQvspcppJxLR00ayBDq1DbL0HiUKy9RDb59DU',
         maxStudents: 500,
         schoolName: 'StageConnectie',
         logo: 'logo-stageconnectie.png',
@@ -62,11 +62,11 @@ const DB_CONFIGS = {
     },
     // Lokale ontwikkelomgeving fallback
     'localhost': {
-        url: 'https://vdeipnqyesduiohxvuvu.supabase.co',
-        key: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVkZWlwbnF5ZXNkdWlvaHh2dXZ1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc1MjY5NTEsImV4cCI6MjA8MzEwMjk1MX0.IknEZ-GQvspcppJxLR00ayBDq1DbL0HiUKy9RDb59DU',
-        maxStudents: 20,
-        schoolName: 'StageConnectie (Localhost)',
-        logo: 'logo-stageconnectie.png',
+        url: 'https://ukqogebsengneaqrlhrr.supabase.co',
+        key: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVrcW9nZWJzZW5nbmVhcXJsaHJyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMwNzMzMzksImV4cCI6MjA5ODY0OTMzOX0.KJ_B8cinUY7b6OtUkF1EPmySw9GqGhQ1XvWj7SPh30s',
+        maxStudents: 250,
+        schoolName: 'Groene Hart Praktijkschool (Localhost)',
+        logo: 'logo-ghpc-v2.png',
         demoCredentials: {
             student: 'fake@leerling.nl',
             supervisor: 'stage@begeleider.nl',
@@ -86,15 +86,15 @@ const DB_CONFIGS = {
     // Selecteer de juiste configuratie
     let config = DB_CONFIGS[hostname];
     
-    // Als er geen exacte match is, controleer op subdomeinen
+    // Als er geen exacte match is, controleer op subdomeinen of lokaal/file protocol
     if (!config) {
-        if (hostname.includes('ghpc')) {
+        if (hostname.includes('ghpc') || hostname === '' || hostname === 'localhost' || hostname === '127.0.0.1') {
             config = DB_CONFIGS['ghpc.stageconnectie.nl'];
         } else if (hostname.includes('prozoetermeer')) {
             config = DB_CONFIGS['prozoetermeer.stageconnectie.nl'];
         } else {
-            // Fallback
-            config = DB_CONFIGS['localhost'];
+            // Fallback naar GHPC
+            config = DB_CONFIGS['ghpc.stageconnectie.nl'];
         }
     }
     
