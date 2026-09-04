@@ -375,6 +375,26 @@ document.addEventListener('DOMContentLoaded', () => {
                         const startDate = formatDateISO(getCol('stage_start_date') || getCol('startdatum_stage') || getCol('startdatum') || getCol('stage_start') || getCol('start_date'));
                         const endDate = formatDateISO(getCol('stage_end_date') || getCol('einddatum_stage') || getCol('einddatum') || getCol('stage_end') || getCol('end_date'));
 
+                        // Helper om stagedagen te parsen (bijv. "Ma, Di, Wo" -> ['Ma', 'Di', 'Wo'])
+                        const parseScheduledDays = (val) => {
+                            if (!val) return null;
+                            const map = {
+                                'ma': 'Ma', 'maandag': 'Ma', 'mon': 'Ma', 'monday': 'Ma',
+                                'di': 'Di', 'dinsdag': 'Di', 'tue': 'Di', 'tuesday': 'Di',
+                                'wo': 'Wo', 'woensdag': 'Wo', 'wed': 'Wo', 'wednesday': 'Wo',
+                                'do': 'Do', 'donderdag': 'Do', 'thu': 'Do', 'thursday': 'Do',
+                                'vr': 'Vr', 'vrijdag': 'Vr', 'fri': 'Vr', 'friday': 'Vr',
+                                'za': 'Za', 'zaterdag': 'Za', 'sat': 'Za', 'saturday': 'Za',
+                                'zo': 'Zo', 'zondag': 'Zo', 'sun': 'Zo', 'sunday': 'Zo'
+                            };
+                            const parts = String(val).split(/[,;/|\s]+/).map(s => s.trim().toLowerCase()).filter(Boolean);
+                            const days = parts.map(p => map[p] || (p.charAt(0).toUpperCase() + p.slice(1))).filter(Boolean);
+                            return days.length > 0 ? Array.from(new Set(days)) : null;
+                        };
+
+                        const rawDays = getCol('stagedagen', 'stage_dagen', 'scheduled_days', 'dagen', 'stagedag', 'stage_dag');
+                        const scheduledDays = parseScheduledDays(rawDays);
+
                         // Check of record al bestaat in database
                         let user_id = null;
                         let exists = false;
@@ -420,17 +440,20 @@ document.addEventListener('DOMContentLoaded', () => {
                         if (exists) {
                             // Bestaande gebruiker: update gegevens
                             if (type === 'student') {
+                                const studentUpdateData = {
+                                    name: getName(),
+                                    class: getCol('klas') || null,
+                                    school_year: getCol('schooljaar') || getCol('school_year') || null,
+                                    company_id: bedrijfId || null,
+                                    supervisor_id: supervisorId || null,
+                                    stage_start_date: startDate || null,
+                                    stage_end_date: endDate || null
+                                };
+                                if (scheduledDays) studentUpdateData.scheduled_days = scheduledDays;
+
                                 const { error: dbError } = await supabase
                                     .from('Students')
-                                    .update({
-                                        name: getName(),
-                                        class: getCol('klas') || null,
-                                        school_year: getCol('schooljaar') || getCol('school_year') || null,
-                                        company_id: bedrijfId || null,
-                                        supervisor_id: supervisorId || null,
-                                        stage_start_date: startDate || null,
-                                        stage_end_date: endDate || null
-                                    })
+                                    .update(studentUpdateData)
                                     .eq('id', user_id);
                                 if (dbError) throw dbError;
                             } else if (type === 'company') {
@@ -516,6 +539,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                     stage_end_date: endDate || null
                                 };
                                 if (user_id) studentPayload.id = user_id;
+                                if (scheduledDays) studentPayload.scheduled_days = scheduledDays;
 
                                 const { error: dbError } = await supabase.from('Students').insert([studentPayload]);
                                 if (dbError) throw dbError;
