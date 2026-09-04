@@ -67,7 +67,11 @@ document.addEventListener('DOMContentLoaded', () => {
                         'Authorization': `Bearer ${supabaseKey}`
                     },
                     body: JSON.stringify(payload)
-                }, 12000);
+                }, 4000);
+
+                if (authRes.status === 404) {
+                    throw new Error('Edge Function create-auth-account is niet geconfigureerd op deze Supabase server (404).');
+                }
 
                 if (authRes.status === 429 && attempts < 2) {
                     await new Promise(r => setTimeout(r, 1500));
@@ -80,7 +84,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 return authData;
             } catch (err) {
-                if (attempts >= 2) throw err;
+                if (attempts >= 2 || err.message.includes('404')) throw err;
                 await new Promise(r => setTimeout(r, 1000));
             }
         }
@@ -202,19 +206,25 @@ document.addEventListener('DOMContentLoaded', () => {
                                             let newCompanyId = null;
                                             let emailToUse = companyEmail.trim().toLowerCase();
 
-                                            // 1. Create auth account if email is provided
-                                            const authResult = await callCreateAuthAccount({
-                                                email: emailToUse,
-                                                password: '', // Leeg laten om uitnodigingslink te sturen
-                                                role: 'employer',
-                                                sendEmail: sendEmailCheckbox.checked,
-                                                name: companySearch,
-                                                loginUrl: 'https://ghpc.stageconnectie.nl/employer-portal.html',
-                                                metadata: { company_name: companySearch }
-                                            });
+                                            // 1. Create auth account if email is provided AND sendEmail is checked
+                                            if (companyEmail && sendEmailCheckbox.checked) {
+                                                try {
+                                                    const authResult = await callCreateAuthAccount({
+                                                        email: emailToUse,
+                                                        password: '', // Leeg laten om uitnodigingslink te sturen
+                                                        role: 'employer',
+                                                        sendEmail: true,
+                                                        name: companySearch,
+                                                        loginUrl: 'https://ghpc.stageconnectie.nl/employer-portal.html',
+                                                        metadata: { company_name: companySearch }
+                                                    });
 
-                                            if (authResult && authResult.success) {
-                                                newCompanyId = authResult.user_id;
+                                                    if (authResult && authResult.success) {
+                                                        newCompanyId = authResult.user_id;
+                                                    }
+                                                } catch (authErr) {
+                                                    console.warn('Edge Function overgeslagen voor automatisch aangemaakt bedrijf:', authErr);
+                                                }
                                             }
 
                                             // 2. Insert company into the 'Bedrijven' table
@@ -283,18 +293,24 @@ document.addEventListener('DOMContentLoaded', () => {
                                             let newSupervisorId = null;
                                             let emailToUse = supervisorEmail.trim().toLowerCase();
 
-                                            // 1. Create auth account if email is provided
-                                            const authResult = await callCreateAuthAccount({
-                                                email: emailToUse,
-                                                password: '', // Leeg laten om uitnodigingslink te sturen
-                                                role: 'supervisor',
-                                                sendEmail: sendEmailCheckbox.checked,
-                                                name: supervisorSearch,
-                                                loginUrl: 'https://ghpc.stageconnectie.nl/supervisor-portal.html'
-                                            });
+                                            // 1. Create auth account if email is provided AND sendEmail is checked
+                                            if (supervisorEmail && sendEmailCheckbox.checked) {
+                                                try {
+                                                    const authResult = await callCreateAuthAccount({
+                                                        email: emailToUse,
+                                                        password: '', // Leeg laten om uitnodigingslink te sturen
+                                                        role: 'supervisor',
+                                                        sendEmail: true,
+                                                        name: supervisorSearch,
+                                                        loginUrl: 'https://ghpc.stageconnectie.nl/supervisor-portal.html'
+                                                    });
 
-                                            if (authResult && authResult.success) {
-                                                newSupervisorId = authResult.user_id;
+                                                    if (authResult && authResult.success) {
+                                                        newSupervisorId = authResult.user_id;
+                                                    }
+                                                } catch (authErr) {
+                                                    console.warn('Edge Function overgeslagen voor automatisch aangemaakte begeleider:', authErr);
+                                                }
                                             }
 
                                             // 2. Insert supervisor into 'stagebegeleiders' table
@@ -464,22 +480,32 @@ document.addEventListener('DOMContentLoaded', () => {
                                 ? 'https://ghpc.stageconnectie.nl/student-portal.html' 
                                 : (type === 'company' ? 'https://ghpc.stageconnectie.nl/employer-portal.html' : 'https://ghpc.stageconnectie.nl/supervisor-portal.html');
                             
-                            const authData = await callCreateAuthAccount({
-                                email: email.trim().toLowerCase(),
-                                password: wachtwoord || '',
-                                role: role,
-                                metadata: { source: 'csv_import' },
-                                sendEmail: sendEmailCheckbox.checked,
-                                name: name || '',
-                                loginUrl: loginUrl
-                            });
+                            let authWarning = null;
 
-                            user_id = authData.user_id;
+                            // Alleen een Auth Edge Function call proberen als de checkbox 'sendEmail' AAN staat
+                            if (sendEmailCheckbox.checked) {
+                                try {
+                                    const authData = await callCreateAuthAccount({
+                                        email: email.trim().toLowerCase(),
+                                        password: wachtwoord || '',
+                                        role: role,
+                                        metadata: { source: 'csv_import' },
+                                        sendEmail: true,
+                                        name: name || '',
+                                        loginUrl: loginUrl
+                                    });
+                                    if (authData && authData.user_id) {
+                                        user_id = authData.user_id;
+                                    }
+                                } catch (authErr) {
+                                    console.warn('Wachtwoord/auth uitnodiging via Edge Function overgeslagen:', authErr);
+                                    authWarning = `welkomstmail niet verzonden (${authErr.message})`;
+                                }
+                            }
 
                             // 2. Voeg toe aan database tabel
                             if (type === 'student') {
-                                const { error: dbError } = await supabase.from('Students').insert([{
-                                    id: user_id,
+                                const studentPayload = {
                                     name: getName(),
                                     email: email.trim().toLowerCase(),
                                     class: getCol('klas') || null,
@@ -488,7 +514,10 @@ document.addEventListener('DOMContentLoaded', () => {
                                     supervisor_id: supervisorId || null,
                                     stage_start_date: startDate || null,
                                     stage_end_date: endDate || null
-                                }]);
+                                };
+                                if (user_id) studentPayload.id = user_id;
+
+                                const { error: dbError } = await supabase.from('Students').insert([studentPayload]);
                                 if (dbError) throw dbError;
 
                             } else if (type === 'company') {
@@ -503,28 +532,36 @@ document.addEventListener('DOMContentLoaded', () => {
                                     fullAddress += (fullAddress ? ', ' : '') + [postcode, city].filter(Boolean).join(' ');
                                 }
 
-                                const { error: dbError } = await supabase.from('Bedrijven').insert([{
-                                    id: user_id,
+                                const companyPayload = {
                                     company_name: companyName,
                                     email: email.trim().toLowerCase(),
                                     contact_person: contactPerson || null,
                                     phone: phone || null,
                                     address: fullAddress || null
-                                }]);
+                                };
+                                if (user_id) companyPayload.id = user_id;
+
+                                const { error: dbError } = await supabase.from('Bedrijven').insert([companyPayload]);
                                 if (dbError) throw dbError;
                             } else if (type === 'supervisor') {
-                                const { error: dbError } = await supabase.from('stagebegeleiders').insert([{
-                                    id: user_id,
+                                const supervisorPayload = {
                                     name: getName(),
                                     email: email.trim().toLowerCase(),
                                     phone: getCol('telefoonnummer') || null,
                                     whatsapp_enabled: getCol('whatsapp') === 'true' || getCol('whatsapp') === 'ja' || getCol('whatsapp_enabled') === 'true' || false
-                                }]);
+                                };
+                                if (user_id) supervisorPayload.id = user_id;
+
+                                const { error: dbError } = await supabase.from('stagebegeleiders').insert([supervisorPayload]);
                                 if (dbError) throw dbError;
                             }
 
                             successCount++;
-                            resultsElement.innerHTML += `<div class="text-green-600 border-b border-gray-100 py-1">✅ ${email}: Succesvol toegevoegd</div>`;
+                            if (authWarning) {
+                                resultsElement.innerHTML += `<div class="text-amber-600 border-b border-gray-100 py-1">⚠️ ${email}: Succesvol toegevoegd (let op: ${authWarning})</div>`;
+                            } else {
+                                resultsElement.innerHTML += `<div class="text-green-600 border-b border-gray-100 py-1">✅ ${email}: Succesvol toegevoegd</div>`;
+                            }
                         }
                     } catch (error) {
                         failCount++;
