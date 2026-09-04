@@ -33,6 +33,59 @@ document.addEventListener('DOMContentLoaded', () => {
     
     const supabase = window.supabaseClient || window.supabase.createClient(supabaseUrl, supabaseKey);
 
+    // Fetch helper met timeout om bevriezen te voorkomen
+    async function fetchWithTimeout(url, options = {}, timeoutMs = 12000) {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+        try {
+            const response = await fetch(url, {
+                ...options,
+                signal: controller.signal
+            });
+            clearTimeout(timeoutId);
+            return response;
+        } catch (err) {
+            clearTimeout(timeoutId);
+            if (err.name === 'AbortError') {
+                throw new Error('Verzoek duurde te lang (timeout)');
+            }
+            throw err;
+        }
+    }
+
+    // Robuuste helper om auth accounts aan te maken met retry bij rate limits
+    async function callCreateAuthAccount(payload) {
+        const functionUrl = `${supabaseUrl}/functions/v1/create-auth-account`;
+        let attempts = 0;
+        while (attempts < 2) {
+            attempts++;
+            try {
+                const authRes = await fetchWithTimeout(functionUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${supabaseKey}`
+                    },
+                    body: JSON.stringify(payload)
+                }, 12000);
+
+                if (authRes.status === 429 && attempts < 2) {
+                    await new Promise(r => setTimeout(r, 1500));
+                    continue;
+                }
+
+                const authData = await authRes.json();
+                if (!authRes.ok || !authData.success) {
+                    throw new Error(authData.error || 'Aanmaken account/uitnodiging mislukt');
+                }
+                return authData;
+            } catch (err) {
+                if (attempts >= 2) throw err;
+                await new Promise(r => setTimeout(r, 1000));
+            }
+        }
+    }
+
     // Algemene import functie
     async function handleImport(fileInput, type, sendEmailCheckbox, progressElements, resultsElement, button) {
         const file = fileInput.files[0];
@@ -146,29 +199,18 @@ document.addEventListener('DOMContentLoaded', () => {
                                         let emailToUse = companyEmail.trim().toLowerCase();
 
                                         // 1. Create auth account if email is provided
-                                        const functionUrl = `${supabaseUrl}/functions/v1/create-auth-account`;
-                                        const authRes = await fetch(functionUrl, {
-                                            method: 'POST',
-                                            headers: {
-                                                'Content-Type': 'application/json',
-                                                'Authorization': `Bearer ${supabaseKey}`
-                                            },
-                                            body: JSON.stringify({
-                                                email: emailToUse,
-                                                password: '', // Leeg laten om uitnodigingslink te sturen
-                                                role: 'employer',
-                                                sendEmail: sendEmailCheckbox.checked,
-                                                name: companySearch,
-                                                loginUrl: 'https://ghpc.stageconnectie.nl/employer-portal.html',
-                                                metadata: { company_name: companySearch }
-                                            })
+                                        const authResult = await callCreateAuthAccount({
+                                            email: emailToUse,
+                                            password: '', // Leeg laten om uitnodigingslink te sturen
+                                            role: 'employer',
+                                            sendEmail: sendEmailCheckbox.checked,
+                                            name: companySearch,
+                                            loginUrl: 'https://ghpc.stageconnectie.nl/employer-portal.html',
+                                            metadata: { company_name: companySearch }
                                         });
 
-                                        const authResult = await authRes.json();
-                                        if (authRes.ok && authResult.success) {
+                                        if (authResult && authResult.success) {
                                             newCompanyId = authResult.user_id;
-                                        } else {
-                                            console.warn('Could not create auth account for auto-provisioned company:', authResult?.error);
                                         }
 
                                         // 2. Insert company into the 'Bedrijven' table
@@ -238,28 +280,17 @@ document.addEventListener('DOMContentLoaded', () => {
                                         let emailToUse = supervisorEmail.trim().toLowerCase();
 
                                         // 1. Create auth account if email is provided
-                                        const functionUrl = `${supabaseUrl}/functions/v1/create-auth-account`;
-                                        const authRes = await fetch(functionUrl, {
-                                            method: 'POST',
-                                            headers: {
-                                                'Content-Type': 'application/json',
-                                                'Authorization': `Bearer ${supabaseKey}`
-                                            },
-                                            body: JSON.stringify({
-                                                email: emailToUse,
-                                                password: '', // Leeg laten om uitnodigingslink te sturen
-                                                role: 'supervisor',
-                                                sendEmail: sendEmailCheckbox.checked,
-                                                name: supervisorSearch,
-                                                loginUrl: 'https://ghpc.stageconnectie.nl/supervisor-portal.html'
-                                            })
+                                        const authResult = await callCreateAuthAccount({
+                                            email: emailToUse,
+                                            password: '', // Leeg laten om uitnodigingslink te sturen
+                                            role: 'supervisor',
+                                            sendEmail: sendEmailCheckbox.checked,
+                                            name: supervisorSearch,
+                                            loginUrl: 'https://ghpc.stageconnectie.nl/supervisor-portal.html'
                                         });
 
-                                        const authResult = await authRes.json();
-                                        if (authRes.ok && authResult.success) {
+                                        if (authResult && authResult.success) {
                                             newSupervisorId = authResult.user_id;
-                                        } else {
-                                            console.warn('Could not create auth account for auto-provisioned supervisor:', authResult?.error);
                                         }
 
                                         // 2. Insert supervisor into 'stagebegeleiders' table
@@ -422,34 +453,21 @@ document.addEventListener('DOMContentLoaded', () => {
                                 throw new Error("Nieuwe stagiair mist 'wachtwoord' kolom.");
                             }
 
-                            const functionUrl = `${supabaseUrl}/functions/v1/create-auth-account`;
                             let role = type === 'student' ? 'student' : (type === 'company' ? 'employer' : 'supervisor');
                             let name = type === 'student' ? getName() : (type === 'company' ? (getCol('contactpersoon') || getCol('bedrijfsnaam')) : getName());
                             let loginUrl = type === 'student' 
                                 ? 'https://ghpc.stageconnectie.nl/student-portal.html' 
                                 : (type === 'company' ? 'https://ghpc.stageconnectie.nl/employer-portal.html' : 'https://ghpc.stageconnectie.nl/supervisor-portal.html');
                             
-                            const authRes = await fetch(functionUrl, {
-                                method: 'POST',
-                                headers: {
-                                    'Content-Type': 'application/json',
-                                    'Authorization': `Bearer ${supabaseKey}`
-                                },
-                                body: JSON.stringify({
-                                    email: email.trim().toLowerCase(),
-                                    password: wachtwoord || '',
-                                    role: role,
-                                    metadata: { source: 'csv_import' },
-                                    sendEmail: sendEmailCheckbox.checked,
-                                    name: name || '',
-                                    loginUrl: loginUrl
-                                })
+                            const authData = await callCreateAuthAccount({
+                                email: email.trim().toLowerCase(),
+                                password: wachtwoord || '',
+                                role: role,
+                                metadata: { source: 'csv_import' },
+                                sendEmail: sendEmailCheckbox.checked,
+                                name: name || '',
+                                loginUrl: loginUrl
                             });
-
-                            const authData = await authRes.json();
-                            if (!authRes.ok || !authData.success) {
-                                throw new Error(authData.error || 'Aanmaken account/uitnodiging mislukt');
-                            }
 
                             user_id = authData.user_id;
 
@@ -513,6 +531,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     progressElements.text.textContent = `${i + 1} / ${total} verwerkt`;
                     progressElements.bar.style.width = `${((i + 1) / total) * 100}%`;
                     resultsElement.scrollTop = resultsElement.scrollHeight; // Auto-scroll
+
+                    // Pauze tussen rijen om rate limiting en stagnering te voorkomen
+                    if (i < total - 1) {
+                        await new Promise(r => setTimeout(r, 300));
+                    }
                 }
 
                 // Afronding
