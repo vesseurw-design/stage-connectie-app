@@ -84,10 +84,11 @@ serve(async (req) => {
                             <h2 style="color: #1e293b;">Beste ${name || 'gebruiker'},</h2>
                             <p>Welkom bij StageConnectie! Er is een account voor je klaargezet in ons systeem.</p>
                             <p>Klik op de onderstaande knop om je account te activeren en je eigen wachtwoord in te stellen:</p>
-                            <a href="${actionLink}" style="display: inline-block; background: #2563eb; color: white; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: bold; margin-top: 10px; margin-bottom: 10px;">Account Activeren</a>
+                            <a href="${actionLink}" style="display: inline-block; background: #2563eb; color: white; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: bold; margin-top: 10px; margin-bottom: 10px;">Account Activeren & Wachtwoord Instellen</a>
                             <p style="font-size: 13px; color: #64748b; margin-top: 15px;">
-                                Na het activeren kun je inloggen met je e-mailadres en je zelfgekozen wachtwoord.<br>
-                                Deze link is beperkt geldig.
+                                Na het instellen van je wachtwoord kun je inloggen op je vernieuwde portaal:<br>
+                                <a href="${loginUrl || 'https://ghpc.stageconnectie.nl/supervisor-portal.html'}" style="color: #2563eb; font-weight: bold; text-decoration: underline;">${loginUrl || 'https://ghpc.stageconnectie.nl/supervisor-portal.html'}</a><br><br>
+                                <em>Let op: Deze activatielink is beperkt geldig.</em>
                             </p>
                             <p style="margin-top: 25px; font-size: 14px; color: #64748b;">
                                 Met vriendelijke groet,<br>Het StageConnectie Team
