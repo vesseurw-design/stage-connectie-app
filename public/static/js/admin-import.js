@@ -529,7 +529,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     } catch (error) {
                         failCount++;
                         let emailDisplay = email || getCol('bedrijfsnaam', 'company_name', 'bedrijf', 'naam', 'company') || getName() || row.email || row.Email || `Rij ${i + 1}`;
-                        resultsElement.innerHTML += `<div class="text-red-600 border-b border-gray-100 py-1">❌ ${emailDisplay}: ${error.message}</div>`;
+                        let errMsg = error.message;
+                        if (errMsg.includes('row-level security policy')) {
+                            errMsg = 'Supabase beveiliging (RLS) op de database blokkeert het toevoegen van nieuwe bedrijven. Voer het SQL-script uit in de Supabase SQL Editor om dit vrij te geven.';
+                        }
+                        resultsElement.innerHTML += `<div class="text-red-600 border-b border-gray-100 py-1">❌ ${emailDisplay}: ${errMsg}</div>`;
                     }
 
                     // Update UI Progress
