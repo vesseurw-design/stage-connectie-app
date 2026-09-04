@@ -140,10 +140,12 @@ document.addEventListener('DOMContentLoaded', () => {
                             if (!bedrijfId && companySearch) {
                                 try {
                                     let newCompanyId = null;
-                                    let emailToUse = companyEmail ? companyEmail.trim().toLowerCase() : null;
+                                    const slug = companySearch.toLowerCase().replace(/[^a-z0-9]/g, '');
+                                    const fallbackEmail = `info@${slug || 'bedrijf'}-${Date.now().toString(36)}.stageconnectie-placeholder.nl`;
+                                    let emailToUse = companyEmail ? companyEmail.trim().toLowerCase() : fallbackEmail;
 
                                     // 1. Create auth account if email is provided
-                                    if (emailToUse) {
+                                    if (companyEmail) {
                                         const functionUrl = `${supabaseUrl}/functions/v1/create-auth-account`;
                                         const authRes = await fetch(functionUrl, {
                                             method: 'POST',
@@ -206,7 +208,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         }
 
                         // Find supervisor ID
-                        let supervisorId = getCol('supervisor_id') || getCol('begeleider_id');
+                        let supervisorId = getCol('supervisor_id', 'begeleider_id');
                         if (supervisorId && !isUuid(supervisorId)) {
                             const matchedSupervisor = allSupervisors.find(s => 
                                 s.email?.toLowerCase().trim() === supervisorId.toLowerCase().trim() ||
@@ -214,8 +216,8 @@ document.addEventListener('DOMContentLoaded', () => {
                             );
                             supervisorId = matchedSupervisor ? matchedSupervisor.id : null;
                         } else if (!supervisorId) {
-                            const supervisorSearch = getCol('begeleider') || getCol('stagebegeleider') || getCol('supervisor') || getCol('begeleider_naam');
-                            const supervisorEmail = getCol('begeleider_email') || getCol('stagebegeleider_email') || getCol('supervisor_email');
+                            const supervisorSearch = getCol('begeleider', 'stagebegeleider', 'supervisor', 'begeleider_naam');
+                            const supervisorEmail = getCol('begeleider_email', 'stagebegeleider_email', 'supervisor_email');
                             
                             if (supervisorEmail) {
                                 const matchedSupervisor = allSupervisors.find(s => s.email?.toLowerCase().trim() === supervisorEmail.toLowerCase().trim());
@@ -230,10 +232,12 @@ document.addEventListener('DOMContentLoaded', () => {
                             if (!supervisorId && supervisorSearch) {
                                 try {
                                     let newSupervisorId = null;
-                                    let emailToUse = supervisorEmail ? supervisorEmail.trim().toLowerCase() : null;
+                                    const slug = supervisorSearch.toLowerCase().replace(/[^a-z0-9]/g, '');
+                                    const fallbackEmail = `begeleider@${slug || 'docent'}-${Date.now().toString(36)}.stageconnectie-placeholder.nl`;
+                                    let emailToUse = supervisorEmail ? supervisorEmail.trim().toLowerCase() : fallbackEmail;
 
                                     // 1. Create auth account if email is provided
-                                    if (emailToUse) {
+                                    if (supervisorEmail) {
                                         const functionUrl = `${supabaseUrl}/functions/v1/create-auth-account`;
                                         const authRes = await fetch(functionUrl, {
                                             method: 'POST',
