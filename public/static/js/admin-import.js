@@ -109,7 +109,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         let wachtwoord = getCol('wachtwoord', 'password', 'passwd');
                         
                         if (!email) {
-                            throw new Error("Rij mist 'email' kolom.");
+                            throw new Error("Geen e-mailadres opgegeven in CSV. Niet toegevoegd.");
                         }
 
                         // Helper for matching UUID
@@ -136,16 +136,16 @@ document.addEventListener('DOMContentLoaded', () => {
                                 if (matchedCompany) bedrijfId = matchedCompany.id;
                             }
 
-                            // Auto-create company if name is provided but not found
+                            // Auto-create company ONLY IF companyEmail is provided in CSV
                             if (!bedrijfId && companySearch) {
-                                try {
-                                    let newCompanyId = null;
-                                    const slug = companySearch.toLowerCase().replace(/[^a-z0-9]/g, '');
-                                    const fallbackEmail = `info@${slug || 'bedrijf'}-${Date.now().toString(36)}.stageconnectie-placeholder.nl`;
-                                    let emailToUse = companyEmail ? companyEmail.trim().toLowerCase() : fallbackEmail;
+                                if (!companyEmail) {
+                                    resultsElement.innerHTML += `<div class="text-amber-600 border-b border-gray-100 py-1">ℹ️ Stagebedrijf "${companySearch}" bestaat nog niet in het systeem en heeft geen e-mailadres in de CSV (niet automatisch aangemaakt).</div>`;
+                                } else {
+                                    try {
+                                        let newCompanyId = null;
+                                        let emailToUse = companyEmail.trim().toLowerCase();
 
-                                    // 1. Create auth account if email is provided
-                                    if (companyEmail) {
+                                        // 1. Create auth account if email is provided
                                         const functionUrl = `${supabaseUrl}/functions/v1/create-auth-account`;
                                         const authRes = await fetch(functionUrl, {
                                             method: 'POST',
@@ -170,39 +170,39 @@ document.addEventListener('DOMContentLoaded', () => {
                                         } else {
                                             console.warn('Could not create auth account for auto-provisioned company:', authResult?.error);
                                         }
-                                    }
 
-                                    // 2. Insert company into the 'Bedrijven' table
-                                    const insertData = {
-                                        company_name: companySearch,
-                                        email: emailToUse
-                                    };
-                                    if (newCompanyId) {
-                                        insertData.id = newCompanyId;
-                                    }
-
-                                    const { data: newCompResult, error: insertError } = await supabase
-                                        .from('Bedrijven')
-                                        .insert([insertData])
-                                        .select();
-
-                                    if (insertError) {
-                                        throw insertError;
-                                    }
-
-                                    if (newCompResult && newCompResult[0]) {
-                                        bedrijfId = newCompResult[0].id;
-                                        // Cache in-memory
-                                        allCompanies.push({
-                                            id: bedrijfId,
+                                        // 2. Insert company into the 'Bedrijven' table
+                                        const insertData = {
                                             company_name: companySearch,
                                             email: emailToUse
-                                        });
-                                        resultsElement.innerHTML += `<div class="text-blue-600 border-b border-gray-100 py-1">🏢 Nieuw stagebedrijf aangemaakt: ${companySearch}</div>`;
+                                        };
+                                        if (newCompanyId) {
+                                            insertData.id = newCompanyId;
+                                        }
+
+                                        const { data: newCompResult, error: insertError } = await supabase
+                                            .from('Bedrijven')
+                                            .insert([insertData])
+                                            .select();
+
+                                        if (insertError) {
+                                            throw insertError;
+                                        }
+
+                                        if (newCompResult && newCompResult[0]) {
+                                            bedrijfId = newCompResult[0].id;
+                                            // Cache in-memory
+                                            allCompanies.push({
+                                                id: bedrijfId,
+                                                company_name: companySearch,
+                                                email: emailToUse
+                                            });
+                                            resultsElement.innerHTML += `<div class="text-blue-600 border-b border-gray-100 py-1">🏢 Nieuw stagebedrijf aangemaakt: ${companySearch}</div>`;
+                                        }
+                                    } catch (compErr) {
+                                        console.error('Error auto-creating company:', compErr);
+                                        resultsElement.innerHTML += `<div class="text-amber-600 border-b border-gray-100 py-1">⚠️ Kon stagebedrijf "${companySearch}" niet automatisch aanmaken: ${compErr.message}</div>`;
                                     }
-                                } catch (compErr) {
-                                    console.error('Error auto-creating company:', compErr);
-                                    resultsElement.innerHTML += `<div class="text-amber-600 border-b border-gray-100 py-1">⚠️ Kon stagebedrijf "${companySearch}" niet automatisch aanmaken: ${compErr.message}</div>`;
                                 }
                             }
                         }
@@ -228,16 +228,16 @@ document.addEventListener('DOMContentLoaded', () => {
                                 if (matchedSupervisor) supervisorId = matchedSupervisor.id;
                             }
 
-                            // Auto-create supervisor if not found
+                            // Auto-create supervisor ONLY IF supervisorEmail is provided in CSV
                             if (!supervisorId && supervisorSearch) {
-                                try {
-                                    let newSupervisorId = null;
-                                    const slug = supervisorSearch.toLowerCase().replace(/[^a-z0-9]/g, '');
-                                    const fallbackEmail = `begeleider@${slug || 'docent'}-${Date.now().toString(36)}.stageconnectie-placeholder.nl`;
-                                    let emailToUse = supervisorEmail ? supervisorEmail.trim().toLowerCase() : fallbackEmail;
+                                if (!supervisorEmail) {
+                                    resultsElement.innerHTML += `<div class="text-amber-600 border-b border-gray-100 py-1">ℹ️ Stagebegeleider "${supervisorSearch}" bestaat nog niet in het systeem en heeft geen e-mailadres in de CSV (niet automatisch aangemaakt).</div>`;
+                                } else {
+                                    try {
+                                        let newSupervisorId = null;
+                                        let emailToUse = supervisorEmail.trim().toLowerCase();
 
-                                    // 1. Create auth account if email is provided
-                                    if (supervisorEmail) {
+                                        // 1. Create auth account if email is provided
                                         const functionUrl = `${supabaseUrl}/functions/v1/create-auth-account`;
                                         const authRes = await fetch(functionUrl, {
                                             method: 'POST',
@@ -261,39 +261,39 @@ document.addEventListener('DOMContentLoaded', () => {
                                         } else {
                                             console.warn('Could not create auth account for auto-provisioned supervisor:', authResult?.error);
                                         }
-                                    }
 
-                                    // 2. Insert supervisor into 'stagebegeleiders' table
-                                    const insertData = {
-                                        name: supervisorSearch,
-                                        email: emailToUse
-                                    };
-                                    if (newSupervisorId) {
-                                        insertData.id = newSupervisorId;
-                                    }
-
-                                    const { data: newSupResult, error: insertError } = await supabase
-                                        .from('stagebegeleiders')
-                                        .insert([insertData])
-                                        .select();
-
-                                    if (insertError) {
-                                        throw insertError;
-                                    }
-
-                                    if (newSupResult && newSupResult[0]) {
-                                        supervisorId = newSupResult[0].id;
-                                        // Cache in-memory
-                                        allSupervisors.push({
-                                            id: supervisorId,
+                                        // 2. Insert supervisor into 'stagebegeleiders' table
+                                        const insertData = {
                                             name: supervisorSearch,
                                             email: emailToUse
-                                        });
-                                        resultsElement.innerHTML += `<div class="text-green-600 border-b border-gray-100 py-1">🏫 Nieuwe stagebegeleider aangemaakt: ${supervisorSearch}</div>`;
+                                        };
+                                        if (newSupervisorId) {
+                                            insertData.id = newSupervisorId;
+                                        }
+
+                                        const { data: newSupResult, error: insertError } = await supabase
+                                            .from('stagebegeleiders')
+                                            .insert([insertData])
+                                            .select();
+
+                                        if (insertError) {
+                                            throw insertError;
+                                        }
+
+                                        if (newSupResult && newSupResult[0]) {
+                                            supervisorId = newSupResult[0].id;
+                                            // Cache in-memory
+                                            allSupervisors.push({
+                                                id: supervisorId,
+                                                name: supervisorSearch,
+                                                email: emailToUse
+                                            });
+                                            resultsElement.innerHTML += `<div class="text-green-600 border-b border-gray-100 py-1">🏫 Nieuwe stagebegeleider aangemaakt: ${supervisorSearch}</div>`;
+                                        }
+                                    } catch (supErr) {
+                                        console.error('Error auto-creating supervisor:', supErr);
+                                        resultsElement.innerHTML += `<div class="text-amber-600 border-b border-gray-100 py-1">⚠️ Kon stagebegeleider "${supervisorSearch}" niet automatisch aanmaken: ${supErr.message}</div>`;
                                     }
-                                } catch (supErr) {
-                                    console.error('Error auto-creating supervisor:', supErr);
-                                    resultsElement.innerHTML += `<div class="text-amber-600 border-b border-gray-100 py-1">⚠️ Kon stagebegeleider "${supervisorSearch}" niet automatisch aanmaken: ${supErr.message}</div>`;
                                 }
                             }
                         }
