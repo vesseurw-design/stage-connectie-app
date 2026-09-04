@@ -23,15 +23,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const supervisorsProgressText = document.getElementById('supervisors-progress-text');
     const supervisorsResults = document.getElementById('supervisors-results');
 
-    // Initialiseer Supabase client (gebruikt window.supabase uit auth scripts)
+    // Initialiseer Supabase client (hergebruik geauthenticeerde window.supabaseClient indien beschikbaar)
     const supabaseUrl = window.SUPABASE_URL || window.ENV_SUPABASE_URL || localStorage.getItem('supabaseUrl');
     const supabaseKey = window.SUPABASE_KEY || window.ENV_SUPABASE_KEY || localStorage.getItem('supabaseKey');
     
     if (!supabaseUrl || !supabaseKey) {
-        console.error("Supabase configuratie ontbreekt in localStorage.");
+        console.error("Supabase configuratie ontbreekt.");
     }
     
-    const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+    const supabase = window.supabaseClient || window.supabase.createClient(supabaseUrl, supabaseKey);
 
     // Algemene import functie
     async function handleImport(fileInput, type, sendEmailCheckbox, progressElements, resultsElement, button) {
@@ -77,26 +77,36 @@ document.addEventListener('DOMContentLoaded', () => {
                 for (let i = 0; i < total; i++) {
                     const row = data[i];
                     try {
-                        // Dynamisch kolommen ophalen (hoofdletterongevoelig)
-                        const getCol = (name) => {
-                            const key = Object.keys(row).find(k => k.toLowerCase() === name.toLowerCase());
-                            return key ? row[key] : null;
+                        // Dynamisch en flexibel kolommen ophalen (hoofdletterongevoelig, UTF-8 BOM-safe, meerdere aliassen)
+                        const getCol = (...names) => {
+                            if (!row) return null;
+                            for (const name of names) {
+                                const key = Object.keys(row).find(k => {
+                                    const cleanKey = k.replace(/^\uFEFF/, '').trim().toLowerCase();
+                                    return cleanKey === name.toLowerCase();
+                                });
+                                if (key && row[key] !== undefined && row[key] !== null) {
+                                    const val = String(row[key]).trim();
+                                    if (val.length > 0) return val;
+                                }
+                            }
+                            return null;
                         };
 
                         const getName = () => {
-                            const nameVal = getCol('naam') || getCol('name');
+                            const nameVal = getCol('naam', 'name', 'volledige_naam', 'student_naam', 'stagiair');
                             if (nameVal) return nameVal;
                             
-                            const voornaam = getCol('voornaam') || getCol('first_name') || getCol('firstname');
-                            const achternaam = getCol('achternaam') || getCol('last_name') || getCol('lastname');
+                            const voornaam = getCol('voornaam', 'first_name', 'firstname');
+                            const achternaam = getCol('achternaam', 'last_name', 'lastname');
                             if (voornaam || achternaam) {
                                 return `${voornaam || ''} ${achternaam || ''}`.trim();
                             }
                             return 'Onbekend';
                         };
 
-                        let email = getCol('email');
-                        let wachtwoord = getCol('wachtwoord');
+                        let email = getCol('email', 'emailadres', 'e-mail', 'e-mailadres', 'bedrijf_email', 'bedrijfs_email', 'company_email', 'contact_email', 'email_adres', 'mail');
+                        let wachtwoord = getCol('wachtwoord', 'password', 'passwd');
                         
                         if (!email) {
                             throw new Error("Rij mist 'email' kolom.");
@@ -106,7 +116,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         const isUuid = (val) => val && /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(val);
 
                         // Find company ID
-                        let bedrijfId = getCol('bedrijf_id') || getCol('bedrijfs_id') || getCol('company_id');
+                        let bedrijfId = getCol('bedrijf_id', 'bedrijfs_id', 'company_id');
                         if (bedrijfId && !isUuid(bedrijfId)) {
                             const matchedCompany = allCompanies.find(c => 
                                 c.email?.toLowerCase().trim() === bedrijfId.toLowerCase().trim() ||
@@ -114,8 +124,8 @@ document.addEventListener('DOMContentLoaded', () => {
                             );
                             bedrijfId = matchedCompany ? matchedCompany.id : null;
                         } else if (!bedrijfId) {
-                            const companySearch = getCol('stagebedrijf') || getCol('bedrijf') || getCol('company') || getCol('stagebedrijf_naam') || getCol('company_name');
-                            const companyEmail = getCol('stagebedrijf_email') || getCol('bedrijf_email') || getCol('company_email');
+                            const companySearch = getCol('stagebedrijf', 'bedrijf', 'company', 'stagebedrijf_naam', 'company_name', 'bedrijfsnaam', 'organisatie');
+                            const companyEmail = getCol('stagebedrijf_email', 'bedrijf_email', 'company_email', 'bedrijfs_email');
                             
                             if (companyEmail) {
                                 const matchedCompany = allCompanies.find(c => c.email?.toLowerCase().trim() === companyEmail.toLowerCase().trim());
@@ -368,9 +378,12 @@ document.addEventListener('DOMContentLoaded', () => {
                                     .eq('id', user_id);
                                 if (dbError) throw dbError;
                             } else if (type === 'company') {
-                                const street = getCol('adres') || '';
-                                const postcode = getCol('postcode') || '';
-                                const city = getCol('plaats') || '';
+                                const companyName = getCol('bedrijfsnaam', 'company_name', 'bedrijf', 'naam', 'company', 'stagebedrijf', 'organisatie', 'bedrijfs_naam') || 'Onbekend';
+                                const contactPerson = getCol('contactpersoon', 'contact_person', 'contact', 'contact_naam', 'contactpersoon_naam');
+                                const phone = getCol('telefoonnummer', 'telefoon', 'phone', 'phone_number', 'tel', 'mobiel');
+                                const street = getCol('adres', 'address', 'straat', 'street') || '';
+                                const postcode = getCol('postcode', 'zipcode', 'zip_code', 'zip') || '';
+                                const city = getCol('plaats', 'city', 'woonplaats') || '';
                                 let fullAddress = street;
                                 if (postcode || city) {
                                     fullAddress += (fullAddress ? ', ' : '') + [postcode, city].filter(Boolean).join(' ');
@@ -379,9 +392,9 @@ document.addEventListener('DOMContentLoaded', () => {
                                 const { error: dbError } = await supabase
                                     .from('Bedrijven')
                                     .update({
-                                        company_name: getCol('bedrijfsnaam') || 'Onbekend',
-                                        contact_person: getCol('contactpersoon') || null,
-                                        phone: getCol('telefoonnummer') || null,
+                                        company_name: companyName,
+                                        contact_person: contactPerson || null,
+                                        phone: phone || null,
                                         address: fullAddress || null
                                     })
                                     .eq('id', user_id);
@@ -452,9 +465,12 @@ document.addEventListener('DOMContentLoaded', () => {
                                 if (dbError) throw dbError;
 
                             } else if (type === 'company') {
-                                const street = getCol('adres') || '';
-                                const postcode = getCol('postcode') || '';
-                                const city = getCol('plaats') || '';
+                                const companyName = getCol('bedrijfsnaam', 'company_name', 'bedrijf', 'naam', 'company', 'stagebedrijf', 'organisatie', 'bedrijfs_naam') || 'Onbekend';
+                                const contactPerson = getCol('contactpersoon', 'contact_person', 'contact', 'contact_naam', 'contactpersoon_naam');
+                                const phone = getCol('telefoonnummer', 'telefoon', 'phone', 'phone_number', 'tel', 'mobiel');
+                                const street = getCol('adres', 'address', 'straat', 'street') || '';
+                                const postcode = getCol('postcode', 'zipcode', 'zip_code', 'zip') || '';
+                                const city = getCol('plaats', 'city', 'woonplaats') || '';
                                 let fullAddress = street;
                                 if (postcode || city) {
                                     fullAddress += (fullAddress ? ', ' : '') + [postcode, city].filter(Boolean).join(' ');
@@ -462,10 +478,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
                                 const { error: dbError } = await supabase.from('Bedrijven').insert([{
                                     id: user_id,
-                                    company_name: getCol('bedrijfsnaam') || 'Onbekend',
+                                    company_name: companyName,
                                     email: email.trim().toLowerCase(),
-                                    contact_person: getCol('contactpersoon') || null,
-                                    phone: getCol('telefoonnummer') || null,
+                                    contact_person: contactPerson || null,
+                                    phone: phone || null,
                                     address: fullAddress || null
                                 }]);
                                 if (dbError) throw dbError;
@@ -485,7 +501,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         }
                     } catch (error) {
                         failCount++;
-                        let emailDisplay = row.email || row.Email || 'Onbekend';
+                        let emailDisplay = email || getCol('bedrijfsnaam', 'company_name', 'bedrijf', 'naam', 'company') || getName() || row.email || row.Email || `Rij ${i + 1}`;
                         resultsElement.innerHTML += `<div class="text-red-600 border-b border-gray-100 py-1">❌ ${emailDisplay}: ${error.message}</div>`;
                     }
 
