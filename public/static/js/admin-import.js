@@ -168,162 +168,167 @@ document.addEventListener('DOMContentLoaded', () => {
                         // Helper for matching UUID
                         const isUuid = (val) => val && /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(val);
 
-                        // Find company ID
-                        let bedrijfId = getCol('bedrijf_id', 'bedrijfs_id', 'company_id');
-                        if (bedrijfId && !isUuid(bedrijfId)) {
-                            const matchedCompany = allCompanies.find(c => 
-                                c.email?.toLowerCase().trim() === bedrijfId.toLowerCase().trim() ||
-                                c.company_name?.toLowerCase().trim() === bedrijfId.toLowerCase().trim()
-                            );
-                            bedrijfId = matchedCompany ? matchedCompany.id : null;
-                        } else if (!bedrijfId) {
-                            const companySearch = getCol('stagebedrijf', 'bedrijf', 'company', 'stagebedrijf_naam', 'company_name', 'bedrijfsnaam', 'organisatie');
-                            const companyEmail = getCol('stagebedrijf_email', 'bedrijf_email', 'company_email', 'bedrijfs_email');
-                            
-                            if (companyEmail) {
-                                const matchedCompany = allCompanies.find(c => c.email?.toLowerCase().trim() === companyEmail.toLowerCase().trim());
-                                if (matchedCompany) bedrijfId = matchedCompany.id;
-                            }
-                            if (!bedrijfId && companySearch) {
-                                const matchedCompany = allCompanies.find(c => c.company_name?.toLowerCase().trim() === companySearch.toLowerCase().trim());
-                                if (matchedCompany) bedrijfId = matchedCompany.id;
-                            }
+                        // Find company & supervisor IDs (only relevant during student import)
+                        let bedrijfId = null;
+                        let supervisorId = null;
 
-                            // Auto-create company ONLY IF companyEmail is provided in CSV
-                            if (!bedrijfId && companySearch) {
-                                if (!companyEmail) {
-                                    resultsElement.innerHTML += `<div class="text-amber-600 border-b border-gray-100 py-1">ℹ️ Stagebedrijf "${companySearch}" bestaat nog niet in het systeem en heeft geen e-mailadres in de CSV (niet automatisch aangemaakt).</div>`;
-                                } else {
-                                    try {
-                                        let newCompanyId = null;
-                                        let emailToUse = companyEmail.trim().toLowerCase();
+                        if (type === 'student') {
+                            bedrijfId = getCol('bedrijf_id', 'bedrijfs_id', 'company_id');
+                            if (bedrijfId && !isUuid(bedrijfId)) {
+                                const matchedCompany = allCompanies.find(c => 
+                                    c.email?.toLowerCase().trim() === bedrijfId.toLowerCase().trim() ||
+                                    c.company_name?.toLowerCase().trim() === bedrijfId.toLowerCase().trim()
+                                );
+                                bedrijfId = matchedCompany ? matchedCompany.id : null;
+                            } else if (!bedrijfId) {
+                                const companySearch = getCol('stagebedrijf', 'bedrijf', 'company', 'stagebedrijf_naam', 'company_name', 'bedrijfsnaam', 'organisatie');
+                                const companyEmail = getCol('stagebedrijf_email', 'bedrijf_email', 'company_email', 'bedrijfs_email');
+                                
+                                if (companyEmail) {
+                                    const matchedCompany = allCompanies.find(c => c.email?.toLowerCase().trim() === companyEmail.toLowerCase().trim());
+                                    if (matchedCompany) bedrijfId = matchedCompany.id;
+                                }
+                                if (!bedrijfId && companySearch) {
+                                    const matchedCompany = allCompanies.find(c => c.company_name?.toLowerCase().trim() === companySearch.toLowerCase().trim());
+                                    if (matchedCompany) bedrijfId = matchedCompany.id;
+                                }
 
-                                        // 1. Create auth account if email is provided
-                                        const authResult = await callCreateAuthAccount({
-                                            email: emailToUse,
-                                            password: '', // Leeg laten om uitnodigingslink te sturen
-                                            role: 'employer',
-                                            sendEmail: sendEmailCheckbox.checked,
-                                            name: companySearch,
-                                            loginUrl: 'https://ghpc.stageconnectie.nl/employer-portal.html',
-                                            metadata: { company_name: companySearch }
-                                        });
+                                // Auto-create company ONLY IF companyEmail is provided in CSV
+                                if (!bedrijfId && companySearch) {
+                                    if (!companyEmail) {
+                                        resultsElement.innerHTML += `<div class="text-amber-600 border-b border-gray-100 py-1">ℹ️ Stagebedrijf "${companySearch}" bestaat nog niet in het systeem en heeft geen e-mailadres in de CSV (niet automatisch aangemaakt).</div>`;
+                                    } else {
+                                        try {
+                                            let newCompanyId = null;
+                                            let emailToUse = companyEmail.trim().toLowerCase();
 
-                                        if (authResult && authResult.success) {
-                                            newCompanyId = authResult.user_id;
-                                        }
+                                            // 1. Create auth account if email is provided
+                                            const authResult = await callCreateAuthAccount({
+                                                email: emailToUse,
+                                                password: '', // Leeg laten om uitnodigingslink te sturen
+                                                role: 'employer',
+                                                sendEmail: sendEmailCheckbox.checked,
+                                                name: companySearch,
+                                                loginUrl: 'https://ghpc.stageconnectie.nl/employer-portal.html',
+                                                metadata: { company_name: companySearch }
+                                            });
 
-                                        // 2. Insert company into the 'Bedrijven' table
-                                        const insertData = {
-                                            company_name: companySearch,
-                                            email: emailToUse
-                                        };
-                                        if (newCompanyId) {
-                                            insertData.id = newCompanyId;
-                                        }
+                                            if (authResult && authResult.success) {
+                                                newCompanyId = authResult.user_id;
+                                            }
 
-                                        const { data: newCompResult, error: insertError } = await supabase
-                                            .from('Bedrijven')
-                                            .insert([insertData])
-                                            .select();
-
-                                        if (insertError) {
-                                            throw insertError;
-                                        }
-
-                                        if (newCompResult && newCompResult[0]) {
-                                            bedrijfId = newCompResult[0].id;
-                                            // Cache in-memory
-                                            allCompanies.push({
-                                                id: bedrijfId,
+                                            // 2. Insert company into the 'Bedrijven' table
+                                            const insertData = {
                                                 company_name: companySearch,
                                                 email: emailToUse
-                                            });
-                                            resultsElement.innerHTML += `<div class="text-blue-600 border-b border-gray-100 py-1">🏢 Nieuw stagebedrijf aangemaakt: ${companySearch}</div>`;
+                                            };
+                                            if (newCompanyId) {
+                                                insertData.id = newCompanyId;
+                                            }
+
+                                            const { data: newCompResult, error: insertError } = await supabase
+                                                .from('Bedrijven')
+                                                .insert([insertData])
+                                                .select();
+
+                                            if (insertError) {
+                                                throw insertError;
+                                            }
+
+                                            if (newCompResult && newCompResult[0]) {
+                                                bedrijfId = newCompResult[0].id;
+                                                // Cache in-memory
+                                                allCompanies.push({
+                                                    id: bedrijfId,
+                                                    company_name: companySearch,
+                                                    email: emailToUse
+                                                });
+                                                resultsElement.innerHTML += `<div class="text-blue-600 border-b border-gray-100 py-1">🏢 Nieuw stagebedrijf aangemaakt: ${companySearch}</div>`;
+                                            }
+                                        } catch (compErr) {
+                                            console.error('Error auto-creating company:', compErr);
+                                            resultsElement.innerHTML += `<div class="text-amber-600 border-b border-gray-100 py-1">⚠️ Kon stagebedrijf "${companySearch}" niet automatisch aanmaken: ${compErr.message}</div>`;
                                         }
-                                    } catch (compErr) {
-                                        console.error('Error auto-creating company:', compErr);
-                                        resultsElement.innerHTML += `<div class="text-amber-600 border-b border-gray-100 py-1">⚠️ Kon stagebedrijf "${companySearch}" niet automatisch aanmaken: ${compErr.message}</div>`;
                                     }
                                 }
                             }
-                        }
 
-                        // Find supervisor ID
-                        let supervisorId = getCol('supervisor_id', 'begeleider_id');
-                        if (supervisorId && !isUuid(supervisorId)) {
-                            const matchedSupervisor = allSupervisors.find(s => 
-                                s.email?.toLowerCase().trim() === supervisorId.toLowerCase().trim() ||
-                                s.name?.toLowerCase().trim() === supervisorId.toLowerCase().trim()
-                            );
-                            supervisorId = matchedSupervisor ? matchedSupervisor.id : null;
-                        } else if (!supervisorId) {
-                            const supervisorSearch = getCol('begeleider', 'stagebegeleider', 'supervisor', 'begeleider_naam');
-                            const supervisorEmail = getCol('begeleider_email', 'stagebegeleider_email', 'supervisor_email');
-                            
-                            if (supervisorEmail) {
-                                const matchedSupervisor = allSupervisors.find(s => s.email?.toLowerCase().trim() === supervisorEmail.toLowerCase().trim());
-                                if (matchedSupervisor) supervisorId = matchedSupervisor.id;
-                            }
-                            if (!supervisorId && supervisorSearch) {
-                                const matchedSupervisor = allSupervisors.find(s => s.name?.toLowerCase().trim() === supervisorSearch.toLowerCase().trim());
-                                if (matchedSupervisor) supervisorId = matchedSupervisor.id;
-                            }
+                            // Find supervisor ID
+                            supervisorId = getCol('supervisor_id', 'begeleider_id');
+                            if (supervisorId && !isUuid(supervisorId)) {
+                                const matchedSupervisor = allSupervisors.find(s => 
+                                    s.email?.toLowerCase().trim() === supervisorId.toLowerCase().trim() ||
+                                    s.name?.toLowerCase().trim() === supervisorId.toLowerCase().trim()
+                                );
+                                supervisorId = matchedSupervisor ? matchedSupervisor.id : null;
+                            } else if (!supervisorId) {
+                                const supervisorSearch = getCol('begeleider', 'stagebegeleider', 'supervisor', 'begeleider_naam');
+                                const supervisorEmail = getCol('begeleider_email', 'stagebegeleider_email', 'supervisor_email');
+                                
+                                if (supervisorEmail) {
+                                    const matchedSupervisor = allSupervisors.find(s => s.email?.toLowerCase().trim() === supervisorEmail.toLowerCase().trim());
+                                    if (matchedSupervisor) supervisorId = matchedSupervisor.id;
+                                }
+                                if (!supervisorId && supervisorSearch) {
+                                    const matchedSupervisor = allSupervisors.find(s => s.name?.toLowerCase().trim() === supervisorSearch.toLowerCase().trim());
+                                    if (matchedSupervisor) supervisorId = matchedSupervisor.id;
+                                }
 
-                            // Auto-create supervisor ONLY IF supervisorEmail is provided in CSV
-                            if (!supervisorId && supervisorSearch) {
-                                if (!supervisorEmail) {
-                                    resultsElement.innerHTML += `<div class="text-amber-600 border-b border-gray-100 py-1">ℹ️ Stagebegeleider "${supervisorSearch}" bestaat nog niet in het systeem en heeft geen e-mailadres in de CSV (niet automatisch aangemaakt).</div>`;
-                                } else {
-                                    try {
-                                        let newSupervisorId = null;
-                                        let emailToUse = supervisorEmail.trim().toLowerCase();
+                                // Auto-create supervisor ONLY IF supervisorEmail is provided in CSV
+                                if (!supervisorId && supervisorSearch) {
+                                    if (!supervisorEmail) {
+                                        resultsElement.innerHTML += `<div class="text-amber-600 border-b border-gray-100 py-1">ℹ️ Stagebegeleider "${supervisorSearch}" bestaat nog niet in het systeem en heeft geen e-mailadres in de CSV (niet automatisch aangemaakt).</div>`;
+                                    } else {
+                                        try {
+                                            let newSupervisorId = null;
+                                            let emailToUse = supervisorEmail.trim().toLowerCase();
 
-                                        // 1. Create auth account if email is provided
-                                        const authResult = await callCreateAuthAccount({
-                                            email: emailToUse,
-                                            password: '', // Leeg laten om uitnodigingslink te sturen
-                                            role: 'supervisor',
-                                            sendEmail: sendEmailCheckbox.checked,
-                                            name: supervisorSearch,
-                                            loginUrl: 'https://ghpc.stageconnectie.nl/supervisor-portal.html'
-                                        });
+                                            // 1. Create auth account if email is provided
+                                            const authResult = await callCreateAuthAccount({
+                                                email: emailToUse,
+                                                password: '', // Leeg laten om uitnodigingslink te sturen
+                                                role: 'supervisor',
+                                                sendEmail: sendEmailCheckbox.checked,
+                                                name: supervisorSearch,
+                                                loginUrl: 'https://ghpc.stageconnectie.nl/supervisor-portal.html'
+                                            });
 
-                                        if (authResult && authResult.success) {
-                                            newSupervisorId = authResult.user_id;
-                                        }
+                                            if (authResult && authResult.success) {
+                                                newSupervisorId = authResult.user_id;
+                                            }
 
-                                        // 2. Insert supervisor into 'stagebegeleiders' table
-                                        const insertData = {
-                                            name: supervisorSearch,
-                                            email: emailToUse
-                                        };
-                                        if (newSupervisorId) {
-                                            insertData.id = newSupervisorId;
-                                        }
-
-                                        const { data: newSupResult, error: insertError } = await supabase
-                                            .from('stagebegeleiders')
-                                            .insert([insertData])
-                                            .select();
-
-                                        if (insertError) {
-                                            throw insertError;
-                                        }
-
-                                        if (newSupResult && newSupResult[0]) {
-                                            supervisorId = newSupResult[0].id;
-                                            // Cache in-memory
-                                            allSupervisors.push({
-                                                id: supervisorId,
+                                            // 2. Insert supervisor into 'stagebegeleiders' table
+                                            const insertData = {
                                                 name: supervisorSearch,
                                                 email: emailToUse
-                                            });
-                                            resultsElement.innerHTML += `<div class="text-green-600 border-b border-gray-100 py-1">🏫 Nieuwe stagebegeleider aangemaakt: ${supervisorSearch}</div>`;
+                                            };
+                                            if (newSupervisorId) {
+                                                insertData.id = newSupervisorId;
+                                            }
+
+                                            const { data: newSupResult, error: insertError } = await supabase
+                                                .from('stagebegeleiders')
+                                                .insert([insertData])
+                                                .select();
+
+                                            if (insertError) {
+                                                throw insertError;
+                                            }
+
+                                            if (newSupResult && newSupResult[0]) {
+                                                supervisorId = newSupResult[0].id;
+                                                // Cache in-memory
+                                                allSupervisors.push({
+                                                    id: supervisorId,
+                                                    name: supervisorSearch,
+                                                    email: emailToUse
+                                                });
+                                                resultsElement.innerHTML += `<div class="text-green-600 border-b border-gray-100 py-1">🏫 Nieuwe stagebegeleider aangemaakt: ${supervisorSearch}</div>`;
+                                            }
+                                        } catch (supErr) {
+                                            console.error('Error auto-creating supervisor:', supErr);
+                                            resultsElement.innerHTML += `<div class="text-amber-600 border-b border-gray-100 py-1">⚠️ Kon stagebegeleider "${supervisorSearch}" niet automatisch aanmaken: ${supErr.message}</div>`;
                                         }
-                                    } catch (supErr) {
-                                        console.error('Error auto-creating supervisor:', supErr);
-                                        resultsElement.innerHTML += `<div class="text-amber-600 border-b border-gray-100 py-1">⚠️ Kon stagebegeleider "${supervisorSearch}" niet automatisch aanmaken: ${supErr.message}</div>`;
                                     }
                                 }
                             }
