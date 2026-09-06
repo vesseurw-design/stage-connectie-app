@@ -124,7 +124,7 @@ serve(async (req) => {
                                 <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 25px 0;">
                                 <p style="font-size: 14px; color: #64748b; margin-bottom: 0;">
                                     Met vriendelijke groet,<br>
-                                    <strong>Groene Hart Praktijkschool & Het StageConnectie Team</strong>
+                                    <strong>Groene Hart Praktijkschool & Het Stage Team</strong>
                                 </p>
                             </div>
                         `;
@@ -142,7 +142,7 @@ serve(async (req) => {
                                     <em>Let op: Deze activatielink is beperkt geldig.</em>
                                 </p>
                                 <p style="margin-top: 25px; font-size: 14px; color: #64748b;">
-                                    Met vriendelijke groet,<br>Het StageConnectie Team
+                                    Met vriendelijke groet,<br>Het Stage Team
                                 </p>
                             </div>
                         `;
@@ -162,7 +162,7 @@ serve(async (req) => {
                             <a href="${loginUrl || 'https://stageconnectie.nl'}" style="display: inline-block; background: #2563eb; color: white; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: bold; margin-top: 10px;">Naar het Portaal</a>
                             <p style="margin-top: 25px; font-size: 14px; color: #64748b;">
                                 We raden je aan om je wachtwoord te wijzigen nadat je voor de eerste keer bent ingelogd.<br><br>
-                                Met vriendelijke groet,<br>Het StageConnectie Team
+                                Met vriendelijke groet,<br>Het Stage Team
                             </p>
                         </div>
                     `;
