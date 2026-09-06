@@ -686,16 +686,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
             let success = 0;
             let failed = 0;
+            let failedItems = [];
 
             for (let i = 0; i < total; i++) {
                 const item = list[i];
+                const name = type === 'company' ? (item.contact_person || item.company_name) : item.name;
                 if (!item.email) {
                     failed++;
+                    failedItems.push({ name: name || 'Onbekend', email: 'Geen e-mailadres', reason: 'Geen e-mailadres ingevuld in database' });
                     continue;
                 }
 
                 try {
-                    const name = type === 'company' ? (item.contact_person || item.company_name) : item.name;
                     const functionUrl = `${supabaseUrl}/functions/v1/create-auth-account`;
                     
                     const authRes = await fetch(functionUrl, {
@@ -719,19 +721,29 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     const authData = await authRes.json();
                     if (!authRes.ok || !authData.success) {
-                        throw new Error(authData.error || 'Failed invitation');
+                        throw new Error(authData.error || 'Verzenden uitnodiging mislukt');
                     }
                     success++;
                 } catch (err) {
                     console.error(`Failed to invite ${item.email}:`, err);
                     failed++;
+                    failedItems.push({ name: name || item.email, email: item.email, reason: err.message });
                 }
 
                 progressElement.textContent = `✉️ Bezig met verzenden: ${i + 1} / ${total} verwerkt...`;
             }
 
-            progressElement.className = "mt-3 text-xs text-green-600 font-semibold block";
-            progressElement.textContent = `🎉 Voltooid! Welkomstmails verzonden: ${success}, Mislukt: ${failed}.`;
+            let resultHtml = `<div>🎉 Voltooid! Welkomstmails verzonden: ${success}, Mislukt: ${failed}.</div>`;
+            if (failedItems.length > 0) {
+                resultHtml += `<div class="mt-2 text-red-600 font-normal border-t border-red-200 pt-2 space-y-1"><strong>⚠️ Mislukte uitnodigingen (${failedItems.length}):</strong><br>`;
+                failedItems.forEach(fi => {
+                    resultHtml += `• <strong>${fi.name}</strong> (${fi.email}): ${fi.reason}<br>`;
+                });
+                resultHtml += `</div>`;
+            }
+
+            progressElement.className = "mt-3 text-xs text-gray-800 font-semibold block bg-gray-50 p-3 rounded-lg border border-gray-200";
+            progressElement.innerHTML = resultHtml;
 
         } catch (err) {
             console.error('Error in bulk invite:', err);
