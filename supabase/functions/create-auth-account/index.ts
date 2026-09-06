@@ -94,23 +94,59 @@ serve(async (req) => {
                 let subjectLine = '';
 
                 if (isInvite) {
-                    subjectLine = 'Uitnodiging voor StageConnectie - Activeer je account';
-                    htmlContent = `
-                        <div style="font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 8px;">
-                            <h2 style="color: #1e293b;">Beste ${name || 'gebruiker'},</h2>
-                            <p>Welkom bij StageConnectie! Er is een account voor je klaargezet in ons systeem.</p>
-                            <p>Klik op de onderstaande knop om je account te activeren en je eigen wachtwoord in te stellen:</p>
-                            <a href="${actionLink}" style="display: inline-block; background: #2563eb; color: white; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: bold; margin-top: 10px; margin-bottom: 10px;">Account Activeren & Wachtwoord Instellen</a>
-                            <p style="font-size: 13px; color: #64748b; margin-top: 15px;">
-                                Na het instellen van je wachtwoord kun je inloggen op je vernieuwde portaal:<br>
-                                <a href="${loginUrl || 'https://ghpc.stageconnectie.nl/supervisor-portal.html'}" style="color: #2563eb; font-weight: bold; text-decoration: underline;">${loginUrl || 'https://ghpc.stageconnectie.nl/supervisor-portal.html'}</a><br><br>
-                                <em>Let op: Deze activatielink is beperkt geldig.</em>
-                            </p>
-                            <p style="margin-top: 25px; font-size: 14px; color: #64748b;">
-                                Met vriendelijke groet,<br>Het StageConnectie Team
-                            </p>
-                        </div>
-                    `;
+                    if (role === 'employer') {
+                        subjectLine = 'Uitnodiging digitale aanwezigheidsregistratie - Groene Hart Praktijkschool';
+                        htmlContent = `
+                            <div style="font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 24px; border: 1px solid #e2e8f0; border-radius: 12px; background: #ffffff;">
+                                <h2 style="color: #1e293b; margin-top: 0;">Beste ${name || 'stagebegeleider / werkgever'},</h2>
+                                <p style="color: #334155; line-height: 1.6;">Wij nodigen u van harte uit voor de digitale aanwezigheidsregistratie van de <strong>Groene Hart Praktijkschool</strong> via StageConnectie.</p>
+                                <p style="color: #334155; line-height: 1.6;">Met behulp van deze website (geschikt voor laptop, tablet en smartphone) kunt u met 2 à 3 klikken snel doorgeven of een stagiair wel of niet aanwezig is op een stagedag.</p>
+                                
+                                <p style="color: #334155; line-height: 1.6; margin-top: 20px;">Klik op de onderstaande knop om uw account te activeren en uw eigen wachtwoord in te stellen:</p>
+                                
+                                <div style="text-align: center; margin: 25px 0;">
+                                    <a href="${actionLink}" style="display: inline-block; background: #2563eb; color: white; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 15px;">Account Activeren & Wachtwoord Instellen</a>
+                                </div>
+
+                                <div style="background: #f8fafc; border-left: 4px solid #2563eb; padding: 15px; border-radius: 6px; margin: 20px 0;">
+                                    <p style="margin: 0; font-size: 13px; color: #475569; line-height: 1.5;">
+                                        💡 <strong>Hulp of uitleg nodig?</strong><br>
+                                        Voor een korte uitleg over de registratie verwijzen wij u graag naar de <strong>Info-knop (📖)</strong> rechts bovenaan de pagina in het portaal. U kunt daarin eenvoudig zoeken op <em>StageConnectie</em>.
+                                    </p>
+                                </div>
+
+                                <p style="font-size: 13px; color: #64748b; margin-top: 20px;">
+                                    Uw portaal is bereikbaar via:<br>
+                                    <a href="${loginUrl || 'https://ghpc.stageconnectie.nl/employer-portal.html'}" style="color: #2563eb; font-weight: bold; text-decoration: underline;">${loginUrl || 'https://ghpc.stageconnectie.nl/employer-portal.html'}</a><br><br>
+                                    <em>Let op: Deze activatielink is beperkt geldig.</em>
+                                </p>
+
+                                <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 25px 0;">
+                                <p style="font-size: 14px; color: #64748b; margin-bottom: 0;">
+                                    Met vriendelijke groet,<br>
+                                    <strong>Groene Hart Praktijkschool & Het StageConnectie Team</strong>
+                                </p>
+                            </div>
+                        `;
+                    } else {
+                        subjectLine = 'Uitnodiging voor StageConnectie - Activeer je account';
+                        htmlContent = `
+                            <div style="font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 8px;">
+                                <h2 style="color: #1e293b;">Beste ${name || 'gebruiker'},</h2>
+                                <p>Welkom bij StageConnectie! Er is een account voor je klaargezet in ons systeem.</p>
+                                <p>Klik op de onderstaande knop om je account te activeren en je eigen wachtwoord in te stellen:</p>
+                                <a href="${actionLink}" style="display: inline-block; background: #2563eb; color: white; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: bold; margin-top: 10px; margin-bottom: 10px;">Account Activeren & Wachtwoord Instellen</a>
+                                <p style="font-size: 13px; color: #64748b; margin-top: 15px;">
+                                    Na het instellen van je wachtwoord kun je inloggen op je vernieuwde portaal:<br>
+                                    <a href="${loginUrl || 'https://ghpc.stageconnectie.nl/supervisor-portal.html'}" style="color: #2563eb; font-weight: bold; text-decoration: underline;">${loginUrl || 'https://ghpc.stageconnectie.nl/supervisor-portal.html'}</a><br><br>
+                                    <em>Let op: Deze activatielink is beperkt geldig.</em>
+                                </p>
+                                <p style="margin-top: 25px; font-size: 14px; color: #64748b;">
+                                    Met vriendelijke groet,<br>Het StageConnectie Team
+                                </p>
+                            </div>
+                        `;
+                    }
                 } else {
                     subjectLine = 'Welkom bij StageConnectie - Jouw Inloggegevens';
                     htmlContent = `
