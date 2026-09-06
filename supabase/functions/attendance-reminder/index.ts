@@ -114,7 +114,7 @@ serve(async (req) => {
                             </ul>
                             <p>Zou je dit alsnog willen invullen? Dit helpt ons bij het begeleiden van de studenten.</p>
                             <a href="https://stageconnectie.nl" style="display: inline-block; background: #2563eb; color: white; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: bold; margin-top: 10px;">Naar het Portaal</a>
-                            <p style="margin-top: 25px; font-size: 14px; color: #64748b;">Met vriendelijke groet,<br>Het StageConnectie Team</p>
+                            <p style="margin-top: 25px; font-size: 14px; color: #64748b;">Met vriendelijke groet,<br>Het Stage Team</p>
                         </div>
                     `
                 })
