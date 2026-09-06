@@ -32,8 +32,9 @@ serve(async (req) => {
         const isInvite = !password || password.trim() === '';
 
         if (isInvite) {
-            // Genereer een uitnodigingslink (dit maakt ook de user aan in auth.users in 'invited' status)
-            const { data: inviteData, error: inviteError } = await supabaseAdmin.auth.admin.generateLink({
+            // Genereer een uitnodigingslink (of recovery link als user al bestaat in auth.users)
+            let inviteData, inviteError;
+            const res = await supabaseAdmin.auth.admin.generateLink({
                 type: 'invite',
                 email: email,
                 options: {
@@ -43,11 +44,26 @@ serve(async (req) => {
                         ...metadata
                     }
                 }
-            })
+            });
 
-            if (inviteError) throw inviteError
-            authUser = inviteData
-            actionLink = inviteData.properties.action_link
+            inviteData = res.data;
+            inviteError = res.error;
+
+            if (inviteError && (inviteError.message?.includes('already been registered') || inviteError.message?.includes('already exists'))) {
+                const recoveryRes = await supabaseAdmin.auth.admin.generateLink({
+                    type: 'recovery',
+                    email: email,
+                    options: {
+                        redirectTo: loginUrl
+                    }
+                });
+                inviteData = recoveryRes.data;
+                inviteError = recoveryRes.error;
+            }
+
+            if (inviteError) throw inviteError;
+            authUser = inviteData;
+            actionLink = inviteData.properties?.action_link || '';
         } else {
             // Maak de user aan met het meegegeven wachtwoord
             const { data: createData, error: createError } = await supabaseAdmin.auth.admin.createUser({
