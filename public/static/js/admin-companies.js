@@ -83,6 +83,7 @@ async function loadData() {
     }
 
     data.forEach(company => {
+        const compJson = JSON.stringify(company).replace(/'/g, "&apos;");
         tbody.innerHTML += `
             <tr class="hover:bg-gray-50">
                 <td class="px-6 py-4 text-sm font-medium text-gray-900">${company.company_name}</td>
@@ -92,7 +93,10 @@ async function loadData() {
                 <td class="px-6 py-4 text-sm text-gray-500">${company.contact_person || '-'}</td>
                 <td class="px-6 py-4 text-sm text-gray-500">${company.email || '-'}</td>
                 <td class="px-6 py-4 text-right text-sm font-medium">
-                    <button onclick='editCompany(${JSON.stringify(company)})' class="text-blue-600 hover:text-blue-900 mr-3">
+                    <button onclick='sendCompanyInvite(${compJson})' class="text-purple-600 hover:text-purple-900 mr-3" title="Stuur uitnodigingsmail">
+                        ✉️ Mail
+                    </button>
+                    <button onclick='editCompany(${compJson})' class="text-blue-600 hover:text-blue-900 mr-3">
                         Bewerk
                     </button>
                     <button onclick="deleteCompany('${company.id}')" class="text-red-600 hover:text-red-900">
@@ -103,6 +107,50 @@ async function loadData() {
         `;
     });
 }
+
+// Send single company invitation email
+window.sendCompanyInvite = async function (company) {
+    if (!company.email) {
+        alert('Dit stagebedrijf heeft geen e-mailadres geregistreerd.');
+        return;
+    }
+
+    if (!confirm(`Wil je een uitnodigingsmail sturen naar ${company.company_name} (${company.email})?`)) {
+        return;
+    }
+
+    try {
+        const functionUrl = `${window.SUPABASE_URL}/functions/v1/create-auth-account`;
+        const authRes = await fetch(functionUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${window.SUPABASE_KEY}`
+            },
+            body: JSON.stringify({
+                email: company.email.trim().toLowerCase(),
+                password: '',
+                role: 'employer',
+                sendEmail: true,
+                name: company.contact_person || company.company_name,
+                loginUrl: 'https://ghpc.stageconnectie.nl/employer-portal.html',
+                metadata: {
+                    company_name: company.company_name,
+                    company_id: company.id
+                }
+            })
+        });
+
+        const authResult = await authRes.json();
+        if (!authRes.ok || !authResult.success) {
+            throw new Error(authResult?.error || 'Verzenden uitnodiging mislukt');
+        }
+
+        alert(`✅ Uitnodigingsmail is succesvol verzonden naar ${company.email}!`);
+    } catch (err) {
+        alert('Fout bij verzenden van uitnodiging: ' + err.message);
+    }
+};
 
 // Open modal
 function openModal(company = null) {
@@ -289,7 +337,7 @@ document.getElementById('company-form').addEventListener('submit', async (e) => 
             }
 
             // Success!
-            alert('✅ Stagebedrijf aangemaakt!\n\nLogin gegevens:\nEmail: ' + email + '\nWachtwoord: ' + password + '\n\n⚠️ BELANGRIJK:\nKopieer dit wachtwoord en stuur het naar het stagebedrijf.\n\nHet stagebedrijf kan direct inloggen op:\nhttps://stageconnectie.nl');
+            alert('✅ Stagebedrijf aangemaakt!\n\nEr is automatisch een uitnodigingsmail met een inlog-/activatielink verzonden naar:\n' + email);
 
             closeModal();
             loadData();
