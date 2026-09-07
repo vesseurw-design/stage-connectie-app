@@ -191,11 +191,14 @@
 
         async function loadData() {
             try {
-                // Load relations first
-                const { data: c } = await supabaseClient.from('Bedrijven').select('*');
+                // Load relations first (alphabetically sorted)
+                const { data: c } = await supabaseClient.from('Bedrijven').select('*').order('company_name', { ascending: true });
                 companies = c || [];
-                const { data: s } = await supabaseClient.from('stagebegeleiders').select('*');
+                companies.sort((a, b) => (a.company_name || '').localeCompare(b.company_name || '', 'nl', { sensitivity: 'base' }));
+
+                const { data: s } = await supabaseClient.from('stagebegeleiders').select('*').order('name', { ascending: true });
                 supervisors = s || [];
+                supervisors.sort((a, b) => (a.name || '').localeCompare(b.name || '', 'nl', { sensitivity: 'base' }));
 
                 // Populate selects
                 const companySelect = document.getElementById('company_id');
