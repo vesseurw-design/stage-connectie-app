@@ -163,7 +163,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         };
 
                         let email = getCol('email', 'emailadres', 'e-mail', 'e-mailadres', 'bedrijf_email', 'bedrijfs_email', 'company_email', 'contact_email', 'email_adres', 'mail');
-                        let wachtwoord = getCol('wachtwoord', 'password', 'passwd');
+                        let wachtwoord = getCol('wachtwoord', 'password', 'passwd', 'code', 'pin', 'pincode', 'wachtwoord_6_cijfers', 'inlogcode');
                         
                         if (!email) {
                             throw new Error("Geen e-mailadres opgegeven in CSV. Niet toegevoegd.");
