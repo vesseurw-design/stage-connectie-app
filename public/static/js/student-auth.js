@@ -15,8 +15,8 @@ const errorMessage = document.getElementById('error-message');
 if (loginForm) {
     loginForm.addEventListener('submit', async (e) => {
         e.preventDefault();
-        const email = document.getElementById('email').value.trim();
-        const password = document.getElementById('password').value;
+        const email = document.getElementById('email').value.trim().toLowerCase();
+        const password = document.getElementById('password').value.trim();
 
         errorMessage.classList.add('hidden');
 
