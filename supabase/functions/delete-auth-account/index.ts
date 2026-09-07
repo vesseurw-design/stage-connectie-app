@@ -40,11 +40,11 @@ serve(async (req) => {
 
         // If no userId is provided, find the user by email
         if (!targetUserId) {
-            const { data: users, error: listError } = await supabaseAdmin.auth.admin.listUsers()
+            const { data: users, error: listError } = await supabaseAdmin.auth.admin.listUsers({ page: 1, perPage: 1000 })
 
             if (listError) throw listError
 
-            const user = users.users.find(u => u.email === email)
+            const user = users.users.find(u => u.email?.toLowerCase() === email?.toLowerCase())
 
             if (!user) {
                 return new Response(

@@ -33,20 +33,41 @@ if (loginForm) {
             if (authError && (authError.message?.includes('Invalid login credentials') || authError.status === 400)) {
                 console.warn('⚠️ Initial auth login failed, attempting auto-provisioning for:', email);
                 try {
-                    // 1. Clear any old/broken Auth account for this email
+                    const functionUrl = `${SUPABASE_URL}/functions/v1/create-auth-account`;
                     const deleteUrl = `${SUPABASE_URL}/functions/v1/delete-auth-account`;
-                    await fetch(deleteUrl, {
+
+                    // 1. Get exact Auth user_id (if user already exists in auth.users)
+                    const linkRes = await fetch(functionUrl, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
                             'Authorization': `Bearer ${SUPABASE_KEY}`
                         },
-                        body: JSON.stringify({ email: email })
+                        body: JSON.stringify({
+                            email: email,
+                            password: '',
+                            role: 'student',
+                            sendEmail: false,
+                            name: email.split('@')[0],
+                            loginUrl: `${window.location.origin}/student-portal.html`
+                        })
                     });
+                    const linkData = await linkRes.json();
 
-                    // 2. Create fresh Auth account with the entered 6-digit password
-                    const createUrl = `${SUPABASE_URL}/functions/v1/create-auth-account`;
-                    const authRes = await fetch(createUrl, {
+                    // 2. Clear old Auth record by exact user_id or email
+                    if (linkData && linkData.user_id) {
+                        await fetch(deleteUrl, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${SUPABASE_KEY}`
+                            },
+                            body: JSON.stringify({ userId: linkData.user_id })
+                        });
+                    }
+
+                    // 3. Create fresh Auth account with entered 6-digit password
+                    const createRes = await fetch(functionUrl, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
@@ -61,8 +82,8 @@ if (loginForm) {
                             loginUrl: `${window.location.origin}/student-portal.html`
                         })
                     });
-                    const authResult = await authRes.json();
-                    if (authRes.ok && authResult.success) {
+                    const createData = await createRes.json();
+                    if (createRes.ok && createData.success) {
                         console.log('✅ Account auto-provisioned with 6-digit password! Retrying login...');
                         const retry = await supabaseClient.auth.signInWithPassword({
                             email: email,
