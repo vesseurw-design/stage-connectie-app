@@ -166,6 +166,24 @@ resetForm.addEventListener('submit', async (e) => {
     hideMessages();
 
     try {
+        // Controleer of de gebruiker een student is (stagiairs mogen hun wachtwoord niet zelf wijzigen)
+        const { data: { user } } = await supabaseClient.auth.getUser();
+        if (user && (user.user_metadata?.role === 'student' || user.email)) {
+            const { data: student } = await supabaseClient
+                .from('Students')
+                .select('id')
+                .eq('email', user.email?.toLowerCase() || '')
+                .maybeSingle();
+
+            if (student || user.user_metadata?.role === 'student') {
+                showError('Stagiairs kunnen hun wachtwoord niet zelf aanpassen. Neem contact op met je stagebegeleider.');
+                submitBtn.disabled = false;
+                btnText.classList.remove('hidden');
+                btnLoading.classList.add('hidden');
+                return;
+            }
+        }
+
         // Update password via Supabase Auth
         const { data, error } = await supabaseClient.auth.updateUser({
             password: password
