@@ -505,23 +505,23 @@ document.addEventListener('DOMContentLoaded', () => {
                             
                             let authWarning = null;
 
-                            // Alleen een Auth Edge Function call proberen als de checkbox 'sendEmail' AAN staat
-                            if (sendEmailCheckbox.checked) {
-                                try {
-                                    const authData = await callCreateAuthAccount({
-                                        email: email.trim().toLowerCase(),
-                                        password: wachtwoord || '',
-                                        role: role,
-                                        metadata: { source: 'csv_import' },
-                                        sendEmail: true,
-                                        name: name || '',
-                                        loginUrl: loginUrl
-                                    });
-                                    if (authData && authData.user_id) {
-                                        user_id = authData.user_id;
-                                    }
-                                } catch (authErr) {
-                                    console.warn('Wachtwoord/auth uitnodiging via Edge Function overgeslagen:', authErr);
+                            // Maak altijd de Supabase Auth user aan in auth.users (en stuur mail als checkbox aan staat)
+                            try {
+                                const authData = await callCreateAuthAccount({
+                                    email: email.trim().toLowerCase(),
+                                    password: wachtwoord || (type === 'student' ? 'WelkomGHPC2026!' : ''),
+                                    role: role,
+                                    metadata: { source: 'csv_import' },
+                                    sendEmail: sendEmailCheckbox.checked,
+                                    name: name || '',
+                                    loginUrl: loginUrl
+                                });
+                                if (authData && authData.user_id) {
+                                    user_id = authData.user_id;
+                                }
+                            } catch (authErr) {
+                                console.warn('Wachtwoord/auth uitnodiging via Edge Function overgeslagen:', authErr);
+                                if (sendEmailCheckbox.checked) {
                                     authWarning = `welkomstmail niet verzonden (${authErr.message})`;
                                 }
                             }

@@ -65,7 +65,7 @@ serve(async (req) => {
             authUser = inviteData;
             actionLink = inviteData.properties?.action_link || '';
         } else {
-            // Maak de user aan met het meegegeven wachtwoord
+            // Maak de user aan met het meegegeven wachtwoord (of update als deze al bestaat)
             const { data: createData, error: createError } = await supabaseAdmin.auth.admin.createUser({
                 email: email,
                 password: password,
@@ -80,8 +80,38 @@ serve(async (req) => {
                 }
             })
 
-            if (createError) throw createError
-            authUser = createData
+            if (createError) {
+                if (createError.message?.includes('already been registered') || createError.message?.includes('already exists')) {
+                    // Update het wachtwoord van de bestaande gebruiker
+                    const { data: listData } = await supabaseAdmin.auth.admin.listUsers({ page: 1, perPage: 1000 })
+                    const existingUser = listData?.users?.find((u: any) => u.email?.toLowerCase() === email.toLowerCase())
+                    if (existingUser) {
+                        const { data: updateData, error: updateError } = await supabaseAdmin.auth.admin.updateUserById(
+                            existingUser.id,
+                            {
+                                password: password,
+                                email_confirm: true,
+                                user_metadata: {
+                                    role: role,
+                                    ...metadata
+                                },
+                                app_metadata: {
+                                    role: role,
+                                    ...metadata
+                                }
+                            }
+                        )
+                        if (updateError) throw updateError
+                        authUser = updateData
+                    } else {
+                        throw createError
+                    }
+                } else {
+                    throw createError
+                }
+            } else {
+                authUser = createData
+            }
         }
 
         const userId = authUser.user?.id
