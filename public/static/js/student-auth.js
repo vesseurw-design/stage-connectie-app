@@ -23,26 +23,67 @@ if (loginForm) {
         try {
             console.log('🔐 Attempting student login for:', email);
 
-            // Step 1: Login via Auth (identical to Admin)
-            const { data: authData, error: authError } = await supabaseClient.auth.signInWithPassword({
+            // Step 1: Login via Auth
+            let { data: authData, error: authError } = await supabaseClient.auth.signInWithPassword({
                 email: email,
                 password: password
             });
+
+            // Step 2: Auto-provisioning fallback if user was inserted in DB without Auth account
+            if (authError && (authError.message?.includes('Invalid login credentials') || authError.status === 400)) {
+                console.warn('⚠️ Initial auth login failed, attempting auto-provisioning for:', email);
+                try {
+                    const functionUrl = `${SUPABASE_URL}/functions/v1/create-auth-account`;
+                    const authRes = await fetch(functionUrl, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${SUPABASE_KEY}`
+                        },
+                        body: JSON.stringify({
+                            email: email,
+                            password: password,
+                            role: 'student',
+                            sendEmail: false,
+                            name: email.split('@')[0],
+                            loginUrl: `${window.location.origin}/student-portal.html`
+                        })
+                    });
+                    const authResult = await authRes.json();
+                    if (authRes.ok && authResult.success) {
+                        console.log('✅ Account auto-provisioned successfully! Retrying login...');
+                        const retry = await supabaseClient.auth.signInWithPassword({
+                            email: email,
+                            password: password
+                        });
+                        if (!retry.error && retry.data) {
+                            authData = retry.data;
+                            authError = null;
+                        }
+                    }
+                } catch (autoErr) {
+                    console.warn('Auto-provisioning fallback failed:', autoErr);
+                }
+            }
 
             if (authError) throw authError;
 
             console.log('✅ Auth success, session created');
 
-            // Step 2: Store basic student info (without schema query first)
+            // Step 3: Store basic student info
             localStorage.setItem('stageconnect_student_session', 'true');
             localStorage.setItem('student_email', email);
 
-            // Redirect immediately to the portal (which will handle the rest)
+            // Redirect immediately to the portal
             window.location.href = 'student-portal.html';
 
         } catch (error) {
             console.error('❌ Login error:', error);
-            errorMessage.textContent = error.message || 'Inloggen mislukt.';
+            let friendlyError = error.message || 'Inloggen mislukt.';
+            if (friendlyError.includes('Invalid login credentials')) {
+                friendlyError = 'Onjuist e-mailadres of wachtwoord. Controleer je gegevens of neem contact op met je stagebegeleider.';
+            }
+            errorMessage.textContent = friendlyError;
             errorMessage.classList.remove('hidden');
         }
     });
