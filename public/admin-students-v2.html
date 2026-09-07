@@ -217,18 +217,20 @@
         let allStudents = [];
 
         async function loadData() {
-            // Load companies
-            const { data: c } = await supabaseClient.from('Bedrijven').select('*');
+            // Load companies (alphabetically sorted)
+            const { data: c } = await supabaseClient.from('Bedrijven').select('*').order('company_name', { ascending: true });
             companies = c || [];
+            companies.sort((a, b) => (a.company_name || '').localeCompare(b.company_name || '', 'nl', { sensitivity: 'base' }));
             const companySelect = document.getElementById('company_id');
             companySelect.innerHTML = '<option value="">Geen stagebedrijf</option>';
             companies.forEach(c => {
                 companySelect.innerHTML += `<option value="${c.id}">${c.company_name}</option>`;
             });
 
-            // Load supervisors
-            const { data: s } = await supabaseClient.from('stagebegeleiders').select('*');
+            // Load supervisors (alphabetically sorted)
+            const { data: s } = await supabaseClient.from('stagebegeleiders').select('*').order('name', { ascending: true });
             supervisors = s || [];
+            supervisors.sort((a, b) => (a.name || '').localeCompare(b.name || '', 'nl', { sensitivity: 'base' }));
             const supervisorSelect = document.getElementById('supervisor_id');
             supervisorSelect.innerHTML = '<option value="">Geen begeleider</option>';
             supervisors.forEach(s => {
