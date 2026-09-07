@@ -29,12 +29,24 @@ if (loginForm) {
                 password: password
             });
 
-            // Step 2: Auto-provisioning fallback if user was inserted in DB without Auth account
+            // Step 2: Auto-provisioning fallback (recreates Auth account with entered 6-digit password if needed)
             if (authError && (authError.message?.includes('Invalid login credentials') || authError.status === 400)) {
                 console.warn('⚠️ Initial auth login failed, attempting auto-provisioning for:', email);
                 try {
-                    const functionUrl = `${SUPABASE_URL}/functions/v1/create-auth-account`;
-                    const authRes = await fetch(functionUrl, {
+                    // 1. Clear any old/broken Auth account for this email
+                    const deleteUrl = `${SUPABASE_URL}/functions/v1/delete-auth-account`;
+                    await fetch(deleteUrl, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${SUPABASE_KEY}`
+                        },
+                        body: JSON.stringify({ email: email })
+                    });
+
+                    // 2. Create fresh Auth account with the entered 6-digit password
+                    const createUrl = `${SUPABASE_URL}/functions/v1/create-auth-account`;
+                    const authRes = await fetch(createUrl, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
@@ -51,7 +63,7 @@ if (loginForm) {
                     });
                     const authResult = await authRes.json();
                     if (authRes.ok && authResult.success) {
-                        console.log('✅ Account auto-provisioned successfully! Retrying login...');
+                        console.log('✅ Account auto-provisioned with 6-digit password! Retrying login...');
                         const retry = await supabaseClient.auth.signInWithPassword({
                             email: email,
                             password: password

@@ -505,11 +505,30 @@ document.addEventListener('DOMContentLoaded', () => {
                             
                             let authWarning = null;
 
-                            // Maak altijd de Supabase Auth user aan in auth.users (en stuur mail als checkbox aan staat)
+                            // Maak altijd de Supabase Auth user aan in auth.users met het wachtwoord uit de CSV
                             try {
+                                const cleanEmail = email.trim().toLowerCase();
+                                const passToSet = wachtwoord || '';
+                                
+                                if (passToSet) {
+                                    // Verwijder eventueel oud/mislukt Auth-account om het 6-cijferige wachtwoord vers in te stellen
+                                    try {
+                                        await fetch(`${supabaseUrl}/functions/v1/delete-auth-account`, {
+                                            method: 'POST',
+                                            headers: {
+                                                'Content-Type': 'application/json',
+                                                'Authorization': `Bearer ${supabaseKey}`
+                                            },
+                                            body: JSON.stringify({ email: cleanEmail })
+                                        });
+                                    } catch (delErr) {
+                                        console.warn('Oud auth account opruimen overgeslagen:', delErr);
+                                    }
+                                }
+
                                 const authData = await callCreateAuthAccount({
-                                    email: email.trim().toLowerCase(),
-                                    password: wachtwoord || (type === 'student' ? 'WelkomGHPC2026!' : ''),
+                                    email: cleanEmail,
+                                    password: passToSet,
                                     role: role,
                                     metadata: { source: 'csv_import' },
                                     sendEmail: sendEmailCheckbox.checked,
