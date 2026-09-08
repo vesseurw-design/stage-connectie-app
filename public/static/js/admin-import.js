@@ -215,7 +215,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                                         role: 'employer',
                                                         sendEmail: true,
                                                         name: companySearch,
-                                                        loginUrl: 'https://ghpc.stageconnectie.nl/employer-portal.html',
+                                                        loginUrl: 'https://ghpc.stageconnectie.nl/reset-password.html',
                                                         metadata: { company_name: companySearch }
                                                     });
 
@@ -681,7 +681,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const table = type === 'company' ? 'Bedrijven' : (type === 'student' ? 'Students' : 'stagebegeleiders');
             const role = type === 'company' ? 'employer' : (type === 'student' ? 'student' : 'supervisor');
             const loginUrl = type === 'company' 
-                ? 'https://ghpc.stageconnectie.nl/employer-portal.html' 
+                ? 'https://ghpc.stageconnectie.nl/reset-password.html' 
                 : (type === 'student' ? 'https://ghpc.stageconnectie.nl/student-portal.html' : 'https://ghpc.stageconnectie.nl/supervisor-portal.html');
 
             // Query users who have NOT accepted terms yet (meaning they haven't logged in)

@@ -197,17 +197,30 @@ resetForm.addEventListener('submit', async (e) => {
         showSuccess();
 
         // Redirect to login after 2 seconds
-        setTimeout(() => {
-            // Determine which login page based on user role
-            const userRole = data.user?.user_metadata?.role || 'supervisor';
+        setTimeout(async () => {
+            const userRole = data.user?.user_metadata?.role;
+            const email = data.user?.email || '';
 
             if (userRole === 'admin') {
                 window.location.href = 'admin-login.html';
-            } else if (userRole === 'employer') {
-                window.location.href = 'index.html';
-            } else {
-                window.location.href = 'supervisor-login.html';
+                return;
             }
+
+            // Check if user is a stagebedrijf in Bedrijven table
+            if (email) {
+                const { data: isCompany } = await supabaseClient
+                    .from('Bedrijven')
+                    .select('id')
+                    .ilike('email', email)
+                    .maybeSingle();
+
+                if (isCompany || userRole === 'employer') {
+                    window.location.href = 'index.html';
+                    return;
+                }
+            }
+
+            window.location.href = 'supervisor-login.html';
         }, 2000);
 
     } catch (error) {

@@ -133,7 +133,7 @@ window.sendCompanyInvite = async function (company) {
                 role: 'employer',
                 sendEmail: true,
                 name: company.contact_person || company.company_name,
-                loginUrl: 'https://ghpc.stageconnectie.nl/employer-portal.html',
+                loginUrl: 'https://ghpc.stageconnectie.nl/reset-password.html',
                 metadata: {
                     company_name: company.company_name,
                     company_id: company.id
@@ -317,7 +317,7 @@ document.getElementById('company-form').addEventListener('submit', async (e) => 
                         role: 'employer',
                         sendEmail: true,
                         name: contactPerson || companyName,
-                        loginUrl: 'https://ghpc.stageconnectie.nl/employer-portal.html',
+                        loginUrl: 'https://ghpc.stageconnectie.nl/reset-password.html',
                         metadata: {
                             company_name: companyName
                         }

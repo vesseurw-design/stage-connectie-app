@@ -11,9 +11,18 @@ let isSaving = false;
 
 async function init() {
     try {
-        const userEmail = localStorage.getItem('user_email');
-        const companyName = localStorage.getItem('company_name');
-        const companyId = localStorage.getItem('company_id');
+        let userEmail = localStorage.getItem('user_email');
+        let companyName = localStorage.getItem('company_name');
+        let companyId = localStorage.getItem('company_id');
+
+        // Check if there is an active Supabase Auth session first
+        if (!userEmail) {
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            if (session && session.user && session.user.email) {
+                userEmail = session.user.email;
+                console.log('✅ Active Supabase session recovered for:', userEmail);
+            }
+        }
 
         if (!userEmail) { window.location.href = 'index.html'; return; }
 
@@ -22,7 +31,10 @@ async function init() {
             document.getElementById('company-name').textContent = companyName;
         }
 
-        const { data: companies, error: companyError } = await supabaseClient.from('Bedrijven').select('*').eq('email', userEmail);
+        const { data: companies, error: companyError } = await supabaseClient
+            .from('Bedrijven')
+            .select('*')
+            .ilike('email', userEmail);
 
         if (companyError || !companies.length) {
             console.error('Company fetch error or empty:', companyError);
@@ -41,6 +53,12 @@ async function init() {
         } else {
             currentCompany = companies[0];
             document.getElementById('company-name').textContent = currentCompany.company_name;
+
+            // Ensure localStorage is updated
+            localStorage.setItem('user_email', userEmail);
+            localStorage.setItem('company_id', currentCompany.id);
+            localStorage.setItem('company_name', currentCompany.company_name);
+            localStorage.setItem('stageconnect_session', 'true');
         }
 
         // Check gebruikersvoorwaarden akkoord (Click-wrap)
