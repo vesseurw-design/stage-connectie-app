@@ -37,23 +37,21 @@ if (loginForm) {
 
             console.log('✅ Auth successful:', authData.user.email);
 
-            // Check if user is employer
-            const userRole = authData.user.user_metadata?.role || authData.user.app_metadata?.role;
-            if (userRole !== 'employer') {
-                throw new Error('Dit account is geen werkgever account. Gebruik de juiste login pagina.');
-            }
-
-            // Haal bedrijfsgegevens op via email
-            // FIX: Use ilike for case-insensitive matching
+            // Haal bedrijfsgegevens op via email (case-insensitive matching)
             const { data: companyData, error: companyError } = await supabaseClient
                 .from('Bedrijven')
                 .select('*')
                 .ilike('email', email)
-                .single();
+                .maybeSingle();
 
-            if (companyError || !companyData) {
+            const userRole = authData.user.user_metadata?.role || authData.user.app_metadata?.role;
+            if (!companyData && userRole !== 'employer') {
+                throw new Error('Dit account is geen werkgever account. Gebruik de juiste login pagina.');
+            }
+
+            if (!companyData) {
                 console.error('Company fetch error:', companyError);
-                throw new Error('Bedrijfsgegevens niet gevonden. Controleer of je email exact overeenkomt.');
+                throw new Error('Bedrijfsgegevens niet gevonden. Controleer of je e-mailadres exact overeenkomt met de registratie.');
             }
 
             console.log('✅ Company data loaded:', companyData.company_name);
