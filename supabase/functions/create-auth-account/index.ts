@@ -141,7 +141,9 @@ serve(async (req) => {
                                 <div style="background: #f8fafc; border-left: 4px solid #2563eb; padding: 15px; border-radius: 6px; margin: 20px 0;">
                                     <p style="margin: 0; font-size: 13px; color: #475569; line-height: 1.5;">
                                         💡 <strong>Hulp of uitleg nodig?</strong><br>
-                                        Voor een korte uitleg over de registratie verwijzen wij u graag naar de <strong>Info-knop (📖)</strong> rechts bovenaan de pagina in het portaal. U kunt daarin eenvoudig zoeken op <em>StageConnectie</em>.
+                                        Voor een korte uitleg over de registratie verwijzen wij u graag naar de <strong>Info-knop (📖)</strong> rechts bovenaan de pagina in het portaal. U kunt daarin eenvoudig zoeken op <em>StageConnectie</em>.<br><br>
+                                        ✉️ <strong>Problemen met inloggen of vragen?</strong><br>
+                                        Neem even contact op met de stagecoördinator Willemien Vesseur (<a href="mailto:wvs@youscope.nl" style="color: #2563eb; text-decoration: underline; font-weight: 500;">wvs@youscope.nl</a>).
                                     </p>
                                 </div>
 
