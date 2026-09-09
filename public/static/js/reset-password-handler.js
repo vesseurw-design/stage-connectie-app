@@ -262,13 +262,59 @@ function hideMessages() {
     errorMessage.classList.add('hidden');
 }
 
-// Check if user has valid reset token
+let isSessionActive = false;
+
+function markSessionValid() {
+    isSessionActive = true;
+    hideMessages();
+    submitBtn.disabled = false;
+}
+
+// 1. Listen for Supabase Auth events (handles async URL token verification)
+supabaseClient.auth.onAuthStateChange((event, session) => {
+    console.log('🔑 Auth state change:', event, !!session);
+    if (session || event === 'PASSWORD_RECOVERY' || event === 'SIGNED_IN') {
+        markSessionValid();
+    }
+});
+
+// 2. Page load verification with token parsing window
 window.addEventListener('load', async () => {
     try {
+        const hash = window.location.hash || '';
+        const search = window.location.search || '';
+        const hasTokenInUrl = hash.includes('access_token=') || hash.includes('type=') || search.includes('code=') || search.includes('token_hash=');
+
+        // Check if there was an explicit error in hash (e.g. link expired)
+        if (hash.includes('error=')) {
+            let detail = 'De activatie- of resetlink is verlopen of al gebruikt.';
+            if (hash.includes('expired')) {
+                detail = 'De activatielink is verlopen. Vraag een nieuwe uitnodiging aan of gebruik "Wachtwoord vergeten" op het inlogscherm.';
+            }
+            showError(detail);
+            submitBtn.disabled = true;
+            return;
+        }
+
+        // If URL contains token parameters, poll briefly to allow Supabase SDK to parse session
+        if (hasTokenInUrl) {
+            for (let attempt = 0; attempt < 20; attempt++) {
+                const { data: { session } } = await supabaseClient.auth.getSession();
+                if (session) {
+                    markSessionValid();
+                    return;
+                }
+                await new Promise(res => setTimeout(res, 100));
+            }
+        }
+
+        // Check current session
         const { data: { session } } = await supabaseClient.auth.getSession();
 
-        if (!session) {
-            showError('Geen geldige reset link gevonden. Vraag een nieuwe reset link aan.');
+        if (session) {
+            markSessionValid();
+        } else if (!isSessionActive) {
+            showError('Geen geldige activatie- of resetlink gevonden. Vraag een nieuwe uitnodiging aan of stel je wachtwoord opnieuw in via "Wachtwoord vergeten".');
             submitBtn.disabled = true;
         }
     } catch (error) {
