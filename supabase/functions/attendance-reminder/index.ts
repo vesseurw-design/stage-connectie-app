@@ -63,6 +63,12 @@ serve(async (req) => {
 
         // 3. Logic
         for (const student of students || []) {
+            // Skip unenrolled students
+            if (student.unenrollment_date && new Date(student.unenrollment_date) <= now) {
+                console.log(`Skipping unenrolled student: ${student.name}`);
+                continue;
+            }
+
             const company = companies?.find(c => c.id === student.company_id);
             if (!company || !company.email) continue;
 
