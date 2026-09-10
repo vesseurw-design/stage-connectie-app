@@ -13,7 +13,7 @@ serve(async (req) => {
     }
 
     try {
-        const { email, password, role, metadata, sendEmail, name, loginUrl } = await req.json()
+        const { action, email, password, role, metadata, sendEmail, name, loginUrl } = await req.json()
 
         // Create Supabase client with Admin rights
         const supabaseAdmin = createClient(
@@ -26,6 +26,24 @@ serve(async (req) => {
                 }
             }
         )
+
+        if (action === 'unlink-student-company') {
+            const { studentName, studentId } = metadata || {};
+            let query = supabaseAdmin.from('Students').update({ company_id: null });
+            if (studentId) {
+                query = query.eq('id', studentId);
+            } else if (studentName) {
+                query = query.eq('name', studentName);
+            } else {
+                throw new Error('studentId or studentName is required');
+            }
+            const { data: updated, error: updateErr } = await query.select();
+            if (updateErr) throw updateErr;
+            return new Response(
+                JSON.stringify({ success: true, updated }),
+                { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
+            );
+        }
 
         let authUser;
         let actionLink = '';
