@@ -332,7 +332,7 @@
             document.getElementById('modal').classList.remove('hidden');
             if (student) {
                 document.getElementById('modal-title').textContent = 'Stagiair Bewerken';
-                document.getElementById('student-id').value = student.name;
+                document.getElementById('student-id').value = student.id || student.name;
                 document.getElementById('name').value = student.name;
                 document.getElementById('email').value = student.email || '';
                 document.getElementById('student_number').value = student.student_number || '';
@@ -455,8 +455,11 @@
 
             let error;
             if (id) {
-                // Bewerken: gewoon de rij updaten in de database
-                const result = await supabaseClient.from('Students').update(data).eq('name', id);
+                // Bewerken: update op id of naam
+                const query = (id.length > 20 || id.includes('-'))
+                    ? supabaseClient.from('Students').update(data).eq('id', id)
+                    : supabaseClient.from('Students').update(data).eq('name', id);
+                const result = await query;
                 error = result.error;
             } else {
                 // Toevoegen: account aanmaken via Edge Function indien e-mail is ingevuld
