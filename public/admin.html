@@ -630,6 +630,8 @@
                     document.getElementById('modal-hours').value = editingExistingRecord.student_hours || 0;
                     const lateInput = document.getElementById('modal-minutes-late');
                     if (lateInput) lateInput.value = editingExistingRecord.minutes_late || 15;
+                    const noteInput = document.getElementById('modal-note');
+                    if (noteInput) noteInput.value = editingExistingRecord.notes || '';
                 }
                 document.getElementById('modal-delete-btn').classList.remove('hidden');
             } else {
@@ -637,10 +639,11 @@
                 document.getElementById('modal-hours').value = 8;
                 const lateInput = document.getElementById('modal-minutes-late');
                 if (lateInput) lateInput.value = 15;
+                const noteInput = document.getElementById('modal-note');
+                if (noteInput) noteInput.value = '';
                 document.getElementById('modal-delete-btn').classList.add('hidden');
             }
 
-            document.getElementById('modal-note').value = '';
             document.getElementById('edit-modal').classList.remove('hidden');
         }
 
@@ -704,6 +707,7 @@
 
             const hours = parseFloat(document.getElementById('modal-hours').value) || 0;
             const minutesLate = selectedModalStatus === 'late' ? (parseInt(document.getElementById('modal-minutes-late').value) || 15) : 0;
+            const noteText = document.getElementById('modal-note')?.value?.trim() || null;
             const student = students.find(s => s.id === editingStudentId);
 
             const record = {
@@ -712,6 +716,7 @@
                 student_status: selectedModalStatus,
                 student_hours: selectedModalStatus === 'absent' ? 0 : hours,
                 minutes_late: minutesLate,
+                notes: noteText,
                 status: selectedModalStatus, // Admin stelt ook de verificatie-status in
                 employer_id: student ? student.company_id : null,
                 updated_at: new Date().toISOString()
