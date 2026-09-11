@@ -488,6 +488,37 @@ function closeModal() {
 window.closeModal = closeModal;
 
 let activeEdit = null;
+let selectedActionStatus = 'present';
+
+function selectActionSheetStatus(status) {
+    selectedActionStatus = status;
+    const lateContainer = document.getElementById('late-input-container');
+    if (lateContainer) {
+        if (status === 'late') {
+            lateContainer.classList.remove('hidden');
+        } else {
+            lateContainer.classList.add('hidden');
+        }
+    }
+    updateActionSheetButtonsUI();
+}
+window.selectActionSheetStatus = selectActionSheetStatus;
+
+function updateActionSheetButtonsUI() {
+    const statuses = ['present', 'absent', 'sick', 'late'];
+    statuses.forEach(s => {
+        const btn = document.getElementById(`action-btn-${s}`);
+        if (btn) {
+            if (s === selectedActionStatus) {
+                btn.classList.add('ring-4', 'ring-blue-500', 'scale-[1.03]', 'shadow-md');
+                btn.classList.remove('border-2');
+            } else {
+                btn.classList.remove('ring-4', 'ring-blue-500', 'scale-[1.03]', 'shadow-md');
+                btn.classList.add('border-2');
+            }
+        }
+    });
+}
 
 function editCurrentFilteredDateStatus() {
     if (!currentStudent) return;
@@ -503,8 +534,8 @@ function openSupervisorActionSheet(studentId, date) {
         (a.student_id === studentId || a.student_id === currentStudent?.name) && a.date === date
     );
 
-    const lateInputContainer = document.getElementById('late-input-container');
-    if (lateInputContainer) lateInputContainer.classList.add('hidden');
+    selectedActionStatus = existingRecord?.status || 'present';
+    selectActionSheetStatus(selectedActionStatus);
 
     const lateMinutesInput = document.getElementById('supervisor-late-minutes');
     if (lateMinutesInput) lateMinutesInput.value = existingRecord?.minutes_late || 15;
@@ -526,8 +557,7 @@ function openSupervisorActionSheet(studentId, date) {
 window.openSupervisorActionSheet = openSupervisorActionSheet;
 
 function openSupervisorLateInput() {
-    const container = document.getElementById('late-input-container');
-    if (container) container.classList.remove('hidden');
+    selectActionSheetStatus('late');
 }
 window.openSupervisorLateInput = openSupervisorLateInput;
 
@@ -543,7 +573,7 @@ function closeActions() {
 }
 window.closeActions = closeActions;
 
-async function saveSupervisorAttendance(status) {
+async function saveSupervisorAttendance(explicitStatus) {
     if (!activeEdit && !currentStudent) return;
 
     const studentId = activeEdit ? activeEdit.studentId : currentStudent?.id;
@@ -551,8 +581,10 @@ async function saveSupervisorAttendance(status) {
 
     if (!studentId || !date) return;
 
+    const statusToSave = (explicitStatus !== undefined) ? explicitStatus : selectedActionStatus;
+
     let minutesLate = 0;
-    if (status === 'late') {
+    if (statusToSave === 'late') {
         minutesLate = parseInt(document.getElementById('supervisor-late-minutes')?.value) || 15;
     }
 
@@ -563,8 +595,8 @@ async function saveSupervisorAttendance(status) {
     const record = {
         student_id: studentId,
         date: date,
-        status: status,
-        hours_worked: (status === 'present' || status === 'late') ? 8 : 0,
+        status: statusToSave,
+        hours_worked: (statusToSave === 'present' || statusToSave === 'late') ? 8 : 0,
         minutes_late: minutesLate,
         notes: noteVal,
         employer_id: companyId,
