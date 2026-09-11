@@ -212,48 +212,56 @@
     <!-- Action Sheet Overlay & Action Sheet for Editing Attendance -->
     <div id="action-overlay" class="fixed inset-0 bg-gray-900/40 backdrop-blur-sm z-[60] hidden" onclick="closeActions()"></div>
     <div id="action-sheet" class="fixed bottom-0 inset-x-0 bg-white rounded-t-3xl z-[70] p-6 transform translate-y-full transition-transform duration-300 md:max-w-md md:mx-auto md:bottom-auto md:top-1/2 md:rounded-3xl md:-translate-y-1/2 hidden shadow-2xl">
-        <h3 class="text-lg font-black text-gray-800 mb-3 text-center">Status Aanpassen door Stagebegeleider</h3>
+        <h3 class="text-lg font-black text-gray-800 mb-1 text-center">Status & Opmerking Aanpassen</h3>
+        <p class="text-xs text-gray-500 mb-4 text-center">Kies een status, vul eventueel een opmerking in en klik op Opslaan</p>
         
         <!-- Opmerking Veld -->
         <div class="mb-4 text-left">
-            <label class="block text-xs font-bold text-gray-600 mb-1">Opmerking (optioneel):</label>
-            <input type="text" id="action-sheet-note" placeholder="bijv. ziekmelding / begeleider akkoord"
-                class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-blue-400 outline-none transition">
+            <label class="block text-xs font-bold text-gray-700 mb-1">Opmerking (optioneel):</label>
+            <input type="text" id="action-sheet-note" placeholder="bijv. studiedag op stagebedrijf / ziekmelding"
+                class="w-full border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm focus:ring-2 focus:ring-blue-400 outline-none transition">
         </div>
 
+        <label class="block text-xs font-bold text-gray-700 mb-2 text-left">Selecteer status:</label>
         <div class="grid grid-cols-2 gap-3 mb-4">
-            <button onclick="saveSupervisorAttendance('present')" class="p-4 rounded-xl bg-green-50 border border-green-200 text-green-700 font-bold hover:bg-green-100 transition flex flex-col items-center gap-1">
-                <span class="text-2xl">✅</span>
+            <button id="action-btn-present" onclick="selectActionSheetStatus('present')" class="p-3.5 rounded-xl bg-green-50 border-2 border-green-300 text-green-700 font-bold hover:bg-green-100 transition flex flex-col items-center gap-1">
+                <span class="text-xl">✅</span>
                 <span class="text-xs uppercase tracking-wide">Aanwezig</span>
             </button>
-            <button onclick="saveSupervisorAttendance('absent')" class="p-4 rounded-xl bg-red-50 border border-red-200 text-red-700 font-bold hover:bg-red-100 transition flex flex-col items-center gap-1">
-                <span class="text-2xl">❌</span>
+            <button id="action-btn-absent" onclick="selectActionSheetStatus('absent')" class="p-3.5 rounded-xl bg-red-50 border-2 border-red-200 text-red-700 font-bold hover:bg-red-100 transition flex flex-col items-center gap-1">
+                <span class="text-xl">❌</span>
                 <span class="text-xs uppercase tracking-wide">Afwezig</span>
             </button>
-            <button onclick="saveSupervisorAttendance('sick')" class="p-4 rounded-xl bg-orange-50 border border-orange-200 text-orange-700 font-bold hover:bg-orange-100 transition flex flex-col items-center gap-1">
-                <span class="text-2xl">🤒</span>
+            <button id="action-btn-sick" onclick="selectActionSheetStatus('sick')" class="p-3.5 rounded-xl bg-orange-50 border-2 border-orange-200 text-orange-700 font-bold hover:bg-orange-100 transition flex flex-col items-center gap-1">
+                <span class="text-xl">🤒</span>
                 <span class="text-xs uppercase tracking-wide">Ziek</span>
             </button>
-            <button onclick="openSupervisorLateInput()" class="p-4 rounded-xl bg-yellow-50 border border-yellow-200 text-yellow-700 font-bold hover:bg-yellow-100 transition flex flex-col items-center gap-1">
-                <span class="text-2xl">⏱️</span>
+            <button id="action-btn-late" onclick="selectActionSheetStatus('late')" class="p-3.5 rounded-xl bg-yellow-50 border-2 border-yellow-200 text-yellow-700 font-bold hover:bg-yellow-100 transition flex flex-col items-center gap-1">
+                <span class="text-xl">⏱️</span>
                 <span class="text-xs uppercase tracking-wide">Te laat</span>
             </button>
         </div>
 
-        <div id="late-input-container" class="hidden border-t pt-4">
-            <p class="text-sm font-bold text-gray-700 mb-2 text-center">Aantal minuten te laat:</p>
-            <div class="flex gap-2 justify-center mb-4">
-                <input type="number" id="supervisor-late-minutes" min="1" max="120" value="15" class="w-20 text-center border rounded-lg px-2 py-1 font-bold">
-                <button onclick="saveSupervisorAttendance('late')" class="px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg text-sm transition">Opslaan</button>
+        <div id="late-input-container" class="hidden border-t pt-3 mb-3">
+            <p class="text-xs font-bold text-gray-700 mb-2 text-center">Aantal minuten te laat:</p>
+            <div class="flex gap-2 justify-center">
+                <input type="number" id="supervisor-late-minutes" min="1" max="120" value="15" class="w-20 text-center border rounded-lg px-2 py-1 font-bold text-sm">
             </div>
         </div>
 
-        <button onclick="saveSupervisorAttendance('')" class="w-full py-2 bg-gray-100 hover:bg-gray-200 text-gray-600 font-bold rounded-lg text-xs uppercase tracking-wider mb-2">
-            Status Wissen
+        <!-- Duidelijke Opslaan Knop -->
+        <button onclick="saveSupervisorAttendance()" class="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-sm transition shadow-md mb-2 flex items-center justify-center gap-2">
+            💾 Opslaan
         </button>
-        <button onclick="closeActions()" class="w-full py-2 border hover:bg-gray-50 text-gray-500 font-bold rounded-lg text-xs uppercase tracking-wider">
-            Annuleren
-        </button>
+
+        <div class="flex gap-2">
+            <button onclick="saveSupervisorAttendance('')" class="flex-1 py-2 bg-gray-100 hover:bg-gray-200 text-gray-600 font-semibold rounded-lg text-xs tracking-wider">
+                Status Wissen
+            </button>
+            <button onclick="closeActions()" class="flex-1 py-2 border hover:bg-gray-50 text-gray-500 font-semibold rounded-lg text-xs tracking-wider">
+                Annuleren
+            </button>
+        </div>
     </div>
 
     <!-- Success/Info Toast -->
