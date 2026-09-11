@@ -5,7 +5,12 @@
 
 const SUPABASE_URL = window.SUPABASE_URL || 'https://vdeipnqyesduiohxvuvu.supabase.co';
 const SUPABASE_KEY = window.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZkZWlwbnF5ZXNkdWlvaHh2dXZ1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc1MjY5NTEsImV4cCI6MjA4MzEwMjk1MX0.IknEZ-GQvspcppJxLR00ayBDq1DbL0HiUKy9RDb59DU';
-const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+let activeSupabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const supabaseClient = activeSupabaseClient;
+
+const MAIN_DB_URL = 'https://vdeipnqyesduiohxvuvu.supabase.co';
+const MAIN_DB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZkZWlwbnF5ZXNkdWlvaHh2dXZ1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc1MjY5NTEsImV4cCI6MjA4MzEwMjk1MX0.IknEZ-GQvspcppJxLR00ayBDq1DbL0HiUKy9RDb59DU';
+const fallbackClient = (SUPABASE_URL !== MAIN_DB_URL) ? window.supabase.createClient(MAIN_DB_URL, MAIN_DB_KEY) : null;
 
 // DOM Elements
 const resetForm = document.getElementById('reset-password-form');
@@ -298,18 +303,33 @@ window.addEventListener('load', async () => {
 
         // If URL contains token parameters, poll briefly to allow Supabase SDK to parse session
         if (hasTokenInUrl) {
-            for (let attempt = 0; attempt < 20; attempt++) {
+            for (let attempt = 0; attempt < 15; attempt++) {
                 const { data: { session } } = await supabaseClient.auth.getSession();
                 if (session) {
                     markSessionValid();
                     return;
+                }
+                if (fallbackClient) {
+                    const { data: { session: fbSession } } = await fallbackClient.auth.getSession();
+                    if (fbSession) {
+                        activeSupabaseClient = fallbackClient;
+                        markSessionValid();
+                        return;
+                    }
                 }
                 await new Promise(res => setTimeout(res, 100));
             }
         }
 
         // Check current session
-        const { data: { session } } = await supabaseClient.auth.getSession();
+        let { data: { session } } = await supabaseClient.auth.getSession();
+        if (!session && fallbackClient) {
+            const { data: { session: fbSession } } = await fallbackClient.auth.getSession();
+            if (fbSession) {
+                activeSupabaseClient = fallbackClient;
+                session = fbSession;
+            }
+        }
 
         if (session) {
             markSessionValid();
