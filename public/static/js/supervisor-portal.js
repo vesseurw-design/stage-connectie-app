@@ -458,12 +458,11 @@ function renderAttendanceHistory(attendance, monthFilter) {
                     </div>
                     
                     <div class="flex flex-wrap gap-2 text-[11px]">
-                        ${a.hours_worked ? `<div class="bg-blue-100 text-blue-800 px-2 py-0.5 rounded-md">🏢 Stagebedrijf: ${a.hours_worked}u</div>` : ''}
+                        ${a.student_hours ? `<div class="bg-blue-100 text-blue-800 px-2 py-0.5 rounded-md">🏢 Uren: ${a.student_hours}u</div>` : ''}
                         
-                        ${a.student_status || a.student_hours > 0 ? `
+                        ${a.student_status ? `
                             <div class="bg-purple-100 text-purple-800 px-2 py-0.5 rounded-md flex items-center gap-1" title="Invoer stagiair">
                                 <span>🎓 Stagiair: ${a.student_status === 'late' ? `Te laat (${a.minutes_late || 0}m)` : (a.student_status === 'present' ? 'Aanwezig' : (a.student_status === 'absent' ? 'Afwezig' : (a.student_status === 'sick' ? 'Ziek' : a.student_status)))}</span>
-                                ${a.student_hours > 0 ? `<span class="font-black border-l border-purple-300 pl-1 ml-1">${a.student_hours}u</span>` : ''}
                             </div>
                         ` : ''}
                     </div>
@@ -596,10 +595,9 @@ async function saveSupervisorAttendance(explicitStatus) {
         student_id: studentId,
         date: date,
         status: statusToSave,
-        hours_worked: (statusToSave === 'present' || statusToSave === 'late') ? 8 : 0,
         minutes_late: minutesLate,
         notes: noteVal,
-        employer_id: companyId,
+        employer_id: companyId || null,
         updated_at: new Date().toISOString()
     };
 
@@ -646,7 +644,7 @@ function openCorrectModal(targetDate) {
 
     if (existingRecord) {
         selectCorrectStatus(existingRecord.status || 'present');
-        if (hoursInput) hoursInput.value = existingRecord.hours_worked ?? 8;
+        if (hoursInput) hoursInput.value = existingRecord.student_hours ?? 8;
         if (noteInput) noteInput.value = existingRecord.notes || '';
     } else {
         selectCorrectStatus('present');
@@ -702,7 +700,7 @@ async function saveCorrection() {
         student_id: currentStudent.id,
         date: dateVal,
         status: selectedCorrectStatus,
-        hours_worked: (selectedCorrectStatus === 'present' || selectedCorrectStatus === 'late') ? hoursVal : 0,
+        student_hours: (selectedCorrectStatus === 'present' || selectedCorrectStatus === 'late') ? hoursVal : 0,
         minutes_late: selectedCorrectStatus === 'late' ? 15 : 0,
         notes: noteVal,
         employer_id: currentStudent.company_id || null,
