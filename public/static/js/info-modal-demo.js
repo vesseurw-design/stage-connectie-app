@@ -1,6 +1,6 @@
 /**
  * Informatieboekje Modal met Live Zoekfunctie & Alle Onderwerpen
- * Versie 2.0 - Groene Hart Pro College Informatieboekje voor Bedrijven & Stagiairs
+ * Versie 2.1 - Strakke Weergave zonder Emojis
  */
 
 (function () {
@@ -16,18 +16,15 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                     </svg>
                 </button>
-                <div class="flex items-center gap-3 pr-8">
-                    <span class="text-3xl">📖</span>
-                    <div>
-                        <h3 class="text-xl font-bold">Informatieboekje Stagebedrijven</h3>
-                        <p class="text-xs text-blue-100 mt-0.5">Groene Hart Pro College • Praktijkonderwijs Alphen aan den Rijn</p>
-                    </div>
+                <div class="pr-8">
+                    <h3 class="text-xl font-bold">Informatieboekje Stagebedrijven</h3>
+                    <p class="text-xs text-blue-100 mt-0.5">Groene Hart Pro College • Praktijkonderwijs Alphen aan den Rijn</p>
                 </div>
 
                 <!-- Zoekbalk -->
                 <div class="mt-4 relative">
                     <input type="text" id="info-search-input" onkeyup="filterInfoTopics()" 
-                        placeholder="🔍 Zoek op trefwoord (bijv. vakantie, ziek, contract, uren, subsidie)..." 
+                        placeholder="Zoek op trefwoord (bijv. vakantie, ziek, contract, uren, subsidie)..." 
                         class="w-full bg-white text-gray-800 placeholder-gray-400 text-sm font-medium px-4 py-3 pl-11 rounded-2xl shadow-inner outline-none focus:ring-4 focus:ring-purple-300 transition">
                     <svg class="w-5 h-5 text-gray-400 absolute left-3.5 top-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
@@ -42,12 +39,9 @@
                 <div class="info-topic bg-purple-50/60 border border-purple-100 rounded-2xl p-4 transition hover:border-purple-200" 
                     data-keywords="contact algemene informatie telefoon stage kantoor email willemien vesseur stagebegeleider praktijkbegeleider stagecoördinator bellen nummer adres anna van burenlaan alphen aan den rijn">
                     <div class="flex items-center justify-between cursor-pointer" onclick="toggleTopic(this)">
-                        <div class="flex items-center gap-3">
-                            <span class="text-2xl">📞</span>
-                            <div>
-                                <h4 class="font-bold text-gray-800 text-sm">Contact & Stagecoördinator</h4>
-                                <p class="text-xs text-gray-500">Groene Hart Pro College • Telefoonnummers, e-mail & adres</p>
-                            </div>
+                        <div>
+                            <h4 class="font-bold text-gray-800 text-sm">Contact & Stagecoördinator</h4>
+                            <p class="text-xs text-gray-500">Groene Hart Pro College • Telefoonnummers, e-mail & adres</p>
                         </div>
                         <span class="text-gray-400 font-bold text-lg transform transition-transform duration-200 icon">▼</span>
                     </div>
@@ -55,9 +49,9 @@
                         <p><strong>Groene Hart Pro College</strong><br>Anna van Burenlaan 15, 2404 GA Alphen aan den Rijn</p>
                         <p><strong>Algemeen nummer:</strong> 0172 – 473 175<br><strong>Stage kantoor:</strong> 0172 – 427 255</p>
                         <p><strong>Stagecoördinator:</strong> Willemien Vesseur<br>
-                        📞 <a href="tel:+31635656874" class="text-blue-600 font-bold hover:underline">+31 6 35656874</a><br>
-                        ✉️ <a href="mailto:WVs@youscope.nl" class="text-blue-600 hover:underline">WVs@youscope.nl</a> / <a href="mailto:admpraktijkschool@youscope.nl" class="text-blue-600 hover:underline">admpraktijkschool@youscope.nl</a></p>
-                        <p class="bg-purple-100/60 p-2 rounded-lg text-[11px] text-purple-900">💡 <strong>Tip:</strong> Contactgegevens van de specifieke stagebegeleider van uw stagiair vindt u bovenaan uw Stagebedrijf Portaal in StageConnectie. U kunt rechtstreeks bellen of WhatsAppen.</p>
+                        Telefoon: <a href="tel:+31635656874" class="text-blue-600 font-bold hover:underline">+31 6 35656874</a><br>
+                        E-mail: <a href="mailto:WVs@youscope.nl" class="text-blue-600 hover:underline">WVs@youscope.nl</a> / <a href="mailto:admpraktijkschool@youscope.nl" class="text-blue-600 hover:underline">admpraktijkschool@youscope.nl</a></p>
+                        <p class="bg-purple-100/60 p-2 rounded-lg text-[11px] text-purple-900"><strong>Tip:</strong> Contactgegevens van de specifieke stagebegeleider van uw stagiair vindt u bovenaan uw Stagebedrijf Portaal in StageConnectie. U kunt rechtstreeks bellen of WhatsAppen.</p>
                     </div>
                 </div>
 
@@ -65,12 +59,9 @@
                 <div class="info-topic bg-blue-50/60 border border-blue-100 rounded-2xl p-4 transition hover:border-blue-200" 
                     data-keywords="algemene informatie onze leerlingen praktijkonderwijs praktijk werkt leren door doen visie competenties werkervaring 1e leerjaar 12 t m 18 jaar">
                     <div class="flex items-center justify-between cursor-pointer" onclick="toggleTopic(this)">
-                        <div class="flex items-center gap-3">
-                            <span class="text-2xl">🏫</span>
-                            <div>
-                                <h4 class="font-bold text-gray-800 text-sm">Algemene Informatie & Onze Leerlingen</h4>
-                                <p class="text-xs text-gray-500">Praktijkonderwijs (12 t/m 18 jaar) • "Praktijk werkt" & "Leren door doen"</p>
-                            </div>
+                        <div>
+                            <h4 class="font-bold text-gray-800 text-sm">Algemene Informatie & Onze Leerlingen</h4>
+                            <p class="text-xs text-gray-500">Praktijkonderwijs (12 t/m 18 jaar) • "Praktijk werkt" & "Leren door doen"</p>
                         </div>
                         <span class="text-gray-400 font-bold text-lg transform transition-transform duration-200 icon">▼</span>
                     </div>
@@ -85,12 +76,9 @@
                 <div class="info-topic bg-indigo-50/60 border border-indigo-100 rounded-2xl p-4 transition hover:border-indigo-200" 
                     data-keywords="onze stages stage klas 1 klas 2 leerjaar 3 leerjaar 4 4e klas 5 pro klas mbo 1 entree praktijkroute kinderboerderij maatschappelijke stage groepsstage individuele stage certificaat portfolio diploma">
                     <div class="flex items-center justify-between cursor-pointer" onclick="toggleTopic(this)">
-                        <div class="flex items-center gap-3">
-                            <span class="text-2xl">🎯</span>
-                            <div>
-                                <h4 class="font-bold text-gray-800 text-sm">Onze Stages & Opbouw per Leerjaar</h4>
-                                <p class="text-xs text-gray-500">Overzicht van stages per leerjaar (klas 1 t/m 5 Pro klas)</p>
-                            </div>
+                        <div>
+                            <h4 class="font-bold text-gray-800 text-sm">Onze Stages & Opbouw per Leerjaar</h4>
+                            <p class="text-xs text-gray-500">Overzicht van stages per leerjaar (klas 1 t/m 5 Pro klas)</p>
                         </div>
                         <span class="text-gray-400 font-bold text-lg transform transition-transform duration-200 icon">▼</span>
                     </div>
@@ -103,7 +91,7 @@
                             <li><strong>5 Pro klas (praktijkroute):</strong> Individuele arbeidsvoorbereidende/plaatsingsstage van maandag t/m woensdag (gerichten op werk).</li>
                             <li><strong>5 Pro klas (MBO 1 entree):</strong> Uitstroomprofiel stage op dinsdag en woensdag a.d.h.v. MBO 1 opleidingen.</li>
                         </ul>
-                        <p class="mt-2 bg-indigo-100/50 p-2 rounded-lg text-[11px] text-indigo-900">🎓 <strong>Certificaat:</strong> Na iedere goed verlopen stage krijgt een leerling een certificaat voor in het portfolio. Deze zijn belangrijk voor overgang en diploma.</p>
+                        <p class="mt-2 bg-indigo-100/50 p-2 rounded-lg text-[11px] text-indigo-900"><strong>Certificaat:</strong> Na iedere goed verlopen stage krijgt een leerling een certificaat voor in het portfolio. Deze zijn belangrijk voor overgang en diploma.</p>
                     </div>
                 </div>
 
@@ -111,18 +99,15 @@
                 <div class="info-topic bg-emerald-50/60 border border-emerald-100 rounded-2xl p-4 transition hover:border-emerald-200" 
                     data-keywords="stageovereenkomst verzekering aansprakelijkheid aansprakelijkheidsverzekering bedrijfsverzekering schade ondertekenen getekend contract regels">
                     <div class="flex items-center justify-between cursor-pointer" onclick="toggleTopic(this)">
-                        <div class="flex items-center gap-3">
-                            <span class="text-2xl">📋</span>
-                            <div>
-                                <h4 class="font-bold text-gray-800 text-sm">Stageovereenkomst & Verzekering</h4>
-                                <p class="text-xs text-gray-500">Contracten, verplichte ondertekening & schoolverzekering</p>
-                            </div>
+                        <div>
+                            <h4 class="font-bold text-gray-800 text-sm">Stageovereenkomst & Verzekering</h4>
+                            <p class="text-xs text-gray-500">Contracten, verplichte ondertekening & schoolverzekering</p>
                         </div>
                         <span class="text-gray-400 font-bold text-lg transform transition-transform duration-200 icon">▼</span>
                     </div>
                     <div class="topic-content hidden mt-3 pt-3 border-t border-emerald-100 text-xs text-gray-600 space-y-2 leading-relaxed">
                         <p><strong>Stageovereenkomsten:</strong> Leerlingen krijgen allemaal 3 stageovereenkomsten mee. Deze worden getekend door het bedrijf, de school, de leerling en een ouder/verzorger. Het stagebedrijf ontvangt één getekend exemplaar.</p>
-                        <p class="bg-red-50 text-red-800 border border-red-200 p-2 rounded-lg font-semibold">⚠️ Belangrijk: Stageovereenkomsten moeten door alle partijen zijn ondertekend voordat de stage begint. Zonder deze overeenkomst mag een leerling niet beginnen.</p>
+                        <p class="bg-red-50 text-red-800 border border-red-200 p-2 rounded-lg font-semibold">Belangrijk: Stageovereenkomsten moeten door alle partijen zijn ondertekend voordat de stage begint. Zonder deze overeenkomst mag een leerling niet beginnen.</p>
                         <p><strong>Verzekering:</strong> Leerlingen op stage zijn via deze overeenkomst via de school verzekerd. De aansprakelijkheidsverzekering van school treedt in werking als de aansprakelijkheids- en/of bedrijfsverzekering bij schade hier niet in voorziet.</p>
                     </div>
                 </div>
@@ -131,12 +116,9 @@
                 <div class="info-topic bg-amber-50/60 border border-amber-100 rounded-2xl p-4 transition hover:border-amber-200" 
                     data-keywords="uitstroom diploma praktijkroute mbo route mbo 1 entree diploma praktijkschooldiploma leerwerktraject vervolgopleiding mbo 2">
                     <div class="flex items-center justify-between cursor-pointer" onclick="toggleTopic(this)">
-                        <div class="flex items-center gap-3">
-                            <span class="text-2xl">🎓</span>
-                            <div>
-                                <h4 class="font-bold text-gray-800 text-sm">Uitstroom & Diploma's</h4>
-                                <p class="text-xs text-gray-500">Praktijkroute vs. MBO 1 Entree route</p>
-                            </div>
+                        <div>
+                            <h4 class="font-bold text-gray-800 text-sm">Uitstroom & Diploma's</h4>
+                            <p class="text-xs text-gray-500">Praktijkroute vs. MBO 1 Entree route</p>
                         </div>
                         <span class="text-gray-400 font-bold text-lg transform transition-transform duration-200 icon">▼</span>
                     </div>
@@ -150,12 +132,9 @@
                 <div class="info-topic bg-teal-50/60 border border-teal-100 rounded-2xl p-4 transition hover:border-teal-200" 
                     data-keywords="verwachten verwachtingen praktijkbegeleider begeleiding veilig werken bedrijfskleding naambordje stagevergoeding beloning gesprek motivatie basisvaardigheden">
                     <div class="flex items-center justify-between cursor-pointer" onclick="toggleTopic(this)">
-                        <div class="flex items-center gap-3">
-                            <span class="text-2xl">🤝</span>
-                            <div>
-                                <h4 class="font-bold text-gray-800 text-sm">Verwachtingen & Stagevergoeding</h4>
-                                <p class="text-xs text-gray-500">Praktijkbegeleider, veiligheid, beloning & begeleidingsgesprekken</p>
-                            </div>
+                        <div>
+                            <h4 class="font-bold text-gray-800 text-sm">Verwachtingen & Stagevergoeding</h4>
+                            <p class="text-xs text-gray-500">Praktijkbegeleider, veiligheid, beloning & begeleidingsgesprekken</p>
                         </div>
                         <span class="text-gray-400 font-bold text-lg transform transition-transform duration-200 icon">▼</span>
                     </div>
@@ -171,12 +150,9 @@
                 <div class="info-topic bg-orange-50/60 border border-orange-100 rounded-2xl p-4 transition hover:border-orange-200" 
                     data-keywords="vakantie vakantieperiodes herfstvakantie kerstvakantie voorjaarsvakantie paasweekend meivakantie pinksteren zomervakantie 2026 2027 inhaaluur gemiste uren">
                     <div class="flex items-center justify-between cursor-pointer" onclick="toggleTopic(this)">
-                        <div class="flex items-center gap-3">
-                            <span class="text-2xl">🌴</span>
-                            <div>
-                                <h4 class="font-bold text-gray-800 text-sm">Vakantieperiodes 2026-2027</h4>
-                                <p class="text-xs text-gray-500">Schoolvakanties waarin er in principe geen stage is</p>
-                            </div>
+                        <div>
+                            <h4 class="font-bold text-gray-800 text-sm">Vakantieperiodes 2026-2027</h4>
+                            <p class="text-xs text-gray-500">Schoolvakanties waarin er in principe geen stage is</p>
                         </div>
                         <span class="text-gray-400 font-bold text-lg transform transition-transform duration-200 icon">▼</span>
                     </div>
@@ -190,7 +166,7 @@
                             <div class="bg-white p-2 rounded-lg border border-orange-100"><strong>Pinksteren:</strong><br>17 mei 2027</div>
                             <div class="bg-white p-2 rounded-lg border border-orange-100 col-span-1 sm:col-span-2"><strong>Zomervakantie:</strong><br>19 juli t/m 27 aug 2027</div>
                         </div>
-                        <p class="mt-2 text-[11px] text-gray-500">ℹ️ <em>Heeft de leerling veel uren gemist? In overleg met de stagebegeleider kunnen uren in een vakantie worden ingehaald.</em></p>
+                        <p class="mt-2 text-[11px] text-gray-500"><em>Heeft de leerling veel uren gemist? In overleg met de stagebegeleider kunnen uren in een vakantie worden ingehaald.</em></p>
                     </div>
                 </div>
 
@@ -198,12 +174,9 @@
                 <div class="info-topic bg-sky-50/60 border border-sky-100 rounded-2xl p-4 transition hover:border-sky-200" 
                     data-keywords="stageperiode stageperiodes 4e klas 5 pro klas donderdag vrijdag maandag dinsdag woensdag p1 p2 p3 weken planning 2026 2027">
                     <div class="flex items-center justify-between cursor-pointer" onclick="toggleTopic(this)">
-                        <div class="flex items-center gap-3">
-                            <span class="text-2xl">📅</span>
-                            <div>
-                                <h4 class="font-bold text-gray-800 text-sm">Stageperiodes 2026-2027 (Planning)</h4>
-                                <p class="text-xs text-gray-500">Datums en lesweken voor 4e klas (Do/Vr) en 5 Pro klas (Ma/Di/Wo)</p>
-                            </div>
+                        <div>
+                            <h4 class="font-bold text-gray-800 text-sm">Stageperiodes 2026-2027 (Planning)</h4>
+                            <p class="text-xs text-gray-500">Datums en lesweken voor 4e klas (Do/Vr) en 5 Pro klas (Ma/Di/Wo)</p>
                         </div>
                         <span class="text-gray-400 font-bold text-lg transform transition-transform duration-200 icon">▼</span>
                     </div>
@@ -230,12 +203,9 @@
                 <div class="info-topic bg-rose-50/60 border border-rose-100 rounded-2xl p-4 transition hover:border-rose-200" 
                     data-keywords="praktische informatie stageconnectie aanwezigheid aanwezigheidsregistratie afmelden ziekte ziekmelden verslag stageverslag evaluatie stagecertificaat">
                     <div class="flex items-center justify-between cursor-pointer" onclick="toggleTopic(this)">
-                        <div class="flex items-center gap-3">
-                            <span class="text-2xl">📱</span>
-                            <div>
-                                <h4 class="font-bold text-gray-800 text-sm">Praktische Informatie & StageConnectie</h4>
-                                <p class="text-xs text-gray-500">Ziekmelden, wekelijkse urenregistratie & stagecertificaat</p>
-                            </div>
+                        <div>
+                            <h4 class="font-bold text-gray-800 text-sm">Praktische Informatie & StageConnectie</h4>
+                            <p class="text-xs text-gray-500">Ziekmelden, wekelijkse urenregistratie & stagecertificaat</p>
                         </div>
                         <span class="text-gray-400 font-bold text-lg transform transition-transform duration-200 icon">▼</span>
                     </div>
@@ -250,28 +220,25 @@
                 <div class="info-topic bg-yellow-50/60 border border-yellow-100 rounded-2xl p-4 transition hover:border-yellow-200" 
                     data-keywords="werknemersvaardigheden competenties communicatie afspraken nakomen leervermogen doorzettingsvermogen werktempo productie nauwkeurigheid kwaliteit zelfstandigheid stressbestendigheid flexibiliteit veiligheid arbeidsverhoudingen samenwerken">
                     <div class="flex items-center justify-between cursor-pointer" onclick="toggleTopic(this)">
-                        <div class="flex items-center gap-3">
-                            <span class="text-2xl">🌟</span>
-                            <div>
-                                <h4 class="font-bold text-gray-800 text-sm">Werknemersvaardigheden & Competenties</h4>
-                                <p class="text-xs text-gray-500">De 10 vaardigheden waarop leerlingen gemonitord worden</p>
-                            </div>
+                        <div>
+                            <h4 class="font-bold text-gray-800 text-sm">Werknemersvaardigheden & Competenties</h4>
+                            <p class="text-xs text-gray-500">De 10 vaardigheden waarop leerlingen gemonitord worden</p>
                         </div>
                         <span class="text-gray-400 font-bold text-lg transform transition-transform duration-200 icon">▼</span>
                     </div>
                     <div class="topic-content hidden mt-3 pt-3 border-t border-yellow-100 text-xs text-gray-600 space-y-2 leading-relaxed">
                         <p>Tijdens elk stagegesprek worden (een deel van) de onderstaande punten besproken:</p>
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px] mt-1">
-                            <div class="bg-white p-2 rounded-lg border border-yellow-200">🗣️ <strong>Communicatie:</strong> Duidelijk spreken, beleefd & respectvol reageren.</div>
-                            <div class="bg-white p-2 rounded-lg border border-yellow-200">⏰ <strong>Afspraken nakomen:</strong> Bedrijfs- en werktijden naleven.</div>
-                            <div class="bg-white p-2 rounded-lg border border-yellow-200">🧠 <strong>Leervermogen:</strong> Opdrachten onthouden, leren van fouten.</div>
-                            <div class="bg-white p-2 rounded-lg border border-yellow-200">💪 <strong>Doorzettingsvermogen:</strong> Volhouden bij lastige of eentonige taken.</div>
-                            <div class="bg-white p-2 rounded-lg border border-yellow-200">⚡ <strong>Werktempo:</strong> Op tempo doorwerken op de juiste volgorde.</div>
-                            <div class="bg-white p-2 rounded-lg border border-yellow-200">🎯 <strong>Nauwkeurigheid:</strong> Zorgvuldig werken, werkplek schoon achterlaten.</div>
-                            <div class="bg-white p-2 rounded-lg border border-yellow-200">🙋‍♂️ <strong>Zelfstandigheid:</strong> Hulp vragen, zelf problemen oplossen.</div>
-                            <div class="bg-white p-2 rounded-lg border border-yellow-200">🧘 <strong>Stressbestendigheid:</strong> Kalm blijven onder tijdsdruk.</div>
-                            <div class="bg-white p-2 rounded-lg border border-yellow-200">🪺 <strong>Veiligheid:</strong> Veilig gedrag laten zien & PBM's/kledingregels volgen.</div>
-                            <div class="bg-white p-2 rounded-lg border border-yellow-200">🤝 <strong>Samenwerken:</strong> Positieve bijdrage & feedback accepteren.</div>
+                            <div class="bg-white p-2 rounded-lg border border-yellow-200"><strong>Communicatie:</strong> Duidelijk spreken, beleefd & respectvol reageren.</div>
+                            <div class="bg-white p-2 rounded-lg border border-yellow-200"><strong>Afspraken nakomen:</strong> Bedrijfs- en werktijden naleven.</div>
+                            <div class="bg-white p-2 rounded-lg border border-yellow-200"><strong>Leervermogen:</strong> Opdrachten onthouden, leren van fouten.</div>
+                            <div class="bg-white p-2 rounded-lg border border-yellow-200"><strong>Doorzettingsvermogen:</strong> Volhouden bij lastige of eentonige taken.</div>
+                            <div class="bg-white p-2 rounded-lg border border-yellow-200"><strong>Werktempo:</strong> Op tempo doorwerken op de juiste volgorde.</div>
+                            <div class="bg-white p-2 rounded-lg border border-yellow-200"><strong>Nauwkeurigheid:</strong> Zorgvuldig werken, werkplek schoon achterlaten.</div>
+                            <div class="bg-white p-2 rounded-lg border border-yellow-200"><strong>Zelfstandigheid:</strong> Hulp vragen, zelf problemen oplossen.</div>
+                            <div class="bg-white p-2 rounded-lg border border-yellow-200"><strong>Stressbestendigheid:</strong> Kalm blijven onder tijdsdruk.</div>
+                            <div class="bg-white p-2 rounded-lg border border-yellow-200"><strong>Veiligheid:</strong> Veilig gedrag laten zien & PBM's/kledingregels volgen.</div>
+                            <div class="bg-white p-2 rounded-lg border border-yellow-200"><strong>Samenwerken:</strong> Positieve bijdrage & feedback accepteren.</div>
                         </div>
                     </div>
                 </div>
@@ -280,12 +247,9 @@
                 <div class="info-topic bg-cyan-50/60 border border-cyan-100 rounded-2xl p-4 transition hover:border-cyan-200" 
                     data-keywords="weetjes subsidie workshop workshops sbb vacature vacaturebord startersbanen bijbanen vakantiewerk stageplaatsen ervaringsdag">
                     <div class="flex items-center justify-between cursor-pointer" onclick="toggleTopic(this)">
-                        <div class="flex items-center gap-3">
-                            <span class="text-2xl">💡</span>
-                            <div>
-                                <h4 class="font-bold text-gray-800 text-sm">Weetjes: Subsidie, Workshops & Vacaturebord</h4>
-                                <p class="text-xs text-gray-500">Subsidies bij uitstroom, SBB workshops & vacatures op school</p>
-                            </div>
+                        <div>
+                            <h4 class="font-bold text-gray-800 text-sm">Weetjes: Subsidie, Workshops & Vacaturebord</h4>
+                            <p class="text-xs text-gray-500">Subsidies bij uitstroom, SBB workshops & vacatures op school</p>
                         </div>
                         <span class="text-gray-400 font-bold text-lg transform transition-transform duration-200 icon">▼</span>
                     </div>
@@ -299,7 +263,6 @@
 
                 <!-- No Results Message -->
                 <div id="no-info-results" class="hidden text-center py-8 text-gray-400">
-                    <span class="text-3xl block mb-2">🔍</span>
                     <p class="text-sm font-semibold">Geen onderwerpen gevonden voor deze zoekopdracht.</p>
                     <p class="text-xs text-gray-400 mt-1">Probeer een ander zoekwoord zoals 'vakantie', 'ziek', 'uren', 'subsidie' of 'contact'.</p>
                 </div>
@@ -308,7 +271,7 @@
 
             <!-- Modal Footer -->
             <div class="bg-gray-50 px-6 py-4 border-t border-gray-100 flex flex-col sm:flex-row justify-between items-center gap-3">
-                <span class="text-xs text-gray-400">💡 Tip: Klik op een onderwerp om de details te lezen of zoek op trefwoord.</span>
+                <span class="text-xs text-gray-400">Tip: Klik op een onderwerp om de details te lezen of zoek op trefwoord.</span>
                 <button onclick="closeInfoModal()" class="w-full sm:w-auto px-6 py-2.5 bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold rounded-xl text-xs transition">
                     Sluiten
                 </button>
