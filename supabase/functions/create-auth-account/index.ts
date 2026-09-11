@@ -45,6 +45,32 @@ serve(async (req) => {
             );
         }
 
+        if (action === 'upsert-student') {
+            const studentPayload = metadata?.student;
+            if (!studentPayload) throw new Error('student metadata is required');
+
+            let existingQuery = supabaseAdmin.from('Students').select('id');
+            if (studentPayload.email) {
+                existingQuery = existingQuery.ilike('email', studentPayload.email);
+            } else {
+                existingQuery = existingQuery.ilike('name', studentPayload.name);
+            }
+            const { data: existing } = await existingQuery.maybeSingle();
+
+            let res;
+            if (existing) {
+                res = await supabaseAdmin.from('Students').update(studentPayload).eq('id', existing.id).select();
+            } else {
+                res = await supabaseAdmin.from('Students').insert([studentPayload]).select();
+            }
+
+            if (res.error) throw res.error;
+            return new Response(
+                JSON.stringify({ success: true, student: res.data }),
+                { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
+            );
+        }
+
         let authUser;
         let actionLink = '';
         const isInvite = !password || password.trim() === '';
