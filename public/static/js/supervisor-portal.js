@@ -451,7 +451,7 @@ function renderAttendanceHistory(attendance, monthFilter) {
                             <span class="px-2 py-0.5 text-[9px] font-bold uppercase rounded-full ${statusColors[a.status] || 'bg-gray-100 text-gray-500'}">
                                 ${statusLabels[a.status] || 'Geen status'}
                             </span>
-                            <button onclick="openSupervisorActionSheet('${a.student_id}', '${a.date}')" class="text-xs font-black text-blue-600 hover:text-blue-800 transition">
+                            <button onclick="openCorrectModal('${a.date}')" class="text-xs font-black text-blue-600 hover:text-blue-800 transition">
                                 Aanpassen
                             </button>
                         </div>
@@ -467,6 +467,13 @@ function renderAttendanceHistory(attendance, monthFilter) {
                             </div>
                         ` : ''}
                     </div>
+
+                    ${a.notes ? `
+                        <div class="mt-1.5 text-xs text-gray-700 bg-amber-50 border border-amber-200 rounded-lg px-2.5 py-1.5 flex items-start gap-1">
+                            <span class="font-semibold text-amber-800 shrink-0">💬 Opmerking:</span>
+                            <span class="text-gray-800">${a.notes}</span>
+                        </div>
+                    ` : ''}
                 </div>
             `;
         }).join('');
@@ -478,66 +485,90 @@ function closeModal() {
     currentStudent = null;
 }
 
-let activeEdit = null;
+let selectedCorrectStatus = 'present';
 
-function editCurrentFilteredDateStatus() {
+function openCorrectModal(targetDate) {
     if (!currentStudent) return;
-    const filterDate = document.getElementById('filter-date').value || new Date().toISOString().split('T')[0];
-    openSupervisorActionSheet(currentStudent.id, filterDate);
-}
-window.editCurrentFilteredDateStatus = editCurrentFilteredDateStatus;
 
-function openSupervisorActionSheet(studentId, date) {
-    activeEdit = { studentId, date };
-    
-    // Reset late input container
-    document.getElementById('late-input-container').classList.add('hidden');
-    document.getElementById('supervisor-late-minutes').value = 15;
+    const modalName = document.getElementById('correct-modal-name');
+    const modalSubtitle = document.getElementById('correct-modal-subtitle');
+    const dateInput = document.getElementById('correct-date');
+    const hoursInput = document.getElementById('correct-hours');
+    const noteInput = document.getElementById('correct-note');
 
-    // Show modal & overlay
-    document.getElementById('action-overlay').classList.remove('hidden');
-    const sheet = document.getElementById('action-sheet');
-    sheet.classList.remove('hidden');
-    setTimeout(() => sheet.classList.remove('translate-y-full'), 10);
-}
-window.openSupervisorActionSheet = openSupervisorActionSheet;
+    if (modalName) modalName.textContent = currentStudent.name;
+    if (modalSubtitle) modalSubtitle.textContent = `Vul aanwezigheid en opmerking in voor ${currentStudent.name}`;
 
-function openSupervisorLateInput() {
-    document.getElementById('late-input-container').classList.remove('hidden');
-}
-window.openSupervisorLateInput = openSupervisorLateInput;
+    const dateVal = targetDate || document.getElementById('filter-date')?.value || new Date().toISOString().split('T')[0];
+    if (dateInput) dateInput.value = dateVal;
 
-function closeActions() {
-    const sheet = document.getElementById('action-sheet');
-    sheet.classList.add('translate-y-full');
-    setTimeout(() => {
-        sheet.classList.add('hidden');
-        document.getElementById('action-overlay').classList.add('hidden');
-        activeEdit = null;
-    }, 300);
-}
-window.closeActions = closeActions;
+    // Check if record exists
+    const existingRecord = allAttendance.find(a => 
+        (a.student_id === currentStudent.id || a.student_id === currentStudent.name) && a.date === dateVal
+    );
 
-async function saveSupervisorAttendance(status) {
-    if (!activeEdit) return;
-
-    let minutesLate = 0;
-    if (status === 'late') {
-        minutesLate = parseInt(document.getElementById('supervisor-late-minutes').value) || 15;
+    if (existingRecord) {
+        selectCorrectStatus(existingRecord.status || 'present');
+        if (hoursInput) hoursInput.value = existingRecord.hours_worked ?? 8;
+        if (noteInput) noteInput.value = existingRecord.notes || '';
+    } else {
+        selectCorrectStatus('present');
+        if (hoursInput) hoursInput.value = 8;
+        if (noteInput) noteInput.value = '';
     }
 
-    const { studentId, date } = activeEdit;
-    
-    // Find matching student's company (for employer_id if exists)
-    const student = students.find(s => s.id === studentId);
-    const companyId = student ? student.company_id : null;
+    const modal = document.getElementById('correct-modal');
+    if (modal) modal.classList.remove('hidden');
+}
+window.openCorrectModal = openCorrectModal;
+
+function closeCorrectModal() {
+    const modal = document.getElementById('correct-modal');
+    if (modal) modal.classList.add('hidden');
+}
+window.closeCorrectModal = closeCorrectModal;
+
+function selectCorrectStatus(status) {
+    selectedCorrectStatus = status;
+    const statuses = ['present', 'absent', 'sick', 'late'];
+    statuses.forEach(s => {
+        const btn = document.getElementById(`sup-btn-${s}`);
+        if (btn) {
+            if (s === status) {
+                btn.classList.add('border-indigo-600', 'bg-indigo-50', 'text-indigo-700', 'font-bold');
+                btn.classList.remove('border-gray-200', 'text-gray-600');
+            } else {
+                btn.classList.remove('border-indigo-600', 'bg-indigo-50', 'text-indigo-700', 'font-bold');
+                btn.classList.add('border-gray-200', 'text-gray-600');
+            }
+        }
+    });
+}
+window.selectCorrectStatus = selectCorrectStatus;
+
+async function saveCorrection() {
+    if (!currentStudent) {
+        alert('Geen stagiair geselecteerd.');
+        return;
+    }
+
+    const dateVal = document.getElementById('correct-date')?.value;
+    if (!dateVal) {
+        alert('Selecteer een datum.');
+        return;
+    }
+
+    const hoursVal = parseFloat(document.getElementById('correct-hours')?.value) || 8;
+    const noteVal = document.getElementById('correct-note')?.value?.trim() || null;
 
     const record = {
-        student_id: studentId,
-        date: date,
-        status: status,
-        minutes_late: minutesLate,
-        employer_id: companyId,
+        student_id: currentStudent.id,
+        date: dateVal,
+        status: selectedCorrectStatus,
+        hours_worked: (selectedCorrectStatus === 'present' || selectedCorrectStatus === 'late') ? hoursVal : 0,
+        minutes_late: selectedCorrectStatus === 'late' ? 15 : 0,
+        notes: noteVal,
+        employer_id: currentStudent.company_id || null,
         updated_at: new Date().toISOString()
     };
 
@@ -545,36 +576,20 @@ async function saveSupervisorAttendance(status) {
         const { error } = await supabaseClient.from('Attendance').upsert(record, { onConflict: 'student_id,date' });
         if (error) throw error;
 
-        // Show toast
-        showToast('Wijziging opgeslagen!');
+        showToast('Aanwezigheid opgeslagen!');
+        closeCorrectModal();
 
-        // Update local state
-        const existingIdx = allAttendance.findIndex(a => a.student_id === studentId && a.date === date);
-        if (existingIdx !== -1) {
-            if (status === '') {
-                allAttendance.splice(existingIdx, 1);
-            } else {
-                allAttendance[existingIdx] = { ...allAttendance[existingIdx], status, minutes_late: minutesLate };
-            }
-        } else if (status !== '') {
-            allAttendance.push(record);
-        }
-
-        // Refresh UI
-        closeActions();
-        
-        // Refresh student list and open modal details
         await loadAttendance();
         renderDashboard();
-        if (currentStudent && currentStudent.id === studentId) {
+        if (currentStudent) {
             openStudentDetail(currentStudent);
         }
     } catch (err) {
-        console.error('Error saving supervisor attendance:', err);
+        console.error('Error saving correction:', err);
         alert('Fout bij opslaan: ' + err.message);
     }
 }
-window.saveSupervisorAttendance = saveSupervisorAttendance;
+window.saveCorrection = saveCorrection;
 
 function showToast(message) {
     const toast = document.getElementById('toast');
