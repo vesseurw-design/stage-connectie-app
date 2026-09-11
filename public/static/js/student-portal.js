@@ -217,6 +217,7 @@ function renderGrid(existingAttendance) {
             const record = existingAttendance.find(a => a.date === dateStr);
             const status = record ? record.student_status : '';
             const hours = record ? record.student_hours : 0;
+            const minutes = record ? (record.minutes_late || 0) : 0;
 
             cell.className = 'flex flex-col items-center justify-center p-4 bg-purple-50 rounded-xl border border-purple-100 text-center min-h-[120px] shadow-sm cursor-pointer hover:bg-purple-100 transition';
             cell.dataset.date = dateStr;
@@ -447,6 +448,7 @@ function confirmAction() {
 
     updateCellContent(activeCell.element, finalStatus, hours, minutes);
     closeActions();
+    saveWeek();
 }
 
 const DEFAULT_ABSENCE_STEPS = [
