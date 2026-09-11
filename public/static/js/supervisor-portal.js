@@ -94,14 +94,28 @@ async function continueSupervisorInit(supervisorName) {
 
 
 async function refreshData() {
-    // We load students first because attendance depends on the student list
-    // Load sequentially to avoid race conditions
-    await loadCompanies();
-    await loadStudents();
-    await loadAttendance();
+    console.log('🔄 Refreshing data...');
+    const btn = document.getElementById('refresh-btn');
+    const icon = document.getElementById('refresh-icon');
 
-    renderDashboard();
+    if (btn) btn.disabled = true;
+    if (icon) icon.classList.add('animate-spin');
+
+    try {
+        await loadCompanies();
+        await loadStudents();
+        await loadAttendance();
+        renderDashboard();
+        showToast('Gegevens succesvol ververst!');
+    } catch (err) {
+        console.error('Error refreshing data:', err);
+        showToast('Fout bij verversen: ' + err.message);
+    } finally {
+        if (btn) btn.disabled = false;
+        if (icon) icon.classList.remove('animate-spin');
+    }
 }
+window.refreshData = refreshData;
 
 
 async function loadCompanies() {

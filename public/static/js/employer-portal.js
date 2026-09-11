@@ -580,11 +580,31 @@ function setupRealtimeSubscription() {
                 loadAttendance();
             } else {
                 console.log('⏸️ Skipping reload - save in progress');
-            }
         })
         .subscribe();
 
     console.log('✅ Realtime subscription active');
 }
+
+async function refreshData() {
+    console.log('🔄 Refreshing employer portal data...');
+    const btn = document.getElementById('refresh-btn');
+    const icon = document.getElementById('refresh-icon');
+
+    if (btn) btn.disabled = true;
+    if (icon) icon.classList.add('animate-spin');
+
+    try {
+        await continueEmployerInit();
+        showToast('Gegevens succesvol ververst!');
+    } catch (err) {
+        console.error('Error refreshing data:', err);
+        showToast('Fout bij verversen: ' + err.message);
+    } finally {
+        if (btn) btn.disabled = false;
+        if (icon) icon.classList.remove('animate-spin');
+    }
+}
+window.refreshData = refreshData;
 
 init();
