@@ -451,7 +451,7 @@ function renderAttendanceHistory(attendance, monthFilter) {
                             <span class="px-2 py-0.5 text-[9px] font-bold uppercase rounded-full ${statusColors[a.status] || 'bg-gray-100 text-gray-500'}">
                                 ${statusLabels[a.status] || 'Geen status'}
                             </span>
-                            <button onclick="openCorrectModal('${a.date}')" class="text-xs font-black text-blue-600 hover:text-blue-800 transition">
+                            <button onclick="openSupervisorActionSheet('${a.student_id}', '${a.date}')" class="text-xs font-black text-blue-600 hover:text-blue-800 transition">
                                 Aanpassen
                             </button>
                         </div>
@@ -481,9 +481,114 @@ function renderAttendanceHistory(attendance, monthFilter) {
 }
 
 function closeModal() {
-    document.getElementById('student-modal').classList.add('hidden');
+    const modal = document.getElementById('student-modal');
+    if (modal) modal.classList.add('hidden');
     currentStudent = null;
 }
+window.closeModal = closeModal;
+
+let activeEdit = null;
+
+function editCurrentFilteredDateStatus() {
+    if (!currentStudent) return;
+    const filterDate = document.getElementById('filter-date')?.value || new Date().toISOString().split('T')[0];
+    openSupervisorActionSheet(currentStudent.id, filterDate);
+}
+window.editCurrentFilteredDateStatus = editCurrentFilteredDateStatus;
+
+function openSupervisorActionSheet(studentId, date) {
+    activeEdit = { studentId, date };
+
+    const existingRecord = allAttendance.find(a => 
+        (a.student_id === studentId || a.student_id === currentStudent?.name) && a.date === date
+    );
+
+    const lateInputContainer = document.getElementById('late-input-container');
+    if (lateInputContainer) lateInputContainer.classList.add('hidden');
+
+    const lateMinutesInput = document.getElementById('supervisor-late-minutes');
+    if (lateMinutesInput) lateMinutesInput.value = existingRecord?.minutes_late || 15;
+
+    const noteInput = document.getElementById('action-sheet-note');
+    if (noteInput) noteInput.value = existingRecord?.notes || '';
+
+    const overlay = document.getElementById('action-overlay');
+    const sheet = document.getElementById('action-sheet');
+
+    if (overlay && sheet) {
+        overlay.classList.remove('hidden');
+        sheet.classList.remove('hidden');
+        setTimeout(() => sheet.classList.remove('translate-y-full'), 10);
+    } else {
+        openCorrectModal(date);
+    }
+}
+window.openSupervisorActionSheet = openSupervisorActionSheet;
+
+function openSupervisorLateInput() {
+    const container = document.getElementById('late-input-container');
+    if (container) container.classList.remove('hidden');
+}
+window.openSupervisorLateInput = openSupervisorLateInput;
+
+function closeActions() {
+    const sheet = document.getElementById('action-sheet');
+    const overlay = document.getElementById('action-overlay');
+    if (sheet) sheet.classList.add('translate-y-full');
+    setTimeout(() => {
+        if (sheet) sheet.classList.add('hidden');
+        if (overlay) overlay.classList.add('hidden');
+        activeEdit = null;
+    }, 300);
+}
+window.closeActions = closeActions;
+
+async function saveSupervisorAttendance(status) {
+    if (!activeEdit && !currentStudent) return;
+
+    const studentId = activeEdit ? activeEdit.studentId : currentStudent?.id;
+    const date = activeEdit ? activeEdit.date : (document.getElementById('filter-date')?.value || new Date().toISOString().split('T')[0]);
+
+    if (!studentId || !date) return;
+
+    let minutesLate = 0;
+    if (status === 'late') {
+        minutesLate = parseInt(document.getElementById('supervisor-late-minutes')?.value) || 15;
+    }
+
+    const noteVal = document.getElementById('action-sheet-note')?.value?.trim() || null;
+    const student = students.find(s => s.id === studentId || s.name === studentId);
+    const companyId = student ? student.company_id : null;
+
+    const record = {
+        student_id: studentId,
+        date: date,
+        status: status,
+        hours_worked: (status === 'present' || status === 'late') ? 8 : 0,
+        minutes_late: minutesLate,
+        notes: noteVal,
+        employer_id: companyId,
+        updated_at: new Date().toISOString()
+    };
+
+    try {
+        const { error } = await supabaseClient.from('Attendance').upsert(record, { onConflict: 'student_id,date' });
+        if (error) throw error;
+
+        showToast('Wijziging opgeslagen!');
+        closeActions();
+
+        await loadAttendance();
+        renderDashboard();
+        if (currentStudent && (currentStudent.id === studentId || currentStudent.name === studentId)) {
+            openStudentDetail(currentStudent);
+        }
+    } catch (err) {
+        console.error('Error saving supervisor attendance:', err);
+        alert('Fout bij opslaan: ' + err.message);
+    }
+}
+window.saveSupervisorAttendance = saveSupervisorAttendance;
 
 let selectedCorrectStatus = 'present';
 
@@ -593,7 +698,9 @@ window.saveCorrection = saveCorrection;
 
 function showToast(message) {
     const toast = document.getElementById('toast');
-    document.getElementById('toast-message').textContent = message;
+    if (!toast) return;
+    const toastMsg = document.getElementById('toast-message');
+    if (toastMsg) toastMsg.textContent = message;
     toast.style.opacity = '1';
     toast.style.transform = 'translate(-50%, 0) scale(1)';
     setTimeout(() => { 

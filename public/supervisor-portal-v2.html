@@ -204,14 +204,23 @@
                     <div id="modal-attendance-history" class="space-y-2">
                         <!-- Dynamically filled -->
                     </div>
+                </div>
+            </div>
         </div>
     </div>
 
     <!-- Action Sheet Overlay & Action Sheet for Editing Attendance -->
     <div id="action-overlay" class="fixed inset-0 bg-gray-900/40 backdrop-blur-sm z-[60] hidden" onclick="closeActions()"></div>
     <div id="action-sheet" class="fixed bottom-0 inset-x-0 bg-white rounded-t-3xl z-[70] p-6 transform translate-y-full transition-transform duration-300 md:max-w-md md:mx-auto md:bottom-auto md:top-1/2 md:rounded-3xl md:-translate-y-1/2 hidden shadow-2xl">
-        <h3 class="text-lg font-black text-gray-800 mb-4 text-center">Status Aanpassen door Stagebegeleider</h3>
+        <h3 class="text-lg font-black text-gray-800 mb-3 text-center">Status Aanpassen door Stagebegeleider</h3>
         
+        <!-- Opmerking Veld -->
+        <div class="mb-4 text-left">
+            <label class="block text-xs font-bold text-gray-600 mb-1">Opmerking (optioneel):</label>
+            <input type="text" id="action-sheet-note" placeholder="bijv. ziekmelding / begeleider akkoord"
+                class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-blue-400 outline-none transition">
+        </div>
+
         <div class="grid grid-cols-2 gap-3 mb-4">
             <button onclick="saveSupervisorAttendance('present')" class="p-4 rounded-xl bg-green-50 border border-green-200 text-green-700 font-bold hover:bg-green-100 transition flex flex-col items-center gap-1">
                 <span class="text-2xl">✅</span>
