@@ -71,6 +71,17 @@ serve(async (req) => {
             );
         }
 
+        if (action === 'update-company') {
+            const { companyId, companyPayload } = metadata || {};
+            if (!companyId || !companyPayload) throw new Error('companyId and companyPayload are required');
+            const { data: updated, error: err } = await supabaseAdmin.from('Bedrijven').update(companyPayload).eq('id', companyId).select();
+            if (err) throw err;
+            return new Response(
+                JSON.stringify({ success: true, company: updated }),
+                { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
+            );
+        }
+
         let authUser;
         let actionLink = '';
         const isInvite = !password || password.trim() === '';
