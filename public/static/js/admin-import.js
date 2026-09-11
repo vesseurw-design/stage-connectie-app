@@ -215,7 +215,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                                         role: 'employer',
                                                         sendEmail: true,
                                                         name: companySearch,
-                                                        loginUrl: 'https://ghpc.stageconnectie.nl/reset-password.html',
+                                                        loginUrl: `${window.location.origin}/reset-password.html`,
                                                         metadata: { company_name: companySearch }
                                                     });
 
@@ -302,7 +302,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                                         role: 'supervisor',
                                                         sendEmail: true,
                                                         name: supervisorSearch,
-                                                        loginUrl: 'https://ghpc.stageconnectie.nl/supervisor-portal.html'
+                                                        loginUrl: `${window.location.origin}/supervisor-portal.html`
                                                     });
 
                                                     if (authResult && authResult.success) {
@@ -500,8 +500,8 @@ document.addEventListener('DOMContentLoaded', () => {
                             let role = type === 'student' ? 'student' : (type === 'company' ? 'employer' : 'supervisor');
                             let name = type === 'student' ? getName() : (type === 'company' ? (getCol('contactpersoon') || getCol('bedrijfsnaam')) : getName());
                             let loginUrl = type === 'student' 
-                                ? 'https://ghpc.stageconnectie.nl/student-portal.html' 
-                                : (type === 'company' ? 'https://ghpc.stageconnectie.nl/employer-portal.html' : 'https://ghpc.stageconnectie.nl/supervisor-portal.html');
+                                ? `${window.location.origin}/student-portal.html` 
+                                : (type === 'company' ? `${window.location.origin}/reset-password.html` : `${window.location.origin}/supervisor-portal.html`);
                             
                             let authWarning = null;
 
@@ -681,8 +681,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const table = type === 'company' ? 'Bedrijven' : (type === 'student' ? 'Students' : 'stagebegeleiders');
             const role = type === 'company' ? 'employer' : (type === 'student' ? 'student' : 'supervisor');
             const loginUrl = type === 'company' 
-                ? 'https://ghpc.stageconnectie.nl/reset-password.html' 
-                : (type === 'student' ? 'https://ghpc.stageconnectie.nl/student-portal.html' : 'https://ghpc.stageconnectie.nl/supervisor-portal.html');
+                ? `${window.location.origin}/reset-password.html` 
+                : (type === 'student' ? `${window.location.origin}/student-portal.html` : `${window.location.origin}/supervisor-portal.html`);
 
             // Query users who have NOT accepted terms yet (meaning they haven't logged in)
             const { data: list, error: fetchError } = await supabase
