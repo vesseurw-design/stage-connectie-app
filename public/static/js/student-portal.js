@@ -218,6 +218,7 @@ function renderGrid(existingAttendance) {
             const status = record ? record.student_status : '';
             const hours = record ? record.student_hours : 0;
             const minutes = record ? (record.minutes_late || 0) : 0;
+            const notes = record ? (record.notes || '') : '';
 
             cell.className = 'flex flex-col items-center justify-center p-4 bg-purple-50 rounded-xl border border-purple-100 text-center min-h-[120px] shadow-sm cursor-pointer hover:bg-purple-100 transition';
             cell.dataset.date = dateStr;
@@ -232,7 +233,7 @@ function renderGrid(existingAttendance) {
                 }
             };
 
-            updateCellContent(cell, status, hours, minutes);
+            updateCellContent(cell, status, hours, minutes, notes);
         } else if (!isScheduled) {
             cell.className = 'flex flex-col items-center justify-center p-4 bg-gray-50 rounded-xl border border-gray-200 text-center min-h-[120px] cursor-pointer hover:bg-gray-100 transition shadow-sm hover:-translate-y-0.5';
             cell.onclick = () => openActionSheet(dateStr, cell, true);
@@ -244,30 +245,32 @@ function renderGrid(existingAttendance) {
             cell.dataset.status = '';
             cell.dataset.hours = 0;
             cell.dataset.minutes = 0;
+            cell.dataset.notes = '';
             
             // Check if there was an exception filled in
             const record = existingAttendance.find(a => a.date === dateStr);
             if (record && record.student_status) {
-                updateCellContent(cell, record.student_status, record.student_hours || 0, record.minutes_late || 0);
+                updateCellContent(cell, record.student_status, record.student_hours || 0, record.minutes_late || 0, record.notes || '');
             }
         } else {
             const record = existingAttendance.find(a => a.date === dateStr);
             const status = record ? record.student_status : '';
             const hours = record ? record.student_hours : 0;
             const minutes = record ? (record.minutes_late || 0) : 0;
+            const notes = record ? (record.notes || '') : '';
 
             cell.className = 'flex flex-col items-center justify-center p-4 bg-white rounded-xl border-2 cursor-pointer transition-all duration-200 hover:-translate-y-0.5 shadow-sm min-h-[120px]';
             cell.dataset.date = dateStr;
             cell.onclick = () => openActionSheet(dateStr, cell, false);
 
-            updateCellContent(cell, status, hours, minutes);
+            updateCellContent(cell, status, hours, minutes, notes);
         }
 
         container.appendChild(cell);
     });
 }
 
-function updateCellContent(cell, status, hours, minutes) {
+function updateCellContent(cell, status, hours, minutes, notes = '') {
     const dateStr = cell.dataset.date;
     const holiday = isHoliday(dateStr);
 
@@ -283,6 +286,7 @@ function updateCellContent(cell, status, hours, minutes) {
         cell.dataset.status = '';
         cell.dataset.hours = 0;
         cell.dataset.minutes = 0;
+        cell.dataset.notes = '';
         return;
     }
 
@@ -292,11 +296,13 @@ function updateCellContent(cell, status, hours, minutes) {
     if (status !== '') content = `<span class="text-4xl filter drop-shadow-sm">${content}</span>`;
 
     const lateText = (status === 'late' && minutes > 0) ? ` (${minutes}m)` : '';
+    const noteBadge = (notes && notes.trim() !== '') ? `<div class="text-[10px] text-purple-700 font-bold bg-purple-50 border border-purple-200 px-1.5 py-0.5 rounded flex items-center gap-0.5 mt-1" title="Verslag ingevuld">📝 <span>Verslag</span></div>` : '';
 
     cell.innerHTML = `
-        <div class="mb-2">${content}</div>
-        ${status ? `<span class="text-xs font-bold text-gray-700 uppercase tracking-wide mb-1">${getStatusLabel(status)}${lateText}</span>` : '<span class="text-xs font-bold text-gray-400 uppercase tracking-wide">Vul in</span>'}
+        <div class="mb-1">${content}</div>
+        ${status ? `<span class="text-xs font-bold text-gray-700 uppercase tracking-wide mb-0.5">${getStatusLabel(status)}${lateText}</span>` : '<span class="text-xs font-bold text-gray-400 uppercase tracking-wide">Vul in</span>'}
         ${hours > 0 && status !== 'absent' ? `<div class="bg-purple-100 text-purple-700 text-xs font-black px-2 py-0.5 rounded shadow-sm mt-auto">${hours} uur</div>` : ''}
+        ${noteBadge}
     `;
     
     cell.classList.add('bg-white');
@@ -313,6 +319,7 @@ function updateCellContent(cell, status, hours, minutes) {
     cell.dataset.status = status;
     cell.dataset.hours = hours;
     cell.dataset.minutes = status === 'late' ? (minutes || 15) : 0;
+    cell.dataset.notes = notes || '';
 }
 
 function getStatusLabel(status) {
@@ -346,6 +353,8 @@ function openActionSheet(dateStr, element, isUnscheduled) {
     document.getElementById('action-hours-worked').value = currentHours;
     const lateInput = document.getElementById('action-minutes-late');
     if (lateInput) lateInput.value = currentMinutes;
+    const notesInput = document.getElementById('action-notes');
+    if (notesInput) notesInput.value = element.dataset.notes || '';
 
     updateActionSheetButtons(currentStatus);
 
@@ -446,7 +455,10 @@ function confirmAction() {
         minutes = lateInput ? (parseInt(lateInput.value) || 15) : 15;
     }
 
-    updateCellContent(activeCell.element, finalStatus, hours, minutes);
+    const notesInput = document.getElementById('action-notes');
+    const notesText = notesInput ? notesInput.value.trim() : '';
+
+    updateCellContent(activeCell.element, finalStatus, hours, minutes, notesText);
     closeActions();
     saveWeek();
 }
@@ -573,6 +585,7 @@ async function saveWeek() {
                 student_status: status,
                 student_hours: parseFloat(cell.dataset.hours) || 0,
                 minutes_late: status === 'late' ? (parseInt(cell.dataset.minutes) || 0) : 0,
+                notes: cell.dataset.notes || null,
                 updated_at: new Date().toISOString()
             });
         }
@@ -666,19 +679,157 @@ async function loadAttendanceHistory() {
             ? `<span class="ml-auto text-xs font-bold text-purple-700 bg-purple-100 px-2 py-0.5 rounded-full">${record.student_hours} uur</span>`
             : '';
         const displayLabel = record.student_status === 'late' && record.minutes_late ? `Te laat (${record.minutes_late}m)` : cfg.label;
+        const noteBlock = record.notes ? `
+            <div class="mt-2 text-xs text-gray-700 bg-white/90 p-2.5 rounded-lg border border-purple-100 flex items-start gap-1.5 shadow-sm">
+                <span class="font-bold shrink-0 text-purple-700">💬 Dagverslag:</span>
+                <span class="text-gray-800 leading-relaxed">${record.notes}</span>
+            </div>
+        ` : '';
+
         return `
-            <div class="flex items-center gap-3 px-4 py-3 rounded-xl border ${cfg.bg} ${cfg.border}">
-                <span class="text-xl flex-shrink-0">${cfg.icon}</span>
-                <div class="flex-1 min-w-0">
-                    <div class="text-xs text-gray-500 capitalize">${dateLabel}</div>
-                    <div class="font-bold ${cfg.text} text-sm">${displayLabel}</div>
+            <div class="p-3.5 rounded-xl border ${cfg.bg} ${cfg.border} space-y-1">
+                <div class="flex items-center gap-3">
+                    <span class="text-xl flex-shrink-0">${cfg.icon}</span>
+                    <div class="flex-1 min-w-0">
+                        <div class="text-xs text-gray-500 capitalize">${dateLabel}</div>
+                        <div class="font-bold ${cfg.text} text-sm">${displayLabel}</div>
+                    </div>
+                    ${hoursStr}
                 </div>
-                ${hoursStr}
+                ${noteBlock}
             </div>
         `;
     }).join('');
 
     historyLoaded = true;
 }
+
+async function exportStudentPDF() {
+    if (!currentStudent) return;
+    
+    const { data, error } = await supabaseClient
+        .from('Attendance')
+        .select('*')
+        .eq('student_id', currentStudent.id)
+        .not('student_status', 'is', null)
+        .order('date', { ascending: true });
+
+    if (error) {
+        alert('Fout bij het ophalen van gegevens: ' + error.message);
+        return;
+    }
+
+    if (!data || data.length === 0) {
+        alert('Geen geregistreerde aanwezigheids- of dagverslaggegevens gevonden om te exporteren.');
+        return;
+    }
+
+    let totalHours = 0;
+    let daysPresent = 0;
+    let daysAbsent = 0;
+    let daysSick = 0;
+    let daysLate = 0;
+
+    data.forEach(r => {
+        totalHours += (r.student_hours || 0);
+        if (r.student_status === 'present') daysPresent++;
+        else if (r.student_status === 'absent') daysAbsent++;
+        else if (r.student_status === 'sick') daysSick++;
+        else if (r.student_status === 'late') daysLate++;
+    });
+
+    const schoolName = window.SCHOOL_CONFIG?.schoolName || 'StageConnectie';
+    const reportContainer = document.createElement('div');
+    reportContainer.style.padding = '24px';
+    reportContainer.style.fontFamily = 'Arial, sans-serif';
+    reportContainer.style.color = '#1f2937';
+
+    const statusLabels = { present: 'Aanwezig', absent: 'Afwezig', sick: 'Ziek', late: 'Te laat' };
+
+    reportContainer.innerHTML = `
+        <div style="border-bottom: 3px solid #7e22ce; padding-bottom: 12px; margin-bottom: 16px; display: flex; justify-content: space-between; items-center;">
+            <div>
+                <h1 style="font-size: 22px; font-weight: bold; color: #6b21a8; margin: 0;">📋 Stage-Logboek & Urenoverzicht</h1>
+                <p style="font-size: 12px; color: #6b7280; margin: 4px 0 0 0;">Gegenereerd via ${schoolName}</p>
+            </div>
+        </div>
+
+        <div style="background-color: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 12px; margin-bottom: 16px; font-size: 12px;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+                <div><strong>Stagiair:</strong> ${currentStudent.name}</div>
+                <div><strong>Klas:</strong> ${currentStudent.class || '-'}</div>
+            </div>
+            <div style="display: flex; justify-content: space-between;">
+                <div><strong>Email:</strong> ${currentStudent.email || '-'}</div>
+                <div><strong>Datum export:</strong> ${new Date().toLocaleDateString('nl-NL')}</div>
+            </div>
+        </div>
+
+        <div style="display: flex; gap: 10px; margin-bottom: 16px;">
+            <div style="flex: 1; background: #f3e8ff; border: 1px solid #d8b4fe; border-radius: 8px; padding: 10px; text-align: center;">
+                <div style="font-size: 16px; font-weight: bold; color: #6b21a8;">${totalHours} uur</div>
+                <div style="font-size: 11px; color: #7e22ce;">Totaal Gelopen</div>
+            </div>
+            <div style="flex: 1; background: #dcfce7; border: 1px solid #86efac; border-radius: 8px; padding: 10px; text-align: center;">
+                <div style="font-size: 16px; font-weight: bold; color: #166534;">${daysPresent} dagen</div>
+                <div style="font-size: 11px; color: #15803d;">Aanwezig</div>
+            </div>
+            <div style="flex: 1; background: #fef9c3; border: 1px solid #fde047; border-radius: 8px; padding: 10px; text-align: center;">
+                <div style="font-size: 16px; font-weight: bold; color: #854d0e;">${daysLate}x</div>
+                <div style="font-size: 11px; color: #a16207;">Te laat</div>
+            </div>
+            <div style="flex: 1; background: #fee2e2; border: 1px solid #fca5a5; border-radius: 8px; padding: 10px; text-align: center;">
+                <div style="font-size: 16px; font-weight: bold; color: #991b1b;">${daysAbsent + daysSick}x</div>
+                <div style="font-size: 11px; color: #b91c1c;">Afwezig / Ziek</div>
+            </div>
+        </div>
+
+        <h2 style="font-size: 14px; font-weight: bold; margin-bottom: 8px; color: #374151;">Geregistreerde Stagedagen & Dagverslagen:</h2>
+        <table style="width: 100%; border-collapse: collapse; font-size: 11px;">
+            <thead>
+                <tr style="background-color: #f3f4f6; border-bottom: 2px solid #d1d5db; text-align: left;">
+                    <th style="padding: 6px 8px; width: 20%;">Datum</th>
+                    <th style="padding: 6px 8px; width: 12%;">Status</th>
+                    <th style="padding: 6px 8px; width: 10%;">Uren</th>
+                    <th style="padding: 6px 8px;">Werkzaamheden / Dagverslag</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${data.map((r, idx) => {
+                    const dateObj = new Date(r.date);
+                    const dateStr = dateObj.toLocaleDateString('nl-NL', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
+                    const bg = idx % 2 === 0 ? '#ffffff' : '#f9fafb';
+                    const statusStr = r.student_status === 'late' ? `Te laat (${r.minutes_late || 0}m)` : (statusLabels[r.student_status] || r.student_status);
+                    return `
+                        <tr style="background-color: ${bg}; border-bottom: 1px solid #e5e7eb;">
+                            <td style="padding: 6px 8px; font-weight: bold;">${dateStr}</td>
+                            <td style="padding: 6px 8px;">${statusStr}</td>
+                            <td style="padding: 6px 8px;">${r.student_hours || 0} u</td>
+                            <td style="padding: 6px 8px; font-style: ${r.notes ? 'normal' : 'italic'}; color: ${r.notes ? '#111827' : '#9ca3af'};">
+                                ${r.notes ? r.notes.replace(/</g, '&lt;').replace(/>/g, '&gt;') : '- Geen notitie -'}
+                            </td>
+                        </tr>
+                    `;
+                }).join('')}
+            </tbody>
+        </table>
+    `;
+
+    const opt = {
+        margin: 10,
+        filename: `Stageverslag_${currentStudent.name.replace(/\s+/g, '_')}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2 },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    };
+
+    if (window.html2pdf) {
+        window.html2pdf().set(opt).from(reportContainer).save();
+    } else {
+        alert('PDF bibliotheek kon niet worden geladen.');
+    }
+}
+
+window.exportStudentPDF = exportStudentPDF;
 
 init();

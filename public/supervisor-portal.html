@@ -192,10 +192,15 @@
                 <div>
                     <div class="flex justify-between items-center mb-2">
                         <p class="text-sm text-gray-500">Aanwezigheidshistorie</p>
-                        <select id="history-month-filter" onchange="filterHistoryByMonth()"
-                            class="text-xs px-2 py-1 border rounded">
-                            <option value="all">Alle maanden</option>
-                        </select>
+                        <div class="flex items-center gap-2">
+                            <select id="history-month-filter" onchange="filterHistoryByMonth()"
+                                class="text-xs px-2 py-1 border rounded">
+                                <option value="all">Alle maanden</option>
+                            </select>
+                            <button onclick="exportSupervisorStudentPDF()" class="px-3 py-1 bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs rounded-lg shadow transition flex items-center gap-1 cursor-pointer">
+                                <span>📄</span> <span>PDF Export</span>
+                            </button>
+                        </div>
                     </div>
                     <div id="modal-attendance-history" class="space-y-2">
                         <!-- Dynamically filled -->
@@ -270,6 +275,7 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <script src="./static/js/config.js"></script>
     <script src="./static/js/terms-acceptance.js"></script>
     <script src="./static/js/supervisor-auth.js?v=4.3"></script>
