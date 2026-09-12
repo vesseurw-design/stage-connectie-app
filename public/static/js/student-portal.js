@@ -142,8 +142,8 @@ function updateWeekDisplay() {
 function changeWeek(direction) {
     const newOffset = currentWeekOffset + direction;
     
-    // Altijd maximaal 1 week terug (-1) en huidige week (0) toegestaan
-    if (newOffset < -1 || newOffset > 0) return;
+    // Toestaan tot 52 weken terug en 0 (huidige week) vooruit
+    if (newOffset < -52 || newOffset > 0) return;
     
     currentWeekOffset = newOffset;
     updateWeekDisplay();
@@ -155,8 +155,7 @@ function updateNavigationButtons() {
     const btnPrev = document.getElementById('btn-prev-week');
     const btnNext = document.getElementById('btn-next-week');
     
-    // Altijd maximaal 1 week terug (-1) en huidige week (0) toegestaan
-    const canGoPrev = (currentWeekOffset > -1);
+    const canGoPrev = (currentWeekOffset > -52);
     const canGoNext = (currentWeekOffset < 0);
     
     if (btnPrev) {
@@ -616,7 +615,12 @@ async function saveWeek() {
     isSaving = false;
     btnSave.innerHTML = originalText;
     
-    setTimeout(loadAttendance, 1000);
+    setTimeout(() => {
+        loadAttendance();
+        if (typeof loadAttendanceHistory === 'function') {
+            loadAttendanceHistory();
+        }
+    }, 1000);
 }
 
 function showToast() {
@@ -654,6 +658,28 @@ function toggleHistory() {
     }
 }
 
+async function jumpToDate(dateStr) {
+    const targetDate = new Date(dateStr + 'T00:00:00');
+    const today = new Date();
+    const targetMonday = getMonday(targetDate);
+    const currentMonday = getMonday(today);
+    
+    const diffTime = targetMonday.getTime() - currentMonday.getTime();
+    const diffWeeks = Math.round(diffTime / (7 * 24 * 60 * 60 * 1000));
+    
+    currentWeekOffset = diffWeeks;
+    updateWeekDisplay();
+    updateNavigationButtons();
+    await loadAttendance();
+    
+    const cell = document.querySelector(`#student-week-row > div[data-date="${dateStr}"]`);
+    if (cell) {
+        cell.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        openActionsSheet(cell);
+    }
+}
+window.jumpToDate = jumpToDate;
+
 async function loadAttendanceHistory() {
     const container = document.getElementById('attendance-history');
     container.innerHTML = '<div class="text-center text-gray-400 text-sm py-4">Laden...</div>';
@@ -681,10 +707,10 @@ async function loadAttendanceHistory() {
 
     container.innerHTML = data.map(record => {
         const cfg = statusConfig[record.student_status] || { label: record.student_status, icon: '❓', bg: 'bg-gray-50', border: 'border-gray-200', text: 'text-gray-700' };
-        const dateObj = new Date(record.date);
+        const dateObj = new Date(record.date + 'T00:00:00');
         const dateLabel = dateObj.toLocaleDateString('nl-NL', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
         const hoursStr = record.student_hours > 0 && record.student_status !== 'absent'
-            ? `<span class="ml-auto text-xs font-bold text-purple-700 bg-purple-100 px-2 py-0.5 rounded-full">${record.student_hours} uur</span>`
+            ? `<span class="text-xs font-bold text-purple-700 bg-purple-100 px-2 py-0.5 rounded-full">${record.student_hours} uur</span>`
             : '';
         const displayLabel = record.student_status === 'late' && record.minutes_late ? `Te laat (${record.minutes_late}m)` : cfg.label;
         const noteBlock = record.notes ? `
@@ -703,6 +729,9 @@ async function loadAttendanceHistory() {
                         <div class="font-bold ${cfg.text} text-sm">${displayLabel}</div>
                     </div>
                     ${hoursStr}
+                    <button onclick="jumpToDate('${record.date}')" class="ml-2 text-xs font-bold text-purple-700 hover:text-purple-900 bg-white hover:bg-purple-50 px-2.5 py-1 rounded-lg border border-purple-200 transition shadow-sm flex items-center gap-1 cursor-pointer">
+                        ✏️ Bewerk
+                    </button>
                 </div>
                 ${noteBlock}
             </div>
