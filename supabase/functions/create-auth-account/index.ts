@@ -59,7 +59,9 @@ serve(async (req) => {
 
             let res;
             if (existing) {
-                res = await supabaseAdmin.from('Students').update(studentPayload).eq('id', existing.id).select();
+                const updatePayload = { ...studentPayload };
+                delete updatePayload.id; // Preserve existing primary key ID to avoid breaking Attendance foreign keys
+                res = await supabaseAdmin.from('Students').update(updatePayload).eq('id', existing.id).select();
             } else {
                 res = await supabaseAdmin.from('Students').insert([studentPayload]).select();
             }
@@ -96,7 +98,9 @@ serve(async (req) => {
 
             let res;
             if (existing) {
-                res = await supabaseAdmin.from('Bedrijven').update(companyPayload).eq('id', existing.id).select();
+                const updatePayload = { ...companyPayload };
+                delete updatePayload.id;
+                res = await supabaseAdmin.from('Bedrijven').update(updatePayload).eq('id', existing.id).select();
             } else {
                 res = await supabaseAdmin.from('Bedrijven').insert([companyPayload]).select();
             }
@@ -122,7 +126,9 @@ serve(async (req) => {
 
             let res;
             if (existing) {
-                res = await supabaseAdmin.from('stagebegeleiders').update(supervisorPayload).eq('id', existing.id).select();
+                const updatePayload = { ...supervisorPayload };
+                delete updatePayload.id;
+                res = await supabaseAdmin.from('stagebegeleiders').update(updatePayload).eq('id', existing.id).select();
             } else {
                 res = await supabaseAdmin.from('stagebegeleiders').insert([supervisorPayload]).select();
             }
