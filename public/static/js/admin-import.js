@@ -247,10 +247,20 @@ async function executeImportProcess(fileInput, type, sendEmailCheckbox, progress
 
         for (let i = 0; i < total; i++) {
             const row = data[i];
+            
+            // Sla lege rijen in de CSV (bijv. lege regels onderaan) automatisch over
+            const hasAnyVal = row && Object.values(row).some(v => String(v || '').trim().length > 0);
+            if (!hasAnyVal) {
+                continue;
+            }
+
             if (progressElements) {
                 if (progressElements.text) progressElements.text.textContent = `${i + 1} / ${total} verwerkt...`;
                 if (progressElements.bar) progressElements.bar.style.width = `${((i + 1) / total) * 100}%`;
             }
+
+            let currentRowEmail = '';
+            let currentRowName = '';
 
             try {
                 // Kolommen ophalen (BOM-safe, case-insensitive, aliassen)
@@ -293,8 +303,11 @@ async function executeImportProcess(fileInput, type, sendEmailCheckbox, progress
                     'wachtwoord/code', 'inlogcode/wachtwoord', 'wachtwoord/pin'
                 );
 
+                currentRowEmail = email || '';
+                currentRowName = getName();
+
                 if (!email) {
-                    throw new Error("Geen e-mailadres opgegeven in deze rij van het CSV bestand.");
+                    throw new Error(`Geen e-mailadres gevonden op rij ${i + 1} (${currentRowName !== 'Onbekend' ? currentRowName : 'Onbekend'}).`);
                 }
 
                 const isUuid = (val) => val && /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(val);
@@ -652,7 +665,7 @@ async function executeImportProcess(fileInput, type, sendEmailCheckbox, progress
                 }
             } catch (error) {
                 failCount++;
-                let emailDisplay = `Rij ${i + 1}`;
+                let emailDisplay = [currentRowEmail, currentRowName].filter(b => b && b !== 'Onbekend').join(' - ') || `Rij ${i + 1}`;
                 let errMsg = error.message || 'Onbekende fout';
                 if (errMsg.includes('row-level security policy')) {
                     errMsg = 'Supabase beveiliging (RLS) op de database blokkeert het toevoegen. Voer het SQL-script uit in de Supabase SQL Editor om dit vrij te geven.';
