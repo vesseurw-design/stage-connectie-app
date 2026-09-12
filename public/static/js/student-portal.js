@@ -142,8 +142,8 @@ function updateWeekDisplay() {
 function changeWeek(direction) {
     const newOffset = currentWeekOffset + direction;
     
-    // Toestaan tot 52 weken terug en 0 (huidige week) vooruit
-    if (newOffset < -52 || newOffset > 0) return;
+    // Altijd maximaal 1 week terug (-1) en huidige week (0) toegestaan
+    if (newOffset < -1 || newOffset > 0) return;
     
     currentWeekOffset = newOffset;
     updateWeekDisplay();
@@ -155,7 +155,8 @@ function updateNavigationButtons() {
     const btnPrev = document.getElementById('btn-prev-week');
     const btnNext = document.getElementById('btn-next-week');
     
-    const canGoPrev = (currentWeekOffset > -52);
+    // Altijd maximaal 1 week terug (-1) en huidige week (0) toegestaan
+    const canGoPrev = (currentWeekOffset > -1);
     const canGoNext = (currentWeekOffset < 0);
     
     if (btnPrev) {
@@ -667,6 +668,11 @@ async function jumpToDate(dateStr) {
     const diffTime = targetMonday.getTime() - currentMonday.getTime();
     const diffWeeks = Math.round(diffTime / (7 * 24 * 60 * 60 * 1000));
     
+    if (diffWeeks < -1 || diffWeeks > 0) {
+        alert('Je kunt registraties tot maximaal 1 week terug bewerken.');
+        return;
+    }
+    
     currentWeekOffset = diffWeeks;
     updateWeekDisplay();
     updateNavigationButtons();
@@ -705,6 +711,9 @@ async function loadAttendanceHistory() {
         late:    { label: 'Te laat',  icon: '⏱️', bg: 'bg-yellow-50',border: 'border-yellow-200',text: 'text-yellow-800' },
     };
 
+    const today = new Date();
+    const currentMonday = getMonday(today);
+
     container.innerHTML = data.map(record => {
         const cfg = statusConfig[record.student_status] || { label: record.student_status, icon: '❓', bg: 'bg-gray-50', border: 'border-gray-200', text: 'text-gray-700' };
         const dateObj = new Date(record.date + 'T00:00:00');
@@ -720,6 +729,16 @@ async function loadAttendanceHistory() {
             </div>
         ` : '';
 
+        const recordMonday = getMonday(dateObj);
+        const diffWeeks = Math.round((recordMonday.getTime() - currentMonday.getTime()) / (7 * 24 * 60 * 60 * 1000));
+        const canEdit = (diffWeeks >= -1 && diffWeeks <= 0);
+
+        const editBtn = canEdit ? `
+            <button onclick="jumpToDate('${record.date}')" class="ml-2 text-xs font-bold text-purple-700 hover:text-purple-900 bg-white hover:bg-purple-50 px-2.5 py-1 rounded-lg border border-purple-200 transition shadow-sm flex items-center gap-1 cursor-pointer">
+                ✏️ Bewerk
+            </button>
+        ` : '';
+
         return `
             <div class="p-3.5 rounded-xl border ${cfg.bg} ${cfg.border} space-y-1">
                 <div class="flex items-center gap-3">
@@ -729,9 +748,7 @@ async function loadAttendanceHistory() {
                         <div class="font-bold ${cfg.text} text-sm">${displayLabel}</div>
                     </div>
                     ${hoursStr}
-                    <button onclick="jumpToDate('${record.date}')" class="ml-2 text-xs font-bold text-purple-700 hover:text-purple-900 bg-white hover:bg-purple-50 px-2.5 py-1 rounded-lg border border-purple-200 transition shadow-sm flex items-center gap-1 cursor-pointer">
-                        ✏️ Bewerk
-                    </button>
+                    ${editBtn}
                 </div>
                 ${noteBlock}
             </div>
