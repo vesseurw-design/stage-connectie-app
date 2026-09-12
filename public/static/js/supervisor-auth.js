@@ -64,7 +64,13 @@ if (loginForm) {
 
             console.log('✅ Supervisor data loaded:', supervisorData);
 
-            // Store session data
+            // Store session data (and clear previous employer/student session)
+            localStorage.removeItem('stageconnect_session');
+            localStorage.removeItem('user_email');
+            localStorage.removeItem('company_id');
+            localStorage.removeItem('company_name');
+            localStorage.removeItem('stageconnect_student_session');
+            localStorage.removeItem('student_email');
             localStorage.setItem('stageconnect_supervisor_session', 'true');
             localStorage.setItem('supervisor_email', user.email);
             localStorage.setItem('supervisor_id', supervisorData.id);
