@@ -93,6 +93,9 @@ async function loadData() {
                 <td class="px-6 py-4 text-sm text-gray-500">${company.contact_person || '-'}</td>
                 <td class="px-6 py-4 text-sm text-gray-500">${company.email || '-'}</td>
                 <td class="px-6 py-4 text-right text-sm font-medium">
+                    <button onclick='previewCompanyPortal(${compJson})' class="text-emerald-600 hover:text-emerald-900 font-semibold mr-3" title="Bekijk portaal als dit bedrijf zonder wachtwoord">
+                        👁️ Bekijk Portaal
+                    </button>
                     <button onclick='sendCompanyInvite(${compJson})' class="text-purple-600 hover:text-purple-900 mr-3" title="Stuur uitnodigingsmail">
                         ✉️ Mail
                     </button>
@@ -107,6 +110,20 @@ async function loadData() {
         `;
     });
 }
+
+// Admin Preview Portal function (geen wachtwoord nodig)
+window.previewCompanyPortal = function (company) {
+    if (!company || !company.id) {
+        alert('Kan werkgeversportaal niet openen: onbekend bedrijf.');
+        return;
+    }
+    localStorage.setItem('stageconnect_session', 'true');
+    localStorage.setItem('user_email', (company.email || '').trim().toLowerCase());
+    localStorage.setItem('company_id', company.id);
+    localStorage.setItem('company_name', company.company_name);
+    localStorage.setItem('admin_preview_mode', 'true');
+    window.open('employer-portal.html', '_blank');
+};
 
 // Send single company invitation email
 window.sendCompanyInvite = async function (company) {
