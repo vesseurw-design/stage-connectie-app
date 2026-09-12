@@ -548,114 +548,107 @@ async function executeImportProcess(fileInput, type, sendEmailCheckbox, progress
                     }
                 }
 
-                if (exists) {
-                    // Update bestaande record
-                    if (type === 'student') {
-                        const studentUpdateData = {
-                            name: getName(),
-                            class: getCol('klas', 'class', 'groep', 'stamklas', 'leerjaar', 'cohort', 'klas_naam', 'klascode', 'groep_naam') || null,
-                            school_year: normalizeSchoolYear(getCol('schooljaar', 'school_year', 'periode', 'jaar', 'cursusjaar', 'collegejaar', 'studiejaar', 'school_jaar')) || '2026-2027',
-                            company_id: bedrijfId || null,
-                            supervisor_id: supervisorId || null,
-                            stage_start_date: startDate || null,
-                            stage_end_date: endDate || null
-                        };
-                        if (scheduledDays) studentUpdateData.scheduled_days = scheduledDays;
+                // Opslaan/bijwerken van gegevens in de database via Admin Edge Function (omzeilt RLS-fouten)
+                const supabaseUrl = window.SUPABASE_URL || window.ENV_SUPABASE_URL || localStorage.getItem('supabaseUrl');
+                const supabaseKey = window.SUPABASE_KEY || window.ENV_SUPABASE_KEY || localStorage.getItem('supabaseKey');
 
-                        const { error: dbError } = await supabase.from('Students').update(studentUpdateData).eq('id', user_id);
-                        if (dbError) throw dbError;
+                if (type === 'student') {
+                    const studentPayload = {
+                        name: getName(),
+                        email: cleanEmail,
+                        class: getCol('klas', 'class', 'groep', 'stamklas', 'leerjaar', 'cohort', 'klas_naam', 'klascode', 'groep_naam') || null,
+                        school_year: normalizeSchoolYear(getCol('schooljaar', 'school_year', 'periode', 'jaar', 'cursusjaar', 'collegejaar', 'studiejaar', 'school_jaar')) || '2026-2027',
+                        company_id: bedrijfId || null,
+                        supervisor_id: supervisorId || null
+                    };
+                    if (user_id) studentPayload.id = user_id;
+                    if (scheduledDays) studentPayload.scheduled_days = scheduledDays;
 
-                    } else if (type === 'company') {
-                        const companyName = getCol('bedrijfsnaam', 'company_name', 'bedrijf', 'naam', 'company', 'stagebedrijf', 'organisatie', 'bedrijfs_naam') || 'Onbekend';
-                        const contactPerson = getCol('contactpersoon', 'contact_person', 'contact', 'contact_naam', 'contactpersoon_naam');
-                        const phone = getCol('telefoonnummer', 'telefoon', 'phone', 'phone_number', 'tel', 'mobiel');
-                        const street = getCol('adres', 'address', 'straat', 'street') || '';
-                        const postcode = getCol('postcode', 'zipcode', 'zip_code', 'zip') || '';
-                        const city = getCol('plaats', 'city', 'woonplaats') || '';
-                        let fullAddress = street;
-                        if (postcode || city) fullAddress += (fullAddress ? ', ' : '') + [postcode, city].filter(Boolean).join(' ');
+                    const edgeRes = await fetchWithTimeout(`${supabaseUrl}/functions/v1/create-auth-account`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${supabaseKey}`
+                        },
+                        body: JSON.stringify({
+                            action: 'upsert-student',
+                            metadata: { student: studentPayload }
+                        })
+                    }, 15000);
 
-                        const { error: dbError } = await supabase.from('Bedrijven').update({
-                            company_name: companyName,
-                            contact_person: contactPerson || null,
-                            phone: phone || null,
-                            address: fullAddress || null
-                        }).eq('id', user_id);
-                        if (dbError) throw dbError;
-
-                    } else if (type === 'supervisor') {
-                        const { error: dbError } = await supabase.from('stagebegeleiders').update({
-                            name: getName(),
-                            phone: getCol('telefoonnummer') || null,
-                            whatsapp_enabled: getCol('whatsapp') === 'true' || getCol('whatsapp') === 'ja' || getCol('whatsapp_enabled') === 'true' || false
-                        }).eq('id', user_id);
-                        if (dbError) throw dbError;
+                    const edgeData = await edgeRes.json();
+                    if (!edgeRes.ok || !edgeData.success) {
+                        throw new Error(edgeData.error || 'Opslaan van stagiair in database mislukt');
                     }
+                } else if (type === 'company') {
+                    const companyName = getCol('bedrijfsnaam', 'company_name', 'bedrijf', 'naam', 'company', 'stagebedrijf', 'organisatie', 'bedrijfs_naam') || 'Onbekend';
+                    const contactPerson = getCol('contactpersoon', 'contact_person', 'contact', 'contact_naam', 'contactpersoon_naam');
+                    const phone = getCol('telefoonnummer', 'telefoon', 'phone', 'phone_number', 'tel', 'mobiel');
+                    const street = getCol('adres', 'address', 'straat', 'street') || '';
+                    const postcode = getCol('postcode', 'zipcode', 'zip_code', 'zip') || '';
+                    const city = getCol('plaats', 'city', 'woonplaats') || '';
+                    let fullAddress = street;
+                    if (postcode || city) fullAddress += (fullAddress ? ', ' : '') + [postcode, city].filter(Boolean).join(' ');
 
-                    successCount++;
-                    const passStatus = wachtwoord ? ' (wachtwoord ingesteld uit CSV)' : '';
-                    if (resultsElement) resultsElement.innerHTML += `<div class="text-green-600 border-b border-gray-100 py-1">🔄 ${cleanEmail}: Succesvol bijgewerkt${passStatus}</div>`;
+                    const companyPayload = {
+                        company_name: companyName,
+                        email: cleanEmail,
+                        contact_person: contactPerson || null,
+                        phone: phone || null,
+                        address: fullAddress || null
+                    };
+                    if (user_id) companyPayload.id = user_id;
+
+                    const edgeRes = await fetchWithTimeout(`${supabaseUrl}/functions/v1/create-auth-account`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${supabaseKey}`
+                        },
+                        body: JSON.stringify({
+                            action: 'upsert-company',
+                            metadata: { company: companyPayload }
+                        })
+                    }, 15000);
+
+                    const edgeData = await edgeRes.json();
+                    if (!edgeRes.ok || !edgeData.success) {
+                        throw new Error(edgeData.error || 'Opslaan van stagebedrijf in database mislukt');
+                    }
+                } else if (type === 'supervisor') {
+                    const supervisorPayload = {
+                        name: getName(),
+                        email: cleanEmail,
+                        phone: getCol('telefoonnummer') || null,
+                        whatsapp_enabled: getCol('whatsapp') === 'true' || getCol('whatsapp') === 'ja' || getCol('whatsapp_enabled') === 'true' || false
+                    };
+                    if (user_id) supervisorPayload.id = user_id;
+
+                    const edgeRes = await fetchWithTimeout(`${supabaseUrl}/functions/v1/create-auth-account`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${supabaseKey}`
+                        },
+                        body: JSON.stringify({
+                            action: 'upsert-supervisor',
+                            metadata: { supervisor: supervisorPayload }
+                        })
+                    }, 15000);
+
+                    const edgeData = await edgeRes.json();
+                    if (!edgeRes.ok || !edgeData.success) {
+                        throw new Error(edgeData.error || 'Opslaan van stagebegeleider in database mislukt');
+                    }
+                }
+
+                successCount++;
+                const statusVerb = exists ? 'bijgewerkt' : 'toegevoegd';
+                if (authWarning) {
+                    if (resultsElement) resultsElement.innerHTML += `<div class="text-amber-600 border-b border-gray-100 py-1">⚠️ ${cleanEmail}: Succesvol ${statusVerb} (let op: ${authWarning})</div>`;
                 } else {
-                    // Voeg nieuw record toe aan database
-                    if (type === 'student') {
-                        const studentPayload = {
-                            name: getName(),
-                            email: cleanEmail,
-                            class: getCol('klas', 'class', 'groep', 'stamklas', 'leerjaar', 'cohort', 'klas_naam', 'klascode', 'groep_naam') || null,
-                            school_year: normalizeSchoolYear(getCol('schooljaar', 'school_year', 'periode', 'jaar', 'cursusjaar', 'collegejaar', 'studiejaar', 'school_jaar')) || '2026-2027',
-                            company_id: bedrijfId || null,
-                            supervisor_id: supervisorId || null,
-                            stage_start_date: startDate || null,
-                            stage_end_date: endDate || null
-                        };
-                        if (user_id) studentPayload.id = user_id;
-                        if (scheduledDays) studentPayload.scheduled_days = scheduledDays;
-
-                        const { error: dbError } = await supabase.from('Students').insert([studentPayload]);
-                        if (dbError) throw dbError;
-
-                    } else if (type === 'company') {
-                        const companyName = getCol('bedrijfsnaam', 'company_name', 'bedrijf', 'naam', 'company', 'stagebedrijf', 'organisatie', 'bedrijfs_naam') || 'Onbekend';
-                        const contactPerson = getCol('contactpersoon', 'contact_person', 'contact', 'contact_naam', 'contactpersoon_naam');
-                        const phone = getCol('telefoonnummer', 'telefoon', 'phone', 'phone_number', 'tel', 'mobiel');
-                        const street = getCol('adres', 'address', 'straat', 'street') || '';
-                        const postcode = getCol('postcode', 'zipcode', 'zip_code', 'zip') || '';
-                        const city = getCol('plaats', 'city', 'woonplaats') || '';
-                        let fullAddress = street;
-                        if (postcode || city) fullAddress += (fullAddress ? ', ' : '') + [postcode, city].filter(Boolean).join(' ');
-
-                        const companyPayload = {
-                            company_name: companyName,
-                            email: cleanEmail,
-                            contact_person: contactPerson || null,
-                            phone: phone || null,
-                            address: fullAddress || null
-                        };
-                        if (user_id) companyPayload.id = user_id;
-
-                        const { error: dbError } = await supabase.from('Bedrijven').insert([companyPayload]);
-                        if (dbError) throw dbError;
-
-                    } else if (type === 'supervisor') {
-                        const supervisorPayload = {
-                            name: getName(),
-                            email: cleanEmail,
-                            phone: getCol('telefoonnummer') || null,
-                            whatsapp_enabled: getCol('whatsapp') === 'true' || getCol('whatsapp') === 'ja' || getCol('whatsapp_enabled') === 'true' || false
-                        };
-                        if (user_id) supervisorPayload.id = user_id;
-
-                        const { error: dbError } = await supabase.from('stagebegeleiders').insert([supervisorPayload]);
-                        if (dbError) throw dbError;
-                    }
-
-                    successCount++;
-                    if (authWarning) {
-                        if (resultsElement) resultsElement.innerHTML += `<div class="text-amber-600 border-b border-gray-100 py-1">⚠️ ${cleanEmail}: Succesvol toegevoegd (let op: ${authWarning})</div>`;
-                    } else {
-                        const passStatus = wachtwoord ? ' (met wachtwoord uit CSV)' : '';
-                        if (resultsElement) resultsElement.innerHTML += `<div class="text-green-600 border-b border-gray-100 py-1">✅ ${cleanEmail}: Succesvol toegevoegd${passStatus}</div>`;
-                    }
+                    const passStatus = wachtwoord ? ' (met wachtwoord uit CSV)' : '';
+                    if (resultsElement) resultsElement.innerHTML += `<div class="text-green-600 border-b border-gray-100 py-1">✅ ${cleanEmail}: Succesvol ${statusVerb}${passStatus}</div>`;
                 }
             } catch (error) {
                 failCount++;

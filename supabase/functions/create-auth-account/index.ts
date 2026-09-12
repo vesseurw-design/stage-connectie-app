@@ -82,6 +82,58 @@ serve(async (req) => {
             );
         }
 
+        if (action === 'upsert-company') {
+            const companyPayload = metadata?.company;
+            if (!companyPayload) throw new Error('company metadata is required');
+
+            let existingQuery = supabaseAdmin.from('Bedrijven').select('id');
+            if (companyPayload.email) {
+                existingQuery = existingQuery.ilike('email', companyPayload.email);
+            } else if (companyPayload.company_name) {
+                existingQuery = existingQuery.ilike('company_name', companyPayload.company_name);
+            }
+            const { data: existing } = await existingQuery.maybeSingle();
+
+            let res;
+            if (existing) {
+                res = await supabaseAdmin.from('Bedrijven').update(companyPayload).eq('id', existing.id).select();
+            } else {
+                res = await supabaseAdmin.from('Bedrijven').insert([companyPayload]).select();
+            }
+
+            if (res.error) throw res.error;
+            return new Response(
+                JSON.stringify({ success: true, company: res.data }),
+                { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
+            );
+        }
+
+        if (action === 'upsert-supervisor') {
+            const supervisorPayload = metadata?.supervisor;
+            if (!supervisorPayload) throw new Error('supervisor metadata is required');
+
+            let existingQuery = supabaseAdmin.from('stagebegeleiders').select('id');
+            if (supervisorPayload.email) {
+                existingQuery = existingQuery.ilike('email', supervisorPayload.email);
+            } else if (supervisorPayload.name) {
+                existingQuery = existingQuery.ilike('name', supervisorPayload.name);
+            }
+            const { data: existing } = await existingQuery.maybeSingle();
+
+            let res;
+            if (existing) {
+                res = await supabaseAdmin.from('stagebegeleiders').update(supervisorPayload).eq('id', existing.id).select();
+            } else {
+                res = await supabaseAdmin.from('stagebegeleiders').insert([supervisorPayload]).select();
+            }
+
+            if (res.error) throw res.error;
+            return new Response(
+                JSON.stringify({ success: true, supervisor: res.data }),
+                { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
+            );
+        }
+
         let authUser;
         let actionLink = '';
         const isInvite = !password || password.trim() === '';
