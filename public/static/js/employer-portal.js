@@ -129,8 +129,8 @@ async function loadStudents() {
         students = data.slice(0, 3);
     } else {
         students = data.filter(s =>
-            s.company_id === currentCompany.id ||
-            s.companyId === currentCompany.id ||
+            (s.company_id && String(s.company_id).includes(currentCompany.id)) ||
+            (s.companyId && String(s.companyId).includes(currentCompany.id)) ||
             (s.company_name && s.company_name === currentCompany.company_name)
         );
     }

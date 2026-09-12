@@ -129,11 +129,19 @@
                             placeholder="bijv. 2025-2026">
                     </div>
                 </div>
-                <div>
-                    <label class="block text-sm font-medium mb-1">Stagebedrijf</label>
-                    <select id="company_id" class="w-full px-3 py-2 border rounded-lg">
-                        <option value="">Geen stagebedrijf</option>
-                    </select>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Stagebedrijf 1</label>
+                        <select id="company_id" class="w-full px-3 py-2 border rounded-lg">
+                            <option value="">Geen stagebedrijf</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-1">2e Stagebedrijf (Optioneel)</label>
+                        <select id="company_id_2" class="w-full px-3 py-2 border rounded-lg">
+                            <option value="">Geen 2e stagebedrijf</option>
+                        </select>
+                    </div>
                 </div>
                 <div>
                     <label class="block text-sm font-medium mb-1">Begeleider</label>
@@ -220,9 +228,12 @@
             companies = c || [];
             companies.sort((a, b) => (a.company_name || '').localeCompare(b.company_name || '', 'nl', { sensitivity: 'base' }));
             const companySelect = document.getElementById('company_id');
-            companySelect.innerHTML = '<option value="">Geen stagebedrijf</option>';
+            const companySelect2 = document.getElementById('company_id_2');
+            if (companySelect) companySelect.innerHTML = '<option value="">Geen stagebedrijf</option>';
+            if (companySelect2) companySelect2.innerHTML = '<option value="">Geen 2e stagebedrijf (Optioneel)</option>';
             companies.forEach(c => {
-                companySelect.innerHTML += `<option value="${c.id}">${c.company_name}</option>`;
+                if (companySelect) companySelect.innerHTML += `<option value="${c.id}">${c.company_name}</option>`;
+                if (companySelect2) companySelect2.innerHTML += `<option value="${c.id}">${c.company_name}</option>`;
             });
 
             // Load supervisors (alphabetically sorted)
@@ -330,7 +341,8 @@
             }
 
             filteredStudents.forEach(student => {
-                const company = companies.find(c => c.id === student.company_id);
+                const compIds = String(student.company_id || '').split(',').map(id => id.trim()).filter(Boolean);
+                const compNames = compIds.map(id => companies.find(c => c.id === id)?.company_name).filter(Boolean).join(', ') || '-';
                 const supervisor = supervisors.find(s => s.id === student.supervisor_id);
                 const days = (student.scheduled_days || []).join(', ');
                 const displayYear = normalizeSchoolYear(student.school_year) || student.school_year || '-';
@@ -341,7 +353,7 @@
                         <td class="px-6 py-4 text-sm text-gray-600">${student.email || '-'}</td>
                         <td class="px-6 py-4 text-sm">${student.class || '-'}</td>
                         <td class="px-6 py-4 text-sm font-semibold text-gray-800">${displayYear}</td>
-                        <td class="px-6 py-4 text-sm">${company?.company_name || '-'}</td>
+                        <td class="px-6 py-4 text-sm">${compNames}</td>
                         <td class="px-6 py-4 text-sm">${supervisor?.name || '-'}</td>
                         <td class="px-6 py-4 text-sm">${days || '-'}</td>
                         <td class="px-6 py-4 text-sm text-right">
@@ -361,14 +373,22 @@
             renderTable();
         }
 
-        async function batchMigrateSchoolYear() {
-            const oldStudents = allStudents.filter(s => !s.school_year || s.school_year === '2025-2026' || s.school_year === '2526');
+        function editStudent(student) {
+            openModal(student);
+        }
+
+        async function bulkPromoteTo2026() {
+            const oldStudents = allStudents.filter(s => {
+                const yr = normalizeSchoolYear(s.school_year);
+                return yr === '2025-2026' || yr === '2526' || yr === '25/26';
+            });
+
             if (oldStudents.length === 0) {
-                alert('Er zijn geen studenten gevonden die op schooljaar 2025-2026 staan.');
+                alert('Geen stagiairs gevonden met schooljaar 2025-2026 om over te zetten.');
                 return;
             }
 
-            if (!confirm(`Weet je zeker dat je ${oldStudents.length} studenten wilt overzetten naar schooljaar 2026-2027 (2627)?`)) {
+            if (!confirm(`Weet je zeker dat je ${oldStudents.length} stagiairs wilt overzetten van 2025-2026 naar 2026-2027?`)) {
                 return;
             }
 
@@ -378,7 +398,7 @@
                 if (!error) success++;
             }
 
-            alert(`✅ ${success} van de ${oldStudents.length} studenten zijn succesvol overgezet naar schooljaar 2026-2027!`);
+            alert(`✅ ${success} van de ${oldStudents.length} stagiairs zijn succesvol overgezet naar schooljaar 2026-2027!`);
             loadData();
         }
 
@@ -397,7 +417,13 @@
                 document.getElementById('name').value = student.name;
                 document.getElementById('email').value = student.email || '';
                 document.getElementById('student_number').value = student.student_number || '';
-                document.getElementById('company_id').value = student.company_id || '';
+                
+                const compIds = String(student.company_id || '').split(',').map(id => id.trim()).filter(Boolean);
+                document.getElementById('company_id').value = compIds[0] || '';
+                if (document.getElementById('company_id_2')) {
+                    document.getElementById('company_id_2').value = compIds[1] || '';
+                }
+
                 document.getElementById('supervisor_id').value = student.supervisor_id || '';
                 document.getElementById('class').value = student.class || '';
                 document.getElementById('school_year').value = student.school_year || '';
@@ -415,6 +441,8 @@
                 document.getElementById('modal-title').textContent = 'Stagiair Toevoegen';
                 document.getElementById('form').reset();
                 document.getElementById('student-id').value = '';
+                document.getElementById('company_id').value = '';
+                if (document.getElementById('company_id_2')) document.getElementById('company_id_2').value = '';
                 
                 // Show password field during add
                 document.getElementById('password-container').classList.remove('hidden');
@@ -542,11 +570,22 @@
                     user_id = authResult.user_id;
                 }
 
+                const c1 = document.getElementById('company_id').value || '';
+                const c2 = document.getElementById('company_id_2') ? document.getElementById('company_id_2').value : '';
+                let company_id_val = null;
+                if (c1 && c2) {
+                    company_id_val = `${c1},${c2}`;
+                } else if (c1) {
+                    company_id_val = c1;
+                } else if (c2) {
+                    company_id_val = c2;
+                }
+
                 const studentPayload = {
                     name: name,
                     email: email,
                     student_number: document.getElementById('student_number').value || null,
-                    company_id: document.getElementById('company_id').value || null,
+                    company_id: company_id_val,
                     supervisor_id: document.getElementById('supervisor_id').value || null,
                     class: document.getElementById('class').value || null,
                     school_year: document.getElementById('school_year').value || null,
