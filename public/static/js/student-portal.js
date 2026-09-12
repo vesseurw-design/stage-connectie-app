@@ -87,11 +87,13 @@ async function continueStudentInit() {
         updateWeekDisplay();
         updateNavigationButtons();
         await loadAttendance();
-
-        document.getElementById('loading').classList.add('hidden');
-        document.getElementById('content').classList.remove('hidden');
     } catch (err) {
         console.error('continueStudentInit error:', err);
+    } finally {
+        const loadingEl = document.getElementById('loading');
+        const contentEl = document.getElementById('content');
+        if (loadingEl) loadingEl.classList.add('hidden');
+        if (contentEl) contentEl.classList.remove('hidden');
     }
 }
 
@@ -184,15 +186,21 @@ async function loadAttendance() {
     const container = document.getElementById('student-week-row');
     container.innerHTML = '<div class="p-12 col-span-5 text-center text-gray-500 font-bold">Laden...</div>';
 
-    const weekDates = [0, 1, 2, 3, 4].map(i => getWeekDate(i));
+    try {
+        const weekDates = [0, 1, 2, 3, 4].map(i => getWeekDate(i));
 
-    const { data: attendanceData, error } = await supabaseClient
-        .from('Attendance')
-        .select('*')
-        .eq('student_id', currentStudent.id)
-        .in('date', weekDates);
+        const { data: attendanceData, error } = await supabaseClient
+            .from('Attendance')
+            .select('*')
+            .eq('student_id', currentStudent.id)
+            .in('date', weekDates);
 
-    renderGrid(attendanceData || []);
+        if (error) console.error('Error fetching attendance:', error);
+        renderGrid(attendanceData || []);
+    } catch (err) {
+        console.error('loadAttendance error:', err);
+        renderGrid([]);
+    }
 }
 
 function isHoliday(dateStr) {
