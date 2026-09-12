@@ -599,23 +599,33 @@ async function saveWeek() {
         }
     });
 
-    if (updates.length > 0) {
-        try {
+    try {
+        if (updates.length > 0) {
+            // Waarborg actieve Auth-sessie
+            const { data: sessionData } = await supabaseClient.auth.getSession();
+            if (!sessionData || !sessionData.session) {
+                console.warn('⚠️ Geen actieve Auth-sessie gevonden bij opslaan');
+            }
+
             const { error } = await supabaseClient.from('Attendance').upsert(updates, { onConflict: 'student_id,date' });
             if (error) throw error;
             
             showToast();
-        } catch (err) {
-            console.error('Save error:', err);
-            alert('Fout bij opslaan: ' + err.message);
+        } else {
+            showToast();
         }
-    } else {
-        showToast();
+    } catch (err) {
+        console.error('Save error:', err);
+        let msg = err.message || 'Netwerkfout bij opslaan.';
+        if (msg.includes('Load failed') || msg.includes('security')) {
+            msg = 'Je inlogsessie is verlopen of verbroken. Log opnieuw in om je registraties op te slaan.';
+        }
+        alert('Fout bij opslaan: ' + msg);
+    } finally {
+        isSaving = false;
+        if (btnSave) btnSave.innerHTML = originalText;
     }
 
-    isSaving = false;
-    btnSave.innerHTML = originalText;
-    
     setTimeout(() => {
         loadAttendance();
         if (typeof loadAttendanceHistory === 'function') {
