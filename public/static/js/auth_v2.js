@@ -171,9 +171,10 @@ async function checkSession() {
                 }
             }
 
-            if (window.location.pathname.includes('login.html')) {
-                // Already logged in, redirect to portal
-                console.log('✅ Active session found, redirecting to employer portal...');
+            const isEmployerLoginPage = (window.location.pathname.endsWith('/login.html') || window.location.pathname === '/login.html' || window.location.pathname.endsWith('/login')) && !window.location.pathname.includes('student') && !window.location.pathname.includes('supervisor') && !window.location.pathname.includes('admin');
+            if (isEmployerLoginPage) {
+                // Already logged in as employer, redirect to employer portal
+                console.log('✅ Active employer session found, redirecting to employer portal...');
                 window.location.href = 'employer-portal.html';
             }
         }

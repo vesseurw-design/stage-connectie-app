@@ -103,7 +103,11 @@ if (loginForm) {
 
             console.log('✅ Auth success, session created');
 
-            // Step 3: Store basic student info
+            // Step 3: Store basic student info (and clear any previous employer session)
+            localStorage.removeItem('stageconnect_session');
+            localStorage.removeItem('user_email');
+            localStorage.removeItem('company_id');
+            localStorage.removeItem('company_name');
             localStorage.setItem('stageconnect_student_session', 'true');
             localStorage.setItem('student_email', email);
 
