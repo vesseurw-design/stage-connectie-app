@@ -84,6 +84,17 @@ async function init() {
 }
 
 async function continueEmployerInit() {
+    if (localStorage.getItem('admin_preview_mode') === 'true') {
+        const existingBanner = document.getElementById('admin-preview-banner');
+        if (!existingBanner) {
+            const banner = document.createElement('div');
+            banner.id = 'admin-preview-banner';
+            banner.className = 'bg-amber-500 text-white font-bold px-4 py-2.5 text-center text-sm flex justify-between items-center sticky top-0 z-50 shadow';
+            banner.innerHTML = `<span>👁️ Beheerder Voorbeeldmodus: U bekijkt het portaal als <strong>${currentCompany?.company_name || 'Werkgever'}</strong></span>
+                <button onclick="localStorage.removeItem('admin_preview_mode'); window.close();" class="bg-amber-700 hover:bg-amber-800 px-3 py-1 rounded text-xs transition">Sluit Voorbeeld</button>`;
+            document.body.insertBefore(banner, document.body.firstChild);
+        }
+    }
     await loadStudents();
     await loadSupervisors(); // Load supervisors after students
     updateWeekDisplay();

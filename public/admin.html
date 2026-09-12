@@ -284,12 +284,12 @@
             <div style="display:flex; gap:8px; align-items:center; margin-right:16px; background:#f3f4f6; padding:4px 12px; border-radius:8px; border:1px solid #e5e7eb; flex-wrap:wrap;">
                 <span style="font-size:12px; font-weight:600; color:#4b5563;">Periode:</span>
                 <label style="font-size:12px; color:#4b5563;">Van</label>
-                <input type="date" id="print-start-date" style="border:1px solid #d1d5db; padding:4px 6px; border-radius:6px; font-size:12px; outline:none;">
+                <input type="date" id="print-start-date" onchange="regeneratePrintContent()" style="border:1px solid #d1d5db; padding:4px 6px; border-radius:6px; font-size:12px; outline:none;">
                 <label style="font-size:12px; color:#4b5563;">Tot</label>
-                <input type="date" id="print-end-date" style="border:1px solid #d1d5db; padding:4px 6px; border-radius:6px; font-size:12px; outline:none;">
+                <input type="date" id="print-end-date" onchange="regeneratePrintContent()" style="border:1px solid #d1d5db; padding:4px 6px; border-radius:6px; font-size:12px; outline:none;">
                 
                 <span style="font-size:12px; font-weight:600; color:#4b5563; margin-left:8px;">Stagiair:</span>
-                <select id="print-student-select" style="border:1px solid #d1d5db; padding:4px 6px; border-radius:6px; font-size:12px; outline:none; background:white; max-width:180px;">
+                <select id="print-student-select" onchange="regeneratePrintContent()" style="border:1px solid #d1d5db; padding:4px 6px; border-radius:6px; font-size:12px; outline:none; background:white; max-width:180px;">
                     <option value="all">Alle stagiairs</option>
                 </select>
 
@@ -782,7 +782,7 @@
                 
                 // Controleer of er voor deze dag een registratie bestaat (voor de geselecteerde leerling of voor álle leerlingen)
                 const hasWeekendRecord = allAttendance.some(a => {
-                    const matchStudent = selectedStudentId === 'all' || a.student_id === selectedStudentId;
+                    const matchStudent = selectedStudentId === 'all' || String(a.student_id) === String(selectedStudentId);
                     return matchStudent && a.date === dStr && (a.student_status || a.status);
                 });
                 
@@ -863,7 +863,7 @@
             // Filter studenten op basis van dropdown
             let printStudents = [...students].sort((a, b) => a.name.localeCompare(b.name));
             if (selectedStudentId !== 'all') {
-                printStudents = printStudents.filter(s => s.id === selectedStudentId);
+                printStudents = printStudents.filter(s => String(s.id) === String(selectedStudentId));
             }
 
             const printContent = document.getElementById('print-content');
@@ -871,7 +871,7 @@
             // Controleer op conflicten in de geselecteerde periode
             let conflictCount = 0;
             printStudents.forEach(student => {
-                const studentRecords = allAttendance.filter(a => a.student_id === student.id && days.some(wd => wd.dateStr === a.date));
+                const studentRecords = allAttendance.filter(a => String(a.student_id) === String(student.id) && days.some(wd => wd.dateStr === a.date));
                 studentRecords.forEach(r => {
                     if (r.status && r.student_status && r.status !== r.student_status) {
                         conflictCount++;
@@ -926,11 +926,11 @@
                         </thead>
                         <tbody>
                             ${printStudents.map(student => {
-                                const company = companies.find(c => c.id === student.company_id);
+                                const company = companies.find(c => String(c.id) === String(student.company_id));
                                 const companyName = company ? company.company_name : '–';
                                 
                                 // Bereken statistieken voor deze leerling in de geselecteerde periode
-                                const studentRecords = allAttendance.filter(a => a.student_id === student.id && days.some(wd => wd.dateStr === a.date));
+                                const studentRecords = allAttendance.filter(a => String(a.student_id) === String(student.id) && days.some(wd => wd.dateStr === a.date));
                                 const stats = {
                                     present: studentRecords.filter(a => a.status === 'present' || (!a.status && a.student_status === 'present')).length,
                                     absent: studentRecords.filter(a => a.status === 'absent' || (!a.status && a.student_status === 'absent')).length,
@@ -973,12 +973,12 @@
                 // ── FORMULIER PER LEERLING ──
                 document.getElementById('print-mode-label').textContent = `Formulieren per stagiair – ${periodLabel}`;
                 printContent.innerHTML = conflictWarningHtml + printStudents.map(student => {
-                    const company = companies.find(c => c.id === student.company_id);
+                    const company = companies.find(c => String(c.id) === String(student.company_id));
                     const companyName = company ? company.company_name : '–';
-                    const supervisor = supervisors.find(s => s.id === student.supervisor_id);
+                    const supervisor = supervisors.find(s => String(s.id) === String(student.supervisor_id));
 
                     // Bereken statistieken en uren voor deze stagiair
-                    const studentRecords = allAttendance.filter(a => a.student_id === student.id && days.some(wd => wd.dateStr === a.date));
+                    const studentRecords = allAttendance.filter(a => String(a.student_id) === String(student.id) && days.some(wd => wd.dateStr === a.date));
                     const stats = {
                         present: studentRecords.filter(a => a.status === 'present' || (!a.status && a.student_status === 'present')).length,
                         absent: studentRecords.filter(a => a.status === 'absent' || (!a.status && a.student_status === 'absent')).length,
@@ -1000,7 +1000,7 @@
                                 <td colspan="4" style="text-align:center; font-style:italic; font-size:10px; color:#94a3b8; font-weight:500;">Schooldag – geen stage</td>
                             </tr>`;
                         }
-                        const record = allAttendance.find(a => a.student_id === student.id && a.date === wd.dateStr);
+                        const record = allAttendance.find(a => String(a.student_id) === String(student.id) && a.date === wd.dateStr);
                         const statusLabelsFull = { present: 'Aanwezig', absent: 'Afwezig', sick: 'Ziek', late: 'Te laat' };
                         const statusBgColors = { present: '#bbf7d0', absent: '#fecaca', sick: '#fed7aa', late: '#fef08a' };
                         let ingevuldCell, ingevuldUren, werkgeverCheckCell, rowBg;
