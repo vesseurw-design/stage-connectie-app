@@ -790,9 +790,15 @@ async function exportSupervisorStudentPDF() {
     const schoolName = window.SCHOOL_CONFIG?.schoolName || 'StageConnectie';
 
     const reportContainer = document.createElement('div');
+    reportContainer.style.width = '750px';
+    reportContainer.style.boxSizing = 'border-box';
     reportContainer.style.padding = '24px';
     reportContainer.style.fontFamily = 'Arial, sans-serif';
     reportContainer.style.color = '#1f2937';
+    reportContainer.style.position = 'fixed';
+    reportContainer.style.left = '-9999px';
+    reportContainer.style.top = '0';
+    document.body.appendChild(reportContainer);
 
     const statusLabels = { present: 'Aanwezig', absent: 'Afwezig', sick: 'Ziek', late: 'Te laat' };
 
@@ -837,29 +843,29 @@ async function exportSupervisorStudentPDF() {
         </div>
 
         <h2 style="font-size: 14px; font-weight: bold; margin-bottom: 8px; color: #374151;">Aanwezigheid & Dagverslagen / Notities:</h2>
-        <table style="width: 100%; border-collapse: collapse; font-size: 11px;">
+        <table style="width: 100%; border-collapse: collapse; font-size: 11px; table-layout: fixed;">
             <thead>
                 <tr style="background-color: #f3f4f6; border-bottom: 2px solid #d1d5db; text-align: left;">
-                    <th style="padding: 6px 8px; width: 20%;">Datum</th>
-                    <th style="padding: 6px 8px; width: 12%;">Status</th>
-                    <th style="padding: 6px 8px; width: 10%;">Uren</th>
-                    <th style="padding: 6px 8px;">Werkzaamheden / Notities</th>
+                    <th style="padding: 8px 10px; width: 22%; font-weight: bold;">Datum</th>
+                    <th style="padding: 8px 10px; width: 15%; font-weight: bold;">Status</th>
+                    <th style="padding: 8px 10px; width: 12%; font-weight: bold;">Uren</th>
+                    <th style="padding: 8px 10px; width: 51%; font-weight: bold;">Werkzaamheden / Notities</th>
                 </tr>
             </thead>
             <tbody>
                 ${sortedAttendance.map((r, idx) => {
-                    const dateObj = new Date(r.date);
+                    const dateObj = new Date(r.date + 'T00:00:00');
                     const dateStr = dateObj.toLocaleDateString('nl-NL', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
                     const bg = idx % 2 === 0 ? '#ffffff' : '#f9fafb';
                     const st = r.student_status || r.status;
                     const statusStr = st === 'late' ? `Te laat (${r.minutes_late || 0}m)` : (statusLabels[st] || st || '-');
                     const noteText = r.notes || '';
                     return `
-                        <tr style="background-color: ${bg}; border-bottom: 1px solid #e5e7eb;">
-                            <td style="padding: 6px 8px; font-weight: bold;">${dateStr}</td>
-                            <td style="padding: 6px 8px;">${statusStr}</td>
-                            <td style="padding: 6px 8px;">${r.student_hours || 0} u</td>
-                            <td style="padding: 6px 8px; font-style: ${noteText ? 'normal' : 'italic'}; color: ${noteText ? '#111827' : '#9ca3af'};">
+                        <tr style="background-color: ${bg}; border-bottom: 1px solid #e5e7eb; page-break-inside: avoid;">
+                            <td style="padding: 8px 10px; font-weight: bold; vertical-align: top; line-height: 1.4;">${dateStr}</td>
+                            <td style="padding: 8px 10px; vertical-align: top; line-height: 1.4;">${statusStr}</td>
+                            <td style="padding: 8px 10px; vertical-align: top; line-height: 1.4;">${r.student_hours || 0} u</td>
+                            <td style="padding: 8px 10px; vertical-align: top; line-height: 1.4; word-break: break-word; white-space: pre-wrap; color: ${noteText ? '#111827' : '#9ca3af'}; font-style: ${noteText ? 'normal' : 'italic'};">
                                 ${noteText ? noteText.replace(/</g, '&lt;').replace(/>/g, '&gt;') : '- Geen notitie -'}
                             </td>
                         </tr>
@@ -870,16 +876,23 @@ async function exportSupervisorStudentPDF() {
     `;
 
     const opt = {
-        margin: 10,
+        margin: [10, 10, 10, 10],
         filename: `Stageverslag_${currentStudent.name.replace(/\s+/g, '_')}.pdf`,
         image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2 },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        html2canvas: { scale: 2, useCORS: true, logging: false },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+        pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
     };
 
     if (window.html2pdf) {
-        window.html2pdf().set(opt).from(reportContainer).save();
+        window.html2pdf().set(opt).from(reportContainer).save().then(() => {
+            reportContainer.remove();
+        }).catch(err => {
+            console.error('PDF error:', err);
+            reportContainer.remove();
+        });
     } else {
+        reportContainer.remove();
         alert('PDF bibliotheek kon niet worden geladen.');
     }
 }
