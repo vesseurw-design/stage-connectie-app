@@ -258,29 +258,6 @@
                 </div>
             </div>
         </div>
-
-        <!-- Geschiedenis / Dagverslagen Paneel -->
-        <div class="mt-6">
-            <button onclick="toggleEmployerHistory()" id="btn-employer-history"
-                class="w-full flex items-center justify-between bg-white rounded-2xl shadow-sm p-5 border border-gray-200 hover:shadow-md transition group">
-                <div class="flex items-center gap-3">
-                    <span class="text-2xl">📋</span>
-                    <div class="text-left">
-                        <div class="font-black text-gray-800 text-base">Bekijk Dagverslagen & Logboeken</div>
-                        <div class="text-xs text-gray-400">Bekijk alle ingevulde dagverslagen en uren van jouw stagiairs</div>
-                    </div>
-                </div>
-                <svg id="employer-history-chevron" class="w-5 h-5 text-gray-400 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-                </svg>
-            </button>
-
-            <div id="employer-history-panel" class="hidden mt-3 bg-white rounded-2xl shadow-sm p-6 border border-gray-200 space-y-4">
-                <div id="employer-notes-history-list" class="space-y-3">
-                    <div class="text-center text-gray-400 text-sm py-4">Laden van dagverslagen...</div>
-                </div>
-            </div>
-        </div>
     </main>
 
     <footer class="max-w-7xl mx-auto px-4 py-8 text-center text-gray-400 text-sm">
@@ -304,20 +281,6 @@
         class="fixed bottom-0 inset-x-0 bg-white rounded-t-3xl z-50 p-8 transform translate-y-full transition-transform duration-300 md:max-w-md md:mx-auto md:bottom-auto md:top-1/2 md:rounded-3xl md:-translate-y-1/2 hidden shadow-2xl">
         <h3 class="text-xl font-black text-gray-800 mb-1 text-center" id="action-date-label">Status Wijzigen</h3>
         <p class="text-xs text-center text-blue-600 font-bold mb-4" id="action-student-name"></p>
-
-        <!-- Dagverslag stagiair weergave -->
-        <div id="action-notes-container" class="mb-4 text-left hidden">
-            <div class="text-xs font-bold text-amber-800 flex items-center gap-1 mb-1">
-                <span>📝</span> <span>Dagverslag stagiair:</span>
-            </div>
-            <div id="action-notes-box" class="p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs sm:text-sm text-gray-800 whitespace-pre-wrap font-medium"></div>
-        </div>
-
-        <div class="mb-4 text-left">
-            <label class="block text-xs font-bold text-gray-700 mb-1">Opmerking / Dagverslag aanpassen:</label>
-            <textarea id="action-notes-input" rows="2" placeholder="Notitie of opmerking bij deze stagedag..."
-                class="w-full p-2.5 rounded-xl border border-gray-200 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition resize-none"></textarea>
-        </div>
 
         <div id="status-buttons-grid" class="grid grid-cols-2 gap-4 mb-4">
             <button onclick="setStatus('present')"
