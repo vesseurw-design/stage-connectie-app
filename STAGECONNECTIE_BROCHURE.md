@@ -73,15 +73,17 @@
 - Status per student en per bedrijf
 - Aanwezigheidspercentages
 
-**Rapportage**
-- Exporteer data naar Excel
-- Genereer periode-overzichten
-- Verzuimrapportages
+**Rapportage & Dossieropbouw**
+- Exporteer met 1 klik een officieel PDF Stageverslag / Logboek
+- Inzicht in uren, afwezigheid en dagverslagen per student
+- Exporteer data naar Excel voor verdere verwerking
+- Verzuim- en urenrapportages per periode
 
-**Communicatie**
-- Contactgegevens van alle bedrijven
-- Direct bellen of mailen
-- Notities per student
+**Communicatie & Beheer**
+- Contactgegevens van alle bedrijven (direct bellen of WhatsAppen)
+- Beheer van schoolvakanties en vrije dagen in de kalender
+- Eenvoudige Excel/CSV-import van studenten en bedrijven
+- Notities en dagverslagen per student in te zien
 
 ---
 
