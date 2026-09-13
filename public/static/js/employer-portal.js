@@ -344,6 +344,7 @@ function renderGrid(existingAttendance) {
                 const minutesLate = record ? record.minutes_late : 0;
                 const studentStatus = record ? record.student_status : '';
                 const studentHours = record ? record.student_hours : 0;
+                const notes = record ? (record.notes || '') : '';
 
                 // Strong permanent border for empty cells
                 cell.className = 'week-cell bg-white rounded-xl shadow-sm border-2 transition-all duration-150 transform';
@@ -357,7 +358,7 @@ function renderGrid(existingAttendance) {
                 cell.classList.add('hover:-translate-y-0.5');
 
                 // Content will set the border colors
-                updateCellContent(cell, status, minutesLate, studentStatus, studentHours);
+                updateCellContent(cell, status, minutesLate, studentStatus, studentHours, notes);
             }
 
             row.appendChild(cell);
@@ -367,7 +368,7 @@ function renderGrid(existingAttendance) {
     });
 }
 
-function updateCellContent(cell, status, minutesLate, studentStatus = '', studentHours = 0) {
+function updateCellContent(cell, status, minutesLate, studentStatus = '', studentHours = 0, notes = '') {
     const icons = { 'present': '✅', 'absent': '❌', 'sick': '🤒', 'late': '⏱️', '': '' };
     const studentIcons = { 'present': '🎓', 'absent': '❓', 'late': '⏳', '': '' };
 
@@ -386,6 +387,16 @@ function updateCellContent(cell, status, minutesLate, studentStatus = '', studen
             <div class="absolute bottom-1 right-1 flex items-center gap-0.5 bg-purple-100 text-purple-700 text-[9px] font-black px-1 rounded shadow-sm" title="Eigen invoer student: ${studentStatus}">
                 <span>${studentIcon}</span>
                 ${studentHours > 0 ? `<span>${studentHours}u</span>` : ''}
+            </div>
+        `;
+    }
+
+    // Dagverslag / Opmerking Badge (Top left)
+    if (notes && notes.trim() !== '') {
+        const titleText = notes.replace(/"/g, '&quot;');
+        cell.innerHTML += `
+            <div class="absolute top-1 left-1 flex items-center gap-0.5 bg-amber-100 text-amber-900 text-[9px] font-extrabold px-1.5 py-0.5 rounded shadow-sm border border-amber-200" title="Dagverslag: ${titleText}">
+                <span>📝</span><span class="hidden sm:inline">Verslag</span>
             </div>
         `;
     }
@@ -410,12 +421,42 @@ function updateCellContent(cell, status, minutesLate, studentStatus = '', studen
     // Store data
     cell.dataset.status = status;
     cell.dataset.minutes = minutesLate;
+    cell.dataset.studentStatus = studentStatus;
+    cell.dataset.studentHours = studentHours;
+    cell.dataset.notes = notes || '';
 }
 
 function openActionSheet(studentId, date, element) {
     activeCell = { studentId, date, element };
     const sheet = document.getElementById('action-sheet');
     const overlay = document.getElementById('action-overlay');
+
+    // Header info: Student Name & Formatted Date
+    const student = students.find(s => s.id === studentId);
+    const studentNameElem = document.getElementById('action-student-name');
+    if (studentNameElem) studentNameElem.textContent = student ? student.name : '';
+
+    const dateObj = new Date(date);
+    const dateOptions = { weekday: 'long', day: 'numeric', month: 'long' };
+    const formattedDate = dateObj.toLocaleDateString('nl-NL', dateOptions);
+    const dateLabelElem = document.getElementById('action-date-label');
+    if (dateLabelElem) dateLabelElem.textContent = formattedDate.charAt(0).toUpperCase() + formattedDate.slice(1);
+
+    // Notes / Dagverslag logic
+    const notes = element.dataset.notes || '';
+    const notesContainer = document.getElementById('action-notes-container');
+    const notesBox = document.getElementById('action-notes-box');
+    const notesInput = document.getElementById('action-notes-input');
+
+    if (notesInput) notesInput.value = notes;
+
+    if (notes && notes.trim() !== '' && notesContainer && notesBox) {
+        notesBox.textContent = notes;
+        notesContainer.classList.remove('hidden');
+    } else if (notesContainer) {
+        notesContainer.classList.add('hidden');
+    }
+
     sheet.classList.remove('hidden');
     overlay.classList.remove('hidden');
     const grid = document.getElementById('status-buttons-grid');
@@ -439,7 +480,10 @@ function closeActions() {
 
 function setStatus(status) {
     if (!activeCell) return;
-    updateCellContent(activeCell.element, status, 0);
+    const noteVal = document.getElementById('action-notes-input') ? document.getElementById('action-notes-input').value.trim() : '';
+    const studentStatus = activeCell.element.dataset.studentStatus || '';
+    const studentHours = activeCell.element.dataset.studentHours || 0;
+    updateCellContent(activeCell.element, status, 0, studentStatus, studentHours, noteVal);
     closeActions();
 }
 
@@ -497,7 +541,10 @@ function confirmLate() {
         if (minutes > 120) minutes = 120;
     }
     
-    updateCellContent(activeCell.element, 'late', minutes);
+    const noteVal = document.getElementById('action-notes-input') ? document.getElementById('action-notes-input').value.trim() : '';
+    const studentStatus = activeCell.element.dataset.studentStatus || '';
+    const studentHours = activeCell.element.dataset.studentHours || 0;
+    updateCellContent(activeCell.element, 'late', minutes, studentStatus, studentHours, noteVal);
     closeActions();
 }
 
@@ -506,25 +553,24 @@ async function saveWeek() {
     const cells = document.querySelectorAll('.week-cell[data-student-id]');
     console.log('💾 Saving week - found cells:', cells.length);
 
-    // No need to collect dates - we only UPSERT now
-
-
     // Collect attendance records
     const updates = [];
     cells.forEach(cell => {
         const status = cell.dataset.status;
-        if (status) {
+        const notes = cell.dataset.notes || null;
+        if (status || notes) {
             updates.push({
                 student_id: cell.dataset.studentId,
                 date: cell.dataset.date,
-                status: status,
+                status: status || null,
                 employer_id: currentCompany.id,
-                minutes_late: status === 'late' ? parseInt(cell.dataset.minutes) : 0
+                minutes_late: status === 'late' ? parseInt(cell.dataset.minutes || 0) : 0,
+                notes: notes
             });
         }
     });
 
-    console.log('�� Attendance records to save:', updates.length, updates);
+    console.log('💾 Attendance records to save:', updates.length, updates);
 
     // Upsert records (if any)
     if (updates.length > 0) {
@@ -616,6 +662,76 @@ async function refreshData() {
         if (icon) icon.classList.remove('animate-spin');
     }
 }
-window.refreshData = refreshData;
+async function toggleEmployerHistory() {
+    const panel = document.getElementById('employer-history-panel');
+    const chevron = document.getElementById('employer-history-chevron');
+    const list = document.getElementById('employer-notes-history-list');
+
+    if (!panel) return;
+    const isHidden = panel.classList.contains('hidden');
+
+    if (isHidden) {
+        panel.classList.remove('hidden');
+        if (chevron) chevron.style.transform = 'rotate(180deg)';
+        
+        list.innerHTML = '<div class="text-center text-gray-400 text-sm py-4">Laden...</div>';
+
+        const studentIds = students.map(s => s.id);
+        if (studentIds.length === 0) {
+            list.innerHTML = '<div class="text-center text-gray-500 text-sm py-4">Geen stagiairs gekoppeld.</div>';
+            return;
+        }
+
+        const { data: attendanceData, error } = await supabaseClient
+            .from('Attendance')
+            .select('*')
+            .in('student_id', studentIds)
+            .order('date', { ascending: false });
+
+        if (error || !attendanceData || attendanceData.length === 0) {
+            list.innerHTML = '<div class="text-center text-gray-500 text-sm py-4">Nog geen aanwezigheidsgegevens of dagverslagen gevonden.</div>';
+            return;
+        }
+
+        const statusBadges = {
+            'present': '<span class="px-2 py-0.5 bg-green-100 text-green-800 rounded font-bold text-xs">✅ Aanwezig</span>',
+            'absent': '<span class="px-2 py-0.5 bg-red-100 text-red-800 rounded font-bold text-xs">❌ Afwezig</span>',
+            'sick': '<span class="px-2 py-0.5 bg-orange-100 text-orange-800 rounded font-bold text-xs">🤒 Ziek</span>',
+            'late': '<span class="px-2 py-0.5 bg-yellow-100 text-yellow-800 rounded font-bold text-xs">⏱️ Te laat</span>'
+        };
+
+        list.innerHTML = attendanceData.map(r => {
+            const student = students.find(s => s.id === r.student_id);
+            const studentName = student ? student.name : 'Stagiair';
+            const dateObj = new Date(r.date);
+            const dateFormatted = dateObj.toLocaleDateString('nl-NL', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
+
+            return `
+                <div class="p-4 bg-gray-50 rounded-xl border border-gray-200 flex flex-col gap-2">
+                    <div class="flex justify-between items-center flex-wrap gap-2">
+                        <div class="font-bold text-gray-900 text-sm">${studentName} • ${dateFormatted}</div>
+                        <div>${r.status ? (statusBadges[r.status] || r.status) : '<span class="text-xs text-gray-400">Nog geen status</span>'}</div>
+                    </div>
+                    ${(r.student_hours || r.minutes_late) ? `
+                        <div class="flex items-center gap-3 text-xs text-gray-600 font-medium">
+                            ${r.student_hours ? `<span>⏱️ Uren: ${r.student_hours}u</span>` : ''}
+                            ${r.minutes_late ? `<span>⏱️ Te laat: ${r.minutes_late}m</span>` : ''}
+                        </div>
+                    ` : ''}
+                    ${r.notes ? `
+                        <div class="p-3 bg-amber-50 border border-amber-200 rounded-lg text-xs sm:text-sm text-gray-800 whitespace-pre-wrap">
+                            <span class="font-bold text-amber-800 block mb-1">📝 Dagverslag:</span>
+                            ${r.notes}
+                        </div>
+                    ` : '<div class="text-xs text-gray-400 italic">Geen dagverslag ingevuld</div>'}
+                </div>
+            `;
+        }).join('');
+    } else {
+        panel.classList.add('hidden');
+        if (chevron) chevron.style.transform = 'rotate(0deg)';
+    }
+}
+window.toggleEmployerHistory = toggleEmployerHistory;
 
 init();
