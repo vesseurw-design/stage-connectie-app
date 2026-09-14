@@ -614,6 +614,7 @@ function setupRealtimeSubscription() {
                 loadAttendance();
             } else {
                 console.log('⏸️ Skipping reload - save in progress');
+            }
         })
         .subscribe();
 
