@@ -353,8 +353,8 @@ function openActionSheet(dateStr, element, isUnscheduled) {
     let currentHours = parseFloat(element.dataset.hours) || 0;
     let currentMinutes = parseInt(element.dataset.minutes) || 15;
 
-    // Fix: If status is empty and hours is 0, default to 8 hours for scheduled days
-    if (currentStatus === '' && currentHours === 0 && !isUnscheduled) {
+    // Fix: If status is empty and hours is 0, default to 8 hours
+    if (currentStatus === '' && currentHours === 0) {
         currentHours = 8;
     }
 
@@ -409,6 +409,10 @@ function updateActionSheetButtons(status) {
         document.getElementById('action-hours-worked').value = 0;
     } else {
         hoursContainer.classList.remove('hidden');
+        const hoursInput = document.getElementById('action-hours-worked');
+        if (hoursInput && (parseFloat(hoursInput.value) || 0) === 0) {
+            hoursInput.value = 8;
+        }
     }
 
     const lateContainer = document.getElementById('action-late-container');

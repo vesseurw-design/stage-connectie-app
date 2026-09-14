@@ -104,25 +104,7 @@ if (loginForm) {
                 errorMsg = error.message;
             }
 
-            let errorDetails = '';
-            if (error && typeof error === 'object') {
-                try {
-                    const propNames = Object.getOwnPropertyNames(error);
-                    errorDetails = propNames.map(k => {
-                        let val = error[k];
-                        if (val && typeof val === 'object') {
-                            try { val = JSON.stringify(val); } catch(je) { val = String(val); }
-                        }
-                        return k + ': ' + val;
-                    }).join(' | ');
-                } catch (e) {
-                    errorDetails = error.message || String(error);
-                }
-            } else {
-                errorDetails = String(error);
-            }
-
-            errorMessage.textContent = errorMsg + ' (Fout: ' + errorDetails + ')';
+            errorMessage.textContent = errorMsg;
             errorMessage.classList.remove('hidden');
         }
     });

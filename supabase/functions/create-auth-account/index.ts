@@ -27,6 +27,122 @@ serve(async (req) => {
             }
         )
 
+        if (action === 'request-password-reset') {
+            if (!email) throw new Error('Email is verplicht');
+            const cleanEmail = email.trim().toLowerCase();
+
+            // Check if student (students cannot reset their password themselves)
+            const { data: student } = await supabaseAdmin.from('Students').select('id').ilike('email', cleanEmail).maybeSingle();
+            if (student) {
+                return new Response(
+                    JSON.stringify({ success: false, error: 'Studenten kunnen hun wachtwoord niet zelf resetten. Neem contact op met je stagebegeleider.' }),
+                    { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+                );
+            }
+
+            let userRole = role || 'employer';
+            let userName = name || '';
+
+            const { data: company } = await supabaseAdmin.from('Bedrijven').select('company_name, contact_person').ilike('email', cleanEmail).maybeSingle();
+            if (company) {
+                userRole = 'employer';
+                userName = company.contact_person || company.company_name;
+            } else {
+                const { data: supervisor } = await supabaseAdmin.from('stagebegeleiders').select('name').ilike('email', cleanEmail).maybeSingle();
+                if (supervisor) {
+                    userRole = 'supervisor';
+                    userName = supervisor.name;
+                }
+            }
+
+            let resetActionLink = '';
+            const recoveryRes = await supabaseAdmin.auth.admin.generateLink({
+                type: 'recovery',
+                email: cleanEmail,
+                options: {
+                    redirectTo: loginUrl || 'https://stageconnectie.nl/reset-password.html'
+                }
+            });
+
+            if (recoveryRes.error) {
+                const inviteRes = await supabaseAdmin.auth.admin.generateLink({
+                    type: 'invite',
+                    email: cleanEmail,
+                    options: {
+                        redirectTo: loginUrl || 'https://stageconnectie.nl/reset-password.html',
+                        data: { role: userRole }
+                    }
+                });
+                if (inviteRes.error) throw inviteRes.error;
+                resetActionLink = inviteRes.data.properties?.action_link || '';
+            } else {
+                resetActionLink = recoveryRes.data.properties?.action_link || '';
+            }
+
+            const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY');
+            if (RESEND_API_KEY && resetActionLink) {
+                const subjectLine = 'Wachtwoord Herstellen - StageConnectie';
+                const htmlContent = `
+                    <div style="font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 24px; border: 1px solid #e2e8f0; border-radius: 12px; background: #ffffff;">
+                        <div style="text-align: center; margin-bottom: 20px;">
+                            <h2 style="color: #1e293b; margin: 0;">StageConnectie</h2>
+                            <p style="color: #64748b; font-size: 14px; margin-top: 4px;">Groene Hart Praktijkschool</p>
+                        </div>
+                        
+                        <h3 style="color: #1e293b; margin-top: 0;">Beste ${userName || 'gebruiker'},</h3>
+                        <p style="color: #334155; line-height: 1.6;">U heeft een verzoek ingediend om uw wachtwoord te herstellen voor StageConnectie.</p>
+                        
+                        <p style="color: #334155; line-height: 1.6; margin-top: 20px;">Klik op de onderstaande knop om uw eigen wachtwoord in te stellen:</p>
+                        
+                        <div style="text-align: center; margin: 25px 0;">
+                            <a href="${resetActionLink}" style="display: inline-block; background: #2563eb; color: white; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 15px;">Nieuw Wachtwoord Instellen</a>
+                        </div>
+
+                        <div style="background: #f8fafc; border-left: 4px solid #2563eb; padding: 15px; border-radius: 6px; margin: 20px 0;">
+                            <p style="margin: 0; font-size: 13px; color: #475569; line-height: 1.5;">
+                                🔒 <strong>Heeft u dit niet aangevraagd?</strong><br>
+                                Dan kunt u deze e-mail negeren. Uw account blijft gewoon veilig.
+                            </p>
+                        </div>
+
+                        <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 25px 0;">
+                        <p style="font-size: 14px; color: #64748b; margin-bottom: 0;">
+                            Met vriendelijke groet,<br>
+                            <strong>Het stage team van Groene Hart Praktijkschool</strong>
+                        </p>
+                    </div>
+                `;
+
+                await fetch('https://api.resend.com/emails', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${RESEND_API_KEY}`
+                    },
+                    body: JSON.stringify({
+                        from: 'StageConnectie <no-reply@stageconnectie.nl>',
+                        to: cleanEmail,
+                        subject: subjectLine,
+                        html: htmlContent
+                    })
+                });
+            }
+
+            return new Response(
+                JSON.stringify({ success: true, message: 'Password reset link sent from StageConnectie' }),
+                { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
+            );
+        }
+
+        if (action === 'list-auth-users') {
+            const { data: listData, error: listErr } = await supabaseAdmin.auth.admin.listUsers({ page: 1, perPage: 1000 });
+            if (listErr) throw listErr;
+            return new Response(
+                JSON.stringify({ success: true, users: listData?.users || [] }),
+                { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
+            );
+        }
+
         if (action === 'unlink-student-company') {
             const { studentName, studentId } = metadata || {};
             let query = supabaseAdmin.from('Students').update({ company_id: null });
@@ -136,6 +252,37 @@ serve(async (req) => {
             if (res.error) throw res.error;
             return new Response(
                 JSON.stringify({ success: true, supervisor: res.data }),
+                { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
+            );
+        }
+
+        if (action === 'restore-attendance') {
+            const { records } = metadata || {};
+            if (!records || !Array.isArray(records)) throw new Error('records array is required');
+
+            const { data: students } = await supabaseAdmin.from('Students').select('id');
+            const studentIds = new Set((students || []).map((s: any) => s.id));
+
+            const { data: companies } = await supabaseAdmin.from('Bedrijven').select('id');
+            const companyIds = new Set((companies || []).map((c: any) => c.id));
+
+            const validRecords = records
+                .filter((r: any) => studentIds.has(r.student_id))
+                .map((r: any) => ({
+                    student_id: r.student_id,
+                    employer_id: r.employer_id && companyIds.has(r.employer_id) ? r.employer_id : null,
+                    date: r.date,
+                    status: r.status || null,
+                    minutes_late: r.minutes_late || 0,
+                    student_status: r.student_status || null,
+                    student_hours: r.student_hours || null,
+                    notes: r.notes || null
+                }));
+
+            const { data, error } = await supabaseAdmin.from('Attendance').upsert(validRecords, { onConflict: 'student_id,date' }).select();
+            if (error) throw error;
+            return new Response(
+                JSON.stringify({ success: true, inputCount: records.length, restoredCount: validRecords.length, data }),
                 { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
             );
         }

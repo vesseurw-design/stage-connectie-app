@@ -53,13 +53,24 @@ if (resetForm) {
                 return;
             }
 
-            // Verstuur password reset email via Supabase Auth
-            const { data, error } = await supabaseClient.auth.resetPasswordForEmail(email, {
-                redirectTo: `${window.location.origin}/reset-password.html`
+            // Verstuur password reset email via StageConnectie Edge Function (Resend - StageConnectie afzender)
+            const functionUrl = `${SUPABASE_URL}/functions/v1/create-auth-account`;
+            const res = await fetch(functionUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${SUPABASE_KEY}`
+                },
+                body: JSON.stringify({
+                    action: 'request-password-reset',
+                    email: email,
+                    loginUrl: `${window.location.origin}/reset-password.html`
+                })
             });
 
-            if (error) {
-                throw error;
+            const resData = await res.json();
+            if (!res.ok || !resData.success) {
+                throw new Error(resData?.error || 'Versturen van reset link mislukt.');
             }
 
             // Success

@@ -294,7 +294,11 @@ document.getElementById('company-form').addEventListener('submit', async (e) => 
             .eq('id', id);
 
         if (error) {
-            alert('Fout bij opslaan: ' + error.message);
+            if (error.code === '23505' || (error.message && (error.message.includes('Bedrijven_email_key') || error.message.includes('unique constraint')))) {
+                alert(`⚠️ Er bestaat al een stagebedrijf met het e-mailadres '${email}'.`);
+            } else {
+                alert('Fout bij opslaan: ' + error.message);
+            }
         } else {
             closeModal();
             loadData();
@@ -314,7 +318,11 @@ document.getElementById('company-form').addEventListener('submit', async (e) => 
                 .select();
 
             if (companyError) {
-                alert('Fout bij opslaan stagebedrijf: ' + companyError.message);
+                if (companyError.code === '23505' || (companyError.message && (companyError.message.includes('Bedrijven_email_key') || companyError.message.includes('unique constraint')))) {
+                    alert(`⚠️ Er bestaat al een stagebedrijf met het e-mailadres '${email}'.\n\nDit bedrijf staat waarschijnlijk al in de lijst. Zoek het op in het overzicht om de gegevens aan te passen, of voer een ander e-mailadres in.`);
+                } else {
+                    alert('Fout bij opslaan stagebedrijf: ' + companyError.message);
+                }
                 return;
             }
 

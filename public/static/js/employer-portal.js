@@ -63,11 +63,13 @@ async function init() {
 
         // Check gebruikersvoorwaarden akkoord (Click-wrap)
         if (currentCompany && !currentCompany.terms_accepted_at && currentCompany.id !== 'demo-company') {
-            checkTermsAcceptance('Bedrijven', currentCompany.id, currentCompany.terms_accepted_at, (acceptedAt) => {
-                currentCompany.terms_accepted_at = acceptedAt;
-                continueEmployerInit();
-            });
-            return;
+            if (typeof checkTermsAcceptance === 'function') {
+                checkTermsAcceptance('Bedrijven', currentCompany.id, currentCompany.terms_accepted_at, (acceptedAt) => {
+                    currentCompany.terms_accepted_at = acceptedAt;
+                    continueEmployerInit();
+                });
+                return;
+            }
         }
 
         await continueEmployerInit();
