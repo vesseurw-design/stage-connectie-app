@@ -37,15 +37,14 @@ async function init() {
 
     try {
         const { data: supervisor, error: supervisorError } = await supabaseClient
-            .from('Stagebegeleiders')
+            .from('stagebegeleiders')
             .select('terms_accepted_at')
             .eq('id', supervisorId)
             .single();
 
-        if (!supervisorError && supervisor) {
-            // Check gebruikersvoorwaarden akkoord (Click-wrap)
-            if (!supervisor.terms_accepted_at) {
-                checkTermsAcceptance('Stagebegeleiders', supervisorId, supervisor.terms_accepted_at, (acceptedAt) => {
+        if (!supervisorError && supervisor && !supervisor.terms_accepted_at) {
+            if (typeof checkTermsAcceptance === 'function') {
+                checkTermsAcceptance('stagebegeleiders', supervisorId, supervisor.terms_accepted_at, (acceptedAt) => {
                     continueSupervisorInit(supervisorName);
                 });
                 return;

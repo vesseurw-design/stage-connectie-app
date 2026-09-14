@@ -37,6 +37,7 @@
     ]
   },
   "devDependencies": {
+    "supabase": "^2.117.0",
     "vercel": "^50.25.4"
   }
 }
