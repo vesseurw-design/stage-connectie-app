@@ -531,9 +531,6 @@ async function executeImportProcess(fileInput, type, sendEmailCheckbox, progress
 
                 // Wachtwoord bepalen: als opgegeven in CSV, exact overnemen (min 6 tekens voor Supabase Auth)
                 let passToSet = wachtwoord ? (wachtwoord.length < 6 ? wachtwoord.padStart(6, '0') : wachtwoord) : '';
-                if (type === 'company' && !passToSet) {
-                    passToSet = 'WelkomGHPC2026!';
-                }
                 
                 // GEEN standaard wachtwoorden: Als een NIEUWE leerling geen wachtwoord in de CSV heeft, meld een fout
                 if (!passToSet && !exists && type === 'student') {
@@ -542,7 +539,7 @@ async function executeImportProcess(fileInput, type, sendEmailCheckbox, progress
 
                 // Auth account aanmaken/updaten in Supabase Auth (Stille import = geen mail versturen)
                 const isSendEmailChecked = sendEmailCheckbox ? sendEmailCheckbox.checked : false;
-                if (passToSet || isSendEmailChecked || !exists) {
+                if (passToSet || isSendEmailChecked || (!exists && type === 'student')) {
                     try {
                         const authData = await callCreateAuthAccount({
                             email: cleanEmail,
