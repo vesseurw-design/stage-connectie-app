@@ -29,6 +29,11 @@ const DB_CONFIGS = {
         maxStudents: 500,
         schoolName: 'StageConnectie',
         logo: 'logo-stageconnectie.png',
+        demoCredentials: {
+            student: 'fake@leerling.nl',
+            supervisor: 'stage@begeleider.nl',
+            employer: 'test@testbedrijf.nl'
+        },
         absenceSteps: [
             "📞 Ik heb mijn stagebedrijf gebeld om mijn afwezigheid door te geven.",
             "💬 Ik heb een appje gestuurd naar mijn coach/stagebegeleider.",
@@ -41,6 +46,11 @@ const DB_CONFIGS = {
         maxStudents: 500,
         schoolName: 'StageConnectie',
         logo: 'logo-stageconnectie.png',
+        demoCredentials: {
+            student: 'fake@leerling.nl',
+            supervisor: 'stage@begeleider.nl',
+            employer: 'test@testbedrijf.nl'
+        },
         absenceSteps: [
             "📞 Ik heb mijn stagebedrijf gebeld om mijn afwezigheid door te geven.",
             "💬 Ik heb een appje gestuurd naar mijn coach/stagebegeleider.",
