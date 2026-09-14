@@ -42,7 +42,7 @@ async function init() {
             if (companyId && companyName) {
                 currentCompany = { id: companyId, company_name: companyName };
                 console.log('✅ Using company data from localStorage');
-            } else if (userEmail !== 'test@test.nl') {
+            } else if (userEmail !== 'test@test.nl' && userEmail !== 'test@testbedrijf.nl') {
                 document.getElementById('company-name').textContent = 'Niet gevonden';
                 document.getElementById('supervisor-select').innerHTML = '<option>Geen toegang</option>';
                 document.getElementById('students-grid').innerHTML = '<div class="p-12 text-center text-red-500 font-bold">Geen stagebedrijf profiel gevonden. Controleer of u bent ingelogd met het juiste emailadres of neem contact op met de beheerder.</div>';
