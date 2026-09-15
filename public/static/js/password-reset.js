@@ -76,7 +76,7 @@ if (resetForm) {
             // Success
             showSuccess(
                 `Een reset link is verstuurd naar ${email}. ` +
-                `Controleer je inbox en volg de instructies. De link is 1 uur geldig.`
+                `Controleer je inbox en volg de instructies. De link is 24 uur geldig.`
             );
 
             // Clear form

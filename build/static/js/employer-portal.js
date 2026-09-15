@@ -1,41 +1,78 @@
-const SUPABASE_URL = 'https://ninkkvffhvkxrrxddgrz.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5pbmtrdmZmaHZreHJyeGRkZ3J6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM5OTc2NTcsImV4cCI6MjA3OTU3MzY1N30.Kq6jojYu5Hopmtzmdqwc9dwUyIZBOm7c27N-OCv1aCM';
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const SUPABASE_URL = window.SUPABASE_URL || 'https://vdeipnqyesduiohxvuvu.supabase.co';
+const SUPABASE_KEY = window.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZkZWlwbnF5ZXNkdWlvaHh2dXZ1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc1MjY5NTEsImV4cCI6MjA4MzEwMjk1MX0.IknEZ-GQvspcppJxLR00ayBDq1DbL0HiUKy9RDb59DU';
+const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 let currentWeekOffset = 0;
 let students = [];
 let supervisors = [];
 let currentCompany = null;
 let activeCell = null;
+let isSaving = false;
 
 async function init() {
     try {
-        const userEmail = localStorage.getItem('user_email');
+        let userEmail = localStorage.getItem('user_email');
+        let companyName = localStorage.getItem('company_name');
+        let companyId = localStorage.getItem('company_id');
+
+        // Check if there is an active Supabase Auth session first
+        if (!userEmail) {
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            if (session && session.user && session.user.email) {
+                userEmail = session.user.email;
+                console.log('✅ Active Supabase session recovered for:', userEmail);
+            }
+        }
+
         if (!userEmail) { window.location.href = 'index.html'; return; }
 
-        const { data: companies, error: companyError } = await supabase.from('Bedrijven').select('*').eq('email', userEmail);
+        // Show company name from localStorage immediately
+        if (companyName) {
+            document.getElementById('company-name').textContent = companyName;
+        }
+
+        const { data: companies, error: companyError } = await supabaseClient
+            .from('Bedrijven')
+            .select('*')
+            .ilike('email', userEmail);
 
         if (companyError || !companies.length) {
             console.error('Company fetch error or empty:', companyError);
-            if (userEmail !== 'test@test.nl') {
+            // Use localStorage data as fallback
+            if (companyId && companyName) {
+                currentCompany = { id: companyId, company_name: companyName };
+                console.log('✅ Using company data from localStorage');
+            } else if (userEmail !== 'test@test.nl' && userEmail !== 'test@testbedrijf.nl') {
                 document.getElementById('company-name').textContent = 'Niet gevonden';
                 document.getElementById('supervisor-select').innerHTML = '<option>Geen toegang</option>';
-                document.getElementById('students-grid').innerHTML = '<div class="p-12 text-center text-red-500 font-bold">Geen bedrijfsprofiel gevonden. Controleer of u bent ingelogd met het juiste emailadres of neem contact op met de beheerder.</div>';
-                // alert('Geen bedrijf gevonden voor dit emailadres.'); 
+                document.getElementById('students-grid').innerHTML = '<div class="p-12 text-center text-red-500 font-bold">Geen stagebedrijf profiel gevonden. Controleer of u bent ingelogd met het juiste emailadres of neem contact op met de beheerder.</div>';
                 return;
+            } else {
+                currentCompany = { id: 'demo-company', company_name: 'Demo Bedrijf' };
             }
-            currentCompany = { id: 'demo-company', company_name: 'Demo Bedrijf' };
         } else {
             currentCompany = companies[0];
+            document.getElementById('company-name').textContent = currentCompany.company_name;
+
+            // Ensure localStorage is updated
+            localStorage.setItem('user_email', userEmail);
+            localStorage.setItem('company_id', currentCompany.id);
+            localStorage.setItem('company_name', currentCompany.company_name);
+            localStorage.setItem('stageconnect_session', 'true');
         }
 
-        document.getElementById('company-name').textContent = currentCompany.company_name;
+        // Check gebruikersvoorwaarden akkoord (Click-wrap)
+        if (currentCompany && !currentCompany.terms_accepted_at && currentCompany.id !== 'demo-company') {
+            if (typeof checkTermsAcceptance === 'function') {
+                checkTermsAcceptance('Bedrijven', currentCompany.id, currentCompany.terms_accepted_at, (acceptedAt) => {
+                    currentCompany.terms_accepted_at = acceptedAt;
+                    continueEmployerInit();
+                });
+                return;
+            }
+        }
 
-        await loadStudents();
-        await loadSupervisors(); // Load supervisors after students
-        updateWeekDisplay();
-        await loadAttendance();
-
+        await continueEmployerInit();
     } catch (err) {
         console.error('Init error:', err);
         document.getElementById('students-grid').innerHTML = `
@@ -48,12 +85,34 @@ async function init() {
     }
 }
 
+async function continueEmployerInit() {
+    if (localStorage.getItem('admin_preview_mode') === 'true') {
+        const existingBanner = document.getElementById('admin-preview-banner');
+        if (!existingBanner) {
+            const banner = document.createElement('div');
+            banner.id = 'admin-preview-banner';
+            banner.className = 'bg-amber-500 text-white font-bold px-4 py-2.5 text-center text-sm flex justify-between items-center sticky top-0 z-50 shadow';
+            banner.innerHTML = `<span>👁️ Beheerder Voorbeeldmodus: U bekijkt het portaal als <strong>${currentCompany?.company_name || 'Werkgever'}</strong></span>
+                <button onclick="localStorage.removeItem('admin_preview_mode'); window.close();" class="bg-amber-700 hover:bg-amber-800 px-3 py-1 rounded text-xs transition">Sluit Voorbeeld</button>`;
+            document.body.insertBefore(banner, document.body.firstChild);
+        }
+    }
+    await loadStudents();
+    await loadSupervisors(); // Load supervisors after students
+    updateWeekDisplay();
+    updateWeekButtons();
+    await loadAttendance();
+
+    // Setup realtime subscription for live updates
+    setupRealtimeSubscription();
+}
+
 async function loadStudents() {
-    let { data, error } = await supabase.from('Students').select('*');
+    let { data, error } = await supabaseClient.from('Students').select('*');
 
     // Fallback to lowercase 'students' if uppercase fails
     if (error) {
-        const { data: dataLow, error: errorLow } = await supabase.from('students').select('*');
+        const { data: dataLow, error: errorLow } = await supabaseClient.from('students').select('*');
         if (!errorLow) {
             data = dataLow;
             error = null;
@@ -65,15 +124,15 @@ async function loadStudents() {
 
     if (error || !data) {
         console.error('Error loading students:', error);
-        throw new Error('Kon studenten niet laden: ' + (error?.message || 'Onbekende fout'));
+        throw new Error('Kon stagiairs niet laden: ' + (error?.message || 'Onbekende fout'));
     }
 
     if (currentCompany.id === 'demo-company') {
         students = data.slice(0, 3);
     } else {
         students = data.filter(s =>
-            s.company_id === currentCompany.id ||
-            s.companyId === currentCompany.id ||
+            (s.company_id && String(s.company_id).includes(currentCompany.id)) ||
+            (s.companyId && String(s.companyId).includes(currentCompany.id)) ||
             (s.company_name && s.company_name === currentCompany.company_name)
         );
     }
@@ -89,15 +148,15 @@ async function loadSupervisors() {
     }
 
     // Try creating table name variants to handle case sensitivity
-    const { data: dataCap, error: errorCap } = await supabase
-        .from('Stagebegeleiders')
+    const { data: dataCap, error: errorCap } = await supabaseClient
+        .from('stagebegeleiders')
         .select('*')
         .in('id', supervisorIds);
 
     let fetchedSupervisors = [];
 
     if (errorCap) {
-        const { data: dataLow } = await supabase
+        const { data: dataLow } = await supabaseClient
             .from('stagebegeleiders')
             .select('*')
             .in('id', supervisorIds);
@@ -184,7 +243,7 @@ function getWeekDate(offsetDays) {
     const today = new Date();
     const monday = getMonday(today);
     const targetDate = new Date(monday);
-    targetDate.setDate(monday.getDate() + offsetDays);
+    targetDate.setDate(monday.getDate() + offsetDays + (currentWeekOffset * 7));
     return targetDate.toISOString().split('T')[0];
 }
 
@@ -207,18 +266,43 @@ function updateWeekDisplay() {
     });
 }
 
+function changeWeek(direction) {
+    const newOffset = currentWeekOffset + direction;
+    if (newOffset < -1 || newOffset > 0) return; // Limit to previous week (-1) and current week (0)
+    currentWeekOffset = newOffset;
+    
+    updateWeekButtons();
+    updateWeekDisplay();
+    loadAttendance();
+}
+
+function updateWeekButtons() {
+    const prevBtn = document.getElementById('prev-week-btn');
+    const nextBtn = document.getElementById('next-week-btn');
+    if (prevBtn) {
+        prevBtn.disabled = (currentWeekOffset <= -1);
+        prevBtn.style.opacity = currentWeekOffset <= -1 ? '0.5' : '1';
+        prevBtn.style.cursor = currentWeekOffset <= -1 ? 'not-allowed' : 'pointer';
+    }
+    if (nextBtn) {
+        nextBtn.disabled = (currentWeekOffset >= 0);
+        nextBtn.style.opacity = currentWeekOffset >= 0 ? '0.5' : '1';
+        nextBtn.style.cursor = currentWeekOffset >= 0 ? 'not-allowed' : 'pointer';
+    }
+}
+
 async function loadAttendance() {
     const container = document.getElementById('students-grid');
 
     const weekDates = [0, 1, 2, 3, 4].map(i => getWeekDate(i));
-    const studentNames = students.map(s => s.name);
+    const studentIds = students.map(s => s.id);
 
-    if (studentNames.length === 0) { renderGrid([]); return; }
+    if (studentIds.length === 0) { renderGrid([]); return; }
 
-    const { data: attendanceData, error } = await supabase
+    const { data: attendanceData, error } = await supabaseClient
         .from('Attendance')
         .select('*')
-        .in('student_id', studentNames)
+        .in('student_id', studentIds)
         .in('date', weekDates);
 
     renderGrid(attendanceData || []);
@@ -229,7 +313,7 @@ function renderGrid(existingAttendance) {
     container.innerHTML = '';
 
     if (students.length === 0) {
-        container.innerHTML = '<div class="p-12 text-center text-gray-500">Geen studenten gevonden voor dit bedrijf.</div>';
+        container.innerHTML = '<div class="p-12 text-center text-gray-500">Geen stagiairs gevonden voor dit stagebedrijf.</div>';
         return;
     }
 
@@ -239,7 +323,7 @@ function renderGrid(existingAttendance) {
 
         const nameCell = document.createElement('div');
         nameCell.className = 'week-cell student-name pl-6 bg-white rounded-xl shadow-sm border border-gray-200 justify-start';
-        nameCell.innerHTML = `<div><div class="text-gray-900 font-black text-sm uppercase tracking-wide">${student.name}</div><div class="text-xs text-blue-600 font-bold mt-0.5">${student.student_number || ''}</div></div>`;
+        nameCell.innerHTML = `<div><div class="text-gray-900 font-black text-sm uppercase tracking-wide">${student.name}</div><div class="text-xs text-blue-600 font-bold mt-0.5">${student.class || ''} ${student.student_number ? '• ' + student.student_number : ''}</div></div>`;
         row.appendChild(nameCell);
 
         const dayMap = ['Ma', 'Di', 'Wo', 'Do', 'Vr'];
@@ -257,21 +341,26 @@ function renderGrid(existingAttendance) {
                 cell.style.pointerEvents = 'none';
                 cell.innerHTML = '';
             } else {
-                const record = existingAttendance.find(a => a.student_id === student.name && a.date === dateStr);
+                const record = existingAttendance.find(a => a.student_id === student.id && a.date === dateStr);
                 const status = record ? record.status : '';
                 const minutesLate = record ? record.minutes_late : 0;
+                const studentStatus = record ? record.student_status : '';
+                const studentHours = record ? record.student_hours : 0;
+                const notes = record ? (record.notes || '') : '';
 
                 // Strong permanent border for empty cells
                 cell.className = 'week-cell bg-white rounded-xl shadow-sm border-2 transition-all duration-150 transform';
 
-                cell.onclick = () => openActionSheet(student.name, dateStr, cell);
+                cell.dataset.studentId = student.id;
+                cell.dataset.date = dateStr;
 
-                // Content will set the border colors
-                updateCellContent(cell, status, minutesLate);
-
-                // Hover effect: just scale and blue border for all interactable cells
+                // Employer can ALWAYS click/edit their own status
+                cell.onclick = () => openActionSheet(student.id, dateStr, cell);
                 cell.classList.add('hover:border-blue-400');
                 cell.classList.add('hover:-translate-y-0.5');
+
+                // Content will set the border colors
+                updateCellContent(cell, status, minutesLate, studentStatus, studentHours, notes);
             }
 
             row.appendChild(cell);
@@ -281,16 +370,27 @@ function renderGrid(existingAttendance) {
     });
 }
 
-function updateCellContent(cell, status, minutesLate) {
+function updateCellContent(cell, status, minutesLate, studentStatus = '', studentHours = 0, notes = '') {
     const icons = { 'present': '✅', 'absent': '❌', 'sick': '🤒', 'late': '⏱️', '': '' };
+    const studentIcons = { 'present': '🎓', 'absent': '❓', 'late': '⏳', '': '' };
 
-    // Explicit placeholder '+' if empty
+    // Employer Status (Big icon)
     const content = status ? icons[status] : '<span class="text-gray-300 text-3xl font-black">+</span>';
-
     cell.innerHTML = `<div class="status-badge ${status || 'empty'}">${content}</div>`;
 
     if (status === 'late' && minutesLate > 0) {
         cell.innerHTML += `<div class="late-minutes">${minutesLate}m</div>`;
+    }
+
+    // Student Input (Small badge at the bottom)
+    if (studentStatus || studentHours > 0) {
+        const studentIcon = studentIcons[studentStatus] || '🎓';
+        cell.innerHTML += `
+            <div class="absolute bottom-1 right-1 flex items-center gap-0.5 bg-purple-100 text-purple-700 text-[9px] font-black px-1 rounded shadow-sm" title="Eigen invoer student: ${studentStatus}">
+                <span>${studentIcon}</span>
+                ${studentHours > 0 ? `<span>${studentHours}u</span>` : ''}
+            </div>
+        `;
     }
 
     // Reset specific borders
@@ -310,17 +410,34 @@ function updateCellContent(cell, status, minutesLate) {
         cell.classList.remove('shadow-md');
     }
 
-    // Store data
+    // Store data (preserve notes for DB save)
     cell.dataset.status = status;
     cell.dataset.minutes = minutesLate;
+    cell.dataset.studentStatus = studentStatus;
+    cell.dataset.studentHours = studentHours;
+    cell.dataset.notes = notes || '';
 }
 
 function openActionSheet(studentId, date, element) {
     activeCell = { studentId, date, element };
     const sheet = document.getElementById('action-sheet');
     const overlay = document.getElementById('action-overlay');
+
+    // Header info: Student Name & Formatted Date
+    const student = students.find(s => s.id === studentId);
+    const studentNameElem = document.getElementById('action-student-name');
+    if (studentNameElem) studentNameElem.textContent = student ? student.name : '';
+
+    const dateObj = new Date(date);
+    const dateOptions = { weekday: 'long', day: 'numeric', month: 'long' };
+    const formattedDate = dateObj.toLocaleDateString('nl-NL', dateOptions);
+    const dateLabelElem = document.getElementById('action-date-label');
+    if (dateLabelElem) dateLabelElem.textContent = formattedDate.charAt(0).toUpperCase() + formattedDate.slice(1);
+
     sheet.classList.remove('hidden');
     overlay.classList.remove('hidden');
+    const grid = document.getElementById('status-buttons-grid');
+    if (grid) grid.classList.remove('hidden');
     document.getElementById('late-input-container').classList.add('hidden');
     setTimeout(() => { sheet.classList.remove('translate-y-full'); }, 10);
 }
@@ -329,67 +446,128 @@ function closeActions() {
     const sheet = document.getElementById('action-sheet');
     const overlay = document.getElementById('action-overlay');
     sheet.classList.add('translate-y-full');
-    setTimeout(() => { sheet.classList.add('hidden'); overlay.classList.add('hidden'); }, 300);
+    setTimeout(() => { 
+        sheet.classList.add('hidden'); 
+        overlay.classList.add('hidden'); 
+        const grid = document.getElementById('status-buttons-grid');
+        if (grid) grid.classList.remove('hidden');
+        document.getElementById('late-input-container').classList.add('hidden');
+    }, 300);
 }
 
 function setStatus(status) {
     if (!activeCell) return;
-    updateCellContent(activeCell.element, status, 0);
+    const notes = activeCell.element.dataset.notes || '';
+    const studentStatus = activeCell.element.dataset.studentStatus || '';
+    const studentHours = activeCell.element.dataset.studentHours || 0;
+    updateCellContent(activeCell.element, status, 0, studentStatus, studentHours, notes);
     closeActions();
 }
 
+let isCustomLate = false;
+
 function showLateInput() {
+    const grid = document.getElementById('status-buttons-grid');
+    if (grid) grid.classList.add('hidden');
     document.getElementById('late-input-container').classList.remove('hidden');
-    document.getElementById('minute-slider').value = 15;
-    updateMinuteDisplay();
+    document.getElementById('minute-input').value = 15;
+    toggleCustomLate(false);
 }
 
 function hideLateInput() {
     document.getElementById('late-input-container').classList.add('hidden');
+    const grid = document.getElementById('status-buttons-grid');
+    if (grid) grid.classList.remove('hidden');
 }
 
-function updateMinuteDisplay() {
-    const val = document.getElementById('minute-slider').value;
-    document.getElementById('minute-display').textContent = val;
+function toggleCustomLate(show) {
+    isCustomLate = show;
+    if (show) {
+        document.getElementById('regular-late-input').classList.add('hidden');
+        document.getElementById('custom-late-input').classList.remove('hidden');
+        document.getElementById('custom-minute-input').value = 121;
+        document.getElementById('custom-minute-input').focus();
+    } else {
+        document.getElementById('custom-late-input').classList.add('hidden');
+        document.getElementById('regular-late-input').classList.remove('hidden');
+        document.getElementById('minute-input').value = 15;
+        document.getElementById('minute-input').focus();
+    }
 }
 
-function adjustMinutes(delta) {
-    const slider = document.getElementById('minute-slider');
-    let val = parseInt(slider.value) + delta;
-    if (val < 5) val = 5;
-    if (val > 120) val = 120;
-    slider.value = val;
-    updateMinuteDisplay();
+function validateMinuteInput() {
+    const input = document.getElementById('minute-input');
+    let val = parseInt(input.value);
+    if (val > 120) {
+        input.value = 120;
+    } else if (val < 1) {
+        input.value = 1;
+    }
 }
 
 function confirmLate() {
     if (!activeCell) return;
-    const minutes = document.getElementById('minute-slider').value;
-    updateCellContent(activeCell.element, 'late', minutes);
+    
+    let minutes;
+    if (isCustomLate) {
+        minutes = parseInt(document.getElementById('custom-minute-input').value);
+        if (isNaN(minutes) || minutes < 121) minutes = 121;
+    } else {
+        minutes = parseInt(document.getElementById('minute-input').value);
+        if (isNaN(minutes) || minutes < 1) minutes = 1;
+        if (minutes > 120) minutes = 120;
+    }
+    
+    const notes = activeCell.element.dataset.notes || '';
+    const studentStatus = activeCell.element.dataset.studentStatus || '';
+    const studentHours = activeCell.element.dataset.studentHours || 0;
+    updateCellContent(activeCell.element, 'late', minutes, studentStatus, studentHours, notes);
     closeActions();
 }
 
 async function saveWeek() {
+    isSaving = true;
     const cells = document.querySelectorAll('.week-cell[data-student-id]');
+    console.log('💾 Saving week - found cells:', cells.length);
+
+    // Collect attendance records
     const updates = [];
     cells.forEach(cell => {
         const status = cell.dataset.status;
-        if (status) {
+        const notes = cell.dataset.notes || null;
+        if (status || notes) {
             updates.push({
                 student_id: cell.dataset.studentId,
                 date: cell.dataset.date,
-                status: status,
+                status: status || null,
                 employer_id: currentCompany.id,
-                minutes_late: status === 'late' ? parseInt(cell.dataset.minutes) : 0
+                minutes_late: status === 'late' ? parseInt(cell.dataset.minutes || 0) : 0,
+                notes: notes
             });
         }
     });
 
-    if (updates.length === 0) { showToast(); return; }
+    console.log('💾 Attendance records to save:', updates.length, updates);
 
-    const { error } = await supabase.from('Attendance').upsert(updates, { onConflict: 'student_id,date' });
-    if (error) { console.error('Save error:', error); alert('Fout bij opslaan: ' + error.message); }
-    else { showToast(); }
+    // Upsert records (if any)
+    if (updates.length > 0) {
+        const { error } = await supabaseClient.from('Attendance').upsert(updates, { onConflict: 'student_id,date' });
+        if (error) {
+            console.error('❌ Save error:', error);
+            alert('Fout bij opslaan: ' + error.message);
+            isSaving = false;
+            return;
+        }
+    }
+
+    console.log('✅ Attendance saved successfully!');
+    showToast();
+
+    // Wait a bit before re-enabling realtime to avoid race condition
+    setTimeout(() => {
+        isSaving = false;
+        loadAttendance(); // Reload once to sync
+    }, 1500);
 }
 
 function showToast() {
@@ -399,10 +577,68 @@ function showToast() {
     setTimeout(() => { toast.style.opacity = '0'; toast.style.transform = 'translate(-50%, 0) scale(0.9)'; }, 2000);
 }
 
-function logout() {
+async function logout() {
+    console.log('logout() function called!');
+    try {
+        console.log('Calling Supabase signOut...');
+        await supabaseClient.auth.signOut();
+    } catch (e) {
+        console.warn('Error signing out of Supabase:', e);
+    }
+
+    console.log('Clearing localStorage...');
     localStorage.removeItem('stageconnect_session');
     localStorage.removeItem('user_email');
+    localStorage.removeItem('company_name');
+    localStorage.removeItem('company_id');
+
+    console.log('Redirecting to index.html...');
     window.location.href = 'index.html';
+}
+window.logout = logout;
+
+
+// Setup realtime subscription for live updates across devices
+function setupRealtimeSubscription() {
+    supabaseClient
+        .channel('public:Attendance')
+        .on('postgres_changes', {
+            event: '*',
+            schema: 'public',
+            table: 'Attendance'
+        }, (payload) => {
+            console.log('🔄 Real-time update:', payload);
+            // Only reload if we're not currently saving
+            if (!isSaving) {
+                console.log('📥 Loading attendance from realtime update');
+                loadAttendance();
+            } else {
+                console.log('⏸️ Skipping reload - save in progress');
+            }
+        })
+        .subscribe();
+
+    console.log('✅ Realtime subscription active');
+}
+
+async function refreshData() {
+    console.log('🔄 Refreshing employer portal data...');
+    const btn = document.getElementById('refresh-btn');
+    const icon = document.getElementById('refresh-icon');
+
+    if (btn) btn.disabled = true;
+    if (icon) icon.classList.add('animate-spin');
+
+    try {
+        await continueEmployerInit();
+        showToast('Gegevens succesvol ververst!');
+    } catch (err) {
+        console.error('Error refreshing data:', err);
+        showToast('Fout bij verversen: ' + err.message);
+    } finally {
+        if (btn) btn.disabled = false;
+        if (icon) icon.classList.remove('animate-spin');
+    }
 }
 
 init();
