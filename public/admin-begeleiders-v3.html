@@ -53,6 +53,7 @@
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Telefoon</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">WhatsApp</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Inlog Status</th>
                         <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Acties</th>
                     </tr>
                 </thead>
@@ -106,26 +107,52 @@
         const SUPABASE_KEY = window.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZkZWlwbnF5ZXNkdWlvaHh2dXZ1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc1MjY5NTEsImV4cCI6MjA4MzEwMjk1MX0.IknEZ-GQvspcppJxLR00ayBDq1DbL0HiUKy9RDb59DU';
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+        let authEmailsSet = null;
+        async function getAuthEmails() {
+            if (authEmailsSet) return authEmailsSet;
+            try {
+                const res = await fetch(`${SUPABASE_URL}/functions/v1/create-auth-account`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SUPABASE_KEY}` },
+                    body: JSON.stringify({ action: 'list-auth-users' })
+                });
+                const data = await res.json();
+                authEmailsSet = new Set((data.users || []).map(u => u.email?.toLowerCase()).filter(Boolean));
+            } catch (e) {
+                authEmailsSet = new Set();
+            }
+            return authEmailsSet;
+        }
+
         async function loadData() {
             const { data, error } = await supabaseClient.from('stagebegeleiders').select('*').order('name');
             if (error) {
                 console.error('Error:', error);
                 const tbody = document.getElementById('table-body');
                 if (tbody) {
-                    tbody.innerHTML = `<tr><td colspan="5" class="px-6 py-8 text-center text-red-600 font-bold">⚠️ Fout bij laden: ${error.message}</td></tr>`;
+                    tbody.innerHTML = `<tr><td colspan="6" class="px-6 py-8 text-center text-red-600 font-bold">⚠️ Fout bij laden: ${error.message}</td></tr>`;
                 }
                 return;
             }
 
+            const authSet = await getAuthEmails();
+
             const tbody = document.getElementById('table-body');
             tbody.innerHTML = '';
             (data || []).forEach(s => {
+                const cleanEmail = s.email ? s.email.trim().toLowerCase() : '';
+                const isAuthActive = cleanEmail && authSet.has(cleanEmail);
+                const statusBadge = isAuthActive 
+                    ? `<span class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-semibold">🟢 Inlog-account actief</span>`
+                    : `<span class="px-2 py-1 bg-amber-100 text-amber-800 rounded-full text-xs font-semibold">🟡 Nog niet actief</span>`;
+
                 tbody.innerHTML += `
                     <tr class="hover:bg-gray-50">
                         <td class="px-6 py-4 text-sm font-medium">${s.name}</td>
                         <td class="px-6 py-4 text-sm">${s.email}</td>
                         <td class="px-6 py-4 text-sm">${s.phone || '-'}</td>
                         <td class="px-6 py-4 text-sm">${s.whatsapp_enabled ? '✅ Ja' : '-'}</td>
+                        <td class="px-6 py-4 text-sm">${statusBadge}</td>
                         <td class="px-6 py-4 text-sm text-right">
                             <button onclick='editSupervisor(${JSON.stringify(s)})' class="text-blue-600 hover:text-blue-900 mr-2">Bewerk</button>
                             <button onclick="deleteSupervisor('${s.id}')" class="text-red-600 hover:text-red-900">Verwijder</button>
