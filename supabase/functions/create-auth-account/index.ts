@@ -13,7 +13,8 @@ serve(async (req) => {
     }
 
     try {
-        const { action, email, password, role, metadata, sendEmail, name, loginUrl } = await req.json()
+        const body = await req.json()
+        const { action, email, password, role, metadata, sendEmail, name, loginUrl, recipients, subject } = body
 
         // Create Supabase client with Admin rights
         const supabaseAdmin = createClient(
@@ -26,6 +27,88 @@ serve(async (req) => {
                 }
             }
         )
+
+        if (action === 'send-broadcast-email') {
+            const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY');
+            if (!RESEND_API_KEY) throw new Error('RESEND_API_KEY is niet ingesteld');
+
+            const results = [];
+            for (const r of (recipients || [])) {
+                if (!r.email) continue;
+                const recipientName = r.contact_person || r.company_name || 'stagebegeleider / werkgever';
+
+                const personalizedHtml = `
+                    <div style="font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 24px; border: 1px solid #e2e8f0; border-radius: 12px; background: #ffffff;">
+                        <div style="text-align: center; margin-bottom: 20px;">
+                            <h2 style="color: #1e293b; margin: 0;">StageConnectie</h2>
+                            <p style="color: #64748b; font-size: 14px; margin-top: 4px;">Groene Hart Praktijkschool</p>
+                        </div>
+                        
+                        <h3 style="color: #1e293b; margin-top: 0;">Beste ${recipientName},</h3>
+                        
+                        <p style="color: #334155; line-height: 1.6;">
+                            Vanwege een beveiligings- en AVG-update van ons systeem kan het zijn dat u vandaag (maandag 14 september) problemen heeft ondervonden bij het inloggen of het laden van het Stagebedrijf Portaal.
+                        </p>
+                        
+                        <p style="color: #1e40af; line-height: 1.6; font-weight: bold;">
+                            Onze welgemeende excuses voor het eventuele ongemak dat dit heeft veroorzaakt!
+                        </p>
+                        
+                        <p style="color: #334155; line-height: 1.6;">
+                            Wij willen u laten weten dat de update en de bijbehorende controles nu 100% succesvol zijn afgerond. Het portaal is per direct weer volledig en razendsnel beschikbaar.
+                        </p>
+
+                        <div style="background: #f8fafc; border-left: 4px solid #2563eb; padding: 16px; border-radius: 8px; margin: 20px 0;">
+                            <h4 style="margin: 0 0 8px 0; color: #1e293b; font-size: 14px;">🔑 Inloggen op StageConnectie:</h4>
+                            <ul style="margin: 0; padding-left: 20px; color: #475569; font-size: 13.5px; line-height: 1.6;">
+                                <li>U kunt inloggen met uw e-mailadres (<strong>${r.email}</strong>) en uw eigen vertrouwde wachtwoord.</li>
+                                <li>Mocht u uw wachtwoord niet meer weten, dan kunt u op de inlogpagina op <strong>"Wachtwoord vergeten"</strong> klikken om direct een e-mail te ontvangen waarmee u een nieuw wachtwoord kunt instellen.</li>
+                            </ul>
+                        </div>
+
+                        <div style="text-align: center; margin: 25px 0;">
+                            <a href="https://ghpc.stageconnectie.nl/login.html" style="display: inline-block; background: #2563eb; color: white; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 15px;">Direct Inloggen op StageConnectie</a>
+                        </div>
+
+                        <p style="color: #334155; line-height: 1.6;">
+                            Wij danken u hartelijk voor uw begrip en voor uw waardevolle samenwerking bij het begeleiden van onze stagiairs.
+                        </p>
+
+                        <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 25px 0;">
+                        <p style="font-size: 14px; color: #64748b; margin-bottom: 0;">
+                            Met vriendelijke groet,<br>
+                            <strong>Het stage team van Groene Hart Praktijkschool</strong><br>
+                            <span style="font-size: 12px; color: #94a3b8;">StageConnectie Support</span>
+                        </p>
+                    </div>
+                `;
+
+                try {
+                    const sendRes = await fetch('https://api.resend.com/emails', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${RESEND_API_KEY}`
+                        },
+                        body: JSON.stringify({
+                            from: 'StageConnectie <no-reply@stageconnectie.nl>',
+                            to: r.email.trim(),
+                            subject: subject || 'Belangrijke update: StageConnectie weer 100% operationeel',
+                            html: personalizedHtml
+                        })
+                    });
+                    const sendData = await sendRes.json();
+                    results.push({ email: r.email, success: sendRes.ok, data: sendData });
+                } catch (err) {
+                    results.push({ email: r.email, success: false, error: err.message });
+                }
+            }
+
+            return new Response(
+                JSON.stringify({ success: true, count: results.length, results }),
+                { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
+            );
+        }
 
         if (action === 'request-password-reset') {
             if (!email) throw new Error('Email is verplicht');
@@ -60,7 +143,7 @@ serve(async (req) => {
                 type: 'recovery',
                 email: cleanEmail,
                 options: {
-                    redirectTo: loginUrl || 'https://stageconnectie.nl/reset-password.html'
+                    redirectTo: loginUrl || 'https://ghpc.stageconnectie.nl/reset-password.html'
                 }
             });
 
@@ -69,7 +152,7 @@ serve(async (req) => {
                     type: 'invite',
                     email: cleanEmail,
                     options: {
-                        redirectTo: loginUrl || 'https://stageconnectie.nl/reset-password.html',
+                        redirectTo: loginUrl || 'https://ghpc.stageconnectie.nl/reset-password.html',
                         data: { role: userRole }
                     }
                 });
@@ -451,7 +534,7 @@ serve(async (req) => {
                                 <strong>Wachtwoord:</strong> ${password}
                             </div>
                             <p>Je kunt inloggen via de volgende link:</p>
-                            <a href="${loginUrl || 'https://stageconnectie.nl'}" style="display: inline-block; background: #2563eb; color: white; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: bold; margin-top: 10px;">Naar het Portaal</a>
+                            <a href="${loginUrl || 'https://ghpc.stageconnectie.nl/login.html'}" style="display: inline-block; background: #2563eb; color: white; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: bold; margin-top: 10px;">Naar het Portaal</a>
                             <p style="margin-top: 25px; font-size: 14px; color: #64748b;">
                                 We raden je aan om je wachtwoord te wijzigen nadat je voor de eerste keer bent ingelogd.<br><br>
                                 Met vriendelijke groet,<br>Het stage team van Groene Hart Praktijkschool
