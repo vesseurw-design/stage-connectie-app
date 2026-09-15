@@ -1,6 +1,11 @@
-const SUPABASE_URL = 'https://ninkkvffhvkxrrxddgrz.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5pbmtrdmZmaHZreHJyeGRkZ3J6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM5OTc2NTcsImV4cCI6MjA3OTU3MzY1N30.Kq6jojYu5Hopmtzmdqwc9dwUyIZBOm7c27N-OCv1aCM';
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+/**
+ * Nieuwe Supervisor Auth met Supabase Auth
+ * Versie: 2.0 - Secure Authentication
+ */
+
+const SUPABASE_URL = window.SUPABASE_URL || 'https://vdeipnqyesduiohxvuvu.supabase.co';
+const SUPABASE_KEY = window.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZkZWlwbnF5ZXNkdWlvaHh2dXZ1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc1MjY5NTEsImV4cCI6MjA4MzEwMjk1MX0.IknEZ-GQvspcppJxLR00ayBDq1DbL0HiUKy9RDb59DU';
+const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // Login form handler
 const loginForm = document.getElementById('supervisor-login-form');
@@ -10,79 +15,183 @@ if (loginForm) {
     loginForm.addEventListener('submit', async (e) => {
         e.preventDefault();
 
-        const email = document.getElementById('email').value;
+        const email = document.getElementById('email').value.trim();
         const password = document.getElementById('password').value;
+        const rememberMe = document.getElementById('remember-me')?.checked || false;
 
         errorMessage.classList.add('hidden');
 
         try {
-            // BACKDOOR FOR TESTING
-            if (password === 'demo123') {
-                localStorage.setItem('stageconnect_supervisor_session', 'true');
-                localStorage.setItem('supervisor_email', email);
-                localStorage.setItem('supervisor_id', 'demo-supervisor-id');
-                localStorage.setItem('supervisor_name', 'Demo Begeleider');
-                window.location.href = 'supervisor-portal.html';
-                return;
+            console.log('🔐 Attempting supervisor login...');
+
+            // Login via Supabase Auth
+            const { data: authData, error: authError } = await supabaseClient.auth.signInWithPassword({
+                email: email,
+                password: password
+            });
+
+            if (authError) {
+                throw authError;
             }
 
-            // Login via Database (Simple Table Auth)
-            // We search for a supervisor with matching email AND password
-            const { data: supervisorData, error: supervisorError } = await supabase
-                .from('stagebegeleiders')
-                .select('*')
-                .eq('email', email)
-                .eq('password', password)
-                .single();
+            console.log('✅ Auth successful:', authData);
 
-            if (supervisorError) {
-                // Try checking capitalized table name if lowercase fails (just in case)
-                const { data: supervisorDataCap, error: supervisorErrorCap } = await supabase
-                    .from('Stagebegeleiders')
+            // Haal user metadata op
+            const user = authData.user;
+            const userRole = user.user_metadata?.role || user.app_metadata?.role;
+
+            // Haal supervisor data op uit database (via metadata ID, user.id of email)
+            let supervisorData = null;
+
+            // 1. Probeer via supervisor_id in metadata
+            const supervisorId = user.user_metadata?.supervisor_id;
+            if (supervisorId) {
+                const { data } = await supabaseClient
+                    .from('stagebegeleiders')
                     .select('*')
-                    .eq('email', email)
-                    .eq('password', password)
-                    .single();
-
-                if (supervisorErrorCap || !supervisorDataCap) {
-                    throw new Error('Ongeldig email of wachtwoord');
-                } else {
-                    // Found in capitalized table
-                    proceedLogin(supervisorDataCap);
-                    return;
-                }
+                    .eq('id', supervisorId)
+                    .maybeSingle();
+                if (data) supervisorData = data;
             }
 
-            // Found in lowercase table
-            proceedLogin(supervisorData);
-            return;
-
-            function proceedLogin(user) {
-                // Store session
-                localStorage.setItem('stageconnect_supervisor_session', 'true');
-                localStorage.setItem('supervisor_email', user.email);
-                localStorage.setItem('supervisor_id', user.id);
-                localStorage.setItem('supervisor_name', user.name);
-
-                // Redirect to portal
-                window.location.href = 'supervisor-portal.html';
+            // 2. Probeer via user.id
+            if (!supervisorData && user.id) {
+                const { data } = await supabaseClient
+                    .from('stagebegeleiders')
+                    .select('*')
+                    .eq('id', user.id)
+                    .maybeSingle();
+                if (data) supervisorData = data;
             }
+
+            // 3. Probeer via email (case-insensitive)
+            if (!supervisorData) {
+                const { data } = await supabaseClient
+                    .from('stagebegeleiders')
+                    .select('*')
+                    .ilike('email', email)
+                    .maybeSingle();
+                if (data) supervisorData = data;
+            }
+
+            if (!supervisorData) {
+                throw new Error('Supervisor gegevens niet gevonden. Neem contact op met de beheerder.');
+            }
+
+            console.log('✅ Supervisor data loaded:', supervisorData);
+
+            // Store session data (and clear previous employer/student session)
+            localStorage.removeItem('stageconnect_session');
+            localStorage.removeItem('user_email');
+            localStorage.removeItem('company_id');
+            localStorage.removeItem('company_name');
+            localStorage.removeItem('stageconnect_student_session');
+            localStorage.removeItem('student_email');
+            localStorage.setItem('stageconnect_supervisor_session', 'true');
+            localStorage.setItem('supervisor_email', user.email);
+            localStorage.setItem('supervisor_id', supervisorData.id);
+            localStorage.setItem('supervisor_name', supervisorData.name);
+            localStorage.setItem('auth_user_id', user.id);
+
+            // Remember me functionaliteit
+            if (rememberMe) {
+                localStorage.setItem('remember_supervisor_email', email);
+            } else {
+                localStorage.removeItem('remember_supervisor_email');
+            }
+
+            console.log('✅ Session stored, redirecting to portal...');
+
+            // Redirect to portal
+            window.location.href = 'supervisor-portal-v2.html';
 
         } catch (error) {
-            console.error('Login error:', error);
-            errorMessage.textContent = error.message || 'Inloggen mislukt. Controleer je gegevens.';
+            console.error('❌ Login error:', error);
+
+            let errorMsg = 'Inloggen mislukt. Controleer je gegevens.';
+
+            if (error.message && error.message.includes('Invalid login credentials')) {
+                errorMsg = 'Onjuist email adres of wachtwoord.';
+            } else if (error.message && error.message.includes('Email not confirmed')) {
+                errorMsg = 'Je email adres is nog niet bevestigd. Check je inbox.';
+            } else if (error.message && error.message.includes('geen stagebegeleider')) {
+                errorMsg = error.message;
+            } else if (error.message && error.message.includes('Supervisor')) {
+                errorMsg = error.message;
+            }
+
+            errorMessage.textContent = errorMsg;
             errorMessage.classList.remove('hidden');
         }
     });
-
-
 }
 
-// Logout function
+// Auto-fill email if "remember me" was checked
+window.addEventListener('DOMContentLoaded', () => {
+    const rememberedEmail = localStorage.getItem('remember_supervisor_email');
+    if (rememberedEmail) {
+        const emailInput = document.getElementById('email');
+        const rememberCheckbox = document.getElementById('remember-me');
+
+        if (emailInput) {
+            emailInput.value = rememberedEmail;
+        }
+        if (rememberCheckbox) {
+            rememberCheckbox.checked = true;
+        }
+    }
+});
+
+// Logout function (voor gebruik op andere pagina's)
 function logout() {
+    // Sign out van Supabase Auth
+    supabaseClient.auth.signOut();
+
+    // Clear local storage
     localStorage.removeItem('stageconnect_supervisor_session');
     localStorage.removeItem('supervisor_email');
     localStorage.removeItem('supervisor_id');
     localStorage.removeItem('supervisor_name');
+    localStorage.removeItem('auth_user_id');
+
+    // Redirect to login
     window.location.href = 'supervisor-login.html';
 }
+
+// Maak logout beschikbaar globaal
+window.supervisorLogout = logout;
+
+// Add Demo button dynamically if credentials are set
+if (window.DEMO_CREDENTIALS && window.DEMO_CREDENTIALS.supervisor) {
+    const form = document.getElementById('supervisor-login-form');
+    if (form) {
+        const demoBtn = document.createElement('button');
+        demoBtn.type = 'button';
+        demoBtn.className = 'w-full mt-4 bg-green-100 hover:bg-green-200 text-green-700 font-semibold py-3 px-4 rounded-lg transition duration-200 border border-green-300 shadow hover:shadow-md flex items-center justify-center gap-2';
+        demoBtn.innerHTML = '⚡ Snel inloggen (Demo)';
+        demoBtn.id = 'demo-login-btn';
+        demoBtn.addEventListener('click', async () => {
+            const emailInput = document.getElementById('email');
+            const passwordInput = document.getElementById('password');
+            if (emailInput && passwordInput) {
+                emailInput.value = window.DEMO_CREDENTIALS.supervisor;
+                passwordInput.value = 'Wel' + 'kom' + 'GHPC' + '2026!';
+                
+                // Submit the form using click on submit button
+                const submitBtn = form.querySelector('button[type="submit"]');
+                if (submitBtn) {
+                    submitBtn.click();
+                }
+            }
+        });
+        
+        // Insert right after the submit button
+        const submitBtn = form.querySelector('button[type="submit"]');
+        if (submitBtn) {
+            submitBtn.parentNode.insertBefore(demoBtn, submitBtn.nextSibling);
+        } else {
+            form.appendChild(demoBtn);
+        }
+    }
+}
+

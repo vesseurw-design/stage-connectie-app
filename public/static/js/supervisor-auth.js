@@ -38,28 +38,44 @@ if (loginForm) {
 
             // Haal user metadata op
             const user = authData.user;
-            const userRole = user.user_metadata?.role;
+            const userRole = user.user_metadata?.role || user.app_metadata?.role;
 
-            // Controleer of dit een supervisor is
-            if (userRole !== 'supervisor') {
-                throw new Error('Dit account is geen stagebegeleider account. Gebruik de juiste login pagina.');
-            }
+            // Haal supervisor data op uit database (via metadata ID, user.id of email)
+            let supervisorData = null;
 
-            // Haal supervisor data op uit database
+            // 1. Probeer via supervisor_id in metadata
             const supervisorId = user.user_metadata?.supervisor_id;
-
-            if (!supervisorId) {
-                throw new Error('Supervisor ID niet gevonden. Neem contact op met de beheerder.');
+            if (supervisorId) {
+                const { data } = await supabaseClient
+                    .from('stagebegeleiders')
+                    .select('*')
+                    .eq('id', supervisorId)
+                    .maybeSingle();
+                if (data) supervisorData = data;
             }
 
-            const { data: supervisorData, error: supervisorError } = await supabaseClient
-                .from('stagebegeleiders')
-                .select('*')
-                .eq('id', supervisorId)
-                .single();
+            // 2. Probeer via user.id
+            if (!supervisorData && user.id) {
+                const { data } = await supabaseClient
+                    .from('stagebegeleiders')
+                    .select('*')
+                    .eq('id', user.id)
+                    .maybeSingle();
+                if (data) supervisorData = data;
+            }
 
-            if (supervisorError || !supervisorData) {
-                throw new Error('Supervisor gegevens niet gevonden.');
+            // 3. Probeer via email (case-insensitive)
+            if (!supervisorData) {
+                const { data } = await supabaseClient
+                    .from('stagebegeleiders')
+                    .select('*')
+                    .ilike('email', email)
+                    .maybeSingle();
+                if (data) supervisorData = data;
+            }
+
+            if (!supervisorData) {
+                throw new Error('Supervisor gegevens niet gevonden. Neem contact op met de beheerder.');
             }
 
             console.log('✅ Supervisor data loaded:', supervisorData);
