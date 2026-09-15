@@ -32,9 +32,30 @@ serve(async (req) => {
             const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY');
             if (!RESEND_API_KEY) throw new Error('RESEND_API_KEY is niet ingesteld');
 
+            // Fetch active student company IDs to filter recipients
+            const { data: activeStudents } = await supabaseAdmin
+                .from('Students')
+                .select('company_id, unenrollment_date')
+                .not('company_id', 'is', null);
+
+            const now = new Date();
+            const activeCompanyIds = new Set(
+                (activeStudents || [])
+                    .filter(s => !s.unenrollment_date || new Date(s.unenrollment_date) > now)
+                    .map(s => s.company_id)
+            );
+
             const results = [];
             for (const r of (recipients || [])) {
                 if (!r.email) continue;
+
+                // Skip companies without an active student unless explicitly forced
+                if (r.id && !activeCompanyIds.has(r.id) && !body.ignoreActiveFilter) {
+                    console.log(`Skipping company without active student: ${r.company_name || r.id} (${r.email})`);
+                    results.push({ email: r.email, skipped: true, reason: 'Geen actieve stagiair' });
+                    continue;
+                }
+
                 const recipientName = r.contact_person || r.company_name || 'stagebegeleider / werkgever';
 
                 const personalizedHtml = `
