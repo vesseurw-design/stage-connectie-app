@@ -129,20 +129,44 @@
                             placeholder="bijv. 2025-2026">
                     </div>
                 </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="space-y-3 bg-gray-50 p-3 rounded-lg border border-gray-200">
                     <div>
-                        <label class="block text-sm font-medium mb-1">Stagebedrijf 1</label>
-                        <select id="company_id" class="w-full px-3 py-2 border rounded-lg">
+                        <label class="block text-sm font-semibold text-gray-700 mb-1">Stagebedrijf 1</label>
+                        <select id="company_id" class="w-full px-3 py-2 border rounded-lg bg-white">
                             <option value="">Geen stagebedrijf</option>
                         </select>
                     </div>
                     <div>
-                        <label class="block text-sm font-medium mb-1">2e Stagebedrijf (Optioneel)</label>
-                        <select id="company_id_2" class="w-full px-3 py-2 border rounded-lg">
+                        <label class="block text-xs font-medium text-gray-600 mb-1">Stagedagen Bedrijf 1</label>
+                        <div class="flex gap-2 text-sm">
+                            <label class="cursor-pointer bg-white px-2.5 py-1 border rounded hover:bg-blue-50"><input type="checkbox" name="days_1" value="Ma" class="mr-1">Ma</label>
+                            <label class="cursor-pointer bg-white px-2.5 py-1 border rounded hover:bg-blue-50"><input type="checkbox" name="days_1" value="Di" class="mr-1">Di</label>
+                            <label class="cursor-pointer bg-white px-2.5 py-1 border rounded hover:bg-blue-50"><input type="checkbox" name="days_1" value="Wo" class="mr-1">Wo</label>
+                            <label class="cursor-pointer bg-white px-2.5 py-1 border rounded hover:bg-blue-50"><input type="checkbox" name="days_1" value="Do" class="mr-1">Do</label>
+                            <label class="cursor-pointer bg-white px-2.5 py-1 border rounded hover:bg-blue-50"><input type="checkbox" name="days_1" value="Vr" class="mr-1">Vr</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="space-y-3 bg-gray-50 p-3 rounded-lg border border-gray-200">
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-1">2e Stagebedrijf (Optioneel)</label>
+                        <select id="company_id_2" class="w-full px-3 py-2 border rounded-lg bg-white">
                             <option value="">Geen 2e stagebedrijf</option>
                         </select>
                     </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-600 mb-1">Stagedagen Bedrijf 2</label>
+                        <div class="flex gap-2 text-sm">
+                            <label class="cursor-pointer bg-white px-2.5 py-1 border rounded hover:bg-blue-50"><input type="checkbox" name="days_2" value="Ma" class="mr-1">Ma</label>
+                            <label class="cursor-pointer bg-white px-2.5 py-1 border rounded hover:bg-blue-50"><input type="checkbox" name="days_2" value="Di" class="mr-1">Di</label>
+                            <label class="cursor-pointer bg-white px-2.5 py-1 border rounded hover:bg-blue-50"><input type="checkbox" name="days_2" value="Wo" class="mr-1">Wo</label>
+                            <label class="cursor-pointer bg-white px-2.5 py-1 border rounded hover:bg-blue-50"><input type="checkbox" name="days_2" value="Do" class="mr-1">Do</label>
+                            <label class="cursor-pointer bg-white px-2.5 py-1 border rounded hover:bg-blue-50"><input type="checkbox" name="days_2" value="Vr" class="mr-1">Vr</label>
+                        </div>
+                    </div>
                 </div>
+
                 <div>
                     <label class="block text-sm font-medium mb-1">Begeleider</label>
                     <select id="supervisor_id" class="w-full px-3 py-2 border rounded-lg">
@@ -153,21 +177,6 @@
                     <label class="block text-sm font-medium mb-1">Uitschrijfdatum</label>
                     <input type="date" id="unenrollment_date" class="w-full px-3 py-2 border rounded-lg">
                     <p class="text-xs text-gray-500 mt-1">Gegevens worden 1 jaar na deze datum verwijderd</p>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium mb-2">Stagedagen</label>
-                    <div class="flex gap-2">
-                        <label class="cursor-pointer"><input type="checkbox" name="days" value="Ma"
-                                class="mr-1">Ma</label>
-                        <label class="cursor-pointer"><input type="checkbox" name="days" value="Di"
-                                class="mr-1">Di</label>
-                        <label class="cursor-pointer"><input type="checkbox" name="days" value="Wo"
-                                class="mr-1">Wo</label>
-                        <label class="cursor-pointer"><input type="checkbox" name="days" value="Do"
-                                class="mr-1">Do</label>
-                        <label class="cursor-pointer"><input type="checkbox" name="days" value="Vr"
-                                class="mr-1">Vr</label>
-                    </div>
                 </div>
                 <div class="flex justify-end gap-3 pt-4">
                     <button type="button" onclick="closeModal()" class="px-4 py-2 border rounded-lg">Annuleren</button>
@@ -212,6 +221,7 @@
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="./static/js/config.js"></script>
+    <script src="./static/js/company-helper.js?v=2"></script>
     <script>
         // Use the 'Dashboard Method' - hardcoded and direct
         const SUPABASE_URL = window.SUPABASE_URL || 'https://vdeipnqyesduiohxvuvu.supabase.co';
@@ -341,8 +351,15 @@
             }
 
             filteredStudents.forEach(student => {
-                const compIds = String(student.company_id || '').split(',').map(id => id.trim()).filter(Boolean);
-                const compNames = compIds.map(id => companies.find(c => c.id === id)?.company_name).filter(Boolean).join(', ') || '-';
+                const assignments = getStudentCompanyAssignments(student, companies);
+                let compNames = '-';
+                if (assignments.length > 0) {
+                    compNames = assignments.map(a => {
+                        const daysStr = (a.days && a.days.length > 0) ? ` (${a.days.join(', ')})` : '';
+                        return `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 mr-1 mb-1">${a.company_name}${daysStr}</span>`;
+                    }).join(' ');
+                }
+
                 const supervisor = supervisors.find(s => s.id === student.supervisor_id);
                 const days = (student.scheduled_days || []).join(', ');
                 const displayYear = normalizeSchoolYear(student.school_year) || student.school_year || '-';
@@ -411,6 +428,11 @@
 
         function openModal(student = null) {
             document.getElementById('modal').classList.remove('hidden');
+            
+            // Clear all day checkboxes
+            document.querySelectorAll('input[name="days_1"]').forEach(cb => cb.checked = false);
+            document.querySelectorAll('input[name="days_2"]').forEach(cb => cb.checked = false);
+
             if (student) {
                 document.getElementById('modal-title').textContent = 'Stagiair Bewerken';
                 document.getElementById('student-id').value = student.id || student.name;
@@ -418,21 +440,35 @@
                 document.getElementById('email').value = student.email || '';
                 document.getElementById('student_number').value = student.student_number || '';
                 
-                const compIds = String(student.company_id || '').split(',').map(id => id.trim()).filter(Boolean);
-                document.getElementById('company_id').value = compIds[0] || '';
-                if (document.getElementById('company_id_2')) {
-                    document.getElementById('company_id_2').value = compIds[1] || '';
+                const assignments = getStudentCompanyAssignments(student, companies);
+                if (assignments.length > 0) {
+                    document.getElementById('company_id').value = assignments[0].company_id || '';
+                    (assignments[0].days || []).forEach(day => {
+                        const cb = document.querySelector(`input[name="days_1"][value="${day}"]`);
+                        if (cb) cb.checked = true;
+                    });
+                } else {
+                    document.getElementById('company_id').value = '';
+                }
+
+                if (assignments.length > 1) {
+                    if (document.getElementById('company_id_2')) {
+                        document.getElementById('company_id_2').value = assignments[1].company_id || '';
+                    }
+                    (assignments[1].days || []).forEach(day => {
+                        const cb = document.querySelector(`input[name="days_2"][value="${day}"]`);
+                        if (cb) cb.checked = true;
+                    });
+                } else {
+                    if (document.getElementById('company_id_2')) {
+                        document.getElementById('company_id_2').value = '';
+                    }
                 }
 
                 document.getElementById('supervisor_id').value = student.supervisor_id || '';
                 document.getElementById('class').value = student.class || '';
                 document.getElementById('school_year').value = student.school_year || '';
                 document.getElementById('unenrollment_date').value = student.unenrollment_date || '';
-                document.querySelectorAll('input[name="days"]').forEach(cb => cb.checked = false);
-                (student.scheduled_days || []).forEach(day => {
-                    const cb = document.querySelector(`input[value="${day}"]`);
-                    if (cb) cb.checked = true;
-                });
                 
                 // Hide password field during edit
                 document.getElementById('password-container').classList.add('hidden');
@@ -571,26 +607,33 @@
                 }
 
                 const c1 = document.getElementById('company_id').value || '';
+                const days1 = Array.from(document.querySelectorAll('input[name="days_1"]:checked')).map(cb => cb.value);
+
                 const c2 = document.getElementById('company_id_2') ? document.getElementById('company_id_2').value : '';
-                let company_id_val = null;
-                if (c1 && c2) {
-                    company_id_val = `${c1},${c2}`;
-                } else if (c1) {
-                    company_id_val = c1;
-                } else if (c2) {
-                    company_id_val = c2;
+                const days2 = Array.from(document.querySelectorAll('input[name="days_2"]:checked')).map(cb => cb.value);
+
+                const company_assignments = [];
+                if (c1) {
+                    company_assignments.push({ company_id: c1, days: days1 });
                 }
+                if (c2) {
+                    company_assignments.push({ company_id: c2, days: days2 });
+                }
+
+                const primary_company_id = c1 || c2 || null;
+                const all_scheduled_days = [...new Set([...days1, ...days2])];
 
                 const studentPayload = {
                     name: name,
                     email: email,
                     student_number: document.getElementById('student_number').value || null,
-                    company_id: company_id_val,
+                    company_id: primary_company_id,
+                    company_assignments: company_assignments,
                     supervisor_id: document.getElementById('supervisor_id').value || null,
                     class: document.getElementById('class').value || null,
                     school_year: document.getElementById('school_year').value || null,
                     unenrollment_date: document.getElementById('unenrollment_date').value || null,
-                    scheduled_days: Array.from(document.querySelectorAll('input[name="days"]:checked')).map(cb => cb.value)
+                    scheduled_days: all_scheduled_days
                 };
 
                 if (studentPayload.company_id === '') studentPayload.company_id = null;
