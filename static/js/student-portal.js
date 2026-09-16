@@ -291,21 +291,35 @@ function renderGrid(existingAttendance) {
             const hours = record ? record.student_hours : 0;
             const minutes = record ? (record.minutes_late || 0) : 0;
             const notes = record ? (record.notes || '') : '';
+            const employerId = record ? record.employer_id : null;
 
             cell.className = 'flex flex-col items-center justify-center p-4 bg-white rounded-xl border-2 cursor-pointer transition-all duration-200 hover:-translate-y-0.5 shadow-sm min-h-[120px]';
             cell.dataset.date = dateStr;
             cell.onclick = () => openActionSheet(dateStr, cell, false);
 
-            updateCellContent(cell, status, hours, minutes, notes);
+            updateCellContent(cell, status, hours, minutes, notes, employerId);
         }
 
         container.appendChild(cell);
     });
 }
 
-function updateCellContent(cell, status, hours, minutes, notes = '') {
+function updateCellContent(cell, status, hours, minutes, notes = '', employerId = null) {
     const dateStr = cell.dataset.date;
     const holiday = isHoliday(dateStr);
+
+    if (employerId) {
+        cell.dataset.employerId = employerId;
+    } else if (!cell.dataset.employerId && currentStudent) {
+        const dateObj = new Date(dateStr + 'T00:00:00');
+        const dayIndex = dateObj.getDay();
+        const dayMap = ['Zo', 'Ma', 'Di', 'Wo', 'Do', 'Vr', 'Za'];
+        const dayCode = dayMap[dayIndex] || 'Ma';
+        const dayCompanies = typeof getStudentCompaniesForDay === 'function'
+            ? getStudentCompaniesForDay(currentStudent, dayCode, currentStudent.companiesList)
+            : [];
+        cell.dataset.employerId = dayCompanies[0] ? dayCompanies[0].company_id : currentStudent.company_id;
+    }
 
     // Remove old borders and colors
     cell.classList.remove('border-gray-100', 'border-gray-200', 'border-green-400', 'border-red-400', 'border-orange-400', 'border-yellow-400', 'hover:border-purple-400', 'hover:shadow-md', 'bg-gray-50', 'bg-white', 'bg-purple-50', 'border-purple-100', 'hover:bg-purple-100');
@@ -331,10 +345,20 @@ function updateCellContent(cell, status, hours, minutes, notes = '') {
     const lateText = (status === 'late' && minutes > 0) ? ` (${minutes}m)` : '';
     const noteBadge = (notes && notes.trim() !== '') ? `<div class="text-[10px] text-purple-700 font-bold bg-purple-50 border border-purple-200 px-1.5 py-0.5 rounded flex items-center gap-0.5 mt-1" title="Verslag ingevuld">📝 <span>Verslag</span></div>` : '';
 
+    let companyBadge = '';
+    const currentEmpId = cell.dataset.employerId;
+    if (currentEmpId && currentStudent.assignedCompanies && currentStudent.assignedCompanies.length > 1) {
+        const matchedComp = (currentStudent.companiesList || []).find(c => c.id === currentEmpId);
+        if (matchedComp) {
+            companyBadge = `<div class="text-[9px] font-bold text-purple-600 truncate max-w-full mt-1 bg-purple-50 border border-purple-100 px-1.5 py-0.5 rounded" title="${matchedComp.company_name}">📍 ${matchedComp.company_name}</div>`;
+        }
+    }
+
     cell.innerHTML = `
         <div class="mb-1">${content}</div>
         ${status ? `<span class="text-xs font-bold text-gray-700 uppercase tracking-wide mb-0.5">${getStatusLabel(status)}${lateText}</span>` : '<span class="text-xs font-bold text-gray-400 uppercase tracking-wide">Vul in</span>'}
         ${hours > 0 && status !== 'absent' ? `<div class="bg-purple-100 text-purple-700 text-xs font-black px-2 py-0.5 rounded shadow-sm mt-auto">${hours} uur</div>` : ''}
+        ${companyBadge}
         ${noteBadge}
     `;
     
@@ -370,8 +394,43 @@ function openActionSheet(dateStr, element, isUnscheduled) {
     activeCell = { date: dateStr, element: element };
     
     // Set date label
-    const dateObj = new Date(dateStr);
+    const dateObj = new Date(dateStr + 'T00:00:00');
     document.getElementById('action-date-label').textContent = dateObj.toLocaleDateString('nl-NL', { weekday: 'long', day: 'numeric', month: 'long' });
+
+    // Populate company selector dropdown
+    const dayIndex = dateObj.getDay();
+    const dayMap = ['Zo', 'Ma', 'Di', 'Wo', 'Do', 'Vr', 'Za'];
+    const dayCode = dayMap[dayIndex] || 'Ma';
+    
+    const dayCompanies = typeof getStudentCompaniesForDay === 'function'
+        ? getStudentCompaniesForDay(currentStudent, dayCode, currentStudent.companiesList)
+        : [];
+        
+    const compContainer = document.getElementById('action-company-container');
+    const compSelect = document.getElementById('action-company-select');
+
+    if (compContainer && compSelect) {
+        compSelect.innerHTML = '';
+        if (dayCompanies.length > 0) {
+            dayCompanies.forEach(c => {
+                const opt = document.createElement('option');
+                opt.value = c.company_id;
+                opt.textContent = c.company_name;
+                compSelect.appendChild(opt);
+            });
+            const currentEmployer = element.dataset.employerId || dayCompanies[0].company_id;
+            compSelect.value = currentEmployer;
+            compContainer.classList.remove('hidden');
+        } else if (currentStudent.Bedrijven) {
+            const opt = document.createElement('option');
+            opt.value = currentStudent.Bedrijven.id;
+            opt.textContent = currentStudent.Bedrijven.company_name;
+            compSelect.appendChild(opt);
+            compContainer.classList.remove('hidden');
+        } else {
+            compContainer.classList.add('hidden');
+        }
+    }
 
     // Pre-fill from cell dataset
     const currentStatus = element.dataset.status || '';
@@ -495,7 +554,10 @@ function confirmAction() {
     const notesInput = document.getElementById('action-notes');
     const notesText = notesInput ? notesInput.value.trim() : '';
 
-    updateCellContent(activeCell.element, finalStatus, hours, minutes, notesText);
+    const compSelect = document.getElementById('action-company-select');
+    const selectedEmployerId = compSelect ? compSelect.value : null;
+
+    updateCellContent(activeCell.element, finalStatus, hours, minutes, notesText, selectedEmployerId);
     closeActions();
     saveWeek();
 }
@@ -616,8 +678,20 @@ async function saveWeek() {
     cells.forEach(cell => {
         const status = cell.dataset.status;
         if (status && status !== '') {
+            const dateStr = cell.dataset.date;
+            const dateObj = new Date(dateStr + 'T00:00:00');
+            const dayIndex = dateObj.getDay();
+            const dayMap = ['Zo', 'Ma', 'Di', 'Wo', 'Do', 'Vr', 'Za'];
+            const dayCode = dayMap[dayIndex] || 'Ma';
+            const dayCompanies = typeof getStudentCompaniesForDay === 'function'
+                ? getStudentCompaniesForDay(currentStudent, dayCode, currentStudent.companiesList)
+                : [];
+            const defaultEmpId = dayCompanies[0] ? dayCompanies[0].company_id : currentStudent.company_id;
+            const employerId = cell.dataset.employerId || defaultEmpId;
+
             updates.push({
                 student_id: currentStudent.id,
+                employer_id: employerId,
                 date: cell.dataset.date,
                 student_status: status,
                 student_hours: parseFloat(cell.dataset.hours) || 0,
@@ -778,6 +852,9 @@ async function loadAttendanceHistory() {
             </button>
         ` : '';
 
+        const comp = (currentStudent.companiesList || []).find(c => c.id === record.employer_id);
+        const compTag = comp ? `<div class="text-[11px] font-semibold text-purple-700 mt-0.5">📍 ${comp.company_name}</div>` : '';
+
         return `
             <div class="p-3.5 rounded-xl border ${cfg.bg} ${cfg.border} space-y-1">
                 <div class="flex items-center gap-3">
@@ -785,6 +862,7 @@ async function loadAttendanceHistory() {
                     <div class="flex-1 min-w-0">
                         <div class="text-xs text-gray-500 capitalize">${dateLabel}</div>
                         <div class="font-bold ${cfg.text} text-sm">${displayLabel}</div>
+                        ${compTag}
                     </div>
                     ${hoursStr}
                     ${editBtn}

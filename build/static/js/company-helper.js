@@ -101,12 +101,22 @@ function getStudentCompanyForDay(student, dayCode, companiesList = []) {
     return dayAssignment || assignments[0];
 }
 
+// Gets ALL company assignments for a student on a specific day
+function getStudentCompaniesForDay(student, dayCode, companiesList = []) {
+    const assignments = getStudentCompanyAssignments(student, companiesList);
+    if (assignments.length === 0) return [];
+
+    const dayAssignments = assignments.filter(a => a.days && a.days.includes(dayCode));
+    return dayAssignments.length > 0 ? dayAssignments : assignments;
+}
+
 // Expose globally for browser
 if (typeof window !== 'undefined') {
     window.getStudentCompanyAssignments = getStudentCompanyAssignments;
     window.isStudentAssignedToCompany = isStudentAssignedToCompany;
     window.isStudentScheduledForCompany = isStudentScheduledForCompany;
     window.getStudentCompanyForDay = getStudentCompanyForDay;
+    window.getStudentCompaniesForDay = getStudentCompaniesForDay;
 }
 
 // Expose for Node.js
@@ -115,6 +125,7 @@ if (typeof module !== 'undefined' && module.exports) {
         getStudentCompanyAssignments,
         isStudentAssignedToCompany,
         isStudentScheduledForCompany,
-        getStudentCompanyForDay
+        getStudentCompanyForDay,
+        getStudentCompaniesForDay
     };
 }

@@ -288,6 +288,18 @@ function renderStudentCards(attendance) {
             return (dbId === sId || dbId === sName) && a.date === filterDate;
         });
 
+        let todayComp = null;
+        if (todayAttendance && todayAttendance.employer_id) {
+            todayComp = companies.find(c => c.id === todayAttendance.employer_id);
+        }
+        if (!todayComp) {
+            const filterDateObj = new Date((filterDate || new Date().toISOString().split('T')[0]) + 'T00:00:00');
+            const dayMap = ['Zo', 'Ma', 'Di', 'Wo', 'Do', 'Vr', 'Za'];
+            const dayCode = dayMap[filterDateObj.getDay()] || 'Ma';
+            const dayComp = typeof getStudentCompanyForDay === 'function' ? getStudentCompanyForDay(student, dayCode, companies) : null;
+            if (dayComp) todayComp = dayComp.company;
+        }
+
         let statusBadge = '';
         if (todayAttendance) {
             const statusColors = {
@@ -307,6 +319,7 @@ function renderStudentCards(attendance) {
                     <span class="px-2 py-1 text-xs font-semibold rounded-full ${statusColors[todayAttendance.status]}">
                         ${statusLabels[todayAttendance.status]}
                     </span>
+                    ${todayComp ? `<span class="text-[9px] font-bold text-indigo-700 bg-indigo-50 border border-indigo-100 px-1.5 py-0.5 rounded" title="Stagebedrijf op deze dag">📍 ${todayComp.company_name}</span>` : ''}
                     ${todayAttendance.student_status || todayAttendance.student_hours > 0 ? `
                         <div class="flex items-center gap-1 bg-purple-50 text-purple-700 text-[9px] px-1.5 py-0.5 rounded border border-purple-100" title="Eigen invoer student">
                             <span>🎓 ${todayAttendance.student_status === 'late' ? `Te laat (${todayAttendance.minutes_late || 0}m)` : (todayAttendance.student_status ? todayAttendance.student_status.charAt(0).toUpperCase() + todayAttendance.student_status.slice(1) : '')}</span>
@@ -319,9 +332,12 @@ function renderStudentCards(attendance) {
             // Show loading if allAttendance is still completely empty after first start
             const isLoading = allAttendance.length === 0;
             statusBadge = `
-                <span class="px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-500 italic">
-                    ${isLoading ? 'Laden...' : 'Niet ingevuld'}
-                </span>
+                <div class="flex flex-col items-end gap-1">
+                    <span class="px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-500 italic">
+                        ${isLoading ? 'Laden...' : 'Niet ingevuld'}
+                    </span>
+                    ${todayComp ? `<span class="text-[9px] font-medium text-gray-500 bg-gray-50 border border-gray-100 px-1.5 py-0.5 rounded">📍 ${todayComp.company_name}</span>` : ''}
+                </div>
             `;
         }
 
@@ -482,6 +498,16 @@ function renderAttendanceHistory(attendance, monthFilter) {
                 year: 'numeric'
             });
 
+            const recComp = companies.find(c => c.id === a.employer_id);
+            let compName = recComp ? recComp.company_name : null;
+            if (!compName && currentStudent) {
+                const dObj = new Date(a.date + 'T00:00:00');
+                const dMap = ['Zo', 'Ma', 'Di', 'Wo', 'Do', 'Vr', 'Za'];
+                const dCode = dMap[dObj.getDay()] || 'Ma';
+                const dayComp = typeof getStudentCompanyForDay === 'function' ? getStudentCompanyForDay(currentStudent, dCode, companies) : null;
+                if (dayComp) compName = dayComp.company_name;
+            }
+
             return `
                 <div class="p-3 bg-gray-50 rounded-xl space-y-2 border border-blue-50">
                     <div class="flex justify-between items-center">
@@ -497,6 +523,7 @@ function renderAttendanceHistory(attendance, monthFilter) {
                     </div>
                     
                     <div class="flex flex-wrap gap-2 text-[11px]">
+                        ${compName ? `<div class="bg-indigo-100 text-indigo-800 font-bold px-2 py-0.5 rounded-md">📍 ${compName}</div>` : ''}
                         ${a.student_hours ? `<div class="bg-blue-100 text-blue-800 px-2 py-0.5 rounded-md">🏢 Uren: ${a.student_hours}u</div>` : ''}
                         
                         ${a.student_status ? `
@@ -628,7 +655,12 @@ async function saveSupervisorAttendance(explicitStatus) {
 
     const noteVal = document.getElementById('action-sheet-note')?.value?.trim() || null;
     const student = students.find(s => s.id === studentId || s.name === studentId);
-    const companyId = student ? student.company_id : null;
+    
+    const dateObj = new Date(date + 'T00:00:00');
+    const dayMap = ['Zo', 'Ma', 'Di', 'Wo', 'Do', 'Vr', 'Za'];
+    const dayCode = dayMap[dateObj.getDay()] || 'Ma';
+    const dayComp = typeof getStudentCompanyForDay === 'function' ? getStudentCompanyForDay(student, dayCode, companies) : null;
+    const companyId = dayComp ? dayComp.company_id : (student ? student.company_id : null);
 
     const record = {
         student_id: studentId,
