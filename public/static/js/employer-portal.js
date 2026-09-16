@@ -131,6 +131,8 @@ async function loadStudents() {
         students = data.slice(0, 3);
     } else {
         students = data.filter(s =>
+            (typeof isStudentAssignedToCompany === 'function' && isStudentAssignedToCompany(s, currentCompany.id)) ||
+            (s.company_assignments && Array.isArray(s.company_assignments) && s.company_assignments.some(a => (a.company_id || a.companyId) === currentCompany.id)) ||
             (s.company_id && String(s.company_id).includes(currentCompany.id)) ||
             (s.companyId && String(s.companyId).includes(currentCompany.id)) ||
             (s.company_name && s.company_name === currentCompany.company_name)
@@ -332,7 +334,9 @@ function renderGrid(existingAttendance) {
             const dateStr = getWeekDate(dayIndex);
 
             const dayCode = dayMap[dayIndex];
-            const isScheduled = !student.scheduled_days || student.scheduled_days.length === 0 || student.scheduled_days.includes(dayCode);
+            const isScheduled = typeof isStudentScheduledForCompany === 'function'
+                ? isStudentScheduledForCompany(student, currentCompany.id, dayCode)
+                : (!student.scheduled_days || student.scheduled_days.length === 0 || student.scheduled_days.includes(dayCode));
 
             const cell = document.createElement('div');
 

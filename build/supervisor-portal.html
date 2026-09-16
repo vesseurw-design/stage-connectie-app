@@ -6,9 +6,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>Begeleider Portal - Stage Connectie App</title>
+    <title>Stagebegeleiders Portaal - Stage Connectie App</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <style>@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"); body { font-family: "Inter", sans-serif; }</style>
+    <style>
+        @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
+
+        body {
+            font-family: "Inter", sans-serif;
+        }
+    </style>
     <style>
         body {
             font-family: 'Inter', sans-serif;
@@ -22,6 +28,22 @@
 
         .student-card:active {
             transform: scale(0.98);
+        }
+
+        @keyframes slide-down {
+            from {
+                transform: translateY(-100%);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .animate-slide-down {
+            animation: slide-down 0.3s ease-out;
         }
     </style>
     <script>
@@ -37,15 +59,25 @@
     <header class="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-10">
         <div class="px-4 py-4">
             <div class="flex justify-between items-center mb-2">
-                <div>
-                    <h1 class="text-xl font-bold text-gray-800" id="supervisor-name">Begeleider Portal</h1>
-                    <p class="text-sm text-gray-600">Stage Connectie App</p>
+                <div class="flex items-center gap-2">
+                    <div>
+                        <h1 class="text-xl font-bold text-gray-800" id="supervisor-name">Stagebegeleiders Portaal</h1>
+                        <p class="text-sm text-gray-600">Stage Connectie App</p>
+                    </div>
+                    <span id="notification-badge"
+                        class="hidden bg-blue-600 text-white text-xs font-bold px-2 py-1 rounded-full">0</span>
                 </div>
                 <div class="flex gap-2">
-                    <button onclick="refreshData()"
-                        class="px-3 py-2 text-sm bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-lg transition flex items-center gap-1">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                    <button onclick="openInfoModal()"
+                        class="px-3 py-2 text-sm bg-purple-50 text-purple-700 hover:bg-purple-100 border border-purple-100 rounded-lg transition flex items-center gap-1 font-semibold">
+                        Info
+                    </button>
+                    <button id="refresh-btn" onclick="refreshData()"
+                        class="px-3 py-2 text-sm bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-lg transition flex items-center gap-1 font-semibold active:scale-95">
+                        <svg id="refresh-icon" class="w-4 h-4 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15">
+                            </path>
                         </svg>
                         Ververs
                     </button>
@@ -58,11 +90,35 @@
         </div>
     </header>
 
+    <!-- In-App Notification Banner -->
+    <div id="notification-banner" class="hidden fixed top-20 left-0 right-0 z-50 mx-4 animate-slide-down">
+        <div
+            class="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-4 py-3 rounded-lg shadow-lg flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9">
+                    </path>
+                </svg>
+                <div>
+                    <p class="font-semibold" id="notification-title">Nieuwe aanwezigheid</p>
+                    <p class="text-sm opacity-90" id="notification-message">Stagiair is gemarkeerd als aanwezig</p>
+                </div>
+            </div>
+            <button onclick="closeNotificationBanner()" class="text-white hover:text-gray-200">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
+                    </path>
+                </svg>
+            </button>
+        </div>
+    </div>
+
     <!-- Stats Dashboard -->
     <div class="px-4 py-4">
         <div class="grid grid-cols-2 gap-3 mb-4">
             <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
-                <p class="text-xs text-gray-500 font-medium mb-1">Mijn Studenten</p>
+                <p class="text-xs text-gray-500 font-medium mb-1">Mijn Stagiairs</p>
                 <p class="text-2xl font-bold text-green-600" id="stat-total">-</p>
             </div>
             <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
@@ -104,7 +160,7 @@
         class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-end sm:items-center justify-center">
         <div class="bg-white rounded-t-3xl sm:rounded-2xl w-full sm:max-w-lg max-h-[80vh] overflow-y-auto">
             <div class="sticky top-0 bg-white border-b border-gray-200 px-4 py-4 flex justify-between items-center">
-                <h2 class="text-lg font-bold text-gray-800" id="modal-student-name">Student Details</h2>
+                <h2 class="text-lg font-bold text-gray-800" id="modal-student-name">Stagiair Details</h2>
                 <button onclick="closeModal()" class="text-gray-500 hover:text-gray-700">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
                         stroke="currentColor">
@@ -115,19 +171,37 @@
             </div>
             <div class="p-4">
                 <div class="mb-4">
-                    <p class="text-sm text-gray-500">Studentnummer</p>
+                    <p class="text-sm text-gray-500">Stagiairnummer</p>
                     <p class="font-medium" id="modal-student-number">-</p>
                 </div>
                 <div class="mb-4">
-                    <p class="text-sm text-gray-500">Bedrijf</p>
+                    <p class="text-sm text-gray-500">Stagebedrijf</p>
                     <p class="font-medium" id="modal-company">-</p>
                 </div>
                 <div class="mb-4">
                     <p class="text-sm text-gray-500">Stagedagen</p>
                     <p class="font-medium" id="modal-scheduled-days">-</p>
                 </div>
+                <!-- Aanwezigheid corrigeren knop -->
+                <div class="mb-4">
+                    <button onclick="openCorrectModal()" 
+                        class="w-full flex items-center justify-center gap-2 py-2.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-semibold rounded-xl border border-indigo-200 transition text-sm">
+                        ✏️ Aanwezigheid invullen / corrigeren
+                    </button>
+                </div>
                 <div>
-                    <p class="text-sm text-gray-500 mb-2">Aanwezigheidshistorie</p>
+                    <div class="flex justify-between items-center mb-2">
+                        <p class="text-sm text-gray-500">Aanwezigheidshistorie</p>
+                        <div class="flex items-center gap-2">
+                            <select id="history-month-filter" onchange="filterHistoryByMonth()"
+                                class="text-xs px-2 py-1 border rounded">
+                                <option value="all">Alle maanden</option>
+                            </select>
+                            <button onclick="exportSupervisorStudentPDF()" class="px-3 py-1 bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs rounded-lg shadow transition flex items-center gap-1 cursor-pointer">
+                                <span>📄</span> <span>PDF Export</span>
+                            </button>
+                        </div>
+                    </div>
                     <div id="modal-attendance-history" class="space-y-2">
                         <!-- Dynamically filled -->
                     </div>
@@ -136,9 +210,78 @@
         </div>
     </div>
 
+    <!-- Aanwezigheid Correctie Modal -->
+    <div id="correct-modal" class="hidden fixed inset-0 bg-black bg-opacity-60 z-[60] flex items-end sm:items-center justify-center">
+        <div class="bg-white rounded-t-3xl sm:rounded-2xl w-full sm:max-w-md p-6">
+            <h3 class="text-lg font-bold text-gray-800 mb-1" id="correct-modal-name">Stagiair</h3>
+            <p class="text-sm text-gray-500 mb-5" id="correct-modal-subtitle">Selecteer datum en status</p>
+
+            <!-- Datum -->
+            <div class="mb-4">
+                <label class="block text-sm font-semibold text-gray-700 mb-1">Datum</label>
+                <input type="date" id="correct-date"
+                    class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-indigo-400 outline-none transition">
+            </div>
+
+            <!-- Status knoppen -->
+            <div class="mb-4">
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Status</label>
+                <div class="grid grid-cols-2 gap-2">
+                    <button id="sup-btn-present" onclick="selectCorrectStatus('present')"
+                        class="sup-status-btn flex items-center gap-2 p-3 rounded-xl border-2 border-gray-200 text-gray-600 font-medium text-sm transition">
+                        ✅ Aanwezig
+                    </button>
+                    <button id="sup-btn-absent" onclick="selectCorrectStatus('absent')"
+                        class="sup-status-btn flex items-center gap-2 p-3 rounded-xl border-2 border-gray-200 text-gray-600 font-medium text-sm transition">
+                        ❌ Afwezig
+                    </button>
+                    <button id="sup-btn-sick" onclick="selectCorrectStatus('sick')"
+                        class="sup-status-btn flex items-center gap-2 p-3 rounded-xl border-2 border-gray-200 text-gray-600 font-medium text-sm transition">
+                        🤒 Ziek
+                    </button>
+                    <button id="sup-btn-late" onclick="selectCorrectStatus('late')"
+                        class="sup-status-btn flex items-center gap-2 p-3 rounded-xl border-2 border-gray-200 text-gray-600 font-medium text-sm transition">
+                        ⏱️ Te laat
+                    </button>
+                </div>
+            </div>
+
+            <!-- Uren -->
+            <div class="mb-4" id="correct-hours-row">
+                <label class="block text-sm font-semibold text-gray-700 mb-1">Uren gewerkt</label>
+                <input type="number" id="correct-hours" min="0" max="12" step="0.5" value="8"
+                    class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-indigo-400 outline-none transition">
+            </div>
+
+            <!-- Opmerking -->
+            <div class="mb-5">
+                <label class="block text-sm font-semibold text-gray-700 mb-1">Opmerking (optioneel)</label>
+                <input type="text" id="correct-note" placeholder="bijv. begeleider goedgekeurd / ziekmelding"
+                    class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-indigo-400 outline-none transition">
+            </div>
+
+            <!-- Knoppen -->
+            <div class="flex gap-3">
+                <button onclick="closeCorrectModal()"
+                    class="flex-1 py-2.5 border border-gray-200 text-gray-600 rounded-xl font-medium text-sm hover:bg-gray-50 transition">
+                    Annuleren
+                </button>
+                <button onclick="saveCorrection()"
+                    class="flex-1 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold text-sm transition shadow-md">
+                    Opslaan
+                </button>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="./static/js/supervisor-auth.js"></script>
-    <script src="./static/js/supervisor-portal.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="./static/js/config.js"></script>
+    <script src="./static/js/company-helper.js?v=20260916_1"></script>
+    <script src="./static/js/terms-acceptance.js"></script>
+    <script src="./static/js/supervisor-auth.js?v=4.3"></script>
+    <script src="./static/js/supervisor-portal.js?v=4.3"></script>
+    <script src="./static/js/info-modal-demo.js"></script>
 </body>
 
 </html>

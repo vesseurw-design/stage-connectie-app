@@ -325,8 +325,22 @@ function renderStudentCards(attendance) {
             `;
         }
 
+        const assignments = typeof getStudentCompanyAssignments === 'function'
+            ? getStudentCompanyAssignments(student, companies)
+            : [];
+        let companyDisplayHtml = '📍 Geen stagebedrijf';
+        if (assignments.length > 0) {
+            companyDisplayHtml = assignments.map(a => {
+                const daysStr = (a.days && a.days.length > 0) ? ` (${a.days.join(', ')})` : '';
+                return `📍 ${a.company_name}${daysStr}`;
+            }).join('<br>');
+        } else {
+            const company = companies.find(c => c.id === student.company_id);
+            if (company) companyDisplayHtml = `📍 ${company.company_name}`;
+        }
+
         return `
-            <div class="student-card bg-white p-4 rounded-xl shadow-sm border border-gray-100" onclick='openStudentDetail(${JSON.stringify(student)})'>
+            <div class="student-card bg-white p-4 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition cursor-pointer" onclick='openStudentDetail(${JSON.stringify(student)})'>
                 <div class="flex justify-between items-start mb-2">
                     <div>
                         <h3 class="font-semibold text-gray-800">${student.name}</h3>
@@ -338,7 +352,7 @@ function renderStudentCards(attendance) {
                     <p class="mb-1 text-xs px-2 py-0.5 bg-gray-100 rounded inline-block">
                         ${student.class || '-'} • ${student.school_year || '-'}
                     </p>
-                    <p class="mb-1">📍 ${company?.company_name || 'Geen stagebedrijf'}</p>
+                    <div class="mb-1 text-xs font-medium text-gray-700">${companyDisplayHtml}</div>
                     <p>📅 ${(student.scheduled_days || []).join(', ') || 'Geen dagen'}</p>
                 </div>
             </div>
@@ -348,11 +362,23 @@ function renderStudentCards(attendance) {
 
 function openStudentDetail(student) {
     currentStudent = student;
-    const company = companies.find(c => c.id === student.company_id);
+    const assignments = typeof getStudentCompanyAssignments === 'function'
+        ? getStudentCompanyAssignments(student, companies)
+        : [];
+    let companyText = '-';
+    if (assignments.length > 0) {
+        companyText = assignments.map(a => {
+            const daysStr = (a.days && a.days.length > 0) ? ` (${a.days.join(', ')})` : '';
+            return `${a.company_name}${daysStr}`;
+        }).join(' | ');
+    } else {
+        const company = companies.find(c => c.id === student.company_id);
+        if (company) companyText = company.company_name;
+    }
 
     document.getElementById('modal-student-name').textContent = student.name;
     document.getElementById('modal-student-number').textContent = student.student_number || '-';
-    document.getElementById('modal-company').textContent = company?.company_name || '-';
+    document.getElementById('modal-company').textContent = companyText;
     document.getElementById('modal-scheduled-days').textContent = (student.scheduled_days || []).join(', ') || '-';
 
     // Support for V2 modal fields
