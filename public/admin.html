@@ -314,6 +314,7 @@
     <!-- ============ SCRIPTS ============ -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="./static/js/config.js"></script>
+    <script src="./static/js/company-helper.js?v=20260916_2"></script>
     <script>
         const SUPABASE_URL = window.SUPABASE_URL || 'https://vdeipnqyesduiohxvuvu.supabase.co';
         const SUPABASE_KEY = window.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZkZWlwbnF5ZXNkdWlvaHh2dXZ1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc1MjY5NTEsImV4cCI6MjA4MzEwMjk1MX0.IknEZ-GQvspcppJxLR00ayBDq1DbL0HiUKy9RDb59DU';
@@ -449,7 +450,11 @@
             if (companyFilter) {
                 filtered = filtered.filter(a => {
                     const st = students.find(s => s.id === a.student_id);
-                    return st && st.company_id === companyFilter;
+                    return st && (
+                        (typeof isStudentAssignedToCompany === 'function' && isStudentAssignedToCompany(st, companyFilter)) ||
+                        (st.company_assignments && Array.isArray(st.company_assignments) && st.company_assignments.some(ca => ca.company_id === companyFilter)) ||
+                        (st.company_id && String(st.company_id).includes(companyFilter))
+                    );
                 });
             }
             if (statusFilter && statusFilter !== 'missing') {
@@ -465,7 +470,11 @@
                 renderTable([], showMissing ? missingStudents : [], dateFilter, companyFilter);
             } else {
                 renderTable(filtered, showMissing ? missingStudents.filter(s =>
-                    !companyFilter || s.company_id === companyFilter
+                    !companyFilter || (
+                        (typeof isStudentAssignedToCompany === 'function' && isStudentAssignedToCompany(s, companyFilter)) ||
+                        (s.company_assignments && Array.isArray(s.company_assignments) && s.company_assignments.some(ca => ca.company_id === companyFilter)) ||
+                        (s.company_id && String(s.company_id).includes(companyFilter))
+                    )
                 ) : [], dateFilter, companyFilter);
             }
         }
@@ -508,9 +517,17 @@
             // Ingevulde records
             attendance.forEach(record => {
                 const student = students.find(s => s.id === record.student_id);
-                const company = companies.find(c => c.id === (student?.company_id));
+                const assignments = typeof getStudentCompanyAssignments === 'function'
+                    ? getStudentCompanyAssignments(student, companies)
+                    : [];
+                let companyName = '–';
+                if (assignments.length > 0) {
+                    companyName = assignments.map(a => a.company_name).join(', ');
+                } else {
+                    const company = companies.find(c => c.id === (student?.company_id));
+                    if (company) companyName = company.company_name;
+                }
                 const studentName = student ? student.name : `ID: ${record.student_id}`;
-                const companyName = company ? company.company_name : '–';
                 const studentStatusHtml = record.student_status ? `
                     <span class="px-2 py-0.5 inline-flex items-center gap-1 text-[11px] font-semibold rounded-full ${statusClasses[record.student_status] || 'bg-gray-100 text-gray-600'}">
                         🎓 Stagiair: ${statusLabels[record.student_status] || record.student_status}
@@ -554,8 +571,16 @@
 
             // Ontbrekende stagiairs
             missingStudents.forEach(student => {
-                const company = companies.find(c => c.id === student.company_id);
-                const companyName = company ? company.company_name : '–';
+                const assignments = typeof getStudentCompanyAssignments === 'function'
+                    ? getStudentCompanyAssignments(student, companies)
+                    : [];
+                let companyName = '–';
+                if (assignments.length > 0) {
+                    companyName = assignments.map(a => a.company_name).join(', ');
+                } else {
+                    const company = companies.find(c => c.id === student.company_id);
+                    if (company) companyName = company.company_name;
+                }
 
                 tbody.innerHTML += `
                     <tr class="hover:bg-orange-50/50 transition bg-orange-50/20">
@@ -926,8 +951,16 @@
                         </thead>
                         <tbody>
                             ${printStudents.map(student => {
-                                const company = companies.find(c => String(c.id) === String(student.company_id));
-                                const companyName = company ? company.company_name : '–';
+                                const assignments = typeof getStudentCompanyAssignments === 'function'
+                                    ? getStudentCompanyAssignments(student, companies)
+                                    : [];
+                                let companyName = '–';
+                                if (assignments.length > 0) {
+                                    companyName = assignments.map(a => a.company_name).join(', ');
+                                } else {
+                                    const company = companies.find(c => String(c.id) === String(student.company_id));
+                                    if (company) companyName = company.company_name;
+                                }
                                 
                                 // Bereken statistieken voor deze leerling in de geselecteerde periode
                                 const studentRecords = allAttendance.filter(a => String(a.student_id) === String(student.id) && days.some(wd => wd.dateStr === a.date));
@@ -973,8 +1006,16 @@
                 // ── FORMULIER PER LEERLING ──
                 document.getElementById('print-mode-label').textContent = `Formulieren per stagiair – ${periodLabel}`;
                 printContent.innerHTML = conflictWarningHtml + printStudents.map(student => {
-                    const company = companies.find(c => String(c.id) === String(student.company_id));
-                    const companyName = company ? company.company_name : '–';
+                    const assignments = typeof getStudentCompanyAssignments === 'function'
+                        ? getStudentCompanyAssignments(student, companies)
+                        : [];
+                    let companyName = '–';
+                    if (assignments.length > 0) {
+                        companyName = assignments.map(a => a.company_name).join(', ');
+                    } else {
+                        const company = companies.find(c => String(c.id) === String(student.company_id));
+                        if (company) companyName = company.company_name;
+                    }
                     const supervisor = supervisors.find(s => String(s.id) === String(student.supervisor_id));
 
                     // Bereken statistieken en uren voor deze stagiair

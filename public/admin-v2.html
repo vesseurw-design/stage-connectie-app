@@ -19,10 +19,9 @@
             body * { visibility: hidden; }
             #print-section, #print-section * { visibility: visible; }
             #print-section {
-                position: fixed;
-                top: 0; left: 0;
+                position: relative;
                 width: 100%;
-                padding: 20px;
+                padding: 0px;
                 background: white;
             }
             .no-print { display: none !important; }
@@ -30,36 +29,38 @@
             .print-table {
                 width: 100%;
                 border-collapse: collapse;
-                font-size: 11px;
+                font-size: 10px;
+                margin-top: 15px;
             }
             .print-table th, .print-table td {
-                border: 1px solid #333;
-                padding: 5px 7px;
+                border: 1px solid #94a3b8;
+                padding: 6px 8px;
                 text-align: center;
             }
-            .print-table th { background: #f0f0f0; font-weight: 700; }
+            .print-table th { background: #f8fafc; font-weight: 700; color: #1e293b; border-bottom: 2px solid #64748b; }
             .print-table td:first-child, .print-table th:first-child { text-align: left; min-width: 130px; }
             .print-table td:nth-child(2), .print-table th:nth-child(2) { text-align: left; min-width: 120px; }
             /* Losse leerlingformulieren */
             .student-form-card {
                 page-break-after: always;
-                padding: 0;
+                break-after: page;
+                padding: 10px 0;
                 margin-bottom: 0;
             }
-            .student-form-card:last-child { page-break-after: auto; }
+            .student-form-card:last-child { page-break-after: auto; break-after: auto; }
             .student-form-table {
                 width: 100%;
                 border-collapse: collapse;
-                font-size: 12px;
-                margin-top: 10px;
+                font-size: 11px;
+                margin-top: 15px;
             }
             .student-form-table th, .student-form-table td {
-                border: 1px solid #333;
-                padding: 8px 10px;
+                border: 1px solid #94a3b8;
+                padding: 7px 10px;
             }
-            .student-form-table th { background: #f0f0f0; font-weight: 700; text-align: left; }
+            .student-form-table th { background: #f8fafc; font-weight: 700; text-align: left; color: #1e293b; border-bottom: 2px solid #64748b; }
             .student-form-table td { min-height: 36px; }
-            .form-header { margin-bottom: 12px; border-bottom: 2px solid #333; padding-bottom: 8px; }
+            .form-header { margin-bottom: 12px; padding-bottom: 8px; }
         }
         @media screen {
             #print-section { display: none; }
@@ -79,11 +80,11 @@
             <div class="flex gap-3 flex-wrap">
                 <a href="admin-students-v2.html"
                     class="px-4 py-2 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-lg transition font-medium text-sm">
-                    Studenten Beheer
+                    Stagiairs Beheer
                 </a>
                 <a href="admin-companies.html"
                     class="px-4 py-2 bg-purple-50 text-purple-600 hover:bg-purple-100 rounded-lg transition font-medium text-sm">
-                    Bedrijven Beheer
+                    Stagebedrijven Beheer
                 </a>
                 <a href="admin-begeleiders-v3.html"
                     class="px-4 py-2 bg-green-50 text-green-600 hover:bg-green-100 rounded-lg transition font-medium text-sm">
@@ -144,9 +145,9 @@
                     <input type="date" id="filter-date" class="px-3 py-2 border border-gray-200 rounded-lg text-sm">
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Bedrijf</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Stagebedrijf</label>
                     <select id="filter-company" class="px-3 py-2 border border-gray-200 rounded-lg text-sm min-w-[180px]">
-                        <option value="">Alle bedrijven</option>
+                        <option value="">Alle stagebedrijven</option>
                     </select>
                 </div>
                 <div>
@@ -174,7 +175,7 @@
                 </button>
                 <button onclick="openPrintSection('perStudent')"
                     class="flex items-center gap-2 px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white font-medium rounded-lg transition shadow-sm text-sm">
-                    🖨️ Formulier per leerling
+                    🖨️ Formulier per stagiair
                 </button>
             </div>
         </div>
@@ -184,8 +185,8 @@
             <table class="w-full">
                 <thead class="bg-gray-50 border-b border-gray-200">
                     <tr>
-                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Student</th>
-                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Bedrijf</th>
+                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Stagiair</th>
+                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Stagebedrijf</th>
                         <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Datum</th>
                         <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
                         <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Uren</th>
@@ -200,15 +201,15 @@
     <!-- ============ ADMIN INVOER MODAL ============ -->
     <div id="edit-modal" class="hidden fixed inset-0 bg-gray-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8">
-            <h2 class="text-xl font-bold text-gray-800 mb-1" id="modal-student-name">Student</h2>
+            <h2 class="text-xl font-bold text-gray-800 mb-1" id="modal-student-name">Stagiair</h2>
             <p class="text-sm text-gray-500 mb-6" id="modal-date-label"></p>
 
             <div class="space-y-5">
-                <!-- Info van werkgever -->
+                <!-- Info van stagebedrijf -->
                 <div id="modal-employer-info" class="hidden bg-blue-50 border border-blue-100 p-3.5 rounded-xl text-xs text-blue-800 flex items-center gap-2 mb-4">
                     <span class="text-base">🏢</span>
                     <div>
-                        <strong>Invoer werkgever:</strong> <span id="modal-employer-status-text">–</span>
+                        <strong>Invoer stagebedrijf:</strong> <span id="modal-employer-status-text">–</span>
                     </div>
                 </div>
 
@@ -287,9 +288,9 @@
                 <label style="font-size:12px; color:#4b5563;">Tot</label>
                 <input type="date" id="print-end-date" onchange="regeneratePrintContent()" style="border:1px solid #d1d5db; padding:4px 6px; border-radius:6px; font-size:12px; outline:none;">
                 
-                <span style="font-size:12px; font-weight:600; color:#4b5563; margin-left:8px;">Leerling:</span>
+                <span style="font-size:12px; font-weight:600; color:#4b5563; margin-left:8px;">Stagiair:</span>
                 <select id="print-student-select" onchange="regeneratePrintContent()" style="border:1px solid #d1d5db; padding:4px 6px; border-radius:6px; font-size:12px; outline:none; background:white; max-width:180px;">
-                    <option value="all">Alle leerlingen</option>
+                    <option value="all">Alle stagiairs</option>
                 </select>
 
                 <button onclick="regeneratePrintContent()" style="background:#0284c7;color:white;border:none;padding:5px 12px;border-radius:6px;cursor:pointer;font-weight:600;font-size:12px;transition:background 0.2s;">
@@ -313,6 +314,7 @@
     <!-- ============ SCRIPTS ============ -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="./static/js/config.js"></script>
+    <script src="./static/js/company-helper.js?v=20260916_2"></script>
     <script>
         const SUPABASE_URL = window.SUPABASE_URL || 'https://vdeipnqyesduiohxvuvu.supabase.co';
         const SUPABASE_KEY = window.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZkZWlwbnF5ZXNkdWlvaHh2dXZ1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc1MjY5NTEsImV4cCI6MjA4MzEwMjk1MX0.IknEZ-GQvspcppJxLR00ayBDq1DbL0HiUKy9RDb59DU';
@@ -321,6 +323,7 @@
         let allAttendance = [];
         let companies = [];
         let students = [];
+        let supervisors = [];
         let currentUser = null;
 
         // Modal state
@@ -344,12 +347,20 @@
         async function checkAuth() {
             const { data: { session }, error } = await db.auth.getSession();
             if (error || !session) {
+                localStorage.removeItem('stageconnect_admin_session');
+                localStorage.removeItem('admin_email');
+                localStorage.removeItem('admin_name');
+                localStorage.removeItem('auth_user_id');
                 window.location.href = 'admin-login.html';
                 return false;
             }
             currentUser = session.user;
             if (currentUser.user_metadata?.role !== 'admin') {
                 alert('Je hebt geen admin rechten!');
+                localStorage.removeItem('stageconnect_admin_session');
+                localStorage.removeItem('admin_email');
+                localStorage.removeItem('admin_name');
+                localStorage.removeItem('auth_user_id');
                 window.location.href = 'admin-login.html';
                 return false;
             }
@@ -363,7 +374,7 @@
             const isAuthenticated = await checkAuth();
             if (!isAuthenticated) return;
 
-            await Promise.all([loadCompanies(), loadStudents(), loadAttendance()]);
+            await Promise.all([loadCompanies(), loadStudents(), loadAttendance(), loadSupervisors()]);
             setupRealtimeSubscription();
             setupFilters();
             updateDashboard();
@@ -391,6 +402,11 @@
             allAttendance = data || [];
         }
 
+        async function loadSupervisors() {
+            const { data } = await db.from('stagebegeleiders').select('*');
+            supervisors = data || [];
+        }
+
         function setupRealtimeSubscription() {
             db.channel('public:Attendance')
                 .on('postgres_changes', { event: '*', schema: 'public', table: 'Attendance' }, () => {
@@ -415,7 +431,7 @@
             const statusFilter = document.getElementById('filter-status').value;
             const showMissing = document.getElementById('show-missing').checked;
 
-            // Bepaal welke leerlingen op deze dag een stagegdag hebben
+            // Bepaal welke stagiairs op deze dag een stagegdag hebben
             const dayCode = getDayCode(dateFilter);
             const scheduledStudents = students.filter(s =>
                 !s.scheduled_days || s.scheduled_days.length === 0 || s.scheduled_days.includes(dayCode)
@@ -424,7 +440,7 @@
             // Bestaande records op deze datum
             let existingOnDate = allAttendance.filter(a => a.date === dateFilter);
 
-            // Ontbrekende leerlingen (geen record voor deze datum)
+            // Ontbrekende stagiairs (geen record voor deze datum)
             const missingStudents = scheduledStudents.filter(s =>
                 !existingOnDate.find(a => a.student_id === s.id)
             );
@@ -434,7 +450,11 @@
             if (companyFilter) {
                 filtered = filtered.filter(a => {
                     const st = students.find(s => s.id === a.student_id);
-                    return st && st.company_id === companyFilter;
+                    return st && (
+                        (typeof isStudentAssignedToCompany === 'function' && isStudentAssignedToCompany(st, companyFilter)) ||
+                        (st.company_assignments && Array.isArray(st.company_assignments) && st.company_assignments.some(ca => ca.company_id === companyFilter)) ||
+                        (st.company_id && String(st.company_id).includes(companyFilter))
+                    );
                 });
             }
             if (statusFilter && statusFilter !== 'missing') {
@@ -450,7 +470,11 @@
                 renderTable([], showMissing ? missingStudents : [], dateFilter, companyFilter);
             } else {
                 renderTable(filtered, showMissing ? missingStudents.filter(s =>
-                    !companyFilter || s.company_id === companyFilter
+                    !companyFilter || (
+                        (typeof isStudentAssignedToCompany === 'function' && isStudentAssignedToCompany(s, companyFilter)) ||
+                        (s.company_assignments && Array.isArray(s.company_assignments) && s.company_assignments.some(ca => ca.company_id === companyFilter)) ||
+                        (s.company_id && String(s.company_id).includes(companyFilter))
+                    )
                 ) : [], dateFilter, companyFilter);
             }
         }
@@ -493,18 +517,26 @@
             // Ingevulde records
             attendance.forEach(record => {
                 const student = students.find(s => s.id === record.student_id);
-                const company = companies.find(c => c.id === (student?.company_id));
+                const assignments = typeof getStudentCompanyAssignments === 'function'
+                    ? getStudentCompanyAssignments(student, companies)
+                    : [];
+                let companyName = '–';
+                if (assignments.length > 0) {
+                    companyName = assignments.map(a => a.company_name).join(', ');
+                } else {
+                    const company = companies.find(c => c.id === (student?.company_id));
+                    if (company) companyName = company.company_name;
+                }
                 const studentName = student ? student.name : `ID: ${record.student_id}`;
-                const companyName = company ? company.company_name : '–';
                 const studentStatusHtml = record.student_status ? `
                     <span class="px-2 py-0.5 inline-flex items-center gap-1 text-[11px] font-semibold rounded-full ${statusClasses[record.student_status] || 'bg-gray-100 text-gray-600'}">
-                        🎓 Student: ${statusLabels[record.student_status] || record.student_status}
+                        🎓 Stagiair: ${statusLabels[record.student_status] || record.student_status}
                     </span>
                 ` : '';
 
                 const employerStatusHtml = record.status ? `
                     <span class="px-2 py-0.5 inline-flex items-center gap-1 text-[11px] font-semibold rounded-full ${statusClasses[record.status] || 'bg-gray-100 text-gray-600'}">
-                        🏢 Werkgever: ${statusLabels[record.status] || record.status}${record.status === 'late' && record.minutes_late > 0 ? ` (${record.minutes_late}m)` : ''}
+                        🏢 Stagebedrijf: ${statusLabels[record.status] || record.status}${record.status === 'late' && record.minutes_late > 0 ? ` (${record.minutes_late}m)` : ''}
                     </span>
                 ` : '';
 
@@ -537,10 +569,18 @@
                 rowsAdded++;
             });
 
-            // Ontbrekende leerlingen
+            // Ontbrekende stagiairs
             missingStudents.forEach(student => {
-                const company = companies.find(c => c.id === student.company_id);
-                const companyName = company ? company.company_name : '–';
+                const assignments = typeof getStudentCompanyAssignments === 'function'
+                    ? getStudentCompanyAssignments(student, companies)
+                    : [];
+                let companyName = '–';
+                if (assignments.length > 0) {
+                    companyName = assignments.map(a => a.company_name).join(', ');
+                } else {
+                    const company = companies.find(c => c.id === student.company_id);
+                    if (company) companyName = company.company_name;
+                }
 
                 tbody.innerHTML += `
                     <tr class="hover:bg-orange-50/50 transition bg-orange-50/20">
@@ -584,7 +624,7 @@
             selectedModalStatus = '';
 
             const student = students.find(s => s.id === studentId);
-            document.getElementById('modal-student-name').textContent = student ? student.name : 'Student';
+            document.getElementById('modal-student-name').textContent = student ? student.name : 'Stagiair';
 
             const dateObj = new Date(date);
             document.getElementById('modal-date-label').textContent =
@@ -693,6 +733,7 @@
             const hours = parseFloat(document.getElementById('modal-hours').value) || 0;
             const minutesLate = selectedModalStatus === 'late' ? (parseInt(document.getElementById('modal-minutes-late').value) || 15) : 0;
             const noteText = document.getElementById('modal-note')?.value?.trim() || null;
+            const student = students.find(s => s.id === editingStudentId);
 
             const record = {
                 student_id: editingStudentId,
@@ -701,6 +742,8 @@
                 student_hours: selectedModalStatus === 'absent' ? 0 : hours,
                 minutes_late: minutesLate,
                 notes: noteText,
+                status: selectedModalStatus, // Admin stelt ook de verificatie-status in
+                employer_id: student ? student.company_id : null,
                 updated_at: new Date().toISOString()
             };
 
@@ -740,21 +783,41 @@
         // ========================
         let currentPrintMode = 'overview';
 
-        function getDaysInRange(startDateStr, endDateStr) {
-            const start = new Date(startDateStr);
-            const end = new Date(endDateStr);
+        function formatDateLocal(d) {
+            const year = d.getFullYear();
+            const month = String(d.getMonth() + 1).padStart(2, '0');
+            const day = String(d.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
+        function getDaysInRange(startDateStr, endDateStr, selectedStudentId = 'all') {
+            const [sYear, sMonth, sDay] = startDateStr.split('-').map(Number);
+            const [eYear, eMonth, eDay] = endDateStr.split('-').map(Number);
+            
+            const start = new Date(sYear, sMonth - 1, sDay);
+            const end = new Date(eYear, eMonth - 1, eDay);
+            
             const days = [];
             let current = new Date(start);
             let count = 0;
             while (current <= end && count < 200) {
                 const dayNum = current.getDay();
-                if (dayNum >= 1 && dayNum <= 5) {
-                    const d = new Date(current);
+                const d = new Date(current);
+                const dStr = formatDateLocal(d);
+                
+                // Controleer of er voor deze dag een registratie bestaat (voor de geselecteerde leerling of voor álle leerlingen)
+                const hasWeekendRecord = allAttendance.some(a => {
+                    const matchStudent = selectedStudentId === 'all' || String(a.student_id) === String(selectedStudentId);
+                    return matchStudent && a.date === dStr && (a.student_status || a.status);
+                });
+                
+                const isWeekday = dayNum >= 1 && dayNum <= 5;
+                if (isWeekday || hasWeekendRecord) {
                     days.push({
-                        label: d.toLocaleDateString('nl-NL', { weekday: 'short', day: 'numeric', month: 'numeric' }),
-                        fullLabel: d.toLocaleDateString('nl-NL', { weekday: 'long', day: 'numeric', month: 'long' }),
-                        dateStr: d.toISOString().split('T')[0],
-                        dayCode: ['', 'Ma', 'Di', 'Wo', 'Do', 'Vr', ''][d.getDay()]
+                        label: current.toLocaleDateString('nl-NL', { weekday: 'short', day: 'numeric', month: 'numeric' }),
+                        fullLabel: current.toLocaleDateString('nl-NL', { weekday: 'long', day: 'numeric', month: 'long' }),
+                        dateStr: dStr,
+                        dayCode: ['Zo', 'Ma', 'Di', 'Wo', 'Do', 'Vr', 'Za'][current.getDay()]
                     });
                 }
                 current.setDate(current.getDate() + 1);
@@ -764,29 +827,26 @@
         }
 
         function openPrintSection(mode) {
-            const dateFilter = document.getElementById('filter-date').value;
-            if (!dateFilter) {
-                alert('Selecteer eerst een datum.');
-                return;
-            }
+            const dateInput = document.getElementById('filter-date');
+            const dateFilter = dateInput ? dateInput.value : '';
 
             currentPrintMode = mode;
 
-            // Bepaal standaard de week (maandag t/m vrijdag) op basis van de geselecteerde filterdatum
-            const current = new Date(dateFilter);
+            // Bepaal standaard de week (maandag t/m vrijdag) op basis van de geselecteerde filterdatum of vandaag
+            const current = dateFilter ? new Date(dateFilter) : new Date();
             const day = current.getDay();
             const monday = new Date(current);
             monday.setDate(current.getDate() - day + (day === 0 ? -6 : 1));
             const friday = new Date(monday);
             friday.setDate(monday.getDate() + 4);
 
-            document.getElementById('print-start-date').value = monday.toISOString().split('T')[0];
-            document.getElementById('print-end-date').value = friday.toISOString().split('T')[0];
+            document.getElementById('print-start-date').value = formatDateLocal(monday);
+            document.getElementById('print-end-date').value = formatDateLocal(friday);
 
             // Vul studenten dropdown in print-section
             const selectEl = document.getElementById('print-student-select');
             if (selectEl) {
-                selectEl.innerHTML = '<option value="all">Alle leerlingen</option>';
+                selectEl.innerHTML = '<option value="all">Alle stagiairs</option>';
                 const sortedStudents = [...students].sort((a, b) => a.name.localeCompare(b.name));
                 sortedStudents.forEach(s => {
                     const opt = document.createElement('option');
@@ -812,9 +872,10 @@
                 return;
             }
 
-            const days = getDaysInRange(startVal, endVal);
+            const selectedStudentId = document.getElementById('print-student-select').value;
+            const days = getDaysInRange(startVal, endVal, selectedStudentId);
             if (days.length === 0) {
-                alert('Geen werkdagen gevonden in deze periode.');
+                alert('Geen stagedagen gevonden in deze periode.');
                 return;
             }
 
@@ -825,7 +886,6 @@
             const statusAbbr = { present: 'A', absent: 'AF', sick: 'Z', late: 'TL' };
             
             // Filter studenten op basis van dropdown
-            const selectedStudentId = document.getElementById('print-student-select').value;
             let printStudents = [...students].sort((a, b) => a.name.localeCompare(b.name));
             if (selectedStudentId !== 'all') {
                 printStudents = printStudents.filter(s => String(s.id) === String(selectedStudentId));
@@ -833,155 +893,328 @@
 
             const printContent = document.getElementById('print-content');
 
+            // Controleer op conflicten in de geselecteerde periode
+            let conflictCount = 0;
+            printStudents.forEach(student => {
+                const studentRecords = allAttendance.filter(a => String(a.student_id) === String(student.id) && days.some(wd => wd.dateStr === a.date));
+                studentRecords.forEach(r => {
+                    if (r.status && r.student_status && r.status !== r.student_status) {
+                        conflictCount++;
+                    }
+                });
+            });
+
+            let conflictWarningHtml = '';
+            if (conflictCount > 0) {
+                conflictWarningHtml = `
+                    <div class="no-print" style="background:#fffbeb; border:1px solid #fef3c7; padding:16px; border-radius:12px; margin-bottom:20px; color:#b45309; font-family:'Inter', sans-serif; font-size:13px; line-height:1.5; display:flex; gap:12px; align-items:flex-start; box-shadow:0 1px 2px 0 rgba(0,0,0,0.05);">
+                        <span style="font-size:20px; margin-top:2px;">⚠️</span>
+                        <div>
+                            <strong style="font-weight:700; color:#92400e; display:block; margin-bottom:4px;">Let op: Er zijn ${conflictCount} onopgeloste conflicten in deze periode!</strong>
+                            Er zijn dagen waarop de invoer van de stagiair afwijkt van de verificatie van het stagebedrijf (bijvoorbeeld: de stagiair meldt zich aanwezig, maar het stagebedrijf meldt hem afwezig). 
+                            Het is belangrijk om deze conflicten eerst op te lossen in het dashboard (klik op de stagedag en kies de juiste status) voordat je het definitieve examendossier afdrukt.
+                        </div>
+                    </div>
+                `;
+            }
+
             if (currentPrintMode === 'overview') {
                 // ── TOTAALOVERZICHT ──
-                document.getElementById('print-mode-label').textContent = `📋 Totaaloverzicht – ${periodLabel}`;
-                printContent.innerHTML = `
-                    <div style="margin-bottom:14px;">
-                        <h1 style="font-size:17px; font-weight:700; margin:0;">StageConnectie – Aanwezigheidsoverzicht</h1>
-                        <p style="font-size:12px; color:#555; margin:4px 0 0;">${periodLabel}</p>
-                        <p style="font-size:10px; color:#999; margin:2px 0 0;">Afdruk: ${printDate}</p>
+                document.getElementById('print-mode-label').textContent = `Totaaloverzicht – ${periodLabel}`;
+                printContent.innerHTML = conflictWarningHtml + `
+                    <div style="display:flex; justify-content:space-between; align-items:flex-start; border-bottom:3px solid #1e3a8a; padding-bottom:12px; margin-bottom:20px; font-family:'Inter', sans-serif;">
+                        <div>
+                            <h1 style="font-size:20px; font-weight:800; color:#1e3a8a; margin:0; text-transform:uppercase; letter-spacing:0.5px;">Aanwezigheidsoverzicht Stage</h1>
+                            <p style="font-size:13px; color:#475569; margin:4px 0 0;">School: <strong>${window.SCHOOL_NAME}</strong></p>
+                            <p style="font-size:12px; color:#475569; margin:2px 0 0;">Periode: <strong>${periodLabel}</strong></p>
+                        </div>
+                        <div style="text-align:right;">
+                            <img src="${window.SCHOOL_LOGO}" onerror="this.style.display='none'; document.getElementById('school-text-fallback-overview').style.display='block';" style="max-height:55px; max-width:180px; object-fit:contain; display:block; margin-left:auto;">
+                            <span id="school-text-fallback-overview" style="display:none; font-size:15px; font-weight:700; color:#1e3a8a; text-transform:uppercase;">${window.SCHOOL_NAME}</span>
+                            <p style="font-size:10px; color:#94a3b8; margin:6px 0 0;">Afdrukdatum: ${printDate}</p>
+                        </div>
                     </div>
-                    <table class="print-table">
+                    <table class="print-table" style="width:100%; border-collapse:collapse; font-size:11px; font-family:'Inter', sans-serif;">
                         <thead>
                             <tr>
-                                <th>Naam leerling</th>
-                                <th>Stageplek</th>
-                                ${days.map(d => `<th>${d.label}</th>`).join('')}
-                                <th>Handtekening</th>
+                                <th style="text-align:left; padding:8px; background:#f8fafc; border:1px solid #cbd5e1; font-weight:700;">Naam stagiair</th>
+                                <th style="text-align:left; padding:8px; background:#f8fafc; border:1px solid #cbd5e1; font-weight:700;">Stagebedrijf</th>
+                                <th style="text-align:center; padding:8px; background:#f8fafc; border:1px solid #cbd5e1; font-weight:700;">Klas</th>
+                                <th style="text-align:center; padding:8px; background:#f8fafc; border:1px solid #cbd5e1; font-weight:700;">Verwachte stagedagen</th>
+                                <th style="text-align:center; padding:8px; background:#f8fafc; border:1px solid #cbd5e1; font-weight:700;">Totaal uren</th>
+                                <th style="text-align:center; padding:8px; background:#f0fdf4; color:#15803d; border:1px solid #cbd5e1; font-weight:700;">Aanwezig</th>
+                                <th style="text-align:center; padding:8px; background:#fef2f2; color:#b91c1c; border:1px solid #cbd5e1; font-weight:700;">Afwezig</th>
+                                <th style="text-align:center; padding:8px; background:#fff7ed; color:#c2410c; border:1px solid #cbd5e1; font-weight:700;">Ziek</th>
+                                <th style="text-align:center; padding:8px; background:#fefce8; color:#a16207; border:1px solid #cbd5e1; font-weight:700;">Te laat</th>
+                                <th style="text-align:center; padding:8px; background:#f8fafc; border:1px solid #cbd5e1; font-weight:700; min-width:120px;">Handtekening docent</th>
                             </tr>
                         </thead>
                         <tbody>
                             ${printStudents.map(student => {
-                                const company = companies.find(c => c.id === student.company_id);
-                                const companyName = company ? company.company_name : '–';
-                                const cells = days.map(wd => {
-                                    const isScheduled = !student.scheduled_days || student.scheduled_days.length === 0 || student.scheduled_days.includes(wd.dayCode);
-                                    if (!isScheduled) return `<td style="background:#f0f0f0; color:#bbb; font-size:9px; text-align:center;">school</td>`;
-                                    const record = allAttendance.find(a => a.student_id === student.id && a.date === wd.dateStr);
-                                    if (record) {
-                                        const sAbbr = record.student_status ? (statusAbbr[record.student_status] || '?') : '';
-                                        const eAbbr = record.status ? (statusAbbr[record.status] || '?') : '';
-                                        
-                                        if (eAbbr && sAbbr) {
-                                            if (eAbbr === sAbbr) {
-                                                const color = { A: '#bbf7d0', AF: '#fecaca', Z: '#fed7aa', TL: '#fef08a' }[eAbbr] || '#f3f4f6';
-                                                return `<td style="background:${color}; font-weight:700; text-align:center; font-size:11px;" title="Beide: ${eAbbr}">${eAbbr}</td>`;
-                                            } else {
-                                                const color = { A: '#bbf7d0', AF: '#fecaca', Z: '#fed7aa', TL: '#fef08a' }[eAbbr] || '#f3f4f6';
-                                                return `<td style="background:${color}; font-weight:700; text-align:center; font-size:10px; border:1.5px solid #ef4444;" title="Student: ${sAbbr}, Werkgever: ${eAbbr}">${sAbbr}/${eAbbr}</td>`;
-                                            }
-                                        } else if (eAbbr) {
-                                            const color = { A: '#bbf7d0', AF: '#fecaca', Z: '#fed7aa', TL: '#fef08a' }[eAbbr] || '#f3f4f6';
-                                            return `<td style="background:${color}; font-weight:700; text-align:center; font-size:11px; border-bottom:2px solid #16a34a;" title="Werkgever: ${eAbbr}">🏢${eAbbr}</td>`;
-                                        } else if (sAbbr) {
-                                            const color = { A: '#bbf7d0', AF: '#fecaca', Z: '#fed7aa', TL: '#fef08a' }[sAbbr] || '#f3f4f6';
-                                            return `<td style="background:${color}; font-weight:700; text-align:center; font-size:11px; border-bottom:2px dotted #8b5cf6;" title="Student: ${sAbbr}">🎓${sAbbr}</td>`;
-                                        }
+                                const assignments = typeof getStudentCompanyAssignments === 'function'
+                                    ? getStudentCompanyAssignments(student, companies)
+                                    : [];
+                                let companyName = '–';
+                                if (assignments.length > 0) {
+                                    companyName = assignments.map(a => a.company_name).join(', ');
+                                } else {
+                                    const company = companies.find(c => String(c.id) === String(student.company_id));
+                                    if (company) companyName = company.company_name;
+                                }
+                                
+                                // Bereken statistieken voor deze leerling in de geselecteerde periode
+                                const studentRecords = allAttendance.filter(a => String(a.student_id) === String(student.id) && days.some(wd => wd.dateStr === a.date));
+                                const stats = {
+                                    present: studentRecords.filter(a => a.status === 'present' || (!a.status && a.student_status === 'present')).length,
+                                    absent: studentRecords.filter(a => a.status === 'absent' || (!a.status && a.student_status === 'absent')).length,
+                                    sick: studentRecords.filter(a => a.status === 'sick' || (!a.status && a.student_status === 'sick')).length,
+                                    late: studentRecords.filter(a => a.status === 'late' || (!a.status && a.student_status === 'late')).length
+                                };
+                                const totalScheduled = days.filter(wd => !student.scheduled_days || student.scheduled_days.length === 0 || student.scheduled_days.includes(wd.dayCode)).length;
+                                const totalHours = studentRecords.reduce((sum, r) => {
+                                    if (r.student_status === 'present' || r.student_status === 'late') {
+                                        return sum + (r.student_hours || 0);
                                     }
-                                    return `<td>&nbsp;</td>`;
-                                }).join('');
+                                    return sum;
+                                }, 0);
+
                                 return `<tr>
-                                    <td style="text-align:left; font-weight:600;">${student.name}</td>
-                                    <td style="text-align:left;">${companyName}</td>
-                                    ${cells}
-                                    <td style="min-width:80px;">&nbsp;</td>
+                                    <td style="text-align:left; padding:8px; border:1px solid #cbd5e1; font-weight:600; color:#1e293b;">${student.name}</td>
+                                    <td style="text-align:left; padding:8px; border:1px solid #cbd5e1; color:#334155;">${companyName}</td>
+                                    <td style="text-align:center; padding:8px; border:1px solid #cbd5e1; color:#334155;">${student.class || '–'}</td>
+                                    <td style="text-align:center; padding:8px; border:1px solid #cbd5e1; font-weight:600; color:#334155;">${totalScheduled}</td>
+                                    <td style="text-align:center; padding:8px; border:1px solid #cbd5e1; font-weight:700; color:#1e3a8a;">${totalHours} uur</td>
+                                    <td style="text-align:center; padding:8px; border:1px solid #cbd5e1; font-weight:700; color:#16a34a; background:#f0fdf4;">${stats.present}</td>
+                                    <td style="text-align:center; padding:8px; border:1px solid #cbd5e1; font-weight:700; color:#dc2626; background:#fef2f2;">${stats.absent}</td>
+                                    <td style="text-align:center; padding:8px; border:1px solid #cbd5e1; font-weight:700; color:#ea580c; background:#fff7ed;">${stats.sick}</td>
+                                    <td style="text-align:center; padding:8px; border:1px solid #cbd5e1; font-weight:700; color:#ca8a04; background:#fefce8;">${stats.late}</td>
+                                    <td style="text-align:center; padding:8px; border:1px solid #cbd5e1;">&nbsp;</td>
                                 </tr>`;
                             }).join('')}
                         </tbody>
                     </table>
-                    <div style="margin-top:14px; font-size:10px; color:#666; border-top:1px solid #ccc; padding-top:6px;">
-                        A = Aanwezig &nbsp;|&nbsp; AF = Afwezig &nbsp;|&nbsp; Z = Ziek &nbsp;|&nbsp; TL = Te laat
+                    <div style="margin-top:20px; font-size:10px; color:#475569; border-top:1px solid #cbd5e1; padding-top:10px; display:flex; gap:15px; justify-content:center;">
+                        <span><strong>Legenda:</strong></span>
+                        <span><span style="background:#f0fdf4; border:1px solid #bbf7d0; color:#15803d; padding:1px 6px; border-radius:3px; font-weight:bold; font-size:9px;">Aanwezig</span> Present op stage</span>
+                        <span><span style="background:#fef2f2; border:1px solid #fecaca; color:#b91c1c; padding:1px 6px; border-radius:3px; font-weight:bold; font-size:9px;">Afwezig</span> Ongeoorloofd afwezig</span>
+                        <span><span style="background:#fff7ed; border:1px solid #fed7aa; color:#c2410c; padding:1px 6px; border-radius:3px; font-weight:bold; font-size:9px;">Ziek</span> Ziekgemeld</span>
+                        <span><span style="background:#fefce8; border:1px solid #fef08a; color:#a16207; padding:1px 6px; border-radius:3px; font-weight:bold; font-size:9px;">Te laat</span> Te laat gekomen</span>
                     </div>
                 `;
 
             } else {
                 // ── FORMULIER PER LEERLING ──
-                document.getElementById('print-mode-label').textContent = `🖨️ Formulieren per leerling – ${periodLabel}`;
-                printContent.innerHTML = printStudents.map(student => {
-                    const company = companies.find(c => c.id === student.company_id);
-                    const companyName = company ? company.company_name : '–';
+                document.getElementById('print-mode-label').textContent = `Formulieren per stagiair – ${periodLabel}`;
+                printContent.innerHTML = conflictWarningHtml + printStudents.map(student => {
+                    const assignments = typeof getStudentCompanyAssignments === 'function'
+                        ? getStudentCompanyAssignments(student, companies)
+                        : [];
+                    let companyName = '–';
+                    if (assignments.length > 0) {
+                        companyName = assignments.map(a => a.company_name).join(', ');
+                    } else {
+                        const company = companies.find(c => String(c.id) === String(student.company_id));
+                        if (company) companyName = company.company_name;
+                    }
+                    const supervisor = supervisors.find(s => String(s.id) === String(student.supervisor_id));
+
+                    // Bereken statistieken en uren voor deze stagiair
+                    const studentRecords = allAttendance.filter(a => String(a.student_id) === String(student.id) && days.some(wd => wd.dateStr === a.date));
+                    const stats = {
+                        present: studentRecords.filter(a => a.status === 'present' || (!a.status && a.student_status === 'present')).length,
+                        absent: studentRecords.filter(a => a.status === 'absent' || (!a.status && a.student_status === 'absent')).length,
+                        sick: studentRecords.filter(a => a.status === 'sick' || (!a.status && a.student_status === 'sick')).length,
+                        late: studentRecords.filter(a => a.status === 'late' || (!a.status && a.student_status === 'late')).length
+                    };
+                    const totalHours = studentRecords.reduce((sum, r) => {
+                        if (r.student_status === 'present' || r.student_status === 'late') {
+                            return sum + (r.student_hours || 0);
+                        }
+                        return sum;
+                    }, 0);
 
                     const rows = days.map(wd => {
                         const isScheduled = !student.scheduled_days || student.scheduled_days.length === 0 || student.scheduled_days.includes(wd.dayCode);
                         if (!isScheduled) {
-                            return `<tr style="background:#f0f0f0; color:#aaa;">
-                                <td>${wd.fullLabel}</td>
-                                <td colspan="4" style="text-align:center; font-style:italic; font-size:11px;">Schooldag – geen stage</td>
+                            return `<tr style="background:#f8fafc; color:#94a3b8;">
+                                <td style="font-weight:500;">${wd.fullLabel}</td>
+                                <td colspan="4" style="text-align:center; font-style:italic; font-size:10px; color:#94a3b8; font-weight:500;">Schooldag – geen stage</td>
                             </tr>`;
                         }
-                        const record = allAttendance.find(a => a.student_id === student.id && a.date === wd.dateStr);
+                        const record = allAttendance.find(a => String(a.student_id) === String(student.id) && a.date === wd.dateStr);
                         const statusLabelsFull = { present: 'Aanwezig', absent: 'Afwezig', sick: 'Ziek', late: 'Te laat' };
                         const statusBgColors = { present: '#bbf7d0', absent: '#fecaca', sick: '#fed7aa', late: '#fef08a' };
                         let ingevuldCell, ingevuldUren, werkgeverCheckCell, rowBg;
                         if (record && record.student_status) {
                             const label = statusLabelsFull[record.student_status] || record.student_status;
                             const bg = statusBgColors[record.student_status] || '#f3f4f6';
-                            rowBg = bg + '22'; // licht transparant
-                            ingevuldCell = `<span style="background:${bg}; padding:3px 12px; border-radius:5px; font-weight:700; font-size:12px; border:1px solid rgba(0,0,0,0.12);">${label}</span>`;
+                            rowBg = bg + '15'; // super licht transparant
+                            ingevuldCell = `<span style="background:${bg}; padding:3px 12px; border-radius:5px; font-weight:700; font-size:11px; border:1px solid rgba(0,0,0,0.08);">${label}</span>`;
                             ingevuldUren = record.student_hours > 0
-                                ? `<strong style="font-size:13px;">${record.student_hours}&thinsp;uur</strong>`
-                                : `<span style="color:#999;">–</span>`;
+                                ? `<strong style="font-size:12px; color:#1e293b;">${record.student_hours}&thinsp;uur</strong>`
+                                : `<span style="color:#94a3b8;">–</span>`;
                             
                             if (record.status) {
                                 const empLabel = statusLabelsFull[record.status] || record.status;
                                 const lateStr = (record.status === 'late' && record.minutes_late > 0) ? ` (${record.minutes_late}m)` : '';
-                                werkgeverCheckCell = `<span style="font-weight:700; color:#16a34a;">☑ ${empLabel}${lateStr}</span>`;
+                                werkgeverCheckCell = `<span style="font-weight:700; color:#16a34a; font-size:12px;">☑ ${empLabel}${lateStr}</span>`;
                             } else {
-                                werkgeverCheckCell = `☐ Akkoord &nbsp; ☐ Corrigeer: ________`;
+                                werkgeverCheckCell = `<span style="color:#64748b; font-size:11px;">☐ Akkoord &nbsp; ☐ Corrigeer: ________</span>`;
                             }
                         } else {
                             if (record && record.status) {
                                 const empLabel = statusLabelsFull[record.status] || record.status;
                                 const lateStr = (record.status === 'late' && record.minutes_late > 0) ? ` (${record.minutes_late}m)` : '';
                                 const bg = statusBgColors[record.status] || '#f3f4f6';
-                                rowBg = bg + '22'; // licht transparant
-                                ingevuldCell = `<span style="color:#bbb; font-size:11px; font-style:italic;">Geen invoer</span>`;
-                                ingevuldUren = `<span style="color:#999;">–</span>`;
-                                werkgeverCheckCell = `<span style="font-weight:700; color:#16a34a;">☑ ${empLabel}${lateStr}</span>`;
+                                rowBg = bg + '15'; // super licht transparant
+                                ingevuldCell = `<span style="color:#94a3b8; font-size:11px; font-style:italic;">Geen invoer</span>`;
+                                ingevuldUren = `<span style="color:#94a3b8;">–</span>`;
+                                werkgeverCheckCell = `<span style="font-weight:700; color:#16a34a; font-size:12px;">☑ ${empLabel}${lateStr}</span>`;
                             } else {
                                 rowBg = 'white';
-                                ingevuldCell = `<span style="color:#bbb; font-size:11px; font-style:italic;">Geen invoer</span>`;
-                                ingevuldUren = `<span style="display:inline-block; width:50px; border-bottom:1px solid #999;">&nbsp;</span> uur`;
-                                werkgeverCheckCell = `☐ A &nbsp; ☐ AF &nbsp; &nbsp; ☐ Z &nbsp; &nbsp; ☐ TL`;
+                                ingevuldCell = `<span style="color:#94a3b8; font-size:10px; font-style:italic;">Geen invoer</span>`;
+                                ingevuldUren = `<span style="display:inline-block; width:30px; border-bottom:1px solid #cbd5e1;">&nbsp;</span> uur`;
+                                werkgeverCheckCell = `<span style="color:#64748b; font-size:11px;">☐ A &nbsp;&nbsp; ☐ AF &nbsp;&nbsp; ☐ Z &nbsp;&nbsp; ☐ TL</span>`;
                             }
                         }
                         return `<tr style="background:${rowBg};">
-                            <td style="font-size:12px;">${wd.fullLabel}</td>
+                            <td style="font-size:11px; font-weight:600; color:#334155;">${wd.fullLabel}</td>
                             <td style="text-align:center;">${ingevuldCell}</td>
                             <td style="text-align:center;">${ingevuldUren}</td>
-                            <td style="text-align:center; font-size:11px; color:#444;">${werkgeverCheckCell}</td>
-                            <td style="min-width:110px;">&nbsp;</td>
+                            <td style="text-align:center;">${werkgeverCheckCell}</td>
+                            <td style="min-width:110px; padding:5px; text-align:center; vertical-align:middle;">
+                                <div style="border:1px dashed #94a3b8; border-radius:4px; height:22px; display:flex; align-items:center; justify-content:center; color:#64748b; font-size:9px; font-weight:500; background:#ffffff;">Paraaf</div>
+                            </td>
                         </tr>`;
                     }).join('');
 
                     return `
-                        <div class="student-form-card">
-                            <div class="form-header">
-                                <h2 style="font-size:16px; font-weight:700; margin:0 0 4px;">${student.name}</h2>
-                                <div style="display:flex; gap:24px; font-size:12px; color:#444;">
-                                    <span>🏢 <strong>Stageplek:</strong> ${companyName}</span>
-                                    <span>📅 <strong>Periode:</strong> ${periodLabel}</span>
+                        <!-- PAGINA 1: SAMENVATTING & DECLARATIE (EXAMENDOSSIER) -->
+                        <div class="student-form-card" style="font-family:'Inter', sans-serif; page-break-after:always; break-after:page;">
+                            <!-- School/Document Header -->
+                            <div style="display:flex; justify-content:space-between; align-items:flex-start; border-bottom:3px solid #1e3a8a; padding-bottom:10px; margin-bottom:15px;">
+                                <div>
+                                    <h1 style="font-size:20px; font-weight:800; color:#1e3a8a; margin:0; text-transform:uppercase; letter-spacing:0.5px;">Verklaring Stage-uren & Aanwezigheid</h1>
+                                    <p style="font-size:11px; color:#475569; margin:4px 0 0; font-weight:500;">Officiële samenvatting ten behoeve van het examendossier</p>
                                 </div>
-                                <div style="font-size:11px; color:#888; margin-top:4px;">
-                                    StageConnectie &nbsp;·&nbsp; Afdruk: ${printDate}
+                                <div style="text-align:right;">
+                                    <img src="${window.SCHOOL_LOGO}" onerror="this.style.display='none'; document.getElementById('school-text-fallback-${student.id}-summary').style.display='block';" style="max-height:48px; max-width:180px; object-fit:contain; display:block; margin-left:auto;">
+                                    <span id="school-text-fallback-${student.id}-summary" style="display:none; font-size:14px; font-weight:700; color:#1e3a8a; text-transform:uppercase;">${window.SCHOOL_NAME}</span>
                                 </div>
                             </div>
+
+                            <!-- Metadata Card -->
+                            <div style="display:grid; grid-template-columns: repeat(2, 1fr); gap:12px; background:#f8fafc; padding:12px; border-radius:8px; border:1px solid #e2e8f0; margin-bottom:15px; font-size:11px; color:#334155; line-height:1.5;">
+                                <div>
+                                    <p style="margin:2px 0;"><strong>Naam stagiair:</strong> <span style="font-size:12px; font-weight:700; color:#1e293b;">${student.name}</span></p>
+                                    <p style="margin:2px 0;"><strong>Stagiairnummer:</strong> ${student.student_number || '–'}</p>
+                                    <p style="margin:2px 0;"><strong>Onderwijsinstelling:</strong> ${window.SCHOOL_NAME}</p>
+                                    <p style="margin:2px 0;"><strong>Schooljaar / Klas:</strong> ${student.school_year || '–'} &nbsp;/&nbsp; ${student.class || '–'}</p>
+                                </div>
+                                <div>
+                                    <p style="margin:2px 0;"><strong>Stagebedrijf:</strong> ${companyName}</p>
+                                    <p style="margin:2px 0;"><strong>Praktijkopleider:</strong> ${supervisor?.name || '–'}</p>
+                                    <p style="margin:2px 0;"><strong>Rapportageperiode:</strong> ${periodLabel}</p>
+                                    <p style="margin:2px 0;"><strong>Afdrukdatum:</strong> ${printDate}</p>
+                                </div>
+                            </div>
+
+                            <!-- Stats Summary Grid -->
+                            <div style="margin-top:15px; margin-bottom:20px;">
+                                <h3 style="font-size:12px; font-weight:700; color:#475569; text-transform:uppercase; margin:0 0 10px; letter-spacing:0.5px;">Geregistreerde resultaten</h3>
+                                <div style="display:grid; grid-template-columns: repeat(5, 1fr); gap:10px; text-align:center;">
+                                    <div style="background:#eff6ff; border:1.5px solid #bfdbfe; padding:10px 4px; border-radius:8px;">
+                                        <span style="font-size:9px; color:#2563eb; font-weight:700; text-transform:uppercase; display:block; margin-bottom:4px;">Totaal Uren</span>
+                                        <div style="font-size:16px; font-weight:800; color:#1d4ed8;">${totalHours} uur</div>
+                                    </div>
+                                    <div style="background:#f0fdf4; border:1.5px solid #bbf7d0; padding:10px 4px; border-radius:8px;">
+                                        <span style="font-size:9px; color:#16a34a; font-weight:700; text-transform:uppercase; display:block; margin-bottom:4px;">Aanwezig</span>
+                                        <div style="font-size:16px; font-weight:800; color:#15803d;">${stats.present} dgn</div>
+                                    </div>
+                                    <div style="background:#fef2f2; border:1.5px solid #fecaca; padding:10px 4px; border-radius:8px;">
+                                        <span style="font-size:9px; color:#dc2626; font-weight:700; text-transform:uppercase; display:block; margin-bottom:4px;">Afwezig</span>
+                                        <div style="font-size:16px; font-weight:800; color:#b91c1c;">${stats.absent} dgn</div>
+                                    </div>
+                                    <div style="background:#fff7ed; border:1.5px solid #fed7aa; padding:10px 4px; border-radius:8px;">
+                                        <span style="font-size:9px; color:#ea580c; font-weight:700; text-transform:uppercase; display:block; margin-bottom:4px;">Ziek</span>
+                                        <div style="font-size:16px; font-weight:800; color:#c2410c;">${stats.sick} dgn</div>
+                                    </div>
+                                    <div style="background:#fefce8; border:1.5px solid #fef08a; padding:10px 4px; border-radius:8px;">
+                                        <span style="font-size:9px; color:#ca8a04; font-weight:700; text-transform:uppercase; display:block; margin-bottom:4px;">Te laat</span>
+                                        <div style="font-size:16px; font-weight:800; color:#a16207;">${stats.late} dgn</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Signatures Box -->
+                            <div style="margin-top:30px; border-top:2px solid #cbd5e1; padding-top:15px; page-break-inside:avoid; break-inside:avoid;">
+                                <h3 style="font-size:12px; font-weight:700; color:#475569; text-transform:uppercase; margin:0 0 10px; letter-spacing:0.5px;">Officiële ondertekening</h3>
+                                <p style="font-size:11px; color:#64748b; margin-bottom:20px; line-height:1.4;">
+                                    Ondergetekenden verklaren hierbij dat de bovenstaande urenregistratie en aanwezigheidsstatistieken naar waarheid zijn ingevuld en gecontroleerd.
+                                </p>
+                                <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:20px; font-size:11px;">
+                                    <div>
+                                        <p style="font-weight:700; margin:0 0 25px 0; color:#334155;">1. Handtekening stagiair</p>
+                                        <div style="border-bottom:1px solid #94a3b8; height:20px; margin-bottom:6px;"></div>
+                                        <p style="color:#64748b; margin:0;">Datum: ___________________</p>
+                                    </div>
+                                    <div>
+                                        <p style="font-weight:700; margin:0 0 25px 0; color:#334155;">2. Handtekening praktijkopleider</p>
+                                        <div style="border-bottom:1px solid #94a3b8; height:20px; margin-bottom:6px;"></div>
+                                        <p style="color:#64748b; margin:0;">Datum: ___________________</p>
+                                    </div>
+                                    <div>
+                                        <p style="font-weight:700; margin:0 0 25px 0; color:#334155;">3. Handtekening stagebegeleider</p>
+                                        <div style="border-bottom:1px solid #94a3b8; height:20px; margin-bottom:6px;"></div>
+                                        <p style="color:#64748b; margin:0;">Datum: ___________________</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Footer disclaimer -->
+                            <div style="margin-top:40px; text-align:center; font-size:9px; color:#94a3b8; border-top:1px solid #f1f5f9; padding-top:8px;">
+                                Gegenereerd via StageConnectie &nbsp;·&nbsp; www.stageconnectie.nl &nbsp;·&nbsp; Document-ID: SC-DECL-${student.id.substring(0,8).toUpperCase()}
+                            </div>
+                        </div>
+
+                        <!-- PAGINA 2: SPECIFICATIE STAGEDAGEN (DETAILOVERZICHT) -->
+                        <div class="student-form-card" style="font-family:'Inter', sans-serif;">
+                            <!-- School/Document Header -->
+                            <div style="display:flex; justify-content:space-between; align-items:flex-start; border-bottom:3px solid #1e3a8a; padding-bottom:12px; margin-bottom:20px;">
+                                <div>
+                                    <h1 style="font-size:18px; font-weight:800; color:#1e3a8a; margin:0; text-transform:uppercase; letter-spacing:0.5px;">Specificatie Stagedagen</h1>
+                                    <p style="font-size:11px; color:#475569; margin:4px 0 0; font-weight:500;">Dag-tot-dag specificatie van aanwezigheid en uren</p>
+                                </div>
+                                <div style="text-align:right;">
+                                    <img src="${window.SCHOOL_LOGO}" onerror="this.style.display='none'; document.getElementById('school-text-fallback-${student.id}-spec').style.display='block';" style="max-height:48px; max-width:180px; object-fit:contain; display:block; margin-left:auto;">
+                                    <span id="school-text-fallback-${student.id}-spec" style="display:none; font-size:14px; font-weight:700; color:#1e3a8a; text-transform:uppercase;">${window.SCHOOL_NAME}</span>
+                                </div>
+                            </div>
+
+                            <!-- Student Info Summary line -->
+                            <div style="background:#f8fafc; padding:8px 12px; border-radius:6px; border:1px solid #e2e8f0; margin-bottom:15px; font-size:11px; color:#334155; display:flex; justify-content:space-between;">
+                                <span><strong>Stagiair:</strong> ${student.name}</span>
+                                <span><strong>Periode:</strong> ${periodLabel}</span>
+                                <span><strong>Bedrijf:</strong> ${companyName}</span>
+                            </div>
+
+                            <!-- Table -->
                             <table class="student-form-table">
                                 <thead>
                                     <tr>
-                                        <th style="min-width:130px;">Dag</th>
-                                        <th style="min-width:160px; text-align:center; background:#e0f2fe;">✏️ Ingevuld (app)</th>
-                                        <th style="min-width:70px; text-align:center; background:#e0f2fe;">Uren</th>
-                                        <th style="min-width:130px; text-align:center;">Werkgever check</th>
-                                        <th style="min-width:110px;">Handtekening</th>
+                                        <th style="min-width:130px; font-size:11px;">Stagedag</th>
+                                        <th style="min-width:140px; text-align:center; font-size:11px; background:#f1f5f9;">Ingevuld (app)</th>
+                                        <th style="min-width:70px; text-align:center; font-size:11px; background:#f1f5f9;">Uren</th>
+                                        <th style="min-width:140px; text-align:center; font-size:11px;">Verificatie Stagebedrijf</th>
+                                        <th style="min-width:100px; font-size:11px;">Handtekening/Paraaf</th>
                                     </tr>
                                 </thead>
                                 <tbody>${rows}</tbody>
                             </table>
-                            <div style="margin-top:14px; font-size:10px; color:#666;">
-                                A = Aanwezig &nbsp;|&nbsp; AF = Afwezig &nbsp;|&nbsp; Z = Ziek &nbsp;|&nbsp; TL = Te laat &nbsp;·&nbsp;
-                                Ingeleverd bij stagebegeleider: ______________ &nbsp; Datum: ______________
+                            
+                            <!-- Footer disclaimer -->
+                            <div style="margin-top:20px; text-align:center; font-size:9px; color:#94a3b8; border-top:1px solid #f1f5f9; padding-top:6px;">
+                                Gegenereerd via StageConnectie &nbsp;·&nbsp; www.stageconnectie.nl &nbsp;·&nbsp; Document-ID: SC-SPEC-${student.id.substring(0,8).toUpperCase()}
                             </div>
                         </div>
                     `;
