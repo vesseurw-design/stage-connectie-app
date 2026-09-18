@@ -254,9 +254,9 @@ function updateStats(attendance) {
 
     const stats = {
         total: students.length,
-        present: todayAttendance.filter(a => a.status === 'present').length,
-        absent: todayAttendance.filter(a => a.status === 'absent').length,
-        sick: todayAttendance.filter(a => a.status === 'sick').length
+        present: todayAttendance.filter(a => (a.status === 'present' || a.student_status === 'present')).length,
+        absent: todayAttendance.filter(a => (a.status === 'absent' || a.student_status === 'absent')).length,
+        sick: todayAttendance.filter(a => (a.status === 'sick' || a.student_status === 'sick')).length
     };
 
     document.getElementById('stat-total').textContent = stats.total;
@@ -381,20 +381,29 @@ function openStudentDetail(student) {
     const assignments = typeof getStudentCompanyAssignments === 'function'
         ? getStudentCompanyAssignments(student, companies)
         : [];
-    let companyText = '-';
+    let companyHtml = '-';
     if (assignments.length > 0) {
-        companyText = assignments.map(a => {
+        companyHtml = assignments.map(a => {
             const daysStr = (a.days && a.days.length > 0) ? ` (${a.days.join(', ')})` : '';
-            return `${a.company_name}${daysStr}`;
-        }).join(' | ');
+            const cObj = companies.find(c => c.id === a.company_id);
+            const contactStr = cObj && cObj.contact_person ? ` • 👤 ${cObj.contact_person}` : '';
+            const phoneStr = cObj && cObj.phone ? ` • 📞 <a href="tel:${cObj.phone}" class="text-blue-600 hover:underline">${cObj.phone}</a>` : '';
+            const emailStr = cObj && cObj.email ? ` • ✉️ <a href="mailto:${cObj.email}" class="text-blue-600 hover:underline">${cObj.email}</a>` : '';
+            return `<div class="mb-1"><strong>📍 ${a.company_name}</strong>${daysStr}${contactStr}${phoneStr}${emailStr}</div>`;
+        }).join('');
     } else {
         const company = companies.find(c => c.id === student.company_id);
-        if (company) companyText = company.company_name;
+        if (company) {
+            const contactStr = company.contact_person ? ` • 👤 ${company.contact_person}` : '';
+            const phoneStr = company.phone ? ` • 📞 <a href="tel:${company.phone}" class="text-blue-600 hover:underline">${company.phone}</a>` : '';
+            const emailStr = company.email ? ` • ✉️ <a href="mailto:${company.email}" class="text-blue-600 hover:underline">${company.email}</a>` : '';
+            companyHtml = `<div><strong>📍 ${company.company_name}</strong>${contactStr}${phoneStr}${emailStr}</div>`;
+        }
     }
 
     document.getElementById('modal-student-name').textContent = student.name;
     document.getElementById('modal-student-number').textContent = student.student_number || '-';
-    document.getElementById('modal-company').textContent = companyText;
+    document.getElementById('modal-company').innerHTML = companyHtml;
     document.getElementById('modal-scheduled-days').textContent = (student.scheduled_days || []).join(', ') || '-';
 
     // Support for V2 modal fields
@@ -954,6 +963,58 @@ async function exportSupervisorStudentPDF() {
     }
 }
 window.exportSupervisorStudentPDF = exportSupervisorStudentPDF;
+
+// Supervisor Companies Search Modal Functions
+window.openSupervisorCompaniesModal = function () {
+    const modal = document.getElementById('supervisor-companies-modal');
+    if (modal) {
+        modal.classList.remove('hidden');
+        filterSupervisorCompanies();
+    }
+};
+
+window.closeSupervisorCompaniesModal = function () {
+    const modal = document.getElementById('supervisor-companies-modal');
+    if (modal) {
+        modal.classList.add('hidden');
+    }
+};
+
+window.filterSupervisorCompanies = function () {
+    const query = (document.getElementById('sup-company-search')?.value || '').toLowerCase().trim();
+    const container = document.getElementById('sup-companies-list');
+    if (!container) return;
+
+    const filtered = (companies || []).filter(c => {
+        const name = (c.company_name || '').toLowerCase();
+        const branche = (c.branche || '').toLowerCase();
+        const contact = (c.contact_person || '').toLowerCase();
+        return name.includes(query) || branche.includes(query) || contact.includes(query);
+    });
+
+    if (filtered.length === 0) {
+        container.innerHTML = '<p class="text-center text-gray-500 text-sm py-6">Geen stagebedrijven gevonden.</p>';
+        return;
+    }
+
+    container.innerHTML = filtered.map(c => `
+        <div class="p-3.5 bg-gray-50 rounded-xl border border-gray-100 flex flex-col sm:flex-row justify-between sm:items-center gap-2">
+            <div>
+                <div class="flex items-center gap-2">
+                    <span class="font-bold text-gray-800 text-sm">${c.company_name}</span>
+                    ${c.branche ? `<span class="px-2 py-0.5 bg-blue-100 text-blue-800 text-[10px] font-semibold rounded-full">${c.branche}</span>` : ''}
+                </div>
+                <div class="text-xs text-gray-600 mt-1">
+                    👤 Praktijkbegeleider: <strong>${c.contact_person || 'Niet opgegeven'}</strong>
+                </div>
+            </div>
+            <div class="text-xs text-gray-600 space-y-1">
+                ${c.phone ? `<div>📞 Telefoon: <a href="tel:${c.phone}" class="text-blue-600 hover:underline font-medium">${c.phone}</a></div>` : ''}
+                ${c.email ? `<div>✉️ Email: <a href="mailto:${c.email}" class="text-blue-600 hover:underline font-medium">${c.email}</a></div>` : ''}
+            </div>
+        </div>
+    `).join('');
+};
 
 // Initialize on load
 init();

@@ -68,6 +68,10 @@
                         class="hidden bg-blue-600 text-white text-xs font-bold px-2 py-1 rounded-full">0</span>
                 </div>
                 <div class="flex gap-2">
+                    <button onclick="openSupervisorCompaniesModal()"
+                        class="px-3 py-2 text-sm bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-100 rounded-lg transition flex items-center gap-1 font-semibold">
+                        🏢 Bedrijven
+                    </button>
                     <button onclick="openInfoModal()"
                         class="px-3 py-2 text-sm bg-purple-50 text-purple-700 hover:bg-purple-100 border border-purple-100 rounded-lg transition flex items-center gap-1 font-semibold">
                         Info
@@ -270,6 +274,27 @@
                     class="flex-1 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold text-sm transition shadow-md">
                     Opslaan
                 </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Supervisor Companies Overview Modal -->
+    <div id="supervisor-companies-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl w-full max-w-3xl max-h-[85vh] flex flex-col shadow-xl overflow-hidden">
+            <div class="p-4 border-b border-gray-200 flex justify-between items-center bg-gray-50">
+                <div>
+                    <h2 class="text-lg font-bold text-gray-800">Stagebedrijven Overzicht</h2>
+                    <p class="text-xs text-gray-500">Overzicht van alle beschikbare stagebedrijven en praktijkbegeleiders</p>
+                </div>
+                <button onclick="closeSupervisorCompaniesModal()" class="text-gray-400 hover:text-gray-600 p-1 font-bold text-lg">
+                    ✕
+                </button>
+            </div>
+            <div class="p-4 border-b border-gray-100 bg-white">
+                <input type="text" id="sup-company-search" oninput="filterSupervisorCompanies()" placeholder="Zoek op bedrijfsnaam, branche of contactpersoon..." class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-emerald-500">
+            </div>
+            <div class="p-4 overflow-y-auto flex-1 space-y-3" id="sup-companies-list">
+                <!-- Dynamically filled -->
             </div>
         </div>
     </div>
