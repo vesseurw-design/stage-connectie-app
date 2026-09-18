@@ -418,6 +418,72 @@ function logout() {
     window.location.href = 'admin-login.html';
 }
 
+// Export companies to CSV (Excel compatible)
+window.exportCompaniesToCSV = async function () {
+    try {
+        let query = supabaseClient
+            .from('Bedrijven')
+            .select('*')
+            .order('company_name', { ascending: true });
+
+        if (currentFilter) {
+            query = query.eq('branche', currentFilter);
+        }
+
+        const { data: bedrijven, error } = await query;
+
+        if (error) {
+            alert('Fout bij ophalen bedrijven: ' + error.message);
+            return;
+        }
+
+        if (!bedrijven || bedrijven.length === 0) {
+            alert('Geen bedrijven gevonden om te exporteren.');
+            return;
+        }
+
+        const authSet = await getAuthEmails();
+
+        const headers = ['Bedrijfsnaam', 'Branche', 'Praktijkbegeleider', 'Email', 'Telefoonnummer', 'Inlog Status', 'Aangemaakt Op'];
+        
+        const escapeCsv = (str) => {
+            if (str === null || str === undefined) return '""';
+            const val = String(str).replace(/"/g, '""');
+            return `"${val}"`;
+        };
+
+        const rows = bedrijven.map(b => {
+            const cleanEmail = b.email ? b.email.trim().toLowerCase() : '';
+            const isAuthActive = cleanEmail && authSet.has(cleanEmail);
+            const statusStr = isAuthActive ? 'Actief (ingelogd)' : 'Nog niet actief';
+            
+            return [
+                escapeCsv(b.company_name),
+                escapeCsv(b.branche || 'Niet opgegeven'),
+                escapeCsv(b.contact_person || 'Niet opgegeven'),
+                escapeCsv(b.email || 'Geen email'),
+                escapeCsv(b.phone || 'Geen telefoonnummer'),
+                escapeCsv(statusStr),
+                escapeCsv(b.created_at ? new Date(b.created_at).toLocaleDateString('nl-NL') : '')
+            ];
+        });
+
+        const bom = '\uFEFF';
+        const csvContent = bom + [headers.map(h => `"${h}"`).join(';'), ...rows.map(r => r.join(';'))].join('\r\n');
+
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.setAttribute('href', url);
+        link.setAttribute('download', `stagebedrijven_export_${new Date().toISOString().slice(0, 10)}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    } catch (err) {
+        alert('Fout bij exporteren: ' + err.message);
+    }
+};
+
 // Initialize
 async function init() {
     await loadBranches();
