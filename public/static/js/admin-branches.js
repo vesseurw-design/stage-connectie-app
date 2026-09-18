@@ -27,9 +27,9 @@ async function loadBranches() {
         return;
     }
 
-    // All branches are standard (no custom branches in new schema)
-    const standardBranches = data;
-    const customBranches = [];
+    // Partition branches into standard and custom
+    const standardBranches = data.filter(b => !b.is_custom && !b.name.startsWith('Custom '));
+    const customBranches = data.filter(b => b.is_custom || b.name.startsWith('Custom '));
 
     // Display standard branches
     const standardContainer = document.getElementById('standard-branches');
@@ -70,7 +70,7 @@ async function loadBranches() {
                     `}
                     <div>
                         <span class="font-medium ${isActive ? 'text-gray-800' : 'text-gray-500'}">${branch.name}</span>
-                        ${!isActive ? '<p class="text-xs text-gray-400 mt-0.5">Klik om te hernoemen en te activeren</p>' : ''}
+                        <p class="text-xs text-gray-400 mt-0.5">${!isActive ? 'Klik om te hernoemen en te activeren' : 'Klik om te hernoemen'}</p>
                     </div>
                 </div>
                 <div class="flex items-center gap-2">
@@ -108,6 +108,7 @@ document.getElementById('edit-form').addEventListener('submit', async (e) => {
     e.preventDefault();
 
     const id = document.getElementById('branch-id').value;
+    const oldName = document.getElementById('old-name').value;
     const newName = document.getElementById('new-name').value.trim();
 
     if (!newName) {
@@ -130,12 +131,18 @@ document.getElementById('edit-form').addEventListener('submit', async (e) => {
     // Update branch
     const { error } = await supabaseClient
         .from('Branches')
-        .update({ name: newName })
+        .update({ name: newName, is_custom: true })
         .eq('id', id);
 
     if (error) {
         alert('Fout bij opslaan: ' + error.message);
     } else {
+        if (oldName && !oldName.startsWith('Custom ') && oldName !== newName) {
+            await supabaseClient
+                .from('Bedrijven')
+                .update({ branche: newName })
+                .eq('branche', oldName);
+        }
         closeModal();
         loadBranches();
         alert('Branch succesvol hernoemd! De nieuwe naam is nu beschikbaar in de branche dropdown.');
