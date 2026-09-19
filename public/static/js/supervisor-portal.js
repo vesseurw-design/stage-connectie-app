@@ -161,6 +161,16 @@ async function loadStudents() {
 
     students = data || [];
     console.log('✅ Found students:', students.length, students);
+    updateClassFilter();
+}
+
+function updateClassFilter() {
+    const classSel = document.getElementById('filter-class');
+    if (!classSel) return;
+    const currentVal = classSel.value;
+    const classes = [...new Set(students.map(s => s.class).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'nl', { numeric: true, sensitivity: 'base' }));
+    classSel.innerHTML = '<option value="">Alle klassen</option>' + classes.map(c => `<option value="${c}">${c}</option>`).join('');
+    classSel.value = currentVal;
 }
 
 async function loadAttendance(retryCount = 0) {
@@ -222,8 +232,9 @@ function setupRealtimeSubscription() {
 }
 
 function setupFilters() {
-    ['filter-date', 'filter-status'].forEach(id => {
-        document.getElementById(id).addEventListener('change', renderDashboard);
+    ['filter-date', 'filter-class', 'filter-status'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.addEventListener('change', renderDashboard);
     });
 }
 
@@ -268,17 +279,23 @@ function updateStats(attendance) {
 function renderStudentCards(attendance) {
     const container = document.getElementById('students-container');
     const filterDate = document.getElementById('filter-date').value;
+    const filterClass = document.getElementById('filter-class') ? document.getElementById('filter-class').value : '';
 
-    if (students.length === 0) {
+    let displayedStudents = students;
+    if (filterClass) {
+        displayedStudents = students.filter(s => s.class === filterClass);
+    }
+
+    if (displayedStudents.length === 0) {
         container.innerHTML = `
             <div class="bg-white p-6 rounded-xl text-center">
-                <p class="text-gray-500 italic">Gegevens ophalen...</p>
+                <p class="text-gray-500 italic">Geen stagiairs gevonden voor de geselecteerde filters.</p>
             </div>
         `;
         return;
     }
 
-    container.innerHTML = students.map(student => {
+    container.innerHTML = displayedStudents.map(student => {
         const company = companies.find(c => c.id === student.company_id);
         const todayAttendance = allAttendance.find(a => {
             if (!a.student_id) return false;
