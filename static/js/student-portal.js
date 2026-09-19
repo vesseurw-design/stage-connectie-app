@@ -689,6 +689,10 @@ async function saveWeek() {
             const defaultEmpId = dayCompanies[0] ? dayCompanies[0].company_id : currentStudent.company_id;
             const employerId = cell.dataset.employerId || defaultEmpId;
 
+            if (!employerId || employerId === 'null' || employerId === 'undefined') {
+                throw new Error('NO_COMPANY_ASSIGNED');
+            }
+
             updates.push({
                 student_id: currentStudent.id,
                 employer_id: employerId,
@@ -720,10 +724,16 @@ async function saveWeek() {
     } catch (err) {
         console.error('Save error:', err);
         let msg = err.message || 'Netwerkfout bij opslaan.';
-        if (msg.includes('Load failed') || msg.includes('security')) {
-            msg = 'Je inlogsessie is verlopen of verbroken. Log opnieuw in om je registraties op te slaan.';
+        if (msg === 'NO_COMPANY_ASSIGNED' || msg.includes('foreign key constraint') || msg.includes('Attendance_employer_id_fkey') || msg.includes('employer_id')) {
+            msg = 'Je bent nog niet gekoppeld aan een (geldig) stagebedrijf. Vraag je stagebegeleider of admin om jouw stagebedrijf (opnieuw) te koppelen in het beheer-dashboard.';
+            alert('Fout bij opslaan: ' + msg);
+        } else if (msg.includes('Load failed') || msg.includes('security') || msg.includes('row-level security') || msg.includes('verlopen') || msg.includes('verbroken')) {
+            alert('Je inlogsessie is verlopen of verbroken. Klik op OK om opnieuw in te loggen.');
+            window.location.href = 'student-login.html';
+            return;
+        } else {
+            alert('Fout bij opslaan: ' + msg);
         }
-        alert('Fout bij opslaan: ' + msg);
     } finally {
         isSaving = false;
         if (btnSave) btnSave.innerHTML = originalText;

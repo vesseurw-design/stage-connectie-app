@@ -145,6 +145,12 @@
                     <input type="date" id="filter-date" class="px-3 py-2 border border-gray-200 rounded-lg text-sm">
                 </div>
                 <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Klas</label>
+                    <select id="filter-class" class="px-3 py-2 border border-gray-200 rounded-lg text-sm min-w-[140px]">
+                        <option value="">Alle klassen</option>
+                    </select>
+                </div>
+                <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Stagebedrijf</label>
                     <select id="filter-company" class="px-3 py-2 border border-gray-200 rounded-lg text-sm min-w-[180px]">
                         <option value="">Alle stagebedrijven</option>
@@ -395,6 +401,16 @@
         async function loadStudents() {
             const { data } = await db.from('Students').select('*');
             students = data || [];
+            updateClassFilter();
+        }
+
+        function updateClassFilter() {
+            const classSel = document.getElementById('filter-class');
+            if (!classSel) return;
+            const currentVal = classSel.value;
+            const classes = [...new Set(students.map(s => s.class).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'nl', { numeric: true, sensitivity: 'base' }));
+            classSel.innerHTML = '<option value="">Alle klassen</option>' + classes.map(c => `<option value="${c}">${c}</option>`).join('');
+            classSel.value = currentVal;
         }
 
         async function loadAttendance() {
@@ -416,8 +432,9 @@
         }
 
         function setupFilters() {
-            ['filter-date', 'filter-company', 'filter-status', 'show-missing'].forEach(id => {
-                document.getElementById(id).addEventListener('change', updateDashboard);
+            ['filter-date', 'filter-class', 'filter-company', 'filter-status', 'show-missing'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.addEventListener('change', updateDashboard);
             });
             document.getElementById('filter-date').valueAsDate = new Date();
         }
@@ -427,25 +444,37 @@
         // ========================
         function updateDashboard() {
             const dateFilter = document.getElementById('filter-date').value;
+            const classFilter = document.getElementById('filter-class') ? document.getElementById('filter-class').value : '';
             const companyFilter = document.getElementById('filter-company').value;
             const statusFilter = document.getElementById('filter-status').value;
             const showMissing = document.getElementById('show-missing').checked;
 
             // Bepaal welke stagiairs op deze dag een stagegdag hebben
             const dayCode = getDayCode(dateFilter);
-            const scheduledStudents = students.filter(s =>
+            let scheduledStudents = students.filter(s =>
                 !s.scheduled_days || s.scheduled_days.length === 0 || s.scheduled_days.includes(dayCode)
             );
 
+            if (classFilter) {
+                scheduledStudents = scheduledStudents.filter(s => s.class === classFilter);
+            }
+
             // Bestaande records op deze datum
             let existingOnDate = allAttendance.filter(a => a.date === dateFilter);
+
+            if (classFilter) {
+                existingOnDate = existingOnDate.filter(a => {
+                    const st = students.find(s => s.id === a.student_id);
+                    return st && st.class === classFilter;
+                });
+            }
 
             // Ontbrekende stagiairs (geen record voor deze datum)
             const missingStudents = scheduledStudents.filter(s =>
                 !existingOnDate.find(a => a.student_id === s.id)
             );
 
-            // Filter bestaande records
+            // Filter bestaande records op bedrijf
             let filtered = existingOnDate;
             if (companyFilter) {
                 filtered = filtered.filter(a => {
@@ -462,7 +491,9 @@
             }
 
             // Stats
-            const allOnDate = allAttendance.filter(a => a.date === dateFilter);
+            const allOnDate = classFilter
+                ? allAttendance.filter(a => a.date === dateFilter && students.find(s => s.id === a.student_id && s.class === classFilter))
+                : allAttendance.filter(a => a.date === dateFilter);
             updateStats(allOnDate, missingStudents.length);
 
             // Render
@@ -885,8 +916,12 @@
             const printDate = new Date().toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' });
             const statusAbbr = { present: 'A', absent: 'AF', sick: 'Z', late: 'TL' };
             
-            // Filter studenten op basis van dropdown
+            // Filter studenten op basis van dropdown & klas filter
+            const classFilter = document.getElementById('filter-class') ? document.getElementById('filter-class').value : '';
             let printStudents = [...students].sort((a, b) => a.name.localeCompare(b.name));
+            if (classFilter) {
+                printStudents = printStudents.filter(s => s.class === classFilter);
+            }
             if (selectedStudentId !== 'all') {
                 printStudents = printStudents.filter(s => String(s.id) === String(selectedStudentId));
             }

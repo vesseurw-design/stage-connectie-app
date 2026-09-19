@@ -98,6 +98,16 @@ async function loadStudents() {
 
     students = data || [];
     console.log('✅ Loaded students:', students.length, students);
+    updateClassFilter();
+}
+
+function updateClassFilter() {
+    const classSel = document.getElementById('filter-class');
+    if (!classSel) return;
+    const currentVal = classSel.value;
+    const classes = [...new Set(students.map(s => s.class).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'nl', { numeric: true, sensitivity: 'base' }));
+    classSel.innerHTML = '<option value="">Alle klassen</option>' + classes.map(c => `<option value="${c}">${c}</option>`).join('');
+    classSel.value = currentVal;
 }
 
 async function loadAttendance() {
@@ -130,25 +140,35 @@ function setupRealtimeSubscription() {
 }
 
 function setupFilters() {
-    ['filter-date', 'filter-company', 'filter-status'].forEach(id => {
-        document.getElementById(id).addEventListener('change', updateDashboard);
+    ['filter-date', 'filter-class', 'filter-company', 'filter-status'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.addEventListener('change', updateDashboard);
     });
 
     // Set default date to today
-    document.getElementById('filter-date').valueAsDate = new Date();
+    const dateInput = document.getElementById('filter-date');
+    if (dateInput) dateInput.valueAsDate = new Date();
 }
 
 function updateDashboard() {
-    const dateFilter = document.getElementById('filter-date').value;
-    const companyFilter = document.getElementById('filter-company').value;
-    const statusFilter = document.getElementById('filter-status').value;
+    const dateFilter = document.getElementById('filter-date')?.value;
+    const classFilter = document.getElementById('filter-class')?.value;
+    const companyFilter = document.getElementById('filter-company')?.value;
+    const statusFilter = document.getElementById('filter-status')?.value;
 
-    console.log('🔍 Filtering with:', { dateFilter, companyFilter, statusFilter });
+    console.log('🔍 Filtering with:', { dateFilter, classFilter, companyFilter, statusFilter });
 
     let filtered = allAttendance;
 
     if (dateFilter) {
         filtered = filtered.filter(a => a.date === dateFilter);
+    }
+
+    if (classFilter) {
+        filtered = filtered.filter(a => {
+            const st = students.find(s => s.id === a.student_id);
+            return st && st.class === classFilter;
+        });
     }
 
     if (companyFilter) {
@@ -167,10 +187,10 @@ function updateDashboard() {
 
 function updateStats(attendance) {
     const stats = {
-        present: attendance.filter(a => a.status === 'present').length,
-        absent: attendance.filter(a => a.status === 'absent').length,
-        sick: attendance.filter(a => a.status === 'sick').length,
-        late: attendance.filter(a => a.status === 'late').length
+        present: attendance.filter(a => (a.status === 'present' || a.student_status === 'present')).length,
+        absent: attendance.filter(a => (a.status === 'absent' || a.student_status === 'absent')).length,
+        sick: attendance.filter(a => (a.status === 'sick' || a.student_status === 'sick')).length,
+        late: attendance.filter(a => (a.status === 'late' || a.student_status === 'late')).length
     };
 
     document.getElementById('stat-present').textContent = stats.present;
