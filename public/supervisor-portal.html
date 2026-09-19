@@ -141,10 +141,13 @@
 
         <!-- Filters -->
         <div class="bg-white p-3 rounded-lg shadow-sm mb-4">
-            <div class="flex gap-2">
-                <input type="date" id="filter-date" class="flex-1 px-3 py-2 border rounded-lg text-sm">
-                <select id="filter-status" class="px-3 py-2 border rounded-lg text-sm">
-                    <option value="">Alle</option>
+            <div class="flex gap-2 flex-wrap">
+                <input type="date" id="filter-date" class="flex-1 px-3 py-2 border rounded-lg text-sm min-w-[130px]">
+                <select id="filter-class" class="px-3 py-2 border rounded-lg text-sm bg-white min-w-[110px]">
+                    <option value="">Alle klassen</option>
+                </select>
+                <select id="filter-status" class="px-3 py-2 border rounded-lg text-sm bg-white min-w-[110px]">
+                    <option value="">Alle status</option>
                     <option value="present">Aanwezig</option>
                     <option value="absent">Afwezig</option>
                     <option value="sick">Ziek</option>
