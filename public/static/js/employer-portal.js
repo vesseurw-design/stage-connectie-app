@@ -184,7 +184,14 @@ function populateSupervisorDropdown() {
     supervisors.forEach(sup => {
         const option = document.createElement('option');
         option.value = sup.id;
-        option.textContent = sup.name;
+
+        // Find students assigned to this supervisor
+        const supStudents = students.filter(s => s.supervisor_id === sup.id);
+        const studentLabel = supStudents.length > 0
+            ? supStudents.map(s => s.name.split(' ')[0]).join(' & ')
+            : '';
+
+        option.textContent = studentLabel ? `${sup.name} (Begeleider van ${studentLabel})` : sup.name;
         select.appendChild(option);
     });
 
@@ -438,12 +445,25 @@ function openActionSheet(studentId, date, element) {
     const dateLabelElem = document.getElementById('action-date-label');
     if (dateLabelElem) dateLabelElem.textContent = formattedDate.charAt(0).toUpperCase() + formattedDate.slice(1);
 
+    // Pre-fill hours input with student's hours or default 8
+    const currentHours = parseFloat(element.dataset.studentHours) || 8;
+    const hoursInput = document.getElementById('employer-hours-input');
+    if (hoursInput) hoursInput.value = currentHours;
+
     sheet.classList.remove('hidden');
     overlay.classList.remove('hidden');
     const grid = document.getElementById('status-buttons-grid');
     if (grid) grid.classList.remove('hidden');
     document.getElementById('late-input-container').classList.add('hidden');
     setTimeout(() => { sheet.classList.remove('translate-y-full'); }, 10);
+}
+
+function adjustEmployerHours(delta) {
+    const input = document.getElementById('employer-hours-input');
+    if (!input) return;
+    let val = parseFloat(input.value) || 0;
+    val = Math.max(0, Math.min(24, val + delta));
+    input.value = val;
 }
 
 function closeActions() {
@@ -463,8 +483,10 @@ function setStatus(status) {
     if (!activeCell) return;
     const notes = activeCell.element.dataset.notes || '';
     const studentStatus = activeCell.element.dataset.studentStatus || '';
-    const studentHours = activeCell.element.dataset.studentHours || 0;
-    updateCellContent(activeCell.element, status, 0, studentStatus, studentHours, notes);
+    const hoursInput = document.getElementById('employer-hours-input');
+    const updatedHours = hoursInput ? (parseFloat(hoursInput.value) || 0) : (parseFloat(activeCell.element.dataset.studentHours) || 0);
+    const finalHours = (status === 'present' || status === 'late') ? updatedHours : 0;
+    updateCellContent(activeCell.element, status, 0, studentStatus, finalHours, notes);
     closeActions();
 }
 
@@ -524,8 +546,9 @@ function confirmLate() {
     
     const notes = activeCell.element.dataset.notes || '';
     const studentStatus = activeCell.element.dataset.studentStatus || '';
-    const studentHours = activeCell.element.dataset.studentHours || 0;
-    updateCellContent(activeCell.element, 'late', minutes, studentStatus, studentHours, notes);
+    const hoursInput = document.getElementById('employer-hours-input');
+    const updatedHours = hoursInput ? (parseFloat(hoursInput.value) || 0) : (parseFloat(activeCell.element.dataset.studentHours) || 0);
+    updateCellContent(activeCell.element, 'late', minutes, studentStatus, updatedHours, notes);
     closeActions();
 }
 
@@ -546,6 +569,7 @@ async function saveWeek() {
                 status: status || null,
                 employer_id: currentCompany.id,
                 minutes_late: status === 'late' ? parseInt(cell.dataset.minutes || 0) : 0,
+                student_hours: parseFloat(cell.dataset.studentHours || 0),
                 notes: notes
             });
         }

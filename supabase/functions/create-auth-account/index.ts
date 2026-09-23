@@ -35,13 +35,18 @@ serve(async (req) => {
             // Fetch active student company IDs to filter recipients
             const { data: activeStudents } = await supabaseAdmin
                 .from('Students')
-                .select('company_id, unenrollment_date')
+                .select('company_id, unenrollment_date, enrollment_end_date, end_date')
                 .not('company_id', 'is', null);
 
             const now = new Date();
             const activeCompanyIds = new Set(
                 (activeStudents || [])
-                    .filter(s => !s.unenrollment_date || new Date(s.unenrollment_date) > now)
+                    .filter(s => {
+                        const isUnenrolled = (s.unenrollment_date && new Date(s.unenrollment_date) <= now) ||
+                                             (s.enrollment_end_date && new Date(s.enrollment_end_date) <= now) ||
+                                             (s.end_date && new Date(s.end_date) <= now);
+                        return !isUnenrolled;
+                    })
                     .map(s => s.company_id)
             );
 

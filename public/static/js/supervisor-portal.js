@@ -248,7 +248,9 @@ function renderDashboard() {
         filteredAttendance = filteredAttendance.filter(a => a.date === filterDate);
     }
     if (filterStatus) {
-        filteredAttendance = filteredAttendance.filter(a => a.status === filterStatus);
+        filteredAttendance = filteredAttendance.filter(a => 
+            a.status === filterStatus || a.student_status === filterStatus
+        );
     }
 
     // Update stats
@@ -319,28 +321,39 @@ function renderStudentCards(attendance) {
 
         let statusBadge = '';
         if (todayAttendance) {
+            const activeStatus = (todayAttendance.status && todayAttendance.status !== 'pending')
+                ? todayAttendance.status
+                : (todayAttendance.student_status || 'pending');
+
             const statusColors = {
                 present: 'bg-green-100 text-green-800',
                 absent: 'bg-red-100 text-red-800',
                 sick: 'bg-orange-100 text-orange-800',
-                late: 'bg-yellow-100 text-yellow-800'
+                late: 'bg-yellow-100 text-yellow-800',
+                pending: 'bg-purple-100 text-purple-800'
             };
             const statusLabels = {
                 present: 'Aanwezig',
                 absent: 'Afwezig',
                 sick: 'Ziek',
-                late: `Te laat (${todayAttendance.minutes_late}m)`
+                late: `Te laat (${todayAttendance.minutes_late || 0}m)`,
+                pending: 'Ingevoerd door student'
             };
+            const isStudentOnly = (!todayAttendance.status || todayAttendance.status === 'pending') && todayAttendance.student_status;
+            const badgeText = isStudentOnly 
+                ? `🎓 Student: ${statusLabels[todayAttendance.student_status] || todayAttendance.student_status}` 
+                : (statusLabels[activeStatus] || 'Geregistreerd');
+            const badgeColor = isStudentOnly ? 'bg-purple-100 text-purple-800 border border-purple-200' : (statusColors[activeStatus] || 'bg-gray-100 text-gray-600');
+
             statusBadge = `
                 <div class="flex flex-col items-end gap-1">
-                    <span class="px-2 py-1 text-xs font-semibold rounded-full ${statusColors[todayAttendance.status]}">
-                        ${statusLabels[todayAttendance.status]}
+                    <span class="px-2 py-1 text-xs font-semibold rounded-full ${badgeColor}">
+                        ${badgeText}
                     </span>
                     ${todayComp ? `<span class="text-[9px] font-bold text-indigo-700 bg-indigo-50 border border-indigo-100 px-1.5 py-0.5 rounded" title="Stagebedrijf op deze dag">📍 ${todayComp.company_name}</span>` : ''}
-                    ${todayAttendance.student_status || todayAttendance.student_hours > 0 ? `
-                        <div class="flex items-center gap-1 bg-purple-50 text-purple-700 text-[9px] px-1.5 py-0.5 rounded border border-purple-100" title="Eigen invoer student">
-                            <span>🎓 ${todayAttendance.student_status === 'late' ? `Te laat (${todayAttendance.minutes_late || 0}m)` : (todayAttendance.student_status ? todayAttendance.student_status.charAt(0).toUpperCase() + todayAttendance.student_status.slice(1) : '')}</span>
-                            ${todayAttendance.student_hours > 0 ? `<span class="font-bold border-l border-purple-200 pl-1 ml-1">${todayAttendance.student_hours}u</span>` : ''}
+                    ${todayAttendance.student_hours > 0 ? `
+                        <div class="flex items-center gap-1 bg-purple-50 text-purple-700 text-[9px] px-1.5 py-0.5 rounded border border-purple-100" title="Uren doorgegeven door student">
+                            <span>⏱️ ${todayAttendance.student_hours}u gewerkt</span>
                         </div>
                     ` : ''}
                 </div>

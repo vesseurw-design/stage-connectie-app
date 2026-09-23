@@ -63,9 +63,12 @@ serve(async (req) => {
 
         // 3. Logic
         for (const student of students || []) {
-            // Skip unenrolled students
-            if (student.unenrollment_date && new Date(student.unenrollment_date) <= now) {
-                console.log(`Skipping unenrolled student: ${student.name}`);
+            // Skip unenrolled or ended internship students
+            const isUnenrolled = (student.unenrollment_date && new Date(student.unenrollment_date) <= now) ||
+                                 (student.enrollment_end_date && new Date(student.enrollment_end_date) <= now) ||
+                                 (student.end_date && new Date(student.end_date) <= now);
+            if (isUnenrolled) {
+                console.log(`Skipping unenrolled/inactive student: ${student.name}`);
                 continue;
             }
 
