@@ -1029,143 +1029,128 @@ async function exportSupervisorStudentPDF() {
     const companyName = company?.company_name || '-';
     const schoolName = window.SCHOOL_CONFIG?.schoolName || 'StageConnectie';
 
-    const reportContainer = document.createElement('div');
-    reportContainer.style.width = '750px';
-    reportContainer.style.boxSizing = 'border-box';
-    reportContainer.style.padding = '24px';
-    reportContainer.style.fontFamily = 'Arial, sans-serif';
-    reportContainer.style.color = '#1f2937';
-    reportContainer.style.position = 'absolute';
-    reportContainer.style.left = '-9999px';
-    reportContainer.style.top = '0';
-    reportContainer.style.backgroundColor = '#ffffff';
-    document.body.appendChild(reportContainer);
-
-    const statusLabels = { present: 'Aanwezig', absent: 'Afwezig', sick: 'Ziek', late: 'Te laat' };
-
-    reportContainer.innerHTML = `
-        <div style="border-bottom: 3px solid #7e22ce; padding-bottom: 12px; margin-bottom: 16px;">
-            <h1 style="font-size: 22px; font-weight: bold; color: #6b21a8; margin: 0;">📋 Stage-Logboek & Urenoverzicht</h1>
-            <p style="font-size: 12px; color: #6b7280; margin: 4px 0 0 0;">Officieel document – ${schoolName}</p>
-        </div>
-
-        <div style="background-color: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 12px; margin-bottom: 16px; font-size: 12px;">
-            <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
-                <div><strong>Stagiair:</strong> ${currentStudent.name}</div>
-                <div><strong>Klas:</strong> ${currentStudent.class || '-'}</div>
-            </div>
-            <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
-                <div><strong>Stagebedrijf:</strong> ${companyName}</div>
-                <div><strong>Schooljaar:</strong> ${currentStudent.school_year || '-'}</div>
-            </div>
-            <div style="display: flex; justify-content: space-between;">
-                <div><strong>Email:</strong> ${currentStudent.email || '-'}</div>
-                <div><strong>Datum export:</strong> ${new Date().toLocaleDateString('nl-NL')}</div>
-            </div>
-        </div>
-
-        <div style="display: flex; gap: 10px; margin-bottom: 16px;">
-            <div style="flex: 1; background: #f3e8ff; border: 1px solid #d8b4fe; border-radius: 8px; padding: 10px; text-align: center;">
-                <div style="font-size: 16px; font-weight: bold; color: #6b21a8;">${totalHours} uur</div>
-                <div style="font-size: 11px; color: #7e22ce;">Totaal Gelopen</div>
-            </div>
-            <div style="flex: 1; background: #dcfce7; border: 1px solid #86efac; border-radius: 8px; padding: 10px; text-align: center;">
-                <div style="font-size: 16px; font-weight: bold; color: #166534;">${daysPresent} dagen</div>
-                <div style="font-size: 11px; color: #15803d;">Aanwezig</div>
-            </div>
-            <div style="flex: 1; background: #fef9c3; border: 1px solid #fde047; border-radius: 8px; padding: 10px; text-align: center;">
-                <div style="font-size: 16px; font-weight: bold; color: #854d0e;">${daysLate}x</div>
-                <div style="font-size: 11px; color: #a16207;">Te laat</div>
-            </div>
-            <div style="flex: 1; background: #fee2e2; border: 1px solid #fca5a5; border-radius: 8px; padding: 10px; text-align: center;">
-                <div style="font-size: 16px; font-weight: bold; color: #991b1b;">${daysAbsent + daysSick}x</div>
-                <div style="font-size: 11px; color: #b91c1c;">Afwezig / Ziek</div>
-            </div>
-        </div>
-
-        <h2 style="font-size: 14px; font-weight: bold; margin-bottom: 8px; color: #374151;">Aanwezigheid & Dagverslagen / Notities:</h2>
-        <table style="width: 100%; border-collapse: collapse; font-size: 11px; table-layout: fixed;">
-            <thead>
-                <tr style="background-color: #f3f4f6; border-bottom: 2px solid #d1d5db; text-align: left;">
-                    <th style="padding: 8px 10px; width: 22%; font-weight: bold;">Datum</th>
-                    <th style="padding: 8px 10px; width: 15%; font-weight: bold;">Status</th>
-                    <th style="padding: 8px 10px; width: 12%; font-weight: bold;">Uren</th>
-                    <th style="padding: 8px 10px; width: 51%; font-weight: bold;">Werkzaamheden / Notities</th>
-                </tr>
-            </thead>
-            <tbody>
-                ${sortedAttendance.map((r, idx) => {
-                    const dateObj = new Date(r.date + 'T00:00:00');
-                    const dateStr = dateObj.toLocaleDateString('nl-NL', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
-                    const bg = idx % 2 === 0 ? '#ffffff' : '#f9fafb';
-                    const st = r.student_status || r.status;
-                    const statusStr = st === 'late' ? `Te laat (${r.minutes_late || 0}m)` : (statusLabels[st] || st || '-');
-                    const noteText = r.notes || '';
-                    return `
-                        <tr style="background-color: ${bg}; border-bottom: 1px solid #e5e7eb; page-break-inside: avoid;">
-                            <td style="padding: 8px 10px; font-weight: bold; vertical-align: top; line-height: 1.4;">${dateStr}</td>
-                            <td style="padding: 8px 10px; vertical-align: top; line-height: 1.4;">${statusStr}</td>
-                            <td style="padding: 8px 10px; vertical-align: top; line-height: 1.4;">${r.student_hours || 0} u</td>
-                            <td style="padding: 8px 10px; vertical-align: top; line-height: 1.4; word-break: break-word; white-space: pre-wrap; color: ${noteText ? '#111827' : '#9ca3af'}; font-style: ${noteText ? 'normal' : 'italic'};">
-                                ${noteText ? noteText.replace(/</g, '&lt;').replace(/>/g, '&gt;') : '- Geen notitie -'}
-                            </td>
-                        </tr>
-                    `;
-                }).join('')}
-            </tbody>
-        </table>
-    `;
-
-    const opt = {
-        margin: [10, 10, 10, 10],
-        filename: `Stageverslag_${currentStudent.name.replace(/\s+/g, '_')}.pdf`,
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2, useCORS: true, logging: false, scrollX: 0, scrollY: 0, windowWidth: 750 },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-        pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
-    };
-
-    if (window.html2pdf) {
-        try {
-            await window.html2pdf().set(opt).from(reportContainer).save();
-            reportContainer.remove();
-        } catch (err) {
-            console.error('PDF generation error, opening print fallback:', err);
-            reportContainer.remove();
-            openPrintFallback(reportContainer.innerHTML, currentStudent.name);
-        }
-    } else {
-        reportContainer.remove();
-        openPrintFallback(reportContainer.innerHTML, currentStudent.name);
-    }
-}
-
-function openPrintFallback(htmlContent, studentName) {
-    const printWin = window.open('', '_blank', 'width=850,height=900');
+    const printWin = window.open('', '_blank', 'width=900,height=900');
     if (!printWin) {
-        alert('Pop-up geblokkeerd. Sta pop-ups toe om het afdrukvenster te openen.');
+        alert('Pop-up geblokkeerd door uw browser. Sta pop-ups toe voor deze site om het afdruk/PDF venster te openen.');
         return;
     }
-    printWin.document.write(`
+
+    const htmlContent = `
         <!DOCTYPE html>
-        <html>
+        <html lang="nl">
         <head>
-            <title>Stageverslag - ${studentName}</title>
+            <meta charset="UTF-8">
+            <title>Stageverslag_${currentStudent.name.replace(/\s+/g, '_')}</title>
             <style>
-                body { font-family: Arial, sans-serif; padding: 20px; color: #1f2937; }
-                @media print { @page { margin: 10mm; } }
+                @page { size: A4; margin: 12mm; }
+                body { font-family: Arial, Helvetica, sans-serif; color: #1f2937; margin: 0; padding: 20px; background: #fff; }
+                .header { border-bottom: 3px solid #7e22ce; padding-bottom: 12px; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: flex-end; }
+                .title { font-size: 22px; font-weight: bold; color: #6b21a8; margin: 0; }
+                .subtitle { font-size: 12px; color: #6b7280; margin: 4px 0 0 0; }
+                .info-grid { background-color: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 12px; margin-bottom: 16px; font-size: 12px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+                .stats-grid { display: flex; gap: 10px; margin-bottom: 16px; }
+                .stat-card { flex: 1; border-radius: 8px; padding: 10px; text-align: center; }
+                .stat-card.purple { background: #f3e8ff; border: 1px solid #d8b4fe; }
+                .stat-card.green { background: #dcfce7; border: 1px solid #86efac; }
+                .stat-card.yellow { background: #fef9c3; border: 1px solid #fde047; }
+                .stat-card.red { background: #fee2e2; border: 1px solid #fca5a5; }
+                .stat-num { font-size: 16px; font-weight: bold; }
+                .stat-label { font-size: 11px; }
+                table { width: 100%; border-collapse: collapse; font-size: 11px; table-layout: fixed; margin-top: 10px; }
+                th { background-color: #f3f4f6; border-bottom: 2px solid #d1d5db; padding: 8px 10px; text-align: left; font-weight: bold; }
+                td { padding: 8px 10px; border-bottom: 1px solid #e5e7eb; vertical-align: top; word-break: break-word; }
+                tr { page-break-inside: avoid; }
+                .btn-print { margin-bottom: 15px; padding: 8px 16px; background: #6b21a8; color: #fff; font-weight: bold; border: none; border-radius: 6px; cursor: pointer; }
+                @media print { .no-print { display: none !important; } }
             </style>
         </head>
         <body>
-            ${htmlContent}
+            <div class="no-print" style="margin-bottom: 20px; padding: 12px; background: #f3e8ff; border: 1px solid #d8b4fe; border-radius: 8px; display: flex; justify-content: space-between; align-items: center;">
+                <span style="font-size: 13px; font-weight: bold; color: #6b21a8;">📄 Klik op "Opslaan als PDF / Afdrukken" (of kies 'Opslaan als PDF' in het afdrukvenster)</span>
+                <button onclick="window.print()" class="btn-print">🖨️ Opslaan als PDF / Afdrukken</button>
+            </div>
+
+            <div class="header">
+                <div>
+                    <h1 class="title">📋 Stage-Logboek & Urenoverzicht</h1>
+                    <p class="subtitle">Officieel document – ${schoolName}</p>
+                </div>
+                <div style="text-align: right; font-size: 11px; color: #6b7280;">
+                    Exportdatum: ${new Date().toLocaleDateString('nl-NL')}
+                </div>
+            </div>
+
+            <div class="info-grid">
+                <div><strong>Stagiair:</strong> ${currentStudent.name}</div>
+                <div><strong>Klas:</strong> ${currentStudent.class || '-'}</div>
+                <div><strong>Stagebedrijf:</strong> ${companyName}</div>
+                <div><strong>Schooljaar:</strong> ${currentStudent.school_year || '-'}</div>
+                <div><strong>Email:</strong> ${currentStudent.email || '-'}</div>
+                <div><strong>Studentnummer:</strong> ${currentStudent.student_number || '-'}</div>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card purple">
+                    <div class="stat-num" style="color: #6b21a8;">${totalHours} uur</div>
+                    <div class="stat-label" style="color: #7e22ce;">Totaal Gelopen</div>
+                </div>
+                <div class="stat-card green">
+                    <div class="stat-num" style="color: #166534;">${daysPresent} dagen</div>
+                    <div class="stat-label" style="color: #15803d;">Aanwezig</div>
+                </div>
+                <div class="stat-card yellow">
+                    <div class="stat-num" style="color: #854d0e;">${daysLate}x</div>
+                    <div class="stat-label" style="color: #a16207;">Te laat</div>
+                </div>
+                <div class="stat-card red">
+                    <div class="stat-num" style="color: #991b1b;">${daysAbsent + daysSick}x</div>
+                    <div class="stat-label" style="color: #b91c1c;">Afwezig / Ziek</div>
+                </div>
+            </div>
+
+            <h3 style="font-size: 13px; font-weight: bold; margin-bottom: 6px;">Aanwezigheid & Dagverslagen / Notities:</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 22%;">Datum</th>
+                        <th style="width: 15%;">Status</th>
+                        <th style="width: 12%;">Uren</th>
+                        <th style="width: 51%;">Werkzaamheden / Notities</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${sortedAttendance.map((r, idx) => {
+                        const dateObj = new Date(r.date + 'T00:00:00');
+                        const dateStr = dateObj.toLocaleDateString('nl-NL', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
+                        const st = r.student_status || r.status;
+                        const statusStr = st === 'late' ? `Te laat (${r.minutes_late || 0}m)` : (statusLabels[st] || st || '-');
+                        const noteText = r.notes || '';
+                        return `
+                            <tr>
+                                <td style="font-weight: bold;">${dateStr}</td>
+                                <td>${statusStr}</td>
+                                <td>${r.student_hours || 0} u</td>
+                                <td style="white-space: pre-wrap; color: ${noteText ? '#111827' : '#9ca3af'}; font-style: ${noteText ? 'normal' : 'italic'};">
+                                    ${noteText ? noteText.replace(/</g, '&lt;').replace(/>/g, '&gt;') : '- Geen notitie -'}
+                                </td>
+                            </tr>
+                        `;
+                    }).join('')}
+                </tbody>
+            </table>
+
             <script>
                 window.onload = function() {
-                    window.print();
+                    setTimeout(function() {
+                        window.print();
+                    }, 200);
                 };
             </script>
         </body>
         </html>
-    `);
+    `;
+
+    printWin.document.write(htmlContent);
     printWin.document.close();
 }
 
