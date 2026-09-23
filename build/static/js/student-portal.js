@@ -689,6 +689,10 @@ async function saveWeek() {
             const defaultEmpId = dayCompanies[0] ? dayCompanies[0].company_id : currentStudent.company_id;
             const employerId = cell.dataset.employerId || defaultEmpId;
 
+            if (!employerId || employerId === 'null' || employerId === 'undefined') {
+                throw new Error('NO_COMPANY_ASSIGNED');
+            }
+
             updates.push({
                 student_id: currentStudent.id,
                 employer_id: employerId,
@@ -720,10 +724,16 @@ async function saveWeek() {
     } catch (err) {
         console.error('Save error:', err);
         let msg = err.message || 'Netwerkfout bij opslaan.';
-        if (msg.includes('Load failed') || msg.includes('security')) {
-            msg = 'Je inlogsessie is verlopen of verbroken. Log opnieuw in om je registraties op te slaan.';
+        if (msg === 'NO_COMPANY_ASSIGNED' || msg.includes('foreign key constraint') || msg.includes('Attendance_employer_id_fkey') || msg.includes('employer_id')) {
+            msg = 'Je bent nog niet gekoppeld aan een (geldig) stagebedrijf. Vraag je stagebegeleider of admin om jouw stagebedrijf (opnieuw) te koppelen in het beheer-dashboard.';
+            alert('Fout bij opslaan: ' + msg);
+        } else if (msg.includes('Load failed') || msg.includes('security') || msg.includes('row-level security') || msg.includes('verlopen') || msg.includes('verbroken')) {
+            alert('Je inlogsessie is verlopen of verbroken. Klik op OK om opnieuw in te loggen.');
+            window.location.href = 'student-login.html';
+            return;
+        } else {
+            alert('Fout bij opslaan: ' + msg);
         }
-        alert('Fout bij opslaan: ' + msg);
     } finally {
         isSaving = false;
         if (btnSave) btnSave.innerHTML = originalText;
@@ -996,22 +1006,53 @@ async function exportStudentPDF() {
         margin: [10, 10, 10, 10],
         filename: `Stageverslag_${currentStudent.name.replace(/\s+/g, '_')}.pdf`,
         image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2, useCORS: true, logging: false },
+        html2canvas: { scale: 2, useCORS: true, logging: false, scrollX: 0, scrollY: 0, windowWidth: 750 },
         jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
         pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
     };
 
     if (window.html2pdf) {
-        window.html2pdf().set(opt).from(reportContainer).save().then(() => {
+        try {
+            await window.html2pdf().set(opt).from(reportContainer).save();
             reportContainer.remove();
-        }).catch(err => {
-            console.error('PDF error:', err);
+        } catch (err) {
+            console.error('PDF error, opening print fallback:', err);
             reportContainer.remove();
-        });
+            openStudentPrintFallback(reportContainer.innerHTML, currentStudent.name);
+        }
     } else {
         reportContainer.remove();
-        alert('PDF bibliotheek kon niet worden geladen.');
+        openStudentPrintFallback(reportContainer.innerHTML, currentStudent.name);
     }
+}
+
+function openStudentPrintFallback(htmlContent, studentName) {
+    const printWin = window.open('', '_blank', 'width=850,height=900');
+    if (!printWin) {
+        alert('Pop-up geblokkeerd. Sta pop-ups toe om het afdrukvenster te openen.');
+        return;
+    }
+    printWin.document.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Stageverslag - ${studentName}</title>
+            <style>
+                body { font-family: Arial, sans-serif; padding: 20px; color: #1f2937; }
+                @media print { @page { margin: 10mm; } }
+            </style>
+        </head>
+        <body>
+            ${htmlContent}
+            <script>
+                window.onload = function() {
+                    window.print();
+                };
+            </script>
+        </body>
+        </html>
+    `);
+    printWin.document.close();
 }
 
 window.exportStudentPDF = exportStudentPDF;
