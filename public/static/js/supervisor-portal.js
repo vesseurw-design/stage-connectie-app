@@ -568,7 +568,13 @@ function openStudentDetail(student) {
     document.getElementById('modal-current-date-label').textContent = `Datum: ${dateStrFormatted}`;
 
     // Get all attendance for this student (support both ID and name fallback)
-    const studentAttendance = allAttendance.filter(a => a.student_id === student.id || a.student_id === student.name);
+    const studentAttendance = allAttendance.filter(a => {
+        if (!a.student_id) return false;
+        const dbId = String(a.student_id).trim().toLowerCase();
+        const sId = String(student.id || '').trim().toLowerCase();
+        const sName = String(student.name || '').trim().toLowerCase();
+        return dbId === sId || dbId === sName;
+    });
 
     // Populate month filter
     populateMonthFilter(studentAttendance);
@@ -974,13 +980,26 @@ async function exportSupervisorStudentPDF() {
         return;
     }
 
-    const studentAttendance = allAttendance.filter(a => {
+    let studentAttendance = allAttendance.filter(a => {
         if (!a.student_id) return false;
         const dbId = String(a.student_id).trim().toLowerCase();
         const sId = String(currentStudent.id || '').trim().toLowerCase();
         const sName = String(currentStudent.name || '').trim().toLowerCase();
         return dbId === sId || dbId === sName;
     });
+
+    // Fallback: If no records in memory, fetch directly from DB for this student
+    if (!studentAttendance || studentAttendance.length === 0) {
+        const { data: dbData } = await supabaseClient
+            .from('Attendance')
+            .select('*')
+            .eq('student_id', currentStudent.id)
+            .order('date', { ascending: true });
+
+        if (dbData && dbData.length > 0) {
+            studentAttendance = dbData;
+        }
+    }
 
     if (!studentAttendance || studentAttendance.length === 0) {
         alert('Geen aanwezigheids- of dagverslaggegevens gevonden voor deze student.');
@@ -1016,12 +1035,11 @@ async function exportSupervisorStudentPDF() {
     reportContainer.style.padding = '24px';
     reportContainer.style.fontFamily = 'Arial, sans-serif';
     reportContainer.style.color = '#1f2937';
-    reportContainer.style.position = 'absolute';
+    reportContainer.style.position = 'fixed';
     reportContainer.style.left = '0';
     reportContainer.style.top = '0';
-    reportContainer.style.opacity = '0.01';
-    reportContainer.style.pointerEvents = 'none';
-    reportContainer.style.zIndex = '-999';
+    reportContainer.style.backgroundColor = '#ffffff';
+    reportContainer.style.zIndex = '99999';
     document.body.appendChild(reportContainer);
 
     const statusLabels = { present: 'Aanwezig', absent: 'Afwezig', sick: 'Ziek', late: 'Te laat' };
