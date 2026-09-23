@@ -303,120 +303,226 @@ function renderStudentCards(attendance) {
 
     if (displayedStudents.length === 0) {
         container.innerHTML = `
-            <div class="bg-white p-6 rounded-xl text-center">
+            <div class="bg-white p-6 rounded-xl text-center shadow-sm border border-gray-200">
                 <p class="text-gray-500 italic">Geen stagiairs gevonden voor de geselecteerde filters.</p>
             </div>
         `;
         return;
     }
 
-    container.innerHTML = displayedStudents.map(student => {
-        const company = companies.find(c => c.id === student.company_id);
-        const todayAttendance = allAttendance.find(a => {
-            if (!a.student_id) return false;
-            const dbId = String(a.student_id).trim().toLowerCase();
-            const sId = String(student.id || '').trim().toLowerCase();
-            const sName = String(student.name || '').trim().toLowerCase();
-            return (dbId === sId || dbId === sName) && a.date === filterDate;
+    // Group students by class
+    const classGroups = {};
+    displayedStudents.forEach(student => {
+        const className = student.class || 'Overige klassen';
+        if (!classGroups[className]) classGroups[className] = [];
+        classGroups[className].push(student);
+    });
+
+    const statusLabels = {
+        present: 'Aanwezig',
+        absent: 'Afwezig',
+        sick: 'Ziek',
+        late: 'Te laat'
+    };
+
+    let html = '';
+
+    // Render each class group
+    Object.keys(classGroups).sort().forEach(className => {
+        const classStudents = classGroups[className];
+
+        html += `
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mb-6">
+                <!-- Class Header -->
+                <div class="bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-gray-200 px-4 py-3 flex justify-between items-center">
+                    <div class="flex items-center gap-2">
+                        <span class="text-lg">📚</span>
+                        <h3 class="font-bold text-gray-800 text-base">Klas ${className}</h3>
+                        <span class="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full font-bold">${classStudents.length} leerling(en)</span>
+                    </div>
+                </div>
+
+                <!-- Desktop / Tablet Table View -->
+                <div class="hidden md:block overflow-x-auto">
+                    <table class="w-full text-left border-collapse text-sm">
+                        <thead>
+                            <tr class="bg-gray-50 text-gray-500 uppercase text-[11px] font-bold tracking-wider border-b border-gray-200">
+                                <th class="py-3 px-4">Klas</th>
+                                <th class="py-3 px-4">Stagiair & Stagebedrijf</th>
+                                <th class="py-3 px-4">Invoer Leerling</th>
+                                <th class="py-3 px-4">Invoer Werkgever</th>
+                                <th class="py-3 px-4 text-right">Actie / Historie</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-100">
+        `;
+
+        classStudents.forEach(student => {
+            const company = companies.find(c => c.id === student.company_id);
+            const todayAttendance = allAttendance.find(a => {
+                if (!a.student_id) return false;
+                const dbId = String(a.student_id).trim().toLowerCase();
+                const sId = String(student.id || '').trim().toLowerCase();
+                const sName = String(student.name || '').trim().toLowerCase();
+                return (dbId === sId || dbId === sName) && a.date === filterDate;
+            });
+
+            let todayComp = null;
+            if (todayAttendance && todayAttendance.employer_id) {
+                todayComp = companies.find(c => c.id === todayAttendance.employer_id);
+            }
+            if (!todayComp) {
+                const filterDateObj = new Date((filterDate || new Date().toISOString().split('T')[0]) + 'T00:00:00');
+                const dayMap = ['Zo', 'Ma', 'Di', 'Wo', 'Do', 'Vr', 'Za'];
+                const dayCode = dayMap[filterDateObj.getDay()] || 'Ma';
+                const dayComp = typeof getStudentCompanyForDay === 'function' ? getStudentCompanyForDay(student, dayCode, companies) : null;
+                if (dayComp) todayComp = dayComp.company;
+            }
+
+            const compName = todayComp ? todayComp.company_name : (company ? company.company_name : 'Geen stagebedrijf');
+
+            // Student Status Badge
+            let studentBadge = '<span class="text-xs text-gray-400 italic">⏳ Niet ingevuld</span>';
+            if (todayAttendance && todayAttendance.student_status) {
+                const st = todayAttendance.student_status;
+                const hours = todayAttendance.student_hours > 0 ? ` (${todayAttendance.student_hours}u)` : '';
+                const lateMin = st === 'late' ? ` (${todayAttendance.minutes_late || 0}m)` : '';
+                
+                if (st === 'present') {
+                    studentBadge = `<span class="px-2 py-1 text-xs font-bold rounded-lg bg-purple-100 text-purple-800 border border-purple-200 inline-flex items-center gap-1">🎓 Aanwezig${hours}</span>`;
+                } else if (st === 'absent') {
+                    studentBadge = `<span class="px-2 py-1 text-xs font-bold rounded-lg bg-red-100 text-red-800 border border-red-200 inline-flex items-center gap-1">🎓 Afwezig</span>`;
+                } else if (st === 'sick') {
+                    studentBadge = `<span class="px-2 py-1 text-xs font-bold rounded-lg bg-orange-100 text-orange-800 border border-orange-200 inline-flex items-center gap-1">🎓 Ziek</span>`;
+                } else if (st === 'late') {
+                    studentBadge = `<span class="px-2 py-1 text-xs font-bold rounded-lg bg-yellow-100 text-yellow-800 border border-yellow-200 inline-flex items-center gap-1">🎓 Te laat${lateMin}</span>`;
+                }
+            }
+
+            // Employer Status Badge
+            let employerBadge = '<span class="text-xs text-gray-400 italic">⏳ Niet ingevuld</span>';
+            if (todayAttendance && todayAttendance.status && todayAttendance.status !== 'pending') {
+                const empSt = todayAttendance.status;
+                const lateMin = empSt === 'late' ? ` (${todayAttendance.minutes_late || 0}m)` : '';
+
+                if (empSt === 'present') {
+                    employerBadge = `<span class="px-2 py-1 text-xs font-bold rounded-lg bg-green-100 text-green-800 border border-green-200 inline-flex items-center gap-1">✅ Goedgekeurd (Aanwezig)</span>`;
+                } else if (empSt === 'absent') {
+                    employerBadge = `<span class="px-2 py-1 text-xs font-bold rounded-lg bg-red-100 text-red-800 border border-red-200 inline-flex items-center gap-1">❌ Afwezig</span>`;
+                } else if (empSt === 'sick') {
+                    employerBadge = `<span class="px-2 py-1 text-xs font-bold rounded-lg bg-orange-100 text-orange-800 border border-orange-200 inline-flex items-center gap-1">🤒 Ziek</span>`;
+                } else if (empSt === 'late') {
+                    employerBadge = `<span class="px-2 py-1 text-xs font-bold rounded-lg bg-yellow-100 text-yellow-800 border border-yellow-200 inline-flex items-center gap-1">⏱️ Te laat${lateMin}</span>`;
+                }
+            } else if (todayAttendance && todayAttendance.student_status) {
+                employerBadge = `<span class="px-2 py-1 text-xs font-semibold rounded-lg bg-purple-50 text-purple-700 border border-purple-100 inline-flex items-center gap-1">⏳ Wacht op akkoord werkgever</span>`;
+            }
+
+            const studentJson = JSON.stringify(student).replace(/'/g, "&apos;");
+
+            html += `
+                <tr class="hover:bg-blue-50/50 transition">
+                    <td class="py-3.5 px-4 font-bold text-gray-700 text-xs">${student.class || '-'}</td>
+                    <td class="py-3.5 px-4">
+                        <div class="font-bold text-gray-900">${student.name}</div>
+                        <div class="text-xs font-medium text-blue-600">📍 ${compName}</div>
+                    </td>
+                    <td class="py-3.5 px-4">${studentBadge}</td>
+                    <td class="py-3.5 px-4">${employerBadge}</td>
+                    <td class="py-3.5 px-4 text-right">
+                        <button onclick='openStudentDetail(${studentJson})' class="px-3 py-1.5 bg-blue-50 text-blue-700 hover:bg-blue-100 font-bold rounded-lg text-xs transition inline-flex items-center gap-1 border border-blue-200 shadow-sm">
+                            👁️ Historie & Acties
+                        </button>
+                    </td>
+                </tr>
+            `;
         });
 
-        let todayComp = null;
-        if (todayAttendance && todayAttendance.employer_id) {
-            todayComp = companies.find(c => c.id === todayAttendance.employer_id);
-        }
-        if (!todayComp) {
-            const filterDateObj = new Date((filterDate || new Date().toISOString().split('T')[0]) + 'T00:00:00');
-            const dayMap = ['Zo', 'Ma', 'Di', 'Wo', 'Do', 'Vr', 'Za'];
-            const dayCode = dayMap[filterDateObj.getDay()] || 'Ma';
-            const dayComp = typeof getStudentCompanyForDay === 'function' ? getStudentCompanyForDay(student, dayCode, companies) : null;
-            if (dayComp) todayComp = dayComp.company;
-        }
-
-        let statusBadge = '';
-        if (todayAttendance) {
-            const activeStatus = (todayAttendance.status && todayAttendance.status !== 'pending')
-                ? todayAttendance.status
-                : (todayAttendance.student_status || 'pending');
-
-            const statusColors = {
-                present: 'bg-green-100 text-green-800',
-                absent: 'bg-red-100 text-red-800',
-                sick: 'bg-orange-100 text-orange-800',
-                late: 'bg-yellow-100 text-yellow-800',
-                pending: 'bg-purple-100 text-purple-800'
-            };
-            const statusLabels = {
-                present: 'Aanwezig',
-                absent: 'Afwezig',
-                sick: 'Ziek',
-                late: `Te laat (${todayAttendance.minutes_late || 0}m)`,
-                pending: 'Ingevoerd door student'
-            };
-            const isStudentOnly = (!todayAttendance.status || todayAttendance.status === 'pending') && todayAttendance.student_status;
-            const badgeText = isStudentOnly 
-                ? `🎓 Student: ${statusLabels[todayAttendance.student_status] || todayAttendance.student_status}` 
-                : (statusLabels[activeStatus] || 'Geregistreerd');
-            const badgeColor = isStudentOnly ? 'bg-purple-100 text-purple-800 border border-purple-200' : (statusColors[activeStatus] || 'bg-gray-100 text-gray-600');
-
-            statusBadge = `
-                <div class="flex flex-col items-end gap-1">
-                    <span class="px-2 py-1 text-xs font-semibold rounded-full ${badgeColor}">
-                        ${badgeText}
-                    </span>
-                    ${todayComp ? `<span class="text-[9px] font-bold text-indigo-700 bg-indigo-50 border border-indigo-100 px-1.5 py-0.5 rounded" title="Stagebedrijf op deze dag">📍 ${todayComp.company_name}</span>` : ''}
-                    ${todayAttendance.student_hours > 0 ? `
-                        <div class="flex items-center gap-1 bg-purple-50 text-purple-700 text-[9px] px-1.5 py-0.5 rounded border border-purple-100" title="Uren doorgegeven door student">
-                            <span>⏱️ ${todayAttendance.student_hours}u gewerkt</span>
-                        </div>
-                    ` : ''}
+        html += `
+                        </tbody>
+                    </table>
                 </div>
-            `;
-        } else {
-            // Show loading if allAttendance is still completely empty after first start
-            const isLoading = allAttendance.length === 0;
-            statusBadge = `
-                <div class="flex flex-col items-end gap-1">
-                    <span class="px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-500 italic">
-                        ${isLoading ? 'Laden...' : 'Niet ingevuld'}
-                    </span>
-                    ${todayComp ? `<span class="text-[9px] font-medium text-gray-500 bg-gray-50 border border-gray-100 px-1.5 py-0.5 rounded">📍 ${todayComp.company_name}</span>` : ''}
-                </div>
-            `;
-        }
 
-        const assignments = typeof getStudentCompanyAssignments === 'function'
-            ? getStudentCompanyAssignments(student, companies)
-            : [];
-        let companyDisplayHtml = '📍 Geen stagebedrijf';
-        if (assignments.length > 0) {
-            companyDisplayHtml = assignments.map(a => {
-                const daysStr = (a.days && a.days.length > 0) ? ` (${a.days.join(', ')})` : '';
-                return `📍 ${a.company_name}${daysStr}`;
-            }).join('<br>');
-        } else {
+                <!-- Mobile Card View -->
+                <div class="block md:hidden divide-y divide-gray-100">
+        `;
+
+        classStudents.forEach(student => {
             const company = companies.find(c => c.id === student.company_id);
-            if (company) companyDisplayHtml = `📍 ${company.company_name}`;
-        }
+            const todayAttendance = allAttendance.find(a => {
+                if (!a.student_id) return false;
+                const dbId = String(a.student_id).trim().toLowerCase();
+                const sId = String(student.id || '').trim().toLowerCase();
+                const sName = String(student.name || '').trim().toLowerCase();
+                return (dbId === sId || dbId === sName) && a.date === filterDate;
+            });
 
-        return `
-            <div class="student-card bg-white p-4 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition cursor-pointer" onclick='openStudentDetail(${JSON.stringify(student)})'>
-                <div class="flex justify-between items-start mb-2">
-                    <div>
-                        <h3 class="font-semibold text-gray-800">${student.name}</h3>
-                        <p class="text-sm text-gray-500">${student.student_number || '-'}</p>
+            let todayComp = null;
+            if (todayAttendance && todayAttendance.employer_id) {
+                todayComp = companies.find(c => c.id === todayAttendance.employer_id);
+            }
+            if (!todayComp) {
+                const filterDateObj = new Date((filterDate || new Date().toISOString().split('T')[0]) + 'T00:00:00');
+                const dayMap = ['Zo', 'Ma', 'Di', 'Wo', 'Do', 'Vr', 'Za'];
+                const dayCode = dayMap[filterDateObj.getDay()] || 'Ma';
+                const dayComp = typeof getStudentCompanyForDay === 'function' ? getStudentCompanyForDay(student, dayCode, companies) : null;
+                if (dayComp) todayComp = dayComp.company;
+            }
+
+            const compName = todayComp ? todayComp.company_name : (company ? company.company_name : 'Geen stagebedrijf');
+
+            let studentBadge = '<span class="text-xs text-gray-400 italic">Niet ingevuld</span>';
+            if (todayAttendance && todayAttendance.student_status) {
+                const st = todayAttendance.student_status;
+                const hours = todayAttendance.student_hours > 0 ? ` (${todayAttendance.student_hours}u)` : '';
+                studentBadge = `🎓 ${statusLabels[st] || st}${hours}`;
+            }
+
+            let employerBadge = '<span class="text-xs text-gray-400 italic">Niet ingevuld</span>';
+            if (todayAttendance && todayAttendance.status && todayAttendance.status !== 'pending') {
+                const empSt = todayAttendance.status;
+                employerBadge = `✅ ${statusLabels[empSt] || empSt}`;
+            } else if (todayAttendance && todayAttendance.student_status) {
+                employerBadge = `⏳ Wacht op akkoord`;
+            }
+
+            const studentJson = JSON.stringify(student).replace(/'/g, "&apos;");
+
+            html += `
+                <div class="p-4 flex flex-col gap-2 hover:bg-gray-50 transition">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <h4 class="font-bold text-gray-900 text-sm">${student.name}</h4>
+                            <p class="text-xs text-blue-600 font-medium">📍 ${compName}</p>
+                        </div>
+                        <span class="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded font-bold">${student.class || '-'}</span>
                     </div>
-                    ${statusBadge}
+
+                    <div class="grid grid-cols-2 gap-2 text-xs my-1 bg-gray-50 p-2.5 rounded-lg border border-gray-100">
+                        <div>
+                            <span class="text-gray-400 block text-[10px] uppercase font-bold mb-0.5">Leerling</span>
+                            <span class="font-bold text-purple-800">${studentBadge}</span>
+                        </div>
+                        <div>
+                            <span class="text-gray-400 block text-[10px] uppercase font-bold mb-0.5">Werkgever</span>
+                            <span class="font-bold text-green-800">${employerBadge}</span>
+                        </div>
+                    </div>
+
+                    <button onclick='openStudentDetail(${studentJson})' class="w-full py-2 bg-blue-50 text-blue-700 hover:bg-blue-100 font-bold rounded-lg text-xs transition text-center border border-blue-200">
+                        👁️ Historie & Aanwezigheid Inkijken
+                    </button>
                 </div>
-                <div class="text-sm text-gray-600">
-                    <p class="mb-1 text-xs px-2 py-0.5 bg-gray-100 rounded inline-block">
-                        ${student.class || '-'} • ${student.school_year || '-'}
-                    </p>
-                    <div class="mb-1 text-xs font-medium text-gray-700">${companyDisplayHtml}</div>
-                    <p>📅 ${(student.scheduled_days || []).join(', ') || 'Geen dagen'}</p>
+            `;
+        });
+
+        html += `
                 </div>
             </div>
         `;
-    }).join('');
+    });
+
+    container.innerHTML = html;
 }
 
 function openStudentDetail(student) {
