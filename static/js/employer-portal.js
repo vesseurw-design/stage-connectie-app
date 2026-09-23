@@ -184,7 +184,14 @@ function populateSupervisorDropdown() {
     supervisors.forEach(sup => {
         const option = document.createElement('option');
         option.value = sup.id;
-        option.textContent = sup.name;
+
+        // Find students assigned to this supervisor
+        const supStudents = students.filter(s => s.supervisor_id === sup.id);
+        const studentLabel = supStudents.length > 0
+            ? supStudents.map(s => s.name.split(' ')[0]).join(' & ')
+            : '';
+
+        option.textContent = studentLabel ? `${sup.name} (Begeleider van ${studentLabel})` : sup.name;
         select.appendChild(option);
     });
 

@@ -740,12 +740,35 @@ async function handleBulkInvite(type, progressElement, button) {
             return;
         }
 
+        // If inviting companies, pre-fetch active student company IDs to skip companies without active stagiairs
+        let activeCompanyIds = null;
+        if (type === 'company') {
+            const { data: studentsData } = await supabase
+                .from('Students')
+                .select('company_id, unenrollment_date, enrollment_end_date, end_date')
+                .not('company_id', 'is', null);
+
+            const now = new Date();
+            activeCompanyIds = new Set(
+                (studentsData || [])
+                    .filter(s => {
+                        const isUnenrolled = (s.unenrollment_date && new Date(s.unenrollment_date) <= now) ||
+                                             (s.enrollment_end_date && new Date(s.enrollment_end_date) <= now) ||
+                                             (s.end_date && new Date(s.end_date) <= now);
+                        return !isUnenrolled;
+                    })
+                    .map(s => s.company_id)
+            );
+        }
+
         const total = list.length;
         progressElement.textContent = `✉️ Bezig met verzenden: 0 / ${total} verwerkt...`;
 
         let success = 0;
+        let skipped = 0;
         let failed = 0;
         let failedItems = [];
+        let skippedItems = [];
 
         for (let i = 0; i < total; i++) {
             const item = list[i];
@@ -753,6 +776,14 @@ async function handleBulkInvite(type, progressElement, button) {
             if (!item.email) {
                 failed++;
                 failedItems.push({ name: name || 'Onbekend', email: 'Geen e-mailadres', reason: 'Geen e-mailadres ingevuld in database' });
+                continue;
+            }
+
+            // Skip companies without an active student
+            if (type === 'company' && activeCompanyIds && !activeCompanyIds.has(item.id)) {
+                skipped++;
+                skippedItems.push({ name: name || item.company_name || item.email, email: item.email, reason: 'Geen actieve stagiair' });
+                progressElement.textContent = `✉️ Bezig met verzenden: ${i + 1} / ${total} verwerkt (${skipped} overgeslagen)...`;
                 continue;
             }
 
@@ -790,7 +821,17 @@ async function handleBulkInvite(type, progressElement, button) {
             progressElement.textContent = `✉️ Bezig met verzenden: ${i + 1} / ${total} verwerkt...`;
         }
 
-        let resultHtml = `<div>🎉 Voltooid! Welkomstmails verzonden: ${success}, Mislukt: ${failed}.</div>`;
+        let resultHtml = `<div>🎉 Voltooid! Welkomstmails verzonden: ${success}${skipped > 0 ? `, Overgeslagen (geen actieve stagiair): ${skipped}` : ''}, Mislukt: ${failed}.</div>`;
+        if (skippedItems.length > 0) {
+            resultHtml += `<div class="mt-2 text-amber-700 font-normal border-t border-amber-200 pt-2 space-y-1"><strong>ℹ️ Overgeslagen bedrijven zonder stagiair (${skippedItems.length}):</strong><br>`;
+            skippedItems.slice(0, 10).forEach(si => {
+                resultHtml += `• <strong>${si.name}</strong> (${si.email})<br>`;
+            });
+            if (skippedItems.length > 10) {
+                resultHtml += `<em>... en nog ${skippedItems.length - 10} andere bedrijven zonder stagiair.</em><br>`;
+            }
+            resultHtml += `</div>`;
+        }
         if (failedItems.length > 0) {
             resultHtml += `<div class="mt-2 text-red-600 font-normal border-t border-red-200 pt-2 space-y-1"><strong>⚠️ Mislukte uitnodigingen (${failedItems.length}):</strong><br>`;
             failedItems.forEach(fi => {

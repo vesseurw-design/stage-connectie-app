@@ -282,6 +282,17 @@
         <h3 class="text-xl font-black text-gray-800 mb-1 text-center" id="action-date-label">Status Wijzigen</h3>
         <p class="text-xs text-center text-blue-600 font-bold mb-4" id="action-student-name"></p>
 
+        <!-- Hours Selector -->
+        <div class="mb-4 bg-gray-50 p-3 rounded-2xl border border-gray-200 text-center">
+            <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Aantal uren gewerkt</label>
+            <div class="flex items-center justify-center gap-2">
+                <button type="button" onclick="adjustEmployerHours(-0.5)" class="w-10 h-10 rounded-xl bg-white border border-gray-300 font-bold text-xl text-gray-700 hover:bg-gray-100 active:scale-95 flex items-center justify-center shadow-sm">-</button>
+                <input type="number" id="employer-hours-input" step="0.5" min="0" max="24" value="8" class="w-20 text-center text-2xl font-black bg-white border border-gray-300 rounded-xl py-1 text-blue-600 focus:outline-none focus:border-blue-500" />
+                <span class="text-sm font-bold text-gray-600">uur</span>
+                <button type="button" onclick="adjustEmployerHours(0.5)" class="w-10 h-10 rounded-xl bg-white border border-gray-300 font-bold text-xl text-gray-700 hover:bg-gray-100 active:scale-95 flex items-center justify-center shadow-sm">+</button>
+            </div>
+        </div>
+
         <div id="status-buttons-grid" class="grid grid-cols-2 gap-4 mb-4">
             <button onclick="setStatus('present')"
                 class="p-5 rounded-2xl bg-green-50 border-2 border-green-100 text-green-700 font-bold hover:bg-green-100 hover:border-green-200 hover:scale-[1.02] active:scale-95 transition flex flex-col items-center gap-2 shadow-sm">
@@ -366,7 +377,7 @@
     <script src="./static/js/config.js"></script>
     <script src="./static/js/company-helper.js?v=20260916_1"></script>
     <script src="./static/js/terms-acceptance.js"></script>
-    <script src="./static/js/employer-portal.js?v=4.8"></script>
+    <script src="./static/js/employer-portal.js?v=4.9"></script>
     <script src="./static/js/info-modal-demo.js"></script>
     <style>
         .animate-slide-up {

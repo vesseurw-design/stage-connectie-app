@@ -75,6 +75,9 @@ if (loginForm) {
             }
 
             if (!supervisorData) {
+                if (userRole === 'employer') {
+                    throw new Error('Dit account is geregistreerd als Stagebedrijf (werkgever). Log in via het Stagebedrijven Portaal op https://ghpc.stageconnectie.nl/login.html');
+                }
                 throw new Error('Supervisor gegevens niet gevonden. Neem contact op met de beheerder.');
             }
 

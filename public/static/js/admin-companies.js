@@ -72,7 +72,9 @@ async function getAuthEmails() {
     return authEmailsSet;
 }
 
-// Load companies
+/// Load companies
+let companyStudentCountMap = {};
+
 async function loadData() {
     let query = supabaseClient
         .from('Bedrijven')
@@ -89,6 +91,28 @@ async function loadData() {
     if (error) {
         console.error('Error loading companies:', error);
         return;
+    }
+
+    // Fetch active students to calculate student count per company
+    try {
+        const { data: studentsData } = await supabaseClient
+            .from('Students')
+            .select('company_id, unenrollment_date, enrollment_end_date, end_date')
+            .not('company_id', 'is', null);
+
+        const now = new Date();
+        companyStudentCountMap = {};
+        (studentsData || []).forEach(s => {
+            const isUnenrolled = (s.unenrollment_date && new Date(s.unenrollment_date) <= now) ||
+                                 (s.enrollment_end_date && new Date(s.enrollment_end_date) <= now) ||
+                                 (s.end_date && new Date(s.end_date) <= now);
+            if (!isUnenrolled && s.company_id) {
+                companyStudentCountMap[s.company_id] = (companyStudentCountMap[s.company_id] || 0) + 1;
+            }
+        });
+    } catch (stErr) {
+        console.warn('Could not fetch student counts:', stErr);
+        companyStudentCountMap = {};
     }
 
     const tbody = document.getElementById('companies-table-body');
@@ -111,13 +135,22 @@ async function loadData() {
         const compJson = JSON.stringify(company).replace(/'/g, "&apos;");
         const cleanEmail = company.email ? company.email.trim().toLowerCase() : '';
         const isAuthActive = cleanEmail && authSet.has(cleanEmail);
+        const activeStudentsCount = companyStudentCountMap[company.id] || 0;
+
+        const studentBadge = activeStudentsCount > 0
+            ? `<span class="px-2 py-0.5 bg-blue-50 text-blue-700 rounded-full text-xs font-medium">🎓 ${activeStudentsCount} stagiair${activeStudentsCount > 1 ? 's' : ''}</span>`
+            : `<span class="px-2 py-0.5 bg-gray-100 text-gray-500 rounded-full text-xs font-medium">⚠️ 0 stagiairs</span>`;
+
         const statusBadge = isAuthActive
             ? `<span class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-semibold">🟢 Inlog-account actief</span>`
             : `<span class="px-2 py-1 bg-amber-100 text-amber-800 rounded-full text-xs font-semibold">🟡 Nog niet actief</span>`;
 
         tbody.innerHTML += `
             <tr class="hover:bg-gray-50">
-                <td class="px-6 py-4 text-sm font-medium text-gray-900">${company.company_name}</td>
+                <td class="px-6 py-4 text-sm font-medium text-gray-900">
+                    <div>${company.company_name}</div>
+                    <div class="mt-1">${studentBadge}</div>
+                </td>
                 <td class="px-6 py-4 text-sm text-gray-500">
                     ${company.branche ? `<span class="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">${company.branche}</span>` : '-'}
                 </td>
@@ -164,8 +197,17 @@ window.sendCompanyInvite = async function (company) {
         return;
     }
 
-    if (!confirm(`Wil je een uitnodigingsmail sturen naar ${company.company_name} (${company.email})?`)) {
-        return;
+    const studentCount = companyStudentCountMap[company.id] || 0;
+    if (studentCount === 0) {
+        const confirmSend = confirm(
+            `⚠️ LET OP: ${company.company_name} heeft momenteel GEEN actieve stagiair gekoppeld in het systeem.\n\n` +
+            `Weet je zeker dat je toch een uitnodigingsmail met inloglink wilt versturen naar ${company.email}?`
+        );
+        if (!confirmSend) return;
+    } else {
+        if (!confirm(`Wil je een uitnodigingsmail sturen naar ${company.company_name} (${company.email})?`)) {
+            return;
+        }
     }
 
     try {
