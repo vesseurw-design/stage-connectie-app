@@ -1035,11 +1035,10 @@ async function exportSupervisorStudentPDF() {
     reportContainer.style.padding = '24px';
     reportContainer.style.fontFamily = 'Arial, sans-serif';
     reportContainer.style.color = '#1f2937';
-    reportContainer.style.position = 'fixed';
-    reportContainer.style.left = '0';
+    reportContainer.style.position = 'absolute';
+    reportContainer.style.left = '-9999px';
     reportContainer.style.top = '0';
     reportContainer.style.backgroundColor = '#ffffff';
-    reportContainer.style.zIndex = '99999';
     document.body.appendChild(reportContainer);
 
     const statusLabels = { present: 'Aanwezig', absent: 'Afwezig', sick: 'Ziek', late: 'Te laat' };
@@ -1121,22 +1120,53 @@ async function exportSupervisorStudentPDF() {
         margin: [10, 10, 10, 10],
         filename: `Stageverslag_${currentStudent.name.replace(/\s+/g, '_')}.pdf`,
         image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2, useCORS: true, logging: false },
+        html2canvas: { scale: 2, useCORS: true, logging: false, scrollX: 0, scrollY: 0, windowWidth: 750 },
         jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
         pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
     };
 
     if (window.html2pdf) {
-        window.html2pdf().set(opt).from(reportContainer).save().then(() => {
+        try {
+            await window.html2pdf().set(opt).from(reportContainer).save();
             reportContainer.remove();
-        }).catch(err => {
-            console.error('PDF error:', err);
+        } catch (err) {
+            console.error('PDF generation error, opening print fallback:', err);
             reportContainer.remove();
-        });
+            openPrintFallback(reportContainer.innerHTML, currentStudent.name);
+        }
     } else {
         reportContainer.remove();
-        alert('PDF bibliotheek kon niet worden geladen.');
+        openPrintFallback(reportContainer.innerHTML, currentStudent.name);
     }
+}
+
+function openPrintFallback(htmlContent, studentName) {
+    const printWin = window.open('', '_blank', 'width=850,height=900');
+    if (!printWin) {
+        alert('Pop-up geblokkeerd. Sta pop-ups toe om het afdrukvenster te openen.');
+        return;
+    }
+    printWin.document.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Stageverslag - ${studentName}</title>
+            <style>
+                body { font-family: Arial, sans-serif; padding: 20px; color: #1f2937; }
+                @media print { @page { margin: 10mm; } }
+            </style>
+        </head>
+        <body>
+            ${htmlContent}
+            <script>
+                window.onload = function() {
+                    window.print();
+                };
+            </script>
+        </body>
+        </html>
+    `);
+    printWin.document.close();
 }
 
 async function exportSupervisorClassPDF() {
