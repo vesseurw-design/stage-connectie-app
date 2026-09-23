@@ -974,7 +974,13 @@ async function exportSupervisorStudentPDF() {
         return;
     }
 
-    const studentAttendance = allAttendance.filter(a => a.student_id === currentStudent.id || a.student_id === currentStudent.name);
+    const studentAttendance = allAttendance.filter(a => {
+        if (!a.student_id) return false;
+        const dbId = String(a.student_id).trim().toLowerCase();
+        const sId = String(currentStudent.id || '').trim().toLowerCase();
+        const sName = String(currentStudent.name || '').trim().toLowerCase();
+        return dbId === sId || dbId === sName;
+    });
 
     if (!studentAttendance || studentAttendance.length === 0) {
         alert('Geen aanwezigheids- of dagverslaggegevens gevonden voor deze student.');
@@ -1010,9 +1016,12 @@ async function exportSupervisorStudentPDF() {
     reportContainer.style.padding = '24px';
     reportContainer.style.fontFamily = 'Arial, sans-serif';
     reportContainer.style.color = '#1f2937';
-    reportContainer.style.position = 'fixed';
-    reportContainer.style.left = '-9999px';
+    reportContainer.style.position = 'absolute';
+    reportContainer.style.left = '0';
     reportContainer.style.top = '0';
+    reportContainer.style.opacity = '0.01';
+    reportContainer.style.pointerEvents = 'none';
+    reportContainer.style.zIndex = '-999';
     document.body.appendChild(reportContainer);
 
     const statusLabels = { present: 'Aanwezig', absent: 'Afwezig', sick: 'Ziek', late: 'Te laat' };
@@ -1111,7 +1120,146 @@ async function exportSupervisorStudentPDF() {
         alert('PDF bibliotheek kon niet worden geladen.');
     }
 }
+
+async function exportSupervisorClassPDF() {
+    const filterDate = document.getElementById('filter-date').value;
+    const filterClass = document.getElementById('filter-class') ? document.getElementById('filter-class').value : '';
+
+    let targetStudents = students;
+    if (filterClass) {
+        targetStudents = students.filter(s => s.class === filterClass);
+    }
+
+    if (!targetStudents || targetStudents.length === 0) {
+        alert('Geen stagiairs om te exporteren.');
+        return;
+    }
+
+    const supervisorName = localStorage.getItem('supervisor_name') || 'Stagebegeleider';
+    const dateObj = new Date(filterDate + 'T00:00:00');
+    const formattedDate = dateObj.toLocaleDateString('nl-NL', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+
+    const reportContainer = document.createElement('div');
+    reportContainer.style.width = '750px';
+    reportContainer.style.boxSizing = 'border-box';
+    reportContainer.style.padding = '24px';
+    reportContainer.style.fontFamily = 'Arial, sans-serif';
+    reportContainer.style.color = '#1f2937';
+    reportContainer.style.position = 'absolute';
+    reportContainer.style.left = '0';
+    reportContainer.style.top = '0';
+    reportContainer.style.opacity = '0.01';
+    reportContainer.style.pointerEvents = 'none';
+    reportContainer.style.zIndex = '-999';
+    document.body.appendChild(reportContainer);
+
+    const statusLabels = { present: 'Aanwezig', absent: 'Afwezig', sick: 'Ziek', late: 'Te laat' };
+
+    reportContainer.innerHTML = `
+        <div style="border-bottom: 3px solid #2563eb; padding-bottom: 12px; margin-bottom: 16px;">
+            <h1 style="font-size: 22px; font-weight: bold; color: #1e40af; margin: 0;">📚 Klas-Aanwezigheidsoverzicht</h1>
+            <p style="font-size: 12px; color: #64748b; margin: 4px 0 0 0;">StageConnectie – Groene Hart Praktijkschool</p>
+        </div>
+
+        <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; margin-bottom: 16px; font-size: 12px;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+                <div><strong>Stagebegeleider:</strong> ${supervisorName}</div>
+                <div><strong>Datum:</strong> ${formattedDate}</div>
+            </div>
+            <div style="display: flex; justify-content: space-between;">
+                <div><strong>Klas-filter:</strong> ${filterClass || 'Alle klassen'}</div>
+                <div><strong>Aantal leerlingen:</strong> ${targetStudents.length}</div>
+            </div>
+        </div>
+
+        <table style="width: 100%; border-collapse: collapse; font-size: 11px; table-layout: fixed;">
+            <thead>
+                <tr style="background-color: #f1f5f9; border-bottom: 2px solid #cbd5e1; text-align: left;">
+                    <th style="padding: 8px 10px; width: 12%; font-weight: bold;">Klas</th>
+                    <th style="padding: 8px 10px; width: 30%; font-weight: bold;">Stagiair & Stagebedrijf</th>
+                    <th style="padding: 8px 10px; width: 28%; font-weight: bold;">Invoer Leerling</th>
+                    <th style="padding: 8px 10px; width: 30%; font-weight: bold;">Invoer Werkgever</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${targetStudents.map((student, idx) => {
+                    const company = companies.find(c => c.id === student.company_id);
+                    const todayAttendance = allAttendance.find(a => {
+                        if (!a.student_id) return false;
+                        const dbId = String(a.student_id).trim().toLowerCase();
+                        const sId = String(student.id || '').trim().toLowerCase();
+                        const sName = String(student.name || '').trim().toLowerCase();
+                        return (dbId === sId || dbId === sName) && a.date === filterDate;
+                    });
+
+                    let todayComp = null;
+                    if (todayAttendance && todayAttendance.employer_id) {
+                        todayComp = companies.find(c => c.id === todayAttendance.employer_id);
+                    }
+                    if (!todayComp) {
+                        const dayMap = ['Zo', 'Ma', 'Di', 'Wo', 'Do', 'Vr', 'Za'];
+                        const dayCode = dayMap[dateObj.getDay()] || 'Ma';
+                        const dayComp = typeof getStudentCompanyForDay === 'function' ? getStudentCompanyForDay(student, dayCode, companies) : null;
+                        if (dayComp) todayComp = dayComp.company;
+                    }
+                    const compName = todayComp ? todayComp.company_name : (company ? company.company_name : 'Geen stagebedrijf');
+
+                    let studentStr = 'Niet ingevuld';
+                    if (todayAttendance && todayAttendance.student_status) {
+                        const st = todayAttendance.student_status;
+                        const hours = todayAttendance.student_hours > 0 ? ` (${todayAttendance.student_hours}u)` : '';
+                        studentStr = `🎓 ${statusLabels[st] || st}${hours}`;
+                    }
+
+                    let employerStr = 'Niet ingevuld';
+                    if (todayAttendance && todayAttendance.status && todayAttendance.status !== 'pending') {
+                        const empSt = todayAttendance.status;
+                        employerStr = `✅ ${statusLabels[empSt] || empSt}`;
+                    } else if (todayAttendance && todayAttendance.student_status) {
+                        employerStr = `⏳ Wacht op akkoord`;
+                    }
+
+                    const bg = idx % 2 === 0 ? '#ffffff' : '#f8fafc';
+                    return `
+                        <tr style="background-color: ${bg}; border-bottom: 1px solid #e2e8f0; page-break-inside: avoid;">
+                            <td style="padding: 8px 10px; font-weight: bold; vertical-align: top;">${student.class || '-'}</td>
+                            <td style="padding: 8px 10px; vertical-align: top;">
+                                <strong>${student.name}</strong><br>
+                                <span style="color: #2563eb; font-size: 10px;">📍 ${compName}</span>
+                            </td>
+                            <td style="padding: 8px 10px; vertical-align: top; color: #6b21a8; font-weight: bold;">${studentStr}</td>
+                            <td style="padding: 8px 10px; vertical-align: top; color: #166534; font-weight: bold;">${employerStr}</td>
+                        </tr>
+                    `;
+                }).join('')}
+            </tbody>
+        </table>
+    `;
+
+    const opt = {
+        margin: [10, 10, 10, 10],
+        filename: `Klas_Aanwezigheidsoverzicht_${filterClass || 'Alle'}_${filterDate}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true, logging: false },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+        pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+    };
+
+    if (window.html2pdf) {
+        window.html2pdf().set(opt).from(reportContainer).save().then(() => {
+            reportContainer.remove();
+        }).catch(err => {
+            console.error('PDF error:', err);
+            reportContainer.remove();
+        });
+    } else {
+        reportContainer.remove();
+        window.print();
+    }
+}
+
 window.exportSupervisorStudentPDF = exportSupervisorStudentPDF;
+window.exportSupervisorClassPDF = exportSupervisorClassPDF;
 
 // Supervisor Companies Search Modal Functions
 window.openSupervisorCompaniesModal = function () {
