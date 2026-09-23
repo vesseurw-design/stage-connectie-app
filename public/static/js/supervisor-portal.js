@@ -126,41 +126,54 @@ async function loadStudents() {
     const supervisorId = localStorage.getItem('supervisor_id');
     console.log('🔍 Loading students for supervisor_id:', supervisorId);
 
-    let data = null;
-    let error = null;
-
-    // Try capitalized first
+    // 1. Fetch direct students to detect supervisor's class(es)
+    let directStudents = [];
     let { data: dataCap, error: errorCap } = await supabaseClient
         .from('Students')
         .select('*')
         .eq('supervisor_id', supervisorId);
 
-    if (errorCap) {
-        console.warn('Error loading Students (capitalized), trying lowercase...');
-        // Try lowercase fallback
-        const { data: dataLow, error: errorLow } = await supabaseClient
+    if (errorCap || !dataCap) {
+        const { data: dataLow } = await supabaseClient
             .from('students')
             .select('*')
             .eq('supervisor_id', supervisorId);
+        directStudents = dataLow || [];
+    } else {
+        directStudents = dataCap;
+    }
 
-        if (errorLow) {
-            console.error('Final student load error:', errorLow);
-            error = errorLow;
+    // Extract unique classes
+    const supervisorClasses = [...new Set((directStudents || []).map(s => s.class).filter(Boolean))];
+
+    let allClassStudents = [];
+    if (supervisorClasses.length > 0) {
+        // Query all students in supervisor's class(es) OR directly assigned
+        const orConditions = [
+            `supervisor_id.eq.${supervisorId}`,
+            ...supervisorClasses.map(c => `class.eq.${c}`)
+        ].join(',');
+
+        let { data: classCap } = await supabaseClient
+            .from('Students')
+            .select('*')
+            .or(orConditions);
+
+        if (!classCap) {
+            const { data: classLow } = await supabaseClient
+                .from('students')
+                .select('*')
+                .or(orConditions);
+            allClassStudents = classLow || [];
         } else {
-            data = dataLow;
+            allClassStudents = classCap;
         }
     } else {
-        data = dataCap;
+        allClassStudents = directStudents || [];
     }
 
-    if (error) {
-        console.error('Final error loading students:', error);
-        allAttendance = []; // Ensure we don't try to load attendance for 0 students
-        return;
-    }
-
-    students = data || [];
-    console.log('✅ Found students:', students.length, students);
+    students = allClassStudents || [];
+    console.log('✅ Found class-wide students:', students.length, students);
     updateClassFilter();
 }
 
