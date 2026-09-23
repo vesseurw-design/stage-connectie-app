@@ -126,41 +126,64 @@ async function loadStudents() {
     const supervisorId = localStorage.getItem('supervisor_id');
     console.log('🔍 Loading students for supervisor_id:', supervisorId);
 
-    let data = null;
-    let error = null;
-
-    // Try capitalized first
+    // 1. Fetch direct students to detect supervisor's class(es)
+    let directStudents = [];
     let { data: dataCap, error: errorCap } = await supabaseClient
         .from('Students')
         .select('*')
         .eq('supervisor_id', supervisorId);
 
-    if (errorCap) {
-        console.warn('Error loading Students (capitalized), trying lowercase...');
-        // Try lowercase fallback
-        const { data: dataLow, error: errorLow } = await supabaseClient
+    if (errorCap || !dataCap) {
+        const { data: dataLow } = await supabaseClient
             .from('students')
             .select('*')
             .eq('supervisor_id', supervisorId);
+        directStudents = dataLow || [];
+    } else {
+        directStudents = dataCap;
+    }
 
-        if (errorLow) {
-            console.error('Final student load error:', errorLow);
-            error = errorLow;
+    // Extract unique classes
+    const supervisorClasses = [...new Set((directStudents || []).map(s => s.class).filter(Boolean))];
+
+    let allClassStudents = [];
+    if (supervisorClasses.length > 0) {
+        // Query all students in supervisor's class(es) OR directly assigned
+        const orConditions = [
+            `supervisor_id.eq.${supervisorId}`,
+            ...supervisorClasses.map(c => `class.eq.${c}`)
+        ].join(',');
+
+        let { data: classCap } = await supabaseClient
+            .from('Students')
+            .select('*')
+            .or(orConditions);
+
+        if (!classCap) {
+            const { data: classLow } = await supabaseClient
+                .from('students')
+                .select('*')
+                .or(orConditions);
+            allClassStudents = classLow || [];
         } else {
-            data = dataLow;
+            allClassStudents = classCap;
         }
     } else {
-        data = dataCap;
+        allClassStudents = directStudents || [];
     }
 
-    if (error) {
-        console.error('Final error loading students:', error);
-        allAttendance = []; // Ensure we don't try to load attendance for 0 students
-        return;
-    }
+    students = allClassStudents || [];
+    console.log('✅ Found class-wide students:', students.length, students);
+    updateClassFilter();
+}
 
-    students = data || [];
-    console.log('✅ Found students:', students.length, students);
+function updateClassFilter() {
+    const classSel = document.getElementById('filter-class');
+    if (!classSel) return;
+    const currentVal = classSel.value;
+    const classes = [...new Set(students.map(s => s.class).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'nl', { numeric: true, sensitivity: 'base' }));
+    classSel.innerHTML = '<option value="">Alle klassen</option>' + classes.map(c => `<option value="${c}">${c}</option>`).join('');
+    classSel.value = currentVal;
 }
 
 async function loadAttendance(retryCount = 0) {
@@ -222,8 +245,9 @@ function setupRealtimeSubscription() {
 }
 
 function setupFilters() {
-    ['filter-date', 'filter-status'].forEach(id => {
-        document.getElementById(id).addEventListener('change', renderDashboard);
+    ['filter-date', 'filter-class', 'filter-status'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.addEventListener('change', renderDashboard);
     });
 }
 
@@ -237,7 +261,9 @@ function renderDashboard() {
         filteredAttendance = filteredAttendance.filter(a => a.date === filterDate);
     }
     if (filterStatus) {
-        filteredAttendance = filteredAttendance.filter(a => a.status === filterStatus);
+        filteredAttendance = filteredAttendance.filter(a => 
+            a.status === filterStatus || a.student_status === filterStatus
+        );
     }
 
     // Update stats
@@ -254,9 +280,9 @@ function updateStats(attendance) {
 
     const stats = {
         total: students.length,
-        present: todayAttendance.filter(a => a.status === 'present').length,
-        absent: todayAttendance.filter(a => a.status === 'absent').length,
-        sick: todayAttendance.filter(a => a.status === 'sick').length
+        present: todayAttendance.filter(a => (a.status === 'present' || a.student_status === 'present')).length,
+        absent: todayAttendance.filter(a => (a.status === 'absent' || a.student_status === 'absent')).length,
+        sick: todayAttendance.filter(a => (a.status === 'sick' || a.student_status === 'sick')).length
     };
 
     document.getElementById('stat-total').textContent = stats.total;
@@ -268,17 +294,23 @@ function updateStats(attendance) {
 function renderStudentCards(attendance) {
     const container = document.getElementById('students-container');
     const filterDate = document.getElementById('filter-date').value;
+    const filterClass = document.getElementById('filter-class') ? document.getElementById('filter-class').value : '';
 
-    if (students.length === 0) {
+    let displayedStudents = students;
+    if (filterClass) {
+        displayedStudents = students.filter(s => s.class === filterClass);
+    }
+
+    if (displayedStudents.length === 0) {
         container.innerHTML = `
             <div class="bg-white p-6 rounded-xl text-center">
-                <p class="text-gray-500 italic">Gegevens ophalen...</p>
+                <p class="text-gray-500 italic">Geen stagiairs gevonden voor de geselecteerde filters.</p>
             </div>
         `;
         return;
     }
 
-    container.innerHTML = students.map(student => {
+    container.innerHTML = displayedStudents.map(student => {
         const company = companies.find(c => c.id === student.company_id);
         const todayAttendance = allAttendance.find(a => {
             if (!a.student_id) return false;
@@ -302,28 +334,39 @@ function renderStudentCards(attendance) {
 
         let statusBadge = '';
         if (todayAttendance) {
+            const activeStatus = (todayAttendance.status && todayAttendance.status !== 'pending')
+                ? todayAttendance.status
+                : (todayAttendance.student_status || 'pending');
+
             const statusColors = {
                 present: 'bg-green-100 text-green-800',
                 absent: 'bg-red-100 text-red-800',
                 sick: 'bg-orange-100 text-orange-800',
-                late: 'bg-yellow-100 text-yellow-800'
+                late: 'bg-yellow-100 text-yellow-800',
+                pending: 'bg-purple-100 text-purple-800'
             };
             const statusLabels = {
                 present: 'Aanwezig',
                 absent: 'Afwezig',
                 sick: 'Ziek',
-                late: `Te laat (${todayAttendance.minutes_late}m)`
+                late: `Te laat (${todayAttendance.minutes_late || 0}m)`,
+                pending: 'Ingevoerd door student'
             };
+            const isStudentOnly = (!todayAttendance.status || todayAttendance.status === 'pending') && todayAttendance.student_status;
+            const badgeText = isStudentOnly 
+                ? `🎓 Student: ${statusLabels[todayAttendance.student_status] || todayAttendance.student_status}` 
+                : (statusLabels[activeStatus] || 'Geregistreerd');
+            const badgeColor = isStudentOnly ? 'bg-purple-100 text-purple-800 border border-purple-200' : (statusColors[activeStatus] || 'bg-gray-100 text-gray-600');
+
             statusBadge = `
                 <div class="flex flex-col items-end gap-1">
-                    <span class="px-2 py-1 text-xs font-semibold rounded-full ${statusColors[todayAttendance.status]}">
-                        ${statusLabels[todayAttendance.status]}
+                    <span class="px-2 py-1 text-xs font-semibold rounded-full ${badgeColor}">
+                        ${badgeText}
                     </span>
                     ${todayComp ? `<span class="text-[9px] font-bold text-indigo-700 bg-indigo-50 border border-indigo-100 px-1.5 py-0.5 rounded" title="Stagebedrijf op deze dag">📍 ${todayComp.company_name}</span>` : ''}
-                    ${todayAttendance.student_status || todayAttendance.student_hours > 0 ? `
-                        <div class="flex items-center gap-1 bg-purple-50 text-purple-700 text-[9px] px-1.5 py-0.5 rounded border border-purple-100" title="Eigen invoer student">
-                            <span>🎓 ${todayAttendance.student_status === 'late' ? `Te laat (${todayAttendance.minutes_late || 0}m)` : (todayAttendance.student_status ? todayAttendance.student_status.charAt(0).toUpperCase() + todayAttendance.student_status.slice(1) : '')}</span>
-                            ${todayAttendance.student_hours > 0 ? `<span class="font-bold border-l border-purple-200 pl-1 ml-1">${todayAttendance.student_hours}u</span>` : ''}
+                    ${todayAttendance.student_hours > 0 ? `
+                        <div class="flex items-center gap-1 bg-purple-50 text-purple-700 text-[9px] px-1.5 py-0.5 rounded border border-purple-100" title="Uren doorgegeven door student">
+                            <span>⏱️ ${todayAttendance.student_hours}u gewerkt</span>
                         </div>
                     ` : ''}
                 </div>
@@ -381,20 +424,29 @@ function openStudentDetail(student) {
     const assignments = typeof getStudentCompanyAssignments === 'function'
         ? getStudentCompanyAssignments(student, companies)
         : [];
-    let companyText = '-';
+    let companyHtml = '-';
     if (assignments.length > 0) {
-        companyText = assignments.map(a => {
+        companyHtml = assignments.map(a => {
             const daysStr = (a.days && a.days.length > 0) ? ` (${a.days.join(', ')})` : '';
-            return `${a.company_name}${daysStr}`;
-        }).join(' | ');
+            const cObj = companies.find(c => c.id === a.company_id);
+            const contactStr = cObj && cObj.contact_person ? ` • 👤 ${cObj.contact_person}` : '';
+            const phoneStr = cObj && cObj.phone ? ` • 📞 <a href="tel:${cObj.phone}" class="text-blue-600 hover:underline">${cObj.phone}</a>` : '';
+            const emailStr = cObj && cObj.email ? ` • ✉️ <a href="mailto:${cObj.email}" class="text-blue-600 hover:underline">${cObj.email}</a>` : '';
+            return `<div class="mb-1"><strong>📍 ${a.company_name}</strong>${daysStr}${contactStr}${phoneStr}${emailStr}</div>`;
+        }).join('');
     } else {
         const company = companies.find(c => c.id === student.company_id);
-        if (company) companyText = company.company_name;
+        if (company) {
+            const contactStr = company.contact_person ? ` • 👤 ${company.contact_person}` : '';
+            const phoneStr = company.phone ? ` • 📞 <a href="tel:${company.phone}" class="text-blue-600 hover:underline">${company.phone}</a>` : '';
+            const emailStr = company.email ? ` • ✉️ <a href="mailto:${company.email}" class="text-blue-600 hover:underline">${company.email}</a>` : '';
+            companyHtml = `<div><strong>📍 ${company.company_name}</strong>${contactStr}${phoneStr}${emailStr}</div>`;
+        }
     }
 
     document.getElementById('modal-student-name').textContent = student.name;
     document.getElementById('modal-student-number').textContent = student.student_number || '-';
-    document.getElementById('modal-company').textContent = companyText;
+    document.getElementById('modal-company').innerHTML = companyHtml;
     document.getElementById('modal-scheduled-days').textContent = (student.scheduled_days || []).join(', ') || '-';
 
     // Support for V2 modal fields
@@ -954,6 +1006,58 @@ async function exportSupervisorStudentPDF() {
     }
 }
 window.exportSupervisorStudentPDF = exportSupervisorStudentPDF;
+
+// Supervisor Companies Search Modal Functions
+window.openSupervisorCompaniesModal = function () {
+    const modal = document.getElementById('supervisor-companies-modal');
+    if (modal) {
+        modal.classList.remove('hidden');
+        filterSupervisorCompanies();
+    }
+};
+
+window.closeSupervisorCompaniesModal = function () {
+    const modal = document.getElementById('supervisor-companies-modal');
+    if (modal) {
+        modal.classList.add('hidden');
+    }
+};
+
+window.filterSupervisorCompanies = function () {
+    const query = (document.getElementById('sup-company-search')?.value || '').toLowerCase().trim();
+    const container = document.getElementById('sup-companies-list');
+    if (!container) return;
+
+    const filtered = (companies || []).filter(c => {
+        const name = (c.company_name || '').toLowerCase();
+        const branche = (c.branche || '').toLowerCase();
+        const contact = (c.contact_person || '').toLowerCase();
+        return name.includes(query) || branche.includes(query) || contact.includes(query);
+    });
+
+    if (filtered.length === 0) {
+        container.innerHTML = '<p class="text-center text-gray-500 text-sm py-6">Geen stagebedrijven gevonden.</p>';
+        return;
+    }
+
+    container.innerHTML = filtered.map(c => `
+        <div class="p-3.5 bg-gray-50 rounded-xl border border-gray-100 flex flex-col sm:flex-row justify-between sm:items-center gap-2">
+            <div>
+                <div class="flex items-center gap-2">
+                    <span class="font-bold text-gray-800 text-sm">${c.company_name}</span>
+                    ${c.branche ? `<span class="px-2 py-0.5 bg-blue-100 text-blue-800 text-[10px] font-semibold rounded-full">${c.branche}</span>` : ''}
+                </div>
+                <div class="text-xs text-gray-600 mt-1">
+                    👤 Praktijkbegeleider: <strong>${c.contact_person || 'Niet opgegeven'}</strong>
+                </div>
+            </div>
+            <div class="text-xs text-gray-600 space-y-1">
+                ${c.phone ? `<div>📞 Telefoon: <a href="tel:${c.phone}" class="text-blue-600 hover:underline font-medium">${c.phone}</a></div>` : ''}
+                ${c.email ? `<div>✉️ Email: <a href="mailto:${c.email}" class="text-blue-600 hover:underline font-medium">${c.email}</a></div>` : ''}
+            </div>
+        </div>
+    `).join('');
+};
 
 // Initialize on load
 init();
