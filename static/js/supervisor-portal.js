@@ -389,13 +389,13 @@ function renderStudentCards(attendance) {
                 const lateMin = st === 'late' ? ` (${todayAttendance.minutes_late || 0}m)` : '';
                 
                 if (st === 'present') {
-                    studentBadge = `<span class="px-2 py-1 text-xs font-bold rounded-lg bg-purple-100 text-purple-800 border border-purple-200 inline-flex items-center gap-1">🎓 Aanwezig${hours}</span>`;
+                    studentBadge = `<span class="px-2 py-1 text-xs font-bold rounded-lg bg-purple-100 text-purple-800 border border-purple-200 inline-flex items-center gap-1">Aanwezig${hours}</span>`;
                 } else if (st === 'absent') {
-                    studentBadge = `<span class="px-2 py-1 text-xs font-bold rounded-lg bg-red-100 text-red-800 border border-red-200 inline-flex items-center gap-1">🎓 Afwezig</span>`;
+                    studentBadge = `<span class="px-2 py-1 text-xs font-bold rounded-lg bg-red-100 text-red-800 border border-red-200 inline-flex items-center gap-1">Afwezig</span>`;
                 } else if (st === 'sick') {
-                    studentBadge = `<span class="px-2 py-1 text-xs font-bold rounded-lg bg-orange-100 text-orange-800 border border-orange-200 inline-flex items-center gap-1">🎓 Ziek</span>`;
+                    studentBadge = `<span class="px-2 py-1 text-xs font-bold rounded-lg bg-orange-100 text-orange-800 border border-orange-200 inline-flex items-center gap-1">Ziek</span>`;
                 } else if (st === 'late') {
-                    studentBadge = `<span class="px-2 py-1 text-xs font-bold rounded-lg bg-yellow-100 text-yellow-800 border border-yellow-200 inline-flex items-center gap-1">🎓 Te laat${lateMin}</span>`;
+                    studentBadge = `<span class="px-2 py-1 text-xs font-bold rounded-lg bg-yellow-100 text-yellow-800 border border-yellow-200 inline-flex items-center gap-1">Te laat${lateMin}</span>`;
                 }
             }
 
@@ -475,7 +475,7 @@ function renderStudentCards(attendance) {
             if (todayAttendance && todayAttendance.student_status) {
                 const st = todayAttendance.student_status;
                 const hours = todayAttendance.student_hours > 0 ? ` (${todayAttendance.student_hours}u)` : '';
-                studentBadge = `🎓 ${statusLabels[st] || st}${hours}`;
+                studentBadge = `${statusLabels[st] || st}${hours}`;
             }
 
             let employerBadge = '<span class="text-xs text-gray-400 italic">Niet ingevuld</span>';
@@ -688,11 +688,11 @@ function renderAttendanceHistory(attendance, monthFilter) {
                     
                     <div class="flex flex-wrap gap-2 text-[11px]">
                         ${compName ? `<div class="bg-indigo-100 text-indigo-800 font-bold px-2 py-0.5 rounded-md">📍 ${compName}</div>` : ''}
-                        ${a.student_hours ? `<div class="bg-blue-100 text-blue-800 px-2 py-0.5 rounded-md">🏢 Uren: ${a.student_hours}u</div>` : ''}
+                        ${a.student_hours ? `<div class="bg-blue-100 text-blue-800 px-2 py-0.5 rounded-md">Uren: ${a.student_hours}u</div>` : ''}
                         
                         ${a.student_status ? `
                             <div class="bg-purple-100 text-purple-800 px-2 py-0.5 rounded-md flex items-center gap-1" title="Invoer stagiair">
-                                <span>🎓 Stagiair: ${a.student_status === 'late' ? `Te laat (${a.minutes_late || 0}m)` : (a.student_status === 'present' ? 'Aanwezig' : (a.student_status === 'absent' ? 'Afwezig' : (a.student_status === 'sick' ? 'Ziek' : a.student_status)))}</span>
+                                <span>Stagiair: ${a.student_status === 'late' ? `Te laat (${a.minutes_late || 0}m)` : (a.student_status === 'present' ? 'Aanwezig' : (a.student_status === 'absent' ? 'Afwezig' : (a.student_status === 'sick' ? 'Ziek' : a.student_status)))}</span>
                             </div>
                         ` : ''}
                     </div>
@@ -1241,7 +1241,7 @@ async function exportSupervisorClassPDF() {
                     if (todayAttendance && todayAttendance.student_status) {
                         const st = todayAttendance.student_status;
                         const hours = todayAttendance.student_hours > 0 ? ` (${todayAttendance.student_hours}u)` : '';
-                        studentStr = `🎓 ${statusLabels[st] || st}${hours}`;
+                        studentStr = `${statusLabels[st] || st}${hours}`;
                     }
 
                     let employerStr = 'Niet ingevuld';

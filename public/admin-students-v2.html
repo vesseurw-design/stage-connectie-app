@@ -167,6 +167,17 @@
                     </div>
                 </div>
 
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Startdatum Stage</label>
+                        <input type="date" id="stage_start_date" class="w-full px-3 py-2 border rounded-lg">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Einddatum Stage</label>
+                        <input type="date" id="stage_end_date" class="w-full px-3 py-2 border rounded-lg">
+                    </div>
+                </div>
+
                 <div>
                     <label class="block text-sm font-medium mb-1">Begeleider</label>
                     <select id="supervisor_id" class="w-full px-3 py-2 border rounded-lg">
@@ -468,6 +479,8 @@
                 document.getElementById('supervisor_id').value = student.supervisor_id || '';
                 document.getElementById('class').value = student.class || '';
                 document.getElementById('school_year').value = student.school_year || '';
+                document.getElementById('stage_start_date').value = student.stage_start_date || student.start_date || '';
+                document.getElementById('stage_end_date').value = student.stage_end_date || student.end_date || '';
                 document.getElementById('unenrollment_date').value = student.unenrollment_date || '';
                 
                 // Hide password field during edit
@@ -479,6 +492,8 @@
                 document.getElementById('student-id').value = '';
                 document.getElementById('company_id').value = '';
                 if (document.getElementById('company_id_2')) document.getElementById('company_id_2').value = '';
+                document.getElementById('stage_start_date').value = '';
+                document.getElementById('stage_end_date').value = '';
                 
                 // Show password field during add
                 document.getElementById('password-container').classList.remove('hidden');
@@ -623,6 +638,9 @@
                 const primary_company_id = c1 || c2 || null;
                 const all_scheduled_days = [...new Set([...days1, ...days2])];
 
+                const stage_start_date = document.getElementById('stage_start_date')?.value || null;
+                const stage_end_date = document.getElementById('stage_end_date')?.value || null;
+
                 const studentPayload = {
                     name: name,
                     email: email,
@@ -632,6 +650,10 @@
                     supervisor_id: document.getElementById('supervisor_id').value || null,
                     class: document.getElementById('class').value || null,
                     school_year: document.getElementById('school_year').value || null,
+                    stage_start_date: stage_start_date,
+                    stage_end_date: stage_end_date,
+                    start_date: stage_start_date,
+                    end_date: stage_end_date,
                     unenrollment_date: document.getElementById('unenrollment_date').value || null,
                     scheduled_days: all_scheduled_days
                 };

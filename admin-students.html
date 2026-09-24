@@ -131,6 +131,16 @@
                             <option value="">Geen begeleider</option>
                         </select>
                     </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-1">Startdatum Stage</label>
+                        <input type="date" id="stage_start_date"
+                            class="block w-full border border-gray-200 rounded-lg shadow-sm p-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-1">Einddatum Stage</label>
+                        <input type="date" id="stage_end_date"
+                            class="block w-full border border-gray-200 rounded-lg shadow-sm p-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition">
+                    </div>
                     <div class="col-span-2">
                         <label class="block text-sm font-semibold text-gray-700 mb-1">Uitschrijfdatum</label>
                         <input type="date" id="unenrollment_date"
@@ -292,6 +302,8 @@
                 document.getElementById("student_number").value = student.student_number || "";
                 document.getElementById("company_id").value = student.company_id || "";
                 document.getElementById("supervisor_id").value = student.supervisor_id || "";
+                document.getElementById("stage_start_date").value = student.stage_start_date || student.start_date || "";
+                document.getElementById("stage_end_date").value = student.stage_end_date || student.end_date || "";
                 document.getElementById("unenrollment_date").value = student.unenrollment_date || "";
                 document.querySelectorAll('input[name="days"]').forEach(cb => cb.checked = false);
                 (student.scheduled_days || []).forEach(day => {
@@ -302,6 +314,8 @@
                 title.textContent = "Student Toevoegen";
                 form.reset();
                 document.getElementById("original-name").value = "";
+                document.getElementById("stage_start_date").value = "";
+                document.getElementById("stage_end_date").value = "";
             }
         }
 
@@ -329,9 +343,15 @@
             const student_number = document.getElementById("student_number").value;
             const company_id = document.getElementById("company_id").value || null;
             const supervisor_id = document.getElementById("supervisor_id").value || null;
+            const stage_start_date = document.getElementById("stage_start_date").value || null;
+            const stage_end_date = document.getElementById("stage_end_date").value || null;
             const unenrollment_date = document.getElementById("unenrollment_date").value || null;
             const scheduled_days = Array.from(document.querySelectorAll('input[name="days"]:checked')).map(cb => cb.value);
-            const studentData = { name, email, student_number, company_id, supervisor_id, unenrollment_date, scheduled_days };
+            const studentData = { 
+                name, email, student_number, company_id, supervisor_id, 
+                stage_start_date, stage_end_date, start_date: stage_start_date, end_date: stage_end_date,
+                unenrollment_date, scheduled_days 
+            };
 
             let error = null;
 
