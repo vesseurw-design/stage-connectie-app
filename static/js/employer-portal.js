@@ -383,7 +383,7 @@ function renderGrid(existingAttendance) {
 
 function updateCellContent(cell, status, minutesLate, studentStatus = '', studentHours = 0, notes = '') {
     const icons = { 'present': '✅', 'absent': '❌', 'sick': '🤒', 'late': '⏱️', '': '' };
-    const studentIcons = { 'present': '🎓', 'absent': '❓', 'late': '⏳', '': '' };
+    const studentIcons = { 'present': '', 'absent': '', 'late': '', '': '' };
 
     // Employer Status (Big icon)
     const content = status ? icons[status] : '<span class="text-gray-300 text-3xl font-black">+</span>';
@@ -395,10 +395,8 @@ function updateCellContent(cell, status, minutesLate, studentStatus = '', studen
 
     // Student Input (Small badge at the bottom)
     if (studentStatus || studentHours > 0) {
-        const studentIcon = studentIcons[studentStatus] || '🎓';
         cell.innerHTML += `
             <div class="absolute bottom-1 right-1 flex items-center gap-0.5 bg-purple-100 text-purple-700 text-[9px] font-black px-1 rounded shadow-sm" title="Eigen invoer student: ${studentStatus}">
-                <span>${studentIcon}</span>
                 ${studentHours > 0 ? `<span>${studentHours}u</span>` : ''}
             </div>
         `;

@@ -2,7 +2,7 @@
 
 **Datum:** 14 september 2026  
 **Status:** ✅ Alle 68 stagebedrijven (zowel nieuw van 12 september als vorig jaar) staan in Supabase Auth  
-**Login URL:** [stageconnectie.nl/login.html](https://stageconnectie.nl/login.html)  
+**Login URL:** [ghpc.stageconnectie.nl/login.html](https://ghpc.stageconnectie.nl/login.html)  
 
 ---
 

@@ -138,7 +138,7 @@ async function loadData() {
         const activeStudentsCount = companyStudentCountMap[company.id] || 0;
 
         const studentBadge = activeStudentsCount > 0
-            ? `<span class="px-2 py-0.5 bg-blue-50 text-blue-700 rounded-full text-xs font-medium">🎓 ${activeStudentsCount} stagiair${activeStudentsCount > 1 ? 's' : ''}</span>`
+            ? `<span class="px-2 py-0.5 bg-blue-50 text-blue-700 rounded-full text-xs font-medium">${activeStudentsCount} stagiair${activeStudentsCount > 1 ? 's' : ''}</span>`
             : `<span class="px-2 py-0.5 bg-gray-100 text-gray-500 rounded-full text-xs font-medium">⚠️ 0 stagiairs</span>`;
 
         const statusBadge = isAuthActive

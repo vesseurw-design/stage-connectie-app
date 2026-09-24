@@ -7,7 +7,7 @@
 
 ## 🔐 Login Informatie
 
-**Login URL:** https://stageconnectie.nl/login.html
+**Login URL:** https://ghpc.stageconnectie.nl/login.html
 
 ### Alle Bedrijven
 
@@ -26,7 +26,7 @@
 
 ### Eerste Keer Inloggen
 
-1. Ga naar: **https://stageconnectie.nl/login.html**
+1. Ga naar: **https://ghpc.stageconnectie.nl/login.html**
 2. Vul je email adres in (zie tabel hierboven)
 3. Vul je tijdelijke wachtwoord in (zie tabel hierboven)
 4. Klik op "Inloggen"

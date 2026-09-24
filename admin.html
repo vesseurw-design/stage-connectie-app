@@ -561,7 +561,7 @@
                 const studentName = student ? student.name : `ID: ${record.student_id}`;
                 const studentStatusHtml = record.student_status ? `
                     <span class="px-2 py-0.5 inline-flex items-center gap-1 text-[11px] font-semibold rounded-full ${statusClasses[record.student_status] || 'bg-gray-100 text-gray-600'}">
-                        🎓 Stagiair: ${statusLabels[record.student_status] || record.student_status}
+                        Stagiair: ${statusLabels[record.student_status] || record.student_status}
                     </span>
                 ` : '';
 
