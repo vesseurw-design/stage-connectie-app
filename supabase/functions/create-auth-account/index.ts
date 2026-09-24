@@ -274,6 +274,10 @@ serve(async (req) => {
             const studentPayload = metadata?.student;
             if (!studentPayload) throw new Error('student metadata is required');
 
+            // Sanitize payload to remove non-existent columns in Students table
+            delete studentPayload.start_date;
+            delete studentPayload.end_date;
+
             let existingQuery = supabaseAdmin.from('Students').select('id');
             if (studentPayload.email) {
                 existingQuery = existingQuery.ilike('email', studentPayload.email);
