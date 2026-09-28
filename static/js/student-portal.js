@@ -708,14 +708,29 @@ async function saveWeek() {
 
     try {
         if (updates.length > 0) {
-            // Waarborg actieve Auth-sessie
-            const { data: sessionData } = await supabaseClient.auth.getSession();
-            if (!sessionData || !sessionData.session) {
-                console.warn('⚠️ Geen actieve Auth-sessie gevonden bij opslaan');
-            }
+            // Probeeer directe upsert
+            const { error: upsertError } = await supabaseClient.from('Attendance').upsert(updates, { onConflict: 'student_id,date' });
+            
+            if (upsertError) {
+                console.warn('⚠️ Direct Attendance upsert failed, trying Edge Function fallback:', upsertError);
+                const functionUrl = `${window.SUPABASE_URL}/functions/v1/create-auth-account`;
+                const edgeRes = await fetch(functionUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${window.SUPABASE_KEY}`
+                    },
+                    body: JSON.stringify({
+                        action: 'restore-attendance',
+                        metadata: { records: updates }
+                    })
+                });
 
-            const { error } = await supabaseClient.from('Attendance').upsert(updates, { onConflict: 'student_id,date' });
-            if (error) throw error;
+                const edgeResult = await edgeRes.json();
+                if (!edgeRes.ok || !edgeResult.success) {
+                    throw upsertError;
+                }
+            }
             
             showToast();
         } else {
@@ -727,7 +742,7 @@ async function saveWeek() {
         if (msg === 'NO_COMPANY_ASSIGNED' || msg.includes('foreign key constraint') || msg.includes('Attendance_employer_id_fkey') || msg.includes('employer_id')) {
             msg = 'Je bent nog niet gekoppeld aan een (geldig) stagebedrijf. Vraag je stagebegeleider of admin om jouw stagebedrijf (opnieuw) te koppelen in het beheer-dashboard.';
             alert('Fout bij opslaan: ' + msg);
-        } else if (msg.includes('Load failed') || msg.includes('security') || msg.includes('row-level security') || msg.includes('verlopen') || msg.includes('verbroken')) {
+        } else if (msg.includes('Load failed') || msg.includes('verlopen') || msg.includes('verbroken')) {
             alert('Je inlogsessie is verlopen of verbroken. Klik op OK om opnieuw in te loggen.');
             window.location.href = 'student-login.html';
             return;
