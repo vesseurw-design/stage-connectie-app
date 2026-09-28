@@ -381,9 +381,19 @@ function renderGrid(existingAttendance) {
     });
 }
 
+function getStudentStatusLabel(st) {
+    if (!st || st === 'undefined') return '';
+    switch (st) {
+        case 'present': return 'Aanwezig';
+        case 'absent': return 'Afwezig';
+        case 'sick': return 'Ziek';
+        case 'late': return 'Te laat';
+        default: return String(st);
+    }
+}
+
 function updateCellContent(cell, status, minutesLate, studentStatus = '', studentHours = 0, notes = '') {
     const icons = { 'present': '✅', 'absent': '❌', 'sick': '🤒', 'late': '⏱️', '': '' };
-    const studentIcons = { 'present': '', 'absent': '', 'late': '', '': '' };
 
     // Employer Status (Big icon)
     const content = status ? icons[status] : '<span class="text-gray-300 text-3xl font-black">+</span>';
@@ -394,9 +404,12 @@ function updateCellContent(cell, status, minutesLate, studentStatus = '', studen
     }
 
     // Student Input (Small badge at the bottom)
-    if (studentStatus || studentHours > 0) {
+    const cleanStudentStatus = studentStatus && studentStatus !== 'undefined' ? studentStatus : '';
+    if (cleanStudentStatus || studentHours > 0) {
+        const label = getStudentStatusLabel(cleanStudentStatus);
+        const titleText = label ? `Eigen invoer student: ${label}` : 'Eigen invoer student';
         cell.innerHTML += `
-            <div class="absolute bottom-1 right-1 flex items-center gap-0.5 bg-purple-100 text-purple-700 text-[9px] font-black px-1 rounded shadow-sm" title="Eigen invoer student: ${studentStatus}">
+            <div class="absolute bottom-1 right-1 flex items-center gap-0.5 bg-purple-100 text-purple-700 text-[9px] font-black px-1 rounded shadow-sm" title="${titleText}">
                 ${studentHours > 0 ? `<span>${studentHours}u</span>` : ''}
             </div>
         `;
@@ -443,12 +456,25 @@ function openActionSheet(studentId, date, element) {
     const dateLabelElem = document.getElementById('action-date-label');
     if (dateLabelElem) dateLabelElem.textContent = formattedDate.charAt(0).toUpperCase() + formattedDate.slice(1);
 
+    // Pre-fill hours input with student's hours or default 8
+    const currentHours = parseFloat(element.dataset.studentHours) || 8;
+    const hoursInput = document.getElementById('employer-hours-input');
+    if (hoursInput) hoursInput.value = currentHours;
+
     sheet.classList.remove('hidden');
     overlay.classList.remove('hidden');
     const grid = document.getElementById('status-buttons-grid');
     if (grid) grid.classList.remove('hidden');
     document.getElementById('late-input-container').classList.add('hidden');
     setTimeout(() => { sheet.classList.remove('translate-y-full'); }, 10);
+}
+
+function adjustEmployerHours(delta) {
+    const input = document.getElementById('employer-hours-input');
+    if (!input) return;
+    let val = parseFloat(input.value) || 0;
+    val = Math.max(0, Math.min(24, val + delta));
+    input.value = val;
 }
 
 function closeActions() {
@@ -468,8 +494,10 @@ function setStatus(status) {
     if (!activeCell) return;
     const notes = activeCell.element.dataset.notes || '';
     const studentStatus = activeCell.element.dataset.studentStatus || '';
-    const studentHours = activeCell.element.dataset.studentHours || 0;
-    updateCellContent(activeCell.element, status, 0, studentStatus, studentHours, notes);
+    const hoursInput = document.getElementById('employer-hours-input');
+    const updatedHours = hoursInput ? (parseFloat(hoursInput.value) || 0) : (parseFloat(activeCell.element.dataset.studentHours) || 0);
+    const finalHours = (status === 'present' || status === 'late') ? updatedHours : 0;
+    updateCellContent(activeCell.element, status, 0, studentStatus, finalHours, notes);
     closeActions();
 }
 
@@ -529,8 +557,9 @@ function confirmLate() {
     
     const notes = activeCell.element.dataset.notes || '';
     const studentStatus = activeCell.element.dataset.studentStatus || '';
-    const studentHours = activeCell.element.dataset.studentHours || 0;
-    updateCellContent(activeCell.element, 'late', minutes, studentStatus, studentHours, notes);
+    const hoursInput = document.getElementById('employer-hours-input');
+    const updatedHours = hoursInput ? (parseFloat(hoursInput.value) || 0) : (parseFloat(activeCell.element.dataset.studentHours) || 0);
+    updateCellContent(activeCell.element, 'late', minutes, studentStatus, updatedHours, notes);
     closeActions();
 }
 
@@ -551,6 +580,7 @@ async function saveWeek() {
                 status: status || null,
                 employer_id: currentCompany.id,
                 minutes_late: status === 'late' ? parseInt(cell.dataset.minutes || 0) : 0,
+                student_hours: parseFloat(cell.dataset.studentHours || 0),
                 notes: notes
             });
         }
