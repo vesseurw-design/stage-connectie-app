@@ -381,9 +381,19 @@ function renderGrid(existingAttendance) {
     });
 }
 
+function getStudentStatusLabel(st) {
+    if (!st || st === 'undefined') return '';
+    switch (st) {
+        case 'present': return 'Aanwezig';
+        case 'absent': return 'Afwezig';
+        case 'sick': return 'Ziek';
+        case 'late': return 'Te laat';
+        default: return String(st);
+    }
+}
+
 function updateCellContent(cell, status, minutesLate, studentStatus = '', studentHours = 0, notes = '') {
     const icons = { 'present': '✅', 'absent': '❌', 'sick': '🤒', 'late': '⏱️', '': '' };
-    const studentIcons = { 'present': '', 'absent': '', 'late': '', '': '' };
 
     // Employer Status (Big icon)
     const content = status ? icons[status] : '<span class="text-gray-300 text-3xl font-black">+</span>';
@@ -394,9 +404,12 @@ function updateCellContent(cell, status, minutesLate, studentStatus = '', studen
     }
 
     // Student Input (Small badge at the bottom)
-    if (studentStatus || studentHours > 0) {
+    const cleanStudentStatus = studentStatus && studentStatus !== 'undefined' ? studentStatus : '';
+    if (cleanStudentStatus || studentHours > 0) {
+        const label = getStudentStatusLabel(cleanStudentStatus);
+        const titleText = label ? `Eigen invoer student: ${label}` : 'Eigen invoer student';
         cell.innerHTML += `
-            <div class="absolute bottom-1 right-1 flex items-center gap-0.5 bg-purple-100 text-purple-700 text-[9px] font-black px-1 rounded shadow-sm" title="Eigen invoer student: ${studentStatus}">
+            <div class="absolute bottom-1 right-1 flex items-center gap-0.5 bg-purple-100 text-purple-700 text-[9px] font-black px-1 rounded shadow-sm" title="${titleText}">
                 ${studentHours > 0 ? `<span>${studentHours}u</span>` : ''}
             </div>
         `;
