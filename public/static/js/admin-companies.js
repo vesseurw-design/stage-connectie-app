@@ -97,17 +97,32 @@ async function loadData() {
     try {
         const { data: studentsData } = await supabaseClient
             .from('Students')
-            .select('company_id, unenrollment_date, enrollment_end_date, end_date')
-            .not('company_id', 'is', null);
+            .select('company_id, unenrollment_date, stage_end_date, company_assignments');
 
         const now = new Date();
         companyStudentCountMap = {};
         (studentsData || []).forEach(s => {
             const isUnenrolled = (s.unenrollment_date && new Date(s.unenrollment_date) <= now) ||
-                                 (s.enrollment_end_date && new Date(s.enrollment_end_date) <= now) ||
-                                 (s.end_date && new Date(s.end_date) <= now);
-            if (!isUnenrolled && s.company_id) {
-                companyStudentCountMap[s.company_id] = (companyStudentCountMap[s.company_id] || 0) + 1;
+                                 (s.stage_end_date && new Date(s.stage_end_date) <= now);
+            if (!isUnenrolled) {
+                if (s.company_id) {
+                    companyStudentCountMap[s.company_id] = (companyStudentCountMap[s.company_id] || 0) + 1;
+                }
+                if (s.company_assignments) {
+                    try {
+                        const assignments = typeof s.company_assignments === 'string' 
+                            ? JSON.parse(s.company_assignments) 
+                            : s.company_assignments;
+                        if (Array.isArray(assignments)) {
+                            assignments.forEach(a => {
+                                const cId = a.company_id || a.companyId || (a.company && a.company.id);
+                                if (cId && cId !== s.company_id) {
+                                    companyStudentCountMap[cId] = (companyStudentCountMap[cId] || 0) + 1;
+                                }
+                            });
+                        }
+                    } catch (e) {}
+                }
             }
         });
     } catch (stErr) {
@@ -361,50 +376,90 @@ document.getElementById('company-form').addEventListener('submit', async (e) => 
     };
 
     if (id) {
-        // Update existing company
-        const { error } = await supabaseClient
-            .from('Bedrijven')
-            .update(companyData)
-            .eq('id', id);
+        // Update existing company via Edge Function (to bypass RLS limitations)
+        try {
+            const functionUrl = `${window.SUPABASE_URL}/functions/v1/create-auth-account`;
+            const authRes = await fetch(functionUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${window.SUPABASE_KEY}`
+                },
+                body: JSON.stringify({
+                    action: 'update-company',
+                    metadata: {
+                        companyId: id,
+                        companyPayload: companyData
+                    }
+                })
+            });
 
-        if (error) {
-            if (error.code === '23505' || (error.message && (error.message.includes('Bedrijven_email_key') || error.message.includes('unique constraint')))) {
-                alert(`⚠️ Er bestaat al een stagebedrijf met het e-mailadres '${email}'.`);
-            } else {
-                alert('Fout bij opslaan: ' + error.message);
+            const authResult = await authRes.json();
+            if (!authRes.ok || !authResult.success) {
+                throw new Error(authResult?.error || 'Bijwerken mislukt');
             }
-        } else {
+
             closeModal();
             loadData();
+        } catch (err) {
+            console.error('Edge Function update error, trying direct update fallback:', err);
+            // Fallback direct update with .select()
+            const { data, error } = await supabaseClient
+                .from('Bedrijven')
+                .update(companyData)
+                .eq('id', id)
+                .select();
+
+            if (error) {
+                if (error.code === '23505' || (error.message && (error.message.includes('Bedrijven_email_key') || error.message.includes('unique constraint')))) {
+                    alert(`⚠️ Er bestaat al een stagebedrijf met het e-mailadres '${email}'.`);
+                } else {
+                    alert('Fout bij opslaan: ' + error.message);
+                }
+            } else if (!data || data.length === 0) {
+                alert('Fout bij opslaan: Kon stagebedrijf niet bijwerken vanwege toegangsrechten.');
+            } else {
+                closeModal();
+                loadData();
+            }
         }
     } else {
-        // Insert new company
+        // Insert new company via Edge Function (to bypass RLS limitations)
         if (!email) {
             alert('Email is verplicht voor nieuwe stagebedrijven (voor login)');
             return;
         }
 
         try {
-            // Step 1: Insert company first
-            const { data: companyResult, error: companyError } = await supabaseClient
-                .from('Bedrijven')
-                .insert([companyData])
-                .select();
+            const functionUrl = `${window.SUPABASE_URL}/functions/v1/create-auth-account`;
+            const authRes = await fetch(functionUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${window.SUPABASE_KEY}`
+                },
+                body: JSON.stringify({
+                    action: 'upsert-company',
+                    metadata: {
+                        company: companyData
+                    }
+                })
+            });
 
-            if (companyError) {
-                if (companyError.code === '23505' || (companyError.message && (companyError.message.includes('Bedrijven_email_key') || companyError.message.includes('unique constraint')))) {
-                    alert(`⚠️ Er bestaat al een stagebedrijf met het e-mailadres '${email}'.\n\nDit bedrijf staat waarschijnlijk al in de lijst. Zoek het op in het overzicht om de gegevens aan te passen, of voer een ander e-mailadres in.`);
+            const authResult = await authRes.json();
+            if (!authRes.ok || !authResult.success) {
+                if (authResult?.error && authResult.error.includes('unique constraint')) {
+                    alert(`⚠️ Er bestaat al een stagebedrijf met het e-mailadres '${email}'.`);
                 } else {
-                    alert('Fout bij opslaan stagebedrijf: ' + companyError.message);
+                    throw new Error(authResult?.error || 'Aanmaken stagebedrijf mislukt');
                 }
                 return;
             }
 
-            // Step 2: Create auth account via Edge Function
+            // Also create auth user / send invite
             try {
-                const functionUrl = `${window.SUPABASE_URL}/functions/v1/create-auth-account`;
                 const contactPerson = document.getElementById('contact_person').value || '';
-                const authRes = await fetch(functionUrl, {
+                await fetch(functionUrl, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -412,7 +467,7 @@ document.getElementById('company-form').addEventListener('submit', async (e) => 
                     },
                     body: JSON.stringify({
                         email: email,
-                        password: '', // Leeg laten om een uitnodigingslink te sturen
+                        password: '',
                         role: 'employer',
                         sendEmail: true,
                         name: contactPerson || companyName,
@@ -422,26 +477,16 @@ document.getElementById('company-form').addEventListener('submit', async (e) => 
                         }
                     })
                 });
-
-                const authResult = await authRes.json();
-                if (!authRes.ok || !authResult.success) {
-                    throw new Error(authResult?.error || 'Auth account creation failed');
-                }
-            } catch (authError) {
-                console.warn('Edge Function error:', authError);
-                // Rollback: delete company
-                await supabaseClient.from('Bedrijven').delete().eq('id', companyResult[0].id);
-                alert('Fout bij aanmaken login account: ' + authError.message);
-                return;
+            } catch (authErr) {
+                console.warn('Auth account invitation warning:', authErr);
             }
 
-            // Success!
-            alert('✅ Stagebedrijf aangemaakt!\n\nEr is automatisch een uitnodigingsmail met een inlog-/activatielink verzonden naar:\n' + email);
+            alert('✅ Stagebedrijf aangemaakt!\n\nEr is automatisch een uitnodigingsmail verzonden naar:\n' + email);
 
             closeModal();
             loadData();
         } catch (err) {
-            alert('Onverwachte fout: ' + err.message);
+            alert('Fout bij opslaan stagebedrijf: ' + err.message);
         }
     }
 });

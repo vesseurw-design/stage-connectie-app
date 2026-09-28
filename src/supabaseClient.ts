@@ -13,9 +13,12 @@ export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 export interface SupabaseEmployer {
   id: string;
   company_name: string;
-  phone_number: string;
-  created_at: string;
-  updated_at: string;
+  phone?: string;
+  phone_number?: string;
+  contact_person?: string;
+  email?: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface SupabaseEmployerContact {

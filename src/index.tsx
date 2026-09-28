@@ -228,7 +228,8 @@ const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
           const mappedEmployers: Employer[] = supabaseEmployers.map(e => ({
             id: e.id,
             companyName: e.company_name,
-            phoneNumber: e.phone_number || ''
+            phoneNumber: e.phone || e.phone_number || '',
+            contactPerson: e.contact_person || ''
           }));
           setEmployers(mappedEmployers);
           console.log(`✅ Loaded ${mappedEmployers.length} employers from Supabase`);
