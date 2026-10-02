@@ -3,19 +3,24 @@
   "name": "StageConnectie",
   "icons": [
     {
-      "src": "/apple-touch-icon.png",
+      "src": "/apple-touch-icon-180x180.png",
       "type": "image/png",
       "sizes": "180x180"
     },
     {
-      "src": "/icon-v3.png",
+      "src": "/icon-192.png",
       "type": "image/png",
       "sizes": "192x192"
     },
     {
-      "src": "/icon-v3.png",
+      "src": "/icon-512.png",
       "type": "image/png",
       "sizes": "512x512"
+    },
+    {
+      "src": "/icon-v3.png",
+      "type": "image/png",
+      "sizes": "1024x1024"
     }
   ],
   "start_url": "/",
