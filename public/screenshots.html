@@ -361,6 +361,13 @@
             </div>
         </div>
 
+        <div style="text-align: center; margin-top: 3.5rem; font-size: 0.85rem; color: #64748b;">
+            Heb je een demo-inlogcode ontvangen na onze presentatie? 
+            <button onclick="openDemoCodeModal()" style="color: #8fb584; font-weight: 700; text-decoration: underline; background: none; border: none; cursor: pointer; font-size: inherit; margin-left: 0.25rem;">
+                Vul hier je code in om de demo te openen →
+            </button>
+        </div>
+
     </div>
 </section>
 
@@ -388,6 +395,22 @@
     <div class="footer-copy">© 2026 StageConnectie — Alle rechten voorbehouden.</div>
 </footer>
 
+<!-- DEMO CODE MODAL -->
+<div id="demo-modal" style="display:none; position:fixed; inset:0; background:rgba(15,23,42,0.6); backdrop-filter:blur(4px); z-index:999; align-items:center; justify-content:center; padding:1rem;">
+    <div style="background:white; border-radius:16px; padding:2rem; width:100%; max-width:400px; box-shadow:0 20px 40px rgba(0,0,0,0.15); text-align:center; position:relative;">
+        <button type="button" onclick="closeDemoCodeModal()" style="position:absolute; top:1rem; right:1rem; border:none; background:none; font-size:1.2rem; cursor:pointer; color:#64748b;">✕</button>
+        
+        <h2 style="font-size:1.25rem; font-weight:800; color:#0f172a; margin-bottom:0.4rem;">Demo Toegangscode</h2>
+        <p style="font-size:0.85rem; color:#64748b; margin-bottom:1.5rem; line-height:1.5;">Vul de inlogcode in die je hebt ontvangen (bijv. na de presentatie) om de demo te openen.</p>
+        
+        <form onsubmit="handleDemoSubmit(event)">
+            <input type="text" id="demo-code-input" placeholder="Voer inlogcode in..." required style="width:100%; padding:0.75rem 1rem; border:1.5px solid #d1d5db; border-radius:8px; font-size:0.95rem; text-align:center; letter-spacing:1px; font-weight:600; text-transform:uppercase; outline:none; margin-bottom:1rem;" />
+            <div id="demo-error" style="display:none; background:#fef2f2; border:1px solid #fecaca; color:#dc2626; padding:0.5rem 0.75rem; border-radius:6px; font-size:0.85rem; margin-bottom:1rem;">Ongeldige of verlopen inlogcode. Controleer de code en probeer opnieuw.</div>
+            <button type="submit" style="width:100%; background:#8fb584; color:white; font-weight:700; padding:0.75rem; border-radius:8px; border:none; cursor:pointer; font-size:0.9rem;">Toegang Openen →</button>
+        </form>
+    </div>
+</div>
+
 <script>
     function switchTab(tabId) {
         document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
@@ -399,6 +422,28 @@
         const btnId = 'btn-' + tabId;
         const btn = document.getElementById(btnId);
         if (btn) btn.classList.add('active-tab');
+    }
+    function openDemoCodeModal() {
+        document.getElementById('demo-modal').style.display = 'flex';
+        setTimeout(() => document.getElementById('demo-code-input').focus(), 100);
+    }
+    function closeDemoCodeModal() {
+        document.getElementById('demo-modal').style.display = 'none';
+        document.getElementById('demo-error').style.display = 'none';
+    }
+    function handleDemoSubmit(e) {
+        e.preventDefault();
+        const input = document.getElementById('demo-code-input').value;
+        const isValid = typeof window.validateDemoCode === 'function' 
+            ? window.validateDemoCode(input) 
+            : ['DEMO2026', 'PRESENTATIE', 'STAGE2026', 'STAGE2025', 'DEMO'].includes(input.trim().toUpperCase());
+
+        if (isValid) {
+            sessionStorage.setItem('demo_unlocked', 'true');
+            window.location.href = 'login.html?demo=unlocked';
+        } else {
+            document.getElementById('demo-error').style.display = 'block';
+        }
     }
 </script>
 </body>
