@@ -126,48 +126,73 @@
             <button onclick="switchTab('tab-admin')" id="btn-tab-admin" class="impressie-tab">School Admin</button>
         </div>
 
-        <!-- TAB CONTENT 1: STAGIAIR -->
+                <!-- TAB CONTENT 1: STAGIAIR -->
         <div id="tab-stagiair" class="tab-content" style="display: block;">
             <div style="background: white; border: 1.5px solid #e9eef5; border-radius: 20px; padding: 2.5rem 2rem; max-width: 880px; margin: 0 auto; box-shadow: 0 10px 30px rgba(0,0,0,0.03);">
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 2.5rem; align-items: center;">
-                    <!-- Smartphone Mockup -->
-                    <div style="background: #1e293b; border-radius: 32px; padding: 12px; box-shadow: 0 20px 40px rgba(0,0,0,0.15); max-width: 320px; margin: 0 auto;">
-                        <div style="background: white; border-radius: 22px; padding: 1.25rem; overflow: hidden; font-size: 0.85rem;">
-                            <!-- Header -->
-                            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f1f5f9; padding-bottom: 0.75rem; margin-bottom: 1rem;">
-                                <div>
-                                    <div style="font-weight: 800; color: #0f172a; font-size: 0.95rem;">Hallo Milan</div>
-                                    <div style="font-size: 0.75rem; color: #64748b;">Mijnschoolnaam (Voorbeeld)</div>
-                                </div>
-                                <span style="background: #dcfce7; color: #15803d; font-size: 0.65rem; font-weight: 700; padding: 0.2rem 0.6rem; border-radius: 99px;">Stagiair</span>
+                    <!-- Real Student Portal App Mockup -->
+                    <div style="background: white; border: 1.5px solid #cbd5e1; border-radius: 16px; padding: 1.25rem; box-shadow: 0 15px 30px rgba(0,0,0,0.08); font-size: 0.8rem;">
+                        <!-- Header -->
+                        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; padding-bottom: 0.75rem; margin-bottom: 0.85rem;">
+                            <div>
+                                <div style="font-weight: 800; color: #0f172a; font-size: 0.95rem;">Stagiair Portaal</div>
+                                <div style="font-size: 0.7rem; color: #64748b;">Mijnschoolnaam • Milan de Jong</div>
                             </div>
-                            <!-- Attendance Status -->
-                            <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 12px; padding: 0.85rem; margin-bottom: 0.85rem; text-align: center;">
-                                <div style="font-size: 0.75rem; color: #166534; font-weight: 600; margin-bottom: 0.25rem;">Vrijdag 26 september</div>
-                                <div style="font-size: 1.1rem; font-weight: 800; color: #15803d;">Aanwezig (7,5 uur)</div>
-                                <div style="font-size: 0.7rem; color: #166534; margin-top: 0.2rem;">Praktijklocatie: Voorbeeld Bedrijf B.V.</div>
+                            <span style="background: #f3e8ff; color: #7e22ce; font-size: 0.65rem; font-weight: 700; padding: 0.2rem 0.6rem; border-radius: 99px;">Stagiair</span>
+                        </div>
+
+                        <!-- Top Action / Phone -->
+                        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 0.5rem 0.75rem; margin-bottom: 0.85rem; display: flex; justify-content: space-between; align-items: center;">
+                            <span style="font-size: 0.7rem; color: #475569; font-weight: 600;">Stagebedrijf: Voorbeeld Bedrijf B.V.</span>
+                            <span style="background: #eff6ff; color: #1d4ed8; font-size: 0.65rem; font-weight: 700; padding: 0.2rem 0.5rem; border-radius: 6px;">Bel Stagebedrijf</span>
+                        </div>
+
+                        <!-- Week Controls Bar -->
+                        <div style="display: flex; justify-content: space-between; align-items: center; background: #fafafa; border: 1px solid #e5e7eb; border-radius: 10px; padding: 0.6rem 0.75rem; margin-bottom: 0.85rem;">
+                            <div style="font-weight: 800; color: #0f172a; font-size: 0.85rem;">Week 39 <span style="font-size: 0.7rem; font-weight: 600; color: #64748b;">(22 - 26 sep)</span></div>
+                            <span style="background: #9333ea; color: white; font-size: 0.7rem; font-weight: 700; padding: 0.35rem 0.75rem; border-radius: 8px;">Week Opslaan</span>
+                        </div>
+
+                        <!-- Weekly Grid 5 Columns -->
+                        <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.4rem; margin-bottom: 0.85rem; text-align: center;">
+                            <div style="background: #f0fdf4; border: 1.5px solid #86efac; border-radius: 8px; padding: 0.4rem 0.2rem;">
+                                <div style="font-size: 0.6rem; font-weight: 800; color: #166534;">MA</div>
+                                <div style="font-size: 0.7rem; font-weight: 800; color: #15803d; margin-top: 0.2rem;">7,5u</div>
                             </div>
-                            <!-- Daily notes box -->
-                            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 0.75rem; margin-bottom: 0.85rem;">
-                                <div style="font-weight: 700; color: #334155; font-size: 0.75rem; margin-bottom: 0.2rem;">Dagverslag / Notitie:</div>
-                                <div style="font-size: 0.75rem; color: #475569; font-style: italic;">"Vandaag gewerkt aan het onderhoud van computerhardware en kabels netjes weggewerkt."</div>
+                            <div style="background: #f0fdf4; border: 1.5px solid #86efac; border-radius: 8px; padding: 0.4rem 0.2rem;">
+                                <div style="font-size: 0.6rem; font-weight: 800; color: #166534;">DI</div>
+                                <div style="font-size: 0.7rem; font-weight: 800; color: #15803d; margin-top: 0.2rem;">7,5u</div>
                             </div>
-                            <!-- Protocol Button -->
-                            <div style="background: #fee2e2; border: 1px solid #fca5a5; color: #991b1b; font-size: 0.75rem; font-weight: 700; padding: 0.6rem; border-radius: 8px; text-align: center;">
-                                Afwezigheidsprotocol (Ziek of Te Laat)
+                            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 0.4rem 0.2rem; opacity: 0.6;">
+                                <div style="font-size: 0.6rem; font-weight: 800; color: #64748b;">WO</div>
+                                <div style="font-size: 0.65rem; color: #94a3b8; margin-top: 0.2rem;">Vrij</div>
                             </div>
+                            <div style="background: #f0fdf4; border: 1.5px solid #86efac; border-radius: 8px; padding: 0.4rem 0.2rem;">
+                                <div style="font-size: 0.6rem; font-weight: 800; color: #166534;">DO</div>
+                                <div style="font-size: 0.7rem; font-weight: 800; color: #15803d; margin-top: 0.2rem;">7,5u</div>
+                            </div>
+                            <div style="background: #fffbeb; border: 1.5px solid #fde68a; border-radius: 8px; padding: 0.4rem 0.2rem;">
+                                <div style="font-size: 0.6rem; font-weight: 800; color: #92400e;">VR</div>
+                                <div style="font-size: 0.7rem; font-weight: 800; color: #b45309; margin-top: 0.2rem;">7,5u</div>
+                            </div>
+                        </div>
+
+                        <!-- History Section -->
+                        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 0.6rem 0.75rem; display: flex; justify-content: space-between; align-items: center;">
+                            <span style="font-weight: 700; color: #334155; font-size: 0.75rem;">Mijn aanwezigheid & Dagverslagen</span>
+                            <span style="font-size: 0.65rem; color: #64748b; font-weight: 600;">Download PDF →</span>
                         </div>
                     </div>
                     <!-- Description side -->
                     <div>
                         <span style="font-size: 0.75rem; font-weight: 700; color: #8fb584; text-transform: uppercase; letter-spacing: 0.8px;">Invoeren in 2 tikken</span>
-                        <h3 style="font-size: 1.35rem; font-weight: 800; color: #0f172a; margin: 0.4rem 0 0.75rem;">Stagiair Portaal op Telefoon</h3>
+                        <h3 style="font-size: 1.35rem; font-weight: 800; color: #0f172a; margin: 0.4rem 0 0.75rem;">Stagiair Portaal</h3>
                         <p style="font-size: 0.9rem; color: #475569; line-height: 1.6; margin-bottom: 1.25rem;">
-                            Stagiairs hoeven geen ingewikkelde formulieren in te vullen. Op hun smartphone geven ze direct aan of ze aanwezig zijn, het aantal gewerkte uren en schrijven ze snel een dagverslag voor de docent.
+                            Stagiairs geven op hun mobiel of laptop per dag hun aanwezigheid en exacte uren door. Daarnaast kunnen ze snel een dagverslag toevoegen voor de stagebegeleider en hun geschiedenis downloaden als PDF.
                         </p>
                         <ul style="list-style: none; display: flex; flex-direction: column; gap: 0.5rem; font-size: 0.85rem; color: #334155;">
-                            <li style="display: flex; align-items: center; gap: 0.5rem;"><span style="color: #8fb584; font-weight: bold;">✓</span> Werkt op iedere smartphone (geen app-store installatie vereist)</li>
-                            <li style="display: flex; align-items: center; gap: 0.5rem;"><span style="color: #8fb584; font-weight: bold;">✓</span> Directe registratie van exacte uren en te-laat-tijden</li>
+                            <li style="display: flex; align-items: center; gap: 0.5rem;"><span style="color: #8fb584; font-weight: bold;">✓</span> Werkt op iedere smartphone en pc (geen app-store installatie vereist)</li>
+                            <li style="display: flex; align-items: center; gap: 0.5rem;"><span style="color: #8fb584; font-weight: bold;">✓</span> Directe registratie van exacte uren en te-laat-tijden per dag</li>
                             <li style="display: flex; align-items: center; gap: 0.5rem;"><span style="color: #8fb584; font-weight: bold;">✓</span> Ingebouwd afwezigheidsprotocol met directe bel/WhatsApp knop</li>
                         </ul>
                     </div>
@@ -179,7 +204,7 @@
         <div id="tab-bedrijf" class="tab-content" style="display: none;">
             <div style="background: white; border: 1.5px solid #e9eef5; border-radius: 20px; padding: 2.5rem 2rem; max-width: 880px; margin: 0 auto; box-shadow: 0 10px 30px rgba(0,0,0,0.03);">
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 2.5rem; align-items: center;">
-                    <!-- Laptop Table Mockup -->
+                    <!-- Real Employer Portal Mockup -->
                     <div style="background: white; border: 1.5px solid #cbd5e1; border-radius: 16px; padding: 1.25rem; box-shadow: 0 15px 30px rgba(0,0,0,0.08); font-size: 0.8rem;">
                         <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; padding-bottom: 0.75rem; margin-bottom: 0.85rem;">
                             <div>
@@ -189,22 +214,33 @@
                             <span style="background: #dbeafe; color: #1e40af; font-size: 0.65rem; font-weight: 700; padding: 0.2rem 0.6rem; border-radius: 99px;">Werkgever</span>
                         </div>
 
-                        <!-- Table -->
-                        <div style="background: #fafafa; border: 1px solid #e5e7eb; border-radius: 10px; overflow: hidden; margin-bottom: 1rem;">
-                            <div style="display: grid; grid-template-columns: 2fr 1.5fr 1fr; background: #f3f4f6; padding: 0.5rem 0.75rem; font-weight: 700; color: #374151; font-size: 0.75rem;">
-                                <div>Stagiair</div>
-                                <div>Uren deze week</div>
-                                <div>Status</div>
+                        <!-- Table Grid Mockup -->
+                        <div style="background: #fafafa; border: 1px solid #e5e7eb; border-radius: 10px; overflow: hidden; margin-bottom: 0.85rem;">
+                            <div style="display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr; background: #f3f4f6; padding: 0.4rem 0.6rem; font-weight: 800; color: #374151; font-size: 0.65rem; text-align: center;">
+                                <div style="text-align: left;">Stagiair</div>
+                                <div>Ma</div>
+                                <div>Di</div>
+                                <div>Wo</div>
+                                <div>Do</div>
+                                <div>Vr</div>
                             </div>
-                            <div style="display: grid; grid-template-columns: 2fr 1.5fr 1fr; padding: 0.65rem 0.75rem; border-bottom: 1px solid #f3f4f6; align-items: center;">
-                                <div style="font-weight: 600; color: #111827;">Milan de Jong</div>
-                                <div style="color: #4b5563;">15,0 uur (2 dagen)</div>
-                                <div><span style="background: #dcfce7; color: #166534; font-size: 0.65rem; font-weight: 700; padding: 0.15rem 0.5rem; border-radius: 99px;">Akkoord ✓</span></div>
+                            <!-- Row 1 -->
+                            <div style="display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr; padding: 0.5rem 0.6rem; border-bottom: 1px solid #f3f4f6; align-items: center; text-align: center; font-size: 0.7rem;">
+                                <div style="text-align: left; font-weight: 700; color: #111827;">Milan de Jong</div>
+                                <div><span style="background: #dcfce7; color: #166534; font-size: 0.6rem; font-weight: 700; padding: 0.1rem 0.3rem; border-radius: 4px;">Akkoord</span></div>
+                                <div><span style="background: #dcfce7; color: #166534; font-size: 0.6rem; font-weight: 700; padding: 0.1rem 0.3rem; border-radius: 4px;">Akkoord</span></div>
+                                <div style="color: #94a3b8;">-</div>
+                                <div><span style="background: #dcfce7; color: #166534; font-size: 0.6rem; font-weight: 700; padding: 0.1rem 0.3rem; border-radius: 4px;">Akkoord</span></div>
+                                <div><span style="background: #fef3c7; color: #92400e; font-size: 0.55rem; font-weight: 800; padding: 0.1rem 0.3rem; border-radius: 4px;">Te accorderen</span></div>
                             </div>
-                            <div style="display: grid; grid-template-columns: 2fr 1.5fr 1fr; padding: 0.65rem 0.75rem; align-items: center;">
-                                <div style="font-weight: 600; color: #111827;">Sophie van Dijk</div>
-                                <div style="color: #4b5563;">7,5 uur (1 dag)</div>
-                                <div><span style="background: #fef3c7; color: #92400e; font-size: 0.65rem; font-weight: 700; padding: 0.15rem 0.5rem; border-radius: 99px;">Te accorderen</span></div>
+                            <!-- Row 2 -->
+                            <div style="display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr; padding: 0.5rem 0.6rem; align-items: center; text-align: center; font-size: 0.7rem;">
+                                <div style="text-align: left; font-weight: 700; color: #111827;">Sophie van Dijk</div>
+                                <div><span style="background: #dcfce7; color: #166534; font-size: 0.6rem; font-weight: 700; padding: 0.1rem 0.3rem; border-radius: 4px;">Akkoord</span></div>
+                                <div><span style="background: #fef3c7; color: #92400e; font-size: 0.55rem; font-weight: 800; padding: 0.1rem 0.3rem; border-radius: 4px;">Te accorderen</span></div>
+                                <div><span style="background: #dcfce7; color: #166534; font-size: 0.6rem; font-weight: 700; padding: 0.1rem 0.3rem; border-radius: 4px;">Akkoord</span></div>
+                                <div style="color: #94a3b8;">-</div>
+                                <div><span style="background: #fef3c7; color: #92400e; font-size: 0.55rem; font-weight: 800; padding: 0.1rem 0.3rem; border-radius: 4px;">Te accorderen</span></div>
                             </div>
                         </div>
 
@@ -230,7 +266,7 @@
             </div>
         </div>
 
-                <!-- TAB CONTENT 3: STAGEBEGELEIDER -->
+        <!-- TAB CONTENT 3: STAGEBEGELEIDER -->
         <div id="tab-docent" class="tab-content" style="display: none;">
             <div style="background: white; border: 1.5px solid #e9eef5; border-radius: 20px; padding: 2.5rem 2rem; max-width: 880px; margin: 0 auto; box-shadow: 0 10px 30px rgba(0,0,0,0.03);">
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 2.5rem; align-items: center;">
@@ -303,31 +339,54 @@
         <div id="tab-admin" class="tab-content" style="display: none;">
             <div style="background: white; border: 1.5px solid #e9eef5; border-radius: 20px; padding: 2.5rem 2rem; max-width: 880px; margin: 0 auto; box-shadow: 0 10px 30px rgba(0,0,0,0.03);">
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 2.5rem; align-items: center;">
-                    <!-- Admin Mockup -->
+                    <!-- Real School Admin Portal Mockup -->
                     <div style="background: white; border: 1.5px solid #cbd5e1; border-radius: 16px; padding: 1.25rem; box-shadow: 0 15px 30px rgba(0,0,0,0.08); font-size: 0.8rem;">
+                        <!-- Header -->
                         <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; padding-bottom: 0.75rem; margin-bottom: 0.85rem;">
                             <div>
-                                <div style="font-weight: 800; color: #0f172a; font-size: 0.95rem;">School Beheerderspaneel</div>
-                                <div style="font-size: 0.7rem; color: #64748b;">Mijnschoolnaam • Admin</div>
+                                <div style="font-weight: 800; color: #0f172a; font-size: 0.95rem;">Admin Portal</div>
+                                <div style="font-size: 0.7rem; color: #64748b;">Mijnschoolnaam • Beheer</div>
                             </div>
                             <span style="background: #f1f5f9; color: #334155; font-size: 0.65rem; font-weight: 700; padding: 0.2rem 0.6rem; border-radius: 99px;">Admin</span>
                         </div>
 
-                        <!-- Features grid mockup -->
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; margin-bottom: 0.85rem;">
-                            <div style="background: #f0fdf4; border: 1px solid #bbf7d0; padding: 0.6rem; border-radius: 8px; text-align: center;">
-                                <div style="font-size: 1.1rem; font-weight: 800; color: #166534;">184</div>
-                                <div style="font-size: 0.7rem; color: #15803d;">Actieve Stagiairs</div>
+                        <!-- Top Menu Badges -->
+                        <div style="display: flex; flex-wrap: wrap; gap: 0.35rem; margin-bottom: 0.85rem;">
+                            <span style="background: #eff6ff; color: #1d4ed8; font-size: 0.65rem; font-weight: 700; padding: 0.2rem 0.5rem; border-radius: 6px;">Stagiairs</span>
+                            <span style="background: #faf5ff; color: #7e22ce; font-size: 0.65rem; font-weight: 700; padding: 0.2rem 0.5rem; border-radius: 6px;">Bedrijven</span>
+                            <span style="background: #f0fdf4; color: #15803d; font-size: 0.65rem; font-weight: 700; padding: 0.2rem 0.5rem; border-radius: 6px;">Begeleiders</span>
+                            <span style="background: #fff7ed; color: #c2410c; font-size: 0.65rem; font-weight: 700; padding: 0.2rem 0.5rem; border-radius: 6px;">Branches</span>
+                            <span style="background: #e0e7ff; color: #3730a3; font-size: 0.65rem; font-weight: 700; padding: 0.2rem 0.5rem; border-radius: 6px;">CSV Import</span>
+                        </div>
+
+                        <!-- Stats 5 Grid Bar -->
+                        <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.35rem; margin-bottom: 0.85rem; text-align: center;">
+                            <div style="background: #f0fdf4; border: 1px solid #bbf7d0; padding: 0.4rem 0.2rem; border-radius: 6px;">
+                                <div style="font-size: 0.9rem; font-weight: 800; color: #166534;">184</div>
+                                <div style="font-size: 0.55rem; font-weight: 700; color: #15803d;">Aanwezig</div>
                             </div>
-                            <div style="background: #eff6ff; border: 1px solid #bfdbfe; padding: 0.6rem; border-radius: 8px; text-align: center;">
-                                <div style="font-size: 1.1rem; font-weight: 800; color: #1e40af;">62</div>
-                                <div style="font-size: 0.7rem; color: #1d4ed8;">Stagebedrijven</div>
+                            <div style="background: #fef2f2; border: 1px solid #fecaca; padding: 0.4rem 0.2rem; border-radius: 6px;">
+                                <div style="font-size: 0.9rem; font-weight: 800; color: #991b1b;">12</div>
+                                <div style="font-size: 0.55rem; font-weight: 700; color: #b91c1c;">Afwezig</div>
+                            </div>
+                            <div style="background: #fff7ed; border: 1px solid #ffedd5; padding: 0.4rem 0.2rem; border-radius: 6px;">
+                                <div style="font-size: 0.9rem; font-weight: 800; color: #c2410c;">5</div>
+                                <div style="font-size: 0.55rem; font-weight: 700; color: #c2410c;">Ziek</div>
+                            </div>
+                            <div style="background: #fefce8; border: 1px solid #fef08a; padding: 0.4rem 0.2rem; border-radius: 6px;">
+                                <div style="font-size: 0.9rem; font-weight: 800; color: #a16207;">8</div>
+                                <div style="font-size: 0.55rem; font-weight: 700; color: #a16207;">Te laat</div>
+                            </div>
+                            <div style="background: #fffbeb; border: 1.5px solid #fcd34d; padding: 0.4rem 0.2rem; border-radius: 6px;">
+                                <div style="font-size: 0.9rem; font-weight: 800; color: #b45309;">14</div>
+                                <div style="font-size: 0.55rem; font-weight: 800; color: #b45309;">Open</div>
                             </div>
                         </div>
 
-                        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 0.75rem; text-align: center;">
-                            <div style="font-weight: 700; color: #0f172a; margin-bottom: 0.3rem;">Excel / CSV Import & Kalender</div>
-                            <div style="font-size: 0.7rem; color: #64748b;">Beheer vakanties, branchedoorstroming en accounttoegangen in enkele seconden.</div>
+                        <!-- Action Toolbar -->
+                        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 0.6rem 0.75rem; display: flex; justify-content: space-between; align-items: center;">
+                            <span style="font-weight: 700; color: #334155; font-size: 0.7rem;">📋 Totaaloverzicht Exporteren</span>
+                            <span style="background: #4f46e5; color: white; font-size: 0.65rem; font-weight: 700; padding: 0.25rem 0.6rem; border-radius: 6px;">CSV / PDF Export</span>
                         </div>
                     </div>
                     <!-- Description side -->
@@ -344,16 +403,12 @@
                         </ul>
                     </div>
                 </div>
-            </div>
-        </div>
-
-        <div style="text-align: center; margin-top: 3.5rem; font-size: 0.85rem; color: #64748b;">
+            <div style="text-align: center; margin-top: 3.5rem; font-size: 0.85rem; color: #64748b;">
             Heb je een demo-inlogcode ontvangen na onze presentatie? 
             <button onclick="openDemoCodeModal()" style="color: #8fb584; font-weight: 700; text-decoration: underline; background: none; border: none; cursor: pointer; font-size: inherit; margin-left: 0.25rem;">
                 Vul hier je code in om de demo te openen →
             </button>
         </div>
-
     </div>
 </section>
 
