@@ -15,7 +15,6 @@ const DB_CONFIGS = {
             student: 'fake@leerling.nl',
             supervisor: 'stage@begeleider.nl',
             employer: 'test@testbedrijf.nl',
-            admin: 'wvs@youscope.nl'
         },
         absenceSteps: [
             "📞 Ik heb mijn stagebedrijf gebeld om mijn afwezigheid door te geven.",
@@ -34,7 +33,6 @@ const DB_CONFIGS = {
             student: 'fake@leerling.nl',
             supervisor: 'stage@begeleider.nl',
             employer: 'test@testbedrijf.nl',
-            admin: 'wvs@youscope.nl'
         },
         absenceSteps: [
             "📞 Ik heb mijn stagebedrijf gebeld om mijn afwezigheid door te geven.",
@@ -52,7 +50,6 @@ const DB_CONFIGS = {
             student: 'fake@leerling.nl',
             supervisor: 'stage@begeleider.nl',
             employer: 'test@testbedrijf.nl',
-            admin: 'wvs@youscope.nl'
         },
         absenceSteps: [
             "📞 Ik heb mijn stagebedrijf gebeld om mijn afwezigheid door te geven.",
@@ -84,7 +81,6 @@ const DB_CONFIGS = {
             student: 'fake@leerling.nl',
             supervisor: 'stage@begeleider.nl',
             employer: 'test@testbedrijf.nl',
-            admin: 'wvs@youscope.nl'
         },
         absenceSteps: [
             "📞 Ik heb mijn stagebedrijf gebeld om mijn afwezigheid door te geven.",
