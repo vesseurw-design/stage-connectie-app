@@ -382,61 +382,71 @@ function renderGrid(existingAttendance) {
 }
 
 function getStudentStatusLabel(st) {
-    if (!st || st === 'undefined') return '';
+    if (!st || st === 'undefined' || st === 'null') return '';
     switch (st) {
         case 'present': return 'Aanwezig';
         case 'absent': return 'Afwezig';
         case 'sick': return 'Ziek';
         case 'late': return 'Te laat';
-        default: return String(st);
+        default: return '';
     }
 }
 
 function updateCellContent(cell, status, minutesLate, studentStatus = '', studentHours = 0, notes = '') {
     const icons = { 'present': '✅', 'absent': '❌', 'sick': '🤒', 'late': '⏱️', '': '' };
 
-    // Employer Status (Big icon)
-    const content = status ? icons[status] : '<span class="text-gray-300 text-3xl font-black">+</span>';
-    cell.innerHTML = `<div class="status-badge ${status || 'empty'}">${content}</div>`;
+    const cleanStudentStatus = (studentStatus && studentStatus !== 'undefined' && studentStatus !== 'null') ? studentStatus : '';
+    const hasStudentInput = Boolean(cleanStudentStatus || (studentHours && parseFloat(studentHours) > 0));
 
-    if (status === 'late' && minutesLate > 0) {
-        cell.innerHTML += `<div class="late-minutes">${minutesLate}m</div>`;
-    }
-
-    // Student Input (Small badge at the bottom)
-    const cleanStudentStatus = studentStatus && studentStatus !== 'undefined' ? studentStatus : '';
-    if (cleanStudentStatus || studentHours > 0) {
-        const label = getStudentStatusLabel(cleanStudentStatus);
-        const titleText = label ? `Eigen invoer student: ${label}` : 'Eigen invoer student';
-        cell.innerHTML += `
-            <div class="absolute bottom-1 right-1 flex items-center gap-0.5 bg-purple-100 text-purple-700 text-[9px] font-black px-1 rounded shadow-sm" title="${titleText}">
-                ${studentHours > 0 ? `<span>${studentHours}u</span>` : ''}
-            </div>
-        `;
-    }
-
-    // Reset specific borders
-    cell.classList.remove('border-gray-300', 'border-gray-100', 'border-green-400', 'border-red-400', 'border-orange-400', 'border-yellow-400');
+    // Reset specific borders & backgrounds
+    cell.classList.remove('border-gray-300', 'border-gray-100', 'border-green-400', 'border-red-400', 'border-orange-400', 'border-yellow-400', 'border-amber-400', 'bg-amber-50/50', 'shadow-md', 'shadow-sm');
 
     if (status) {
+        // Employer has accorded/set status
+        const content = icons[status] || status;
+        cell.innerHTML = `<div class="status-badge ${status}">${content}</div>`;
+        if (status === 'late' && minutesLate > 0) {
+            cell.innerHTML += `<div class="late-minutes">${minutesLate}m</div>`;
+        }
         // Active Status Coloring
         if (status === 'present') cell.classList.add('border-green-400');
         else if (status === 'absent') cell.classList.add('border-red-400');
         else if (status === 'sick') cell.classList.add('border-orange-400');
         else if (status === 'late') cell.classList.add('border-yellow-400');
-
         cell.classList.add('shadow-md');
+    } else if (hasStudentInput) {
+        // Student registered attendance, but employer has NOT yet accorded -> Show 'Te accorderen'!
+        const studentLabel = getStudentStatusLabel(cleanStudentStatus);
+        const hoursText = parseFloat(studentHours) > 0 ? `${studentHours}u` : (studentLabel || 'Invoer');
+        cell.innerHTML = `
+            <div class="flex flex-col items-center justify-center h-full gap-0.5 p-1">
+                <span class="text-[9px] font-extrabold text-amber-800 bg-amber-100 px-1.5 py-0.5 rounded-full border border-amber-300 shadow-sm leading-none tracking-tight">Te accorderen</span>
+                <span class="text-[10px] font-bold text-purple-700 leading-none mt-0.5">${hoursText}</span>
+            </div>
+        `;
+        cell.classList.add('border-amber-400', 'bg-amber-50/50', 'shadow-sm');
     } else {
-        // Empty State: Gray border = visible box
+        // Empty State: Gray border = visible box with +
+        cell.innerHTML = `<div class="status-badge empty"><span class="text-gray-300 text-3xl font-black">+</span></div>`;
         cell.classList.add('border-gray-300');
-        cell.classList.remove('shadow-md');
+    }
+
+    // Small badge at bottom right for student hours if employer has accorded
+    if (status && hasStudentInput) {
+        const label = getStudentStatusLabel(cleanStudentStatus);
+        const titleText = label ? `Eigen invoer student: ${label}` : 'Eigen invoer student';
+        cell.innerHTML += `
+            <div class="absolute bottom-1 right-1 flex items-center gap-0.5 bg-purple-100 text-purple-700 text-[9px] font-black px-1 rounded shadow-sm" title="${titleText}">
+                ${parseFloat(studentHours) > 0 ? `<span>${studentHours}u</span>` : ''}
+            </div>
+        `;
     }
 
     // Store data (preserve notes for DB save)
-    cell.dataset.status = status;
-    cell.dataset.minutes = minutesLate;
-    cell.dataset.studentStatus = studentStatus;
-    cell.dataset.studentHours = studentHours;
+    cell.dataset.status = status || '';
+    cell.dataset.minutes = minutesLate || 0;
+    cell.dataset.studentStatus = cleanStudentStatus;
+    cell.dataset.studentHours = studentHours || 0;
     cell.dataset.notes = notes || '';
 }
 
