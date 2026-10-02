@@ -798,7 +798,7 @@ async function handleBulkInvite(type, progressElement, button) {
                         email: item.email.trim().toLowerCase(),
                         password: '',
                         role: role,
-                        sendEmail: true,
+                        sendEmail: false,
                         name: name || '',
                         loginUrl: loginUrl,
                         metadata: type === 'company' 
