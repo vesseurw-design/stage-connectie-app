@@ -237,9 +237,10 @@
         <span class="nav-logo-text">StageConnectie</span>
     </div>
     <div class="nav-right">
+        <a href="#impressie" class="nav-link">Screenshots</a>
         <a href="#hoe-het-werkt" class="nav-link">Hoe het werkt</a>
         <a href="#contact" class="nav-link">Contact</a>
-        <a href="kies-school.html" class="nav-btn">Inloggen</a>
+        <a href="#portaal" class="nav-btn">Inloggen</a>
     </div>
 </nav>
 
@@ -251,14 +252,276 @@
         <h1>Stageregistratie <span>simpel, snel<br>en overzichtelijk</span></h1>
         <p>StageConnectie verbindt stagiair, stagebedrijf en school in één helder portaal. Registreer aanwezigheid, uren en dagverslagen eenvoudig via telefoon, tablet of laptop — inclusief automatisch PDF-stageverslag voor het examendossier.</p>
         <div class="hero-actions">
-            <a href="kies-school.html" class="btn-blue">Naar het portaal →</a>
-            <a href="#contact" class="btn-white">Kennismaking aanvragen</a>
+            <a href="#portaal" class="btn-blue">Naar het portaal →</a>
+            <a href="#impressie" class="btn-white">Bekijk Screenshots 📸</a>
         </div>
         <div class="hero-image" style="margin-top: 3.5rem; display: flex; justify-content: center;">
             <img src="brochure-photo.png" alt="StageConnectie impressie 1" onerror="this.style.display='none'" style="width: 100%; max-width: 450px; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.05); border: 1px solid #e9eef5; object-fit: cover; max-height: 320px;">
         </div>
     </div>
 </div>
+
+<!-- ── SCREENSHOTS & IMPRESSIE ───────────────────────── -->
+<section class="impressie-section" id="impressie" style="background: white; border-bottom: 1px solid #e9eef5; padding: 5rem 0;">
+    <div class="container">
+        <div style="text-align: center; max-width: 650px; margin: 0 auto 3rem;">
+            <div class="section-eyebrow">Screenshots & Impressie</div>
+            <h2 class="section-title">Bekijk StageConnectie in actie</h2>
+            <p class="section-sub">Overzichtelijk, snel en modern voor scholen, leerlingen en stagebedrijven. Ervaar hier hoe de verschillende portalen eruitzien.</p>
+        </div>
+
+        <!-- TAB NAVIGATION -->
+        <div style="display: flex; justify-content: center; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 2.5rem;">
+            <button onclick="switchTab('tab-stagiair')" id="btn-tab-stagiair" class="impressie-tab active-tab">📱 Stagiair Portaal</button>
+            <button onclick="switchTab('tab-bedrijf')" id="btn-tab-bedrijf" class="impressie-tab">🏢 Stagebedrijf</button>
+            <button onclick="switchTab('tab-docent')" id="btn-tab-docent" class="impressie-tab">🏫 Stagebegeleider</button>
+            <button onclick="switchTab('tab-admin')" id="btn-tab-admin" class="impressie-tab">⚙️ School Admin</button>
+        </div>
+
+        <!-- TAB CONTENT 1: STAGIAIR -->
+        <div id="tab-stagiair" class="tab-content" style="display: block;">
+            <div style="background: #f8faff; border: 1.5px solid #e9eef5; border-radius: 20px; padding: 2rem; max-width: 850px; margin: 0 auto; box-shadow: 0 10px 30px rgba(0,0,0,0.04);">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 2rem; align-items: center;">
+                    <!-- Smartphone Mockup -->
+                    <div style="background: #1e293b; border-radius: 32px; padding: 12px; box-shadow: 0 20px 40px rgba(0,0,0,0.15); max-width: 320px; margin: 0 auto;">
+                        <div style="background: white; border-radius: 22px; padding: 1.25rem; overflow: hidden; font-size: 0.85rem;">
+                            <!-- Header -->
+                            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f1f5f9; padding-bottom: 0.75rem; margin-bottom: 1rem;">
+                                <div>
+                                    <div style="font-weight: 800; color: #0f172a; font-size: 0.95rem;">👋 Hallo Milan</div>
+                                    <div style="font-size: 0.75rem; color: #64748b;">Groene Hart Pro College</div>
+                                </div>
+                                <span style="background: #dcfce7; color: #15803d; font-size: 0.65rem; font-weight: 700; padding: 0.2rem 0.6rem; border-radius: 99px;">Stagiair</span>
+                            </div>
+                            <!-- Attendance Status -->
+                            <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 12px; padding: 0.85rem; margin-bottom: 0.85rem; text-align: center;">
+                                <div style="font-size: 0.75rem; color: #166534; font-weight: 600; margin-bottom: 0.25rem;">Vrijdag 26 september</div>
+                                <div style="font-size: 1.1rem; font-weight: 800; color: #15803d;">✅ Aanwezig (7,5 uur)</div>
+                                <div style="font-size: 0.7rem; color: #166534; margin-top: 0.2rem;">Praktijklocatie: BitWorks Alphen</div>
+                            </div>
+                            <!-- Daily notes box -->
+                            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 0.75rem; margin-bottom: 0.85rem;">
+                                <div style="font-weight: 700; color: #334155; font-size: 0.75rem; margin-bottom: 0.2rem;">📝 Dagverslag / Notitie:</div>
+                                <div style="font-size: 0.75rem; color: #475569; font-style: italic;">"Vandaag gewerkt aan het onderhoud van computerhardware en kabels netjes weggewerkt."</div>
+                            </div>
+                            <!-- Protocol Button -->
+                            <div style="background: #fee2e2; border: 1px solid #fca5a5; color: #991b1b; font-size: 0.75rem; font-weight: 700; padding: 0.6rem; border-radius: 8px; text-align: center;">
+                                🚨 Ziek of Te Laat? Afwezigheidsprotocol
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Description side -->
+                    <div>
+                        <span style="font-size: 0.75rem; font-weight: 700; color: #8fb584; text-transform: uppercase; letter-spacing: 0.8px;">Invoeren in 2 tikken</span>
+                        <h3 style="font-size: 1.35rem; font-weight: 800; color: #0f172a; margin: 0.4rem 0 0.75rem;">Stagiair Portaal op Telefoon</h3>
+                        <p style="font-size: 0.9rem; color: #475569; line-height: 1.6; margin-bottom: 1.25rem;">
+                            Stagiairs hoeven geen ingewikkelde formulieren in te vullen. Op hun smartphone geven ze direct aan of ze aanwezig zijn, het aantal gewerkte uren en schrijven ze snel een dagverslag voor de docent.
+                        </p>
+                        <ul style="list-style: none; display: flex; flex-direction: column; gap: 0.5rem; font-size: 0.85rem; color: #334155;">
+                            <li style="display: flex; align-items: center; gap: 0.5rem;"><span style="color: #8fb584; font-weight: bold;">✓</span> Werkt op iedere smartphone (geen app-store installatie vereist)</li>
+                            <li style="display: flex; align-items: center; gap: 0.5rem;"><span style="color: #8fb584; font-weight: bold;">✓</span> Directe registratie van exacte uren en te-laat-tijden</li>
+                            <li style="display: flex; align-items: center; gap: 0.5rem;"><span style="color: #8fb584; font-weight: bold;">✓</span> Ingebouwd afwezigheidsprotocol met directe bel/WhatsApp knop</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB CONTENT 2: STAGEBEDRIJF -->
+        <div id="tab-bedrijf" class="tab-content" style="display: none;">
+            <div style="background: #f8faff; border: 1.5px solid #e9eef5; border-radius: 20px; padding: 2rem; max-width: 850px; margin: 0 auto; box-shadow: 0 10px 30px rgba(0,0,0,0.04);">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 2rem; align-items: center;">
+                    <!-- Laptop Table Mockup -->
+                    <div style="background: white; border: 1.5px solid #cbd5e1; border-radius: 16px; padding: 1.25rem; box-shadow: 0 15px 30px rgba(0,0,0,0.08); font-size: 0.8rem;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; padding-bottom: 0.75rem; margin-bottom: 0.85rem;">
+                            <div>
+                                <div style="font-weight: 800; color: #0f172a; font-size: 0.95rem;">🏬 BitWorks B.V.</div>
+                                <div style="font-size: 0.7rem; color: #64748b;">Stagebedrijf Portaal • Week 39</div>
+                            </div>
+                            <span style="background: #dbeafe; color: #1e40af; font-size: 0.65rem; font-weight: 700; padding: 0.2rem 0.6rem; border-radius: 99px;">Werkgever</span>
+                        </div>
+
+                        <!-- Table -->
+                        <div style="background: #fafafa; border: 1px solid #e5e7eb; border-radius: 10px; overflow: hidden; margin-bottom: 1rem;">
+                            <div style="display: grid; grid-template-columns: 2fr 1.5fr 1fr; background: #f3f4f6; padding: 0.5rem 0.75rem; font-weight: 700; color: #374151; font-size: 0.75rem;">
+                                <div>Stagiair</div>
+                                <div>Uren deze week</div>
+                                <div>Status</div>
+                            </div>
+                            <div style="display: grid; grid-template-columns: 2fr 1.5fr 1fr; padding: 0.65rem 0.75rem; border-bottom: 1px solid #f3f4f6; align-items: center;">
+                                <div style="font-weight: 600; color: #111827;">Milan de Jong</div>
+                                <div style="color: #4b5563;">15,0 uur (2 dagen)</div>
+                                <div><span style="background: #dcfce7; color: #166534; font-size: 0.65rem; font-weight: 700; padding: 0.15rem 0.5rem; border-radius: 99px;">Akkoord ✓</span></div>
+                            </div>
+                            <div style="display: grid; grid-template-columns: 2fr 1.5fr 1fr; padding: 0.65rem 0.75rem; align-items: center;">
+                                <div style="font-weight: 600; color: #111827;">Sophie van Dijk</div>
+                                <div style="color: #4b5563;">7,5 uur (1 dag)</div>
+                                <div><span style="background: #fef3c7; color: #92400e; font-size: 0.65rem; font-weight: 700; padding: 0.15rem 0.5rem; border-radius: 99px;">Te accorderen</span></div>
+                            </div>
+                        </div>
+
+                        <!-- Quick Approve Button mockup -->
+                        <div style="background: #2563eb; color: white; text-align: center; padding: 0.6rem; border-radius: 8px; font-weight: 700; font-size: 0.8rem; cursor: pointer;">
+                            👍 Week 39 Goedkeuren voor alle stagiairs
+                        </div>
+                    </div>
+                    <!-- Description side -->
+                    <div>
+                        <span style="font-size: 0.75rem; font-weight: 700; color: #8fb584; text-transform: uppercase; letter-spacing: 0.8px;">1-Klik Accordering</span>
+                        <h3 style="font-size: 1.35rem; font-weight: 800; color: #0f172a; margin: 0.4rem 0 0.75rem;">Stagebedrijf Portaal</h3>
+                        <p style="font-size: 0.9rem; color: #475569; line-height: 1.6; margin-bottom: 1.25rem;">
+                            Stagebedrijven zien in één overzichtelijk weekoverzicht de uren en aanwezigheid van hun stagiairs. Accorderen kost slechts één klik. Vrijdagmiddag ontvangen ze automatisch een herinneringsmail.
+                        </p>
+                        <ul style="list-style: none; display: flex; flex-direction: column; gap: 0.5rem; font-size: 0.85rem; color: #334155;">
+                            <li style="display: flex; align-items: center; gap: 0.5rem;"><span style="color: #8fb584; font-weight: bold;">✓</span> Geen wachtwoorden te onthouden (direct via veilige login link)</li>
+                            <li style="display: flex; align-items: center; gap: 0.5rem;"><span style="color: #8fb584; font-weight: bold;">✓</span> Automatische e-mail notificaties op vrijdagmiddag</li>
+                            <li style="display: flex; align-items: center; gap: 0.5rem;"><span style="color: #8fb584; font-weight: bold;">✓</span> Directe contactknop met de stagebegeleider van de school</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB CONTENT 3: STAGEBEGELEIDER -->
+        <div id="tab-docent" class="tab-content" style="display: none;">
+            <div style="background: #f8faff; border: 1.5px solid #e9eef5; border-radius: 20px; padding: 2rem; max-width: 850px; margin: 0 auto; box-shadow: 0 10px 30px rgba(0,0,0,0.04);">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 2rem; align-items: center;">
+                    <!-- Dashboard Mockup -->
+                    <div style="background: white; border: 1.5px solid #cbd5e1; border-radius: 16px; padding: 1.25rem; box-shadow: 0 15px 30px rgba(0,0,0,0.08); font-size: 0.8rem;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; padding-bottom: 0.75rem; margin-bottom: 0.85rem;">
+                            <div>
+                                <div style="font-weight: 800; color: #0f172a; font-size: 0.95rem;">🏫 Stagebegeleider Dashboard</div>
+                                <div style="font-size: 0.7rem; color: #64748b;">Klas 4A • 12 Stagiairs actief</div>
+                            </div>
+                            <span style="background: #fcf6e5; color: #854d0e; font-size: 0.65rem; font-weight: 700; padding: 0.2rem 0.6rem; border-radius: 99px;">Docent</span>
+                        </div>
+
+                        <!-- Progress card mockup -->
+                        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 0.85rem; margin-bottom: 0.85rem;">
+                            <div style="display: flex; justify-content: space-between; font-weight: 700; color: #0f172a; margin-bottom: 0.3rem;">
+                                <span>Milan de Jong</span>
+                                <span style="color: #16a34a;">120 / 150 uur (80%)</span>
+                            </div>
+                            <div style="width: 100%; height: 8px; background: #e2e8f0; border-radius: 99px; overflow: hidden; margin-bottom: 0.5rem;">
+                                <div style="width: 80%; height: 100%; background: #16a34a; border-radius: 99px;"></div>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <span style="font-size: 0.7rem; color: #64748b;">Bedrijf: BitWorks B.V.</span>
+                                <span style="background: #16a34a; color: white; font-size: 0.65rem; font-weight: 700; padding: 0.2rem 0.5rem; border-radius: 6px;">📄 PDF Verslag</span>
+                            </div>
+                        </div>
+
+                        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 0.85rem;">
+                            <div style="display: flex; justify-content: space-between; font-weight: 700; color: #0f172a; margin-bottom: 0.3rem;">
+                                <span>Lisa Bakker</span>
+                                <span style="color: #ca8a04;">95 / 150 uur (63%)</span>
+                            </div>
+                            <div style="width: 100%; height: 8px; background: #e2e8f0; border-radius: 99px; overflow: hidden; margin-bottom: 0.5rem;">
+                                <div style="width: 63%; height: 100%; background: #eab308; border-radius: 99px;"></div>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <span style="font-size: 0.7rem; color: #64748b;">Bedrijf: Bakkerij De Proef</span>
+                                <span style="background: #16a34a; color: white; font-size: 0.65rem; font-weight: 700; padding: 0.2rem 0.5rem; border-radius: 6px;">📄 PDF Verslag</span>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Description side -->
+                    <div>
+                        <span style="font-size: 0.75rem; font-weight: 700; color: #8fb584; text-transform: uppercase; letter-spacing: 0.8px;">Regie & Examendossier</span>
+                        <h3 style="font-size: 1.35rem; font-weight: 800; color: #0f172a; margin: 0.4rem 0 0.75rem;">Stagebegeleider Portaal</h3>
+                        <p style="font-size: 0.9rem; color: #475569; line-height: 1.6; margin-bottom: 1.25rem;">
+                            Stagebegeleiders en mentoren houden vanuit hun dashboard continue grip op alle stagiairs. Afwezigheid en openstaande accorderingen lichten direct op. Met 1 klik genereer je een PDF-logboek voor het dossier.
+                        </p>
+                        <ul style="list-style: none; display: flex; flex-direction: column; gap: 0.5rem; font-size: 0.85rem; color: #334155;">
+                            <li style="display: flex; align-items: center; gap: 0.5rem;"><span style="color: #8fb584; font-weight: bold;">✓</span> 1-Klik PDF Stageverslag & Urenlogboek export</li>
+                            <li style="display: flex; align-items: center; gap: 0.5rem;"><span style="color: #8fb584; font-weight: bold;">✓</span> Direct inzicht in dagverslagen en notities per leerling</li>
+                            <li style="display: flex; align-items: center; gap: 0.5rem;"><span style="color: #8fb584; font-weight: bold;">✓</span> Signaleert afwijkingen of ontbrekende goedkeuringen automatisch</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB CONTENT 4: ADMIN -->
+        <div id="tab-admin" class="tab-content" style="display: none;">
+            <div style="background: #f8faff; border: 1.5px solid #e9eef5; border-radius: 20px; padding: 2rem; max-width: 850px; margin: 0 auto; box-shadow: 0 10px 30px rgba(0,0,0,0.04);">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 2rem; align-items: center;">
+                    <!-- Admin Mockup -->
+                    <div style="background: white; border: 1.5px solid #cbd5e1; border-radius: 16px; padding: 1.25rem; box-shadow: 0 15px 30px rgba(0,0,0,0.08); font-size: 0.8rem;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; padding-bottom: 0.75rem; margin-bottom: 0.85rem;">
+                            <div>
+                                <div style="font-weight: 800; color: #0f172a; font-size: 0.95rem;">⚙️ School Beheerderspaneel</div>
+                                <div style="font-size: 0.7rem; color: #64748b;">Groene Hart Pro College • Admin</div>
+                            </div>
+                            <span style="background: #f1f5f9; color: #334155; font-size: 0.65rem; font-weight: 700; padding: 0.2rem 0.6rem; border-radius: 99px;">Admin</span>
+                        </div>
+
+                        <!-- Features grid mockup -->
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; margin-bottom: 0.85rem;">
+                            <div style="background: #f0fdf4; border: 1px solid #bbf7d0; padding: 0.6rem; border-radius: 8px; text-align: center;">
+                                <div style="font-size: 1.1rem; font-weight: 800; color: #166534;">184</div>
+                                <div style="font-size: 0.7rem; color: #15803d;">Actieve Stagiairs</div>
+                            </div>
+                            <div style="background: #eff6ff; border: 1px solid #bfdbfe; padding: 0.6rem; border-radius: 8px; text-align: center;">
+                                <div style="font-size: 1.1rem; font-weight: 800; color: #1e40af;">62</div>
+                                <div style="font-size: 0.7rem; color: #1d4ed8;">Stagebedrijven</div>
+                            </div>
+                        </div>
+
+                        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 0.75rem; text-align: center;">
+                            <div style="font-weight: 700; color: #0f172a; margin-bottom: 0.3rem;">📊 Excel / CSV Import & Kalender</div>
+                            <div style="font-size: 0.7rem; color: #64748b;">Beheer vakanties, branchedoorstroming en accounttoegangen in enkele seconden.</div>
+                        </div>
+                    </div>
+                    <!-- Description side -->
+                    <div>
+                        <span style="font-size: 0.75rem; font-weight: 700; color: #8fb584; text-transform: uppercase; letter-spacing: 0.8px;">Centraal Beheer</span>
+                        <h3 style="font-size: 1.35rem; font-weight: 800; color: #0f172a; margin: 0.4rem 0 0.75rem;">School Admin Dashboard</h3>
+                        <p style="font-size: 0.9rem; color: #475569; line-height: 1.6; margin-bottom: 1.25rem;">
+                            Beheerders op school stellen in een handomdraai het schooljaar in. Vakantieperiodes worden op de kalender gezet en nieuwe leerlingen en bedrijven worden eenvoudig in één keer geïmporteerd via Excel.
+                        </p>
+                        <ul style="list-style: none; display: flex; flex-direction: column; gap: 0.5rem; font-size: 0.85rem; color: #334155;">
+                            <li style="display: flex; align-items: center; gap: 0.5rem;"><span style="color: #8fb584; font-weight: bold;">✓</span> Snelle gegevensimport via CSV / Excel-bestanden</li>
+                            <li style="display: flex; align-items: center; gap: 0.5rem;"><span style="color: #8fb584; font-weight: bold;">✓</span> Beheer van schoolvakanties, roosterdagen en branches</li>
+                            <li style="display: flex; align-items: center; gap: 0.5rem;"><span style="color: #8fb584; font-weight: bold;">✓</span> Volledige controle over toegangsrechten en accountherstel</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div style="text-align: center; margin-top: 3rem; font-size: 0.85rem; color: #64748b;">
+            Heb je een demo-inlogcode ontvangen na onze presentatie? 
+            <button onclick="openDemoCodeModal()" style="color: #8fb584; font-weight: 700; text-decoration: underline; background: none; border: none; cursor: pointer; font-size: inherit; margin-left: 0.25rem;">
+                Vul hier je code in om de demo te openen →
+            </button>
+        </div>
+    </div>
+</section>
+
+<style>
+    .impressie-tab {
+        background: #f1f5f9; border: 1.5px solid #e2e8f0; color: #475569;
+        font-size: 0.85rem; font-weight: 600; padding: 0.6rem 1.25rem;
+        border-radius: 99px; cursor: pointer; transition: all 0.15s ease;
+    }
+    .impressie-tab:hover { background: #e2e8f0; color: #0f172a; }
+    .impressie-tab.active-tab { background: #8fb584; border-color: #8fb584; color: white; font-weight: 700; box-shadow: 0 4px 12px rgba(143,181,132,0.25); }
+</style>
+
+<script>
+    function switchTab(tabId) {
+        document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
+        document.querySelectorAll('.impressie-tab').forEach(el => el.classList.remove('active-tab'));
+        
+        const target = document.getElementById(tabId);
+        if (target) target.style.display = 'block';
+        
+        const btnId = 'btn-' + tabId;
+        const btn = document.getElementById(btnId);
+        if (btn) btn.classList.add('active-tab');
+    }
+</script>
 
 <!-- ── HOW IT WORKS ──────────────────────────────────── -->
 <section class="how" id="hoe-het-werkt">
@@ -398,22 +661,22 @@
         <h2 class="section-title">Kies jouw portaal</h2>
         <p class="section-sub">Selecteer wie je bent om direct naar jouw inlogpagina te gaan.</p>
         <div class="portals-grid">
-            <a href="kies-school.html" class="portal-card" id="portal-leerling">
+            <a href="student-login.html" class="portal-card" id="portal-leerling">
                 <h3>Stagiair</h3>
                 <p>Aanwezigheid melden en uren invoeren</p>
                 <div class="portal-arrow">→</div>
             </a>
-            <a href="kies-school.html" class="portal-card" id="portal-werkgever">
+            <a href="login.html" class="portal-card" id="portal-werkgever">
                 <h3>Stagebedrijf</h3>
                 <p>Uren bekijken en goedkeuren</p>
                 <div class="portal-arrow">→</div>
             </a>
-            <a href="kies-school.html" class="portal-card" id="portal-begeleider">
+            <a href="supervisor-login.html" class="portal-card" id="portal-begeleider">
                 <h3>Stagebegeleider</h3>
                 <p>Stagiairs begeleiden en volgen</p>
                 <div class="portal-arrow">→</div>
             </a>
-            <a href="kies-school.html" class="portal-card" id="portal-admin">
+            <a href="admin-login.html" class="portal-card" id="portal-admin">
                 <h3>School Admin</h3>
                 <p>Volledig beheer van het platform</p>
                 <div class="portal-arrow">→</div>
@@ -537,6 +800,44 @@
     function resetContactForm() {
         document.getElementById('contact-success-card').style.display = 'none';
         document.getElementById('contact-form').style.display = 'flex';
+    }
+</script>
+
+<!-- DEMO CODE MODAL -->
+<div id="demo-modal" style="display:none; position:fixed; inset:0; background:rgba(15,23,42,0.6); backdrop-filter:blur(4px); z-index:999; align-items:center; justify-content:center; padding:1rem;">
+    <div style="background:white; border-radius:16px; padding:2rem; width:100%; max-width:400px; box-shadow:0 20px 40px rgba(0,0,0,0.15); text-align:center; position:relative;">
+        <button type="button" onclick="closeDemoCodeModal()" style="position:absolute; top:1rem; right:1rem; border:none; background:none; font-size:1.2rem; cursor:pointer; color:#64748b;">✕</button>
+        <div style="width:48px; height:48px; background:#f2f7f1; border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 1rem; font-size:1.4rem;">🔑</div>
+        <h2 style="font-size:1.25rem; font-weight:800; color:#0f172a; margin-bottom:0.4rem;">Demo Toegangscode</h2>
+        <p style="font-size:0.85rem; color:#64748b; margin-bottom:1.5rem; line-height:1.5;">Vul de inlogcode in die je hebt ontvangen (bijv. na de presentatie) om de demo te openen.</p>
+        
+        <form onsubmit="handleDemoSubmit(event)">
+            <input type="text" id="demo-code-input" placeholder="Voer inlogcode in..." required style="width:100%; padding:0.75rem 1rem; border:1.5px solid #d1d5db; border-radius:8px; font-size:0.95rem; text-align:center; letter-spacing:1px; font-weight:600; text-transform:uppercase; outline:none; margin-bottom:1rem;" />
+            <div id="demo-error" style="display:none; background:#fef2f2; border:1px solid #fecaca; color:#dc2626; padding:0.5rem 0.75rem; border-radius:6px; font-size:0.85rem; margin-bottom:1rem;">Ongeldige inlogcode. Controleer de code en probeer opnieuw.</div>
+            <button type="submit" style="width:100%; background:#8fb584; color:white; font-weight:700; padding:0.75rem; border-radius:8px; border:none; cursor:pointer; font-size:0.9rem;">Toegang Openen →</button>
+        </form>
+    </div>
+</div>
+
+<script>
+    function openDemoCodeModal() {
+        document.getElementById('demo-modal').style.display = 'flex';
+        setTimeout(() => document.getElementById('demo-code-input').focus(), 100);
+    }
+    function closeDemoCodeModal() {
+        document.getElementById('demo-modal').style.display = 'none';
+        document.getElementById('demo-error').style.display = 'none';
+    }
+    function handleDemoSubmit(e) {
+        e.preventDefault();
+        const input = document.getElementById('demo-code-input').value.trim().toUpperCase();
+        const validCodes = ['DEMO2026', 'PRESENTATIE', 'STAGE2026', 'STAGE2025', 'DEMO'];
+        if (validCodes.includes(input)) {
+            sessionStorage.setItem('demo_unlocked', 'true');
+            window.location.href = 'login.html?demo=unlocked';
+        } else {
+            document.getElementById('demo-error').style.display = 'block';
+        }
     }
 </script>
 </body>

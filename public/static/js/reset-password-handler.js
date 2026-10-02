@@ -5,6 +5,12 @@
 
 const SUPABASE_URL = window.SUPABASE_URL || 'https://vdeipnqyesduiohxvuvu.supabase.co';
 const SUPABASE_KEY = window.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZkZWlwbnF5ZXNkdWlvaHh2dXZ1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc1MjY5NTEsImV4cCI6MjA4MzEwMjk1MX0.IknEZ-GQvspcppJxLR00ayBDq1DbL0HiUKy9RDb59DU';
+// Capture initial URL hash/search before Supabase JS SDK parses and strips them from the location bar
+const INITIAL_HASH = window.location.hash || '';
+const INITIAL_SEARCH = window.location.search || '';
+const HAS_INITIAL_TOKEN = INITIAL_HASH.includes('access_token=') || INITIAL_HASH.includes('type=') || INITIAL_SEARCH.includes('code=') || INITIAL_SEARCH.includes('token_hash=');
+const HAS_INITIAL_ERROR = INITIAL_HASH.includes('error=') || INITIAL_SEARCH.includes('error=');
+
 let activeSupabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 const supabaseClient = activeSupabaseClient;
 
@@ -272,13 +278,13 @@ let isSessionActive = false;
 function markSessionValid() {
     isSessionActive = true;
     hideMessages();
-    submitBtn.disabled = false;
+    if (submitBtn) submitBtn.disabled = false;
 }
 
 // 1. Listen for Supabase Auth events (handles async URL token verification)
 supabaseClient.auth.onAuthStateChange((event, session) => {
     console.log('🔑 Auth state change:', event, !!session);
-    if (session || event === 'PASSWORD_RECOVERY' || event === 'SIGNED_IN') {
+    if (session || event === 'PASSWORD_RECOVERY' || event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED') {
         markSessionValid();
     }
 });
@@ -286,26 +292,26 @@ supabaseClient.auth.onAuthStateChange((event, session) => {
 // 2. Page load verification with token parsing window
 window.addEventListener('load', async () => {
     try {
-        const hash = window.location.hash || '';
-        const search = window.location.search || '';
-        const hasTokenInUrl = hash.includes('access_token=') || hash.includes('type=') || search.includes('code=') || search.includes('token_hash=');
+        const hash = window.location.hash || INITIAL_HASH;
+        const search = window.location.search || INITIAL_SEARCH;
+        const hasTokenInUrl = HAS_INITIAL_TOKEN || hash.includes('access_token=') || hash.includes('type=') || search.includes('code=') || search.includes('token_hash=');
 
-        // Check if there was an explicit error in hash (e.g. link expired)
-        if (hash.includes('error=')) {
+        // Check if there was an explicit error in hash or query (e.g. link expired)
+        if (HAS_INITIAL_ERROR || hash.includes('error=') || search.includes('error=')) {
             let detail = 'De activatie- of resetlink is verlopen of al gebruikt.';
-            if (hash.includes('expired')) {
+            if (hash.includes('expired') || search.includes('expired') || INITIAL_HASH.includes('expired')) {
                 detail = 'De activatielink is verlopen. Vraag een nieuwe uitnodiging aan of gebruik "Wachtwoord vergeten" op het inlogscherm.';
             }
             showError(detail);
-            submitBtn.disabled = true;
+            if (submitBtn) submitBtn.disabled = true;
             return;
         }
 
-        // If URL contains token parameters, poll briefly to allow Supabase SDK to parse session
+        // If URL initially contained token parameters, poll up to 3 seconds to allow Supabase SDK to parse session
         if (hasTokenInUrl) {
-            for (let attempt = 0; attempt < 15; attempt++) {
+            for (let attempt = 0; attempt < 30; attempt++) {
                 const { data: { session } } = await supabaseClient.auth.getSession();
-                if (session) {
+                if (session || isSessionActive) {
                     markSessionValid();
                     return;
                 }
@@ -331,11 +337,11 @@ window.addEventListener('load', async () => {
             }
         }
 
-        if (session) {
+        if (session || isSessionActive) {
             markSessionValid();
-        } else if (!isSessionActive) {
+        } else {
             showError('Geen geldige activatie- of resetlink gevonden. Vraag een nieuwe uitnodiging aan of stel je wachtwoord opnieuw in via "Wachtwoord vergeten".');
-            submitBtn.disabled = true;
+            if (submitBtn) submitBtn.disabled = true;
         }
     } catch (error) {
         console.error('Session check error:', error);
