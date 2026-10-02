@@ -1,9 +1,7 @@
 {
     "version": 2,
-    "framework": null,
-    "regions": [
-        "fra1"
-    ],
+    "cleanUrls": true,
+    "trailingSlash": false,
     "outputDirectory": "public",
     "headers": [
         {
@@ -22,12 +20,6 @@
                     "value": "0"
                 }
             ]
-        }
-    ],
-    "rewrites": [
-        {
-            "source": "/(.*)",
-            "destination": "/$1"
         }
     ]
 }
