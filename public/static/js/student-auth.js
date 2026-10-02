@@ -57,9 +57,10 @@ if (loginForm) {
 }
 
 // Add Demo button dynamically if credentials are set and demo access is unlocked with code
+const urlCode = new URLSearchParams(window.location.search).get('code');
 const isDemoUnlocked = sessionStorage.getItem('demo_unlocked') === 'true' || 
                        new URLSearchParams(window.location.search).get('demo') === 'unlocked' ||
-                       ['DEMO2026', 'PRESENTATIE', 'STAGE2026', 'STAGE2025'].includes(new URLSearchParams(window.location.search).get('code')?.toUpperCase());
+                       (typeof window.validateDemoCode === 'function' && urlCode ? window.validateDemoCode(urlCode) : false);
 
 if (window.DEMO_CREDENTIALS && window.DEMO_CREDENTIALS.student && isDemoUnlocked) {
     const form = document.getElementById('student-login-form');
