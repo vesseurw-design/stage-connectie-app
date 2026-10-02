@@ -237,7 +237,7 @@ window.sendCompanyInvite = async function (company) {
                 email: company.email.trim().toLowerCase(),
                 password: '',
                 role: 'employer',
-                sendEmail: true,
+                sendEmail: false,
                 name: company.contact_person || company.company_name,
                 loginUrl: `${window.location.origin}/reset-password.html`,
                 metadata: {
@@ -469,7 +469,7 @@ document.getElementById('company-form').addEventListener('submit', async (e) => 
                         email: email,
                         password: '',
                         role: 'employer',
-                        sendEmail: true,
+                        sendEmail: false,
                         name: contactPerson || companyName,
                         loginUrl: `${window.location.origin}/reset-password.html`,
                         metadata: {
