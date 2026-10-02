@@ -134,15 +134,33 @@ const DB_CONFIGS = {
         const staticCodes = ['DEMO2026', 'PRESENTATIE', 'STAGE2026', 'STAGE2025', 'DEMO'];
         if (staticCodes.includes(code)) return true;
 
-        // 2. Datum-gebaseerde tijdelijke codes (bijv. DEMO-0910 of STAGE-0910 -> geldig t/m 9 oktober)
-        const matchDDMM = code.match(/^(?:DEMO|STAGE|CODE|PRO|PRES)-(\d{2})(\d{2})$/);
-        if (matchDDMM) {
-            const day = parseInt(matchDDMM[1], 10);
-            const month = parseInt(matchDDMM[2], 10) - 1; // 0-indexed
+        // 2. Datum-gebaseerde tijdelijke codes (bijv. DEMO-0910, DEMO-1710, DEMO-0917 -> flexibele verloopdatum)
+        const matchDigits = code.match(/^(?:DEMO|STAGE|CODE|PRO|PRES)-(\d{2})(\d{2})$/);
+        if (matchDigits) {
+            let num1 = parseInt(matchDigits[1], 10);
+            let num2 = parseInt(matchDigits[2], 10);
+            let day, month;
+
+            if (num1 > 12 && num1 <= 31) {
+                // bijv. DEMO-1710 -> Dag 17, Maand 10 (17 oktober)
+                day = num1;
+                month = num2 - 1;
+            } else if (num2 > 12 && num2 <= 31) {
+                // bijv. DEMO-0917 of DEMO-1017 -> Dag 17, Maand 10/9
+                day = num2;
+                month = num1 - 1;
+            } else {
+                // bijv. DEMO-0910 -> Dag 9, Maand 10 (9 oktober)
+                day = num1;
+                month = num2 - 1;
+            }
+
             const now = new Date();
-            const expDate = new Date(now.getFullYear(), month, day, 23, 59, 59);
-            if (now <= expDate) {
-                return true;
+            if (month >= 0 && month <= 11 && day >= 1 && day <= 31) {
+                const expDate = new Date(now.getFullYear(), month, day, 23, 59, 59);
+                if (now <= expDate) {
+                    return true;
+                }
             }
         }
 
