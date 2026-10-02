@@ -830,15 +830,33 @@
     }
     function handleDemoSubmit(e) {
         e.preventDefault();
-        const input = document.getElementById('demo-code-input').value.trim().toUpperCase();
-        const validCodes = ['DEMO2026', 'PRESENTATIE', 'STAGE2026', 'STAGE2025', 'DEMO'];
-        if (validCodes.includes(input)) {
+        const input = document.getElementById('demo-code-input').value;
+        const isValid = typeof window.validateDemoCode === 'function' 
+            ? window.validateDemoCode(input) 
+            : ['DEMO2026', 'PRESENTATIE', 'STAGE2026', 'STAGE2025', 'DEMO'].includes(input.trim().toUpperCase());
+
+        if (isValid) {
             sessionStorage.setItem('demo_unlocked', 'true');
             window.location.href = 'login.html?demo=unlocked';
         } else {
             document.getElementById('demo-error').style.display = 'block';
         }
     }
+
+    // Auto unlock if valid code in URL parameter
+    (function() {
+        const params = new URLSearchParams(window.location.search);
+        const code = params.get('code') || params.get('inlogcode');
+        if (code) {
+            const isValid = typeof window.validateDemoCode === 'function' 
+                ? window.validateDemoCode(code) 
+                : ['DEMO2026', 'PRESENTATIE', 'STAGE2026', 'STAGE2025', 'DEMO'].includes(code.trim().toUpperCase());
+            if (isValid) {
+                sessionStorage.setItem('demo_unlocked', 'true');
+                window.location.href = 'login.html?demo=unlocked';
+            }
+        }
+    })();
 </script>
 </body>
 </html>
