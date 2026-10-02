@@ -230,46 +230,55 @@
             </div>
         </div>
 
-        <!-- TAB CONTENT 3: STAGEBEGELEIDER -->
+                <!-- TAB CONTENT 3: STAGEBEGELEIDER -->
         <div id="tab-docent" class="tab-content" style="display: none;">
             <div style="background: white; border: 1.5px solid #e9eef5; border-radius: 20px; padding: 2.5rem 2rem; max-width: 880px; margin: 0 auto; box-shadow: 0 10px 30px rgba(0,0,0,0.03);">
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 2.5rem; align-items: center;">
-                    <!-- Dashboard Mockup -->
+                    <!-- Real Supervisor Dashboard Mockup -->
                     <div style="background: white; border: 1.5px solid #cbd5e1; border-radius: 16px; padding: 1.25rem; box-shadow: 0 15px 30px rgba(0,0,0,0.08); font-size: 0.8rem;">
+                        <!-- Header -->
                         <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; padding-bottom: 0.75rem; margin-bottom: 0.85rem;">
                             <div>
-                                <div style="font-weight: 800; color: #0f172a; font-size: 0.95rem;">Stagebegeleider Dashboard</div>
+                                <div style="font-weight: 800; color: #0f172a; font-size: 0.95rem;">Stagebegeleider Portaal</div>
                                 <div style="font-size: 0.7rem; color: #64748b;">Klas 4A • 12 Stagiairs actief</div>
                             </div>
                             <span style="background: #fcf6e5; color: #854d0e; font-size: 0.65rem; font-weight: 700; padding: 0.2rem 0.6rem; border-radius: 99px;">Docent</span>
                         </div>
 
-                        <!-- Progress card mockup -->
-                        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 0.85rem; margin-bottom: 0.85rem;">
-                            <div style="display: flex; justify-content: space-between; font-weight: 700; color: #0f172a; margin-bottom: 0.3rem;">
-                                <span>Milan de Jong</span>
-                                <span style="color: #16a34a;">120 / 150 uur (80%)</span>
+                        <!-- Stats summary bar -->
+                        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 0.5rem 0.75rem; margin-bottom: 0.85rem; font-size: 0.7rem; display: flex; flex-wrap: wrap; gap: 0.4rem; justify-content: space-between; align-items: center;">
+                            <span style="font-weight: 700; color: #334155;">Vandaag:</span>
+                            <span style="background: #dcfce7; color: #166534; font-weight: 700; padding: 0.1rem 0.4rem; border-radius: 4px;">Aanwezig: 9</span>
+                            <span style="background: #fef3c7; color: #92400e; font-weight: 700; padding: 0.1rem 0.4rem; border-radius: 4px;">Te accorderen: 2</span>
+                            <span style="background: #fee2e2; color: #991b1b; font-weight: 700; padding: 0.1rem 0.4rem; border-radius: 4px;">Ziek: 1</span>
+                        </div>
+
+                        <!-- Student Card 1 -->
+                        <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 0.75rem; margin-bottom: 0.75rem; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.3rem;">
+                                <span style="font-weight: 800; color: #0f172a; font-size: 0.85rem;">Milan de Jong</span>
+                                <span style="background: #dcfce7; color: #166534; font-size: 0.65rem; font-weight: 700; padding: 0.15rem 0.5rem; border-radius: 99px;">Aanwezig (7,5 uur)</span>
                             </div>
-                            <div style="width: 100%; height: 8px; background: #e2e8f0; border-radius: 99px; overflow: hidden; margin-bottom: 0.5rem;">
-                                <div style="width: 80%; height: 100%; background: #16a34a; border-radius: 99px;"></div>
+                            <div style="font-size: 0.7rem; color: #64748b; margin-bottom: 0.35rem;">Stagebedrijf: Voorbeeld Bedrijf B.V.</div>
+                            <div style="font-size: 0.7rem; color: #334155; background: #f8fafc; padding: 0.4rem 0.6rem; border-radius: 6px; border: 1px solid #f1f5f9; margin-bottom: 0.5rem; font-style: italic;">
+                                "Onderhoud uitgevoerd aan netwerkkabels op de IT afdeling."
                             </div>
                             <div style="display: flex; justify-content: space-between; align-items: center;">
-                                <span style="font-size: 0.7rem; color: #64748b;">Bedrijf: Voorbeeld Bedrijf B.V.</span>
-                                <span style="background: #16a34a; color: white; font-size: 0.65rem; font-weight: 700; padding: 0.2rem 0.5rem; border-radius: 6px;">PDF Verslag</span>
+                                <span style="background: #16a34a; color: white; font-size: 0.65rem; font-weight: 700; padding: 0.25rem 0.6rem; border-radius: 6px;">PDF Logboek Export</span>
+                                <span style="background: #eff6ff; color: #1d4ed8; font-size: 0.65rem; font-weight: 700; padding: 0.25rem 0.6rem; border-radius: 6px;">Bewerken</span>
                             </div>
                         </div>
 
-                        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 0.85rem;">
-                            <div style="display: flex; justify-content: space-between; font-weight: 700; color: #0f172a; margin-bottom: 0.3rem;">
-                                <span>Lisa Bakker</span>
-                                <span style="color: #ca8a04;">95 / 150 uur (63%)</span>
+                        <!-- Student Card 2 -->
+                        <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 0.75rem; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.3rem;">
+                                <span style="font-weight: 800; color: #0f172a; font-size: 0.85rem;">Sophie van Dijk</span>
+                                <span style="background: #fef3c7; color: #92400e; font-size: 0.65rem; font-weight: 700; padding: 0.15rem 0.5rem; border-radius: 99px;">Te accorderen (7,5 uur)</span>
                             </div>
-                            <div style="width: 100%; height: 8px; background: #e2e8f0; border-radius: 99px; overflow: hidden; margin-bottom: 0.5rem;">
-                                <div style="width: 63%; height: 100%; background: #eab308; border-radius: 99px;"></div>
-                            </div>
-                            <div style="display: flex; justify-content: space-between; align-items: center;">
-                                <span style="font-size: 0.7rem; color: #64748b;">Bedrijf: Bakkerij De Proef</span>
-                                <span style="background: #16a34a; color: white; font-size: 0.65rem; font-weight: 700; padding: 0.2rem 0.5rem; border-radius: 6px;">PDF Verslag</span>
+                            <div style="font-size: 0.7rem; color: #64748b; margin-bottom: 0.35rem;">Stagebedrijf: Bakkerij De Proef</div>
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.5rem;">
+                                <span style="background: #16a34a; color: white; font-size: 0.65rem; font-weight: 700; padding: 0.25rem 0.6rem; border-radius: 6px;">PDF Logboek Export</span>
+                                <span style="background: #eff6ff; color: #1d4ed8; font-size: 0.65rem; font-weight: 700; padding: 0.25rem 0.6rem; border-radius: 6px;">Bewerken</span>
                             </div>
                         </div>
                     </div>
