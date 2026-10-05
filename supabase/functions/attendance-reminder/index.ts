@@ -28,24 +28,26 @@ serve(async (req) => {
         const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY');
         if (!RESEND_API_KEY) throw new Error('RESEND_API_KEY not configured');
 
-        // 1. Get dates
+        // 1. Get dates using pure UTC to avoid timezone offset shifts
         const now = new Date();
-        const monday = new Date(now);
-        const day = now.getDay();
-        const diff = now.getDate() - day + (day === 0 ? -6 : 1);
-        monday.setDate(diff);
-        monday.setHours(0, 0, 0, 0);
+        const utcYear = now.getUTCFullYear();
+        const utcMonth = now.getUTCMonth();
+        const utcDate = now.getUTCDate();
+        const utcDay = now.getUTCDay(); // 0 = Sun, 1 = Mon...
+
+        const diffToMonday = utcDay === 0 ? -6 : 1 - utcDay;
+        const monday = new Date(Date.UTC(utcYear, utcMonth, utcDate + diffToMonday));
 
         const weekDates: { [key: string]: string } = {};
         const dayMap = ['Ma', 'Di', 'Wo', 'Do', 'Vr'];
         for (let i = 0; i < 5; i++) {
             const d = new Date(monday);
-            d.setDate(monday.getDate() + i);
+            d.setUTCDate(monday.getUTCDate() + i);
             weekDates[dayMap[i]] = d.toISOString().split('T')[0];
         }
 
         // 2. Fetch data
-        const { data: students } = await supabaseAdmin.from('Students').select('*').not('company_id', 'is', null);
+        const { data: students } = await supabaseAdmin.from('Students').select('*');
         const { data: companies } = await supabaseAdmin.from('Bedrijven').select('*');
         const { data: attendance } = await supabaseAdmin.from('Attendance').select('*').gte('date', weekDates['Ma']).lte('date', weekDates['Vr']);
         const { data: holidays } = await supabaseAdmin.from('Vakanties').select('*').lte('start_date', weekDates['Vr']).gte('end_date', weekDates['Ma']);
@@ -72,28 +74,74 @@ serve(async (req) => {
                 continue;
             }
 
-            const company = companies?.find(c => c.id === student.company_id);
-            if (!company || !company.email) continue;
+            // Determine company assignments (supports multi-company JSON and single company_id)
+            const assignments: Array<{ company_id: string; days: string[] }> = [];
 
-            const scheduled = student.scheduled_days || [];
-            const missingDays = [];
-
-            for (const dayCode of scheduled) {
-                const dateStr = weekDates[dayCode];
-                if (!dateStr || dateStr > now.toISOString().split('T')[0]) continue;
-
-                // Check if this date falls within a holiday
-                const isHoliday = holidays?.some(h => dateStr >= h.start_date && dateStr <= h.end_date);
-                if (isHoliday) continue;
-
-                if (!attendance?.some(a => a.student_id === student.id && a.date === dateStr)) {
-                    missingDays.push(dayCode);
+            if (student.company_assignments) {
+                let ca = student.company_assignments;
+                if (typeof ca === 'string') {
+                    try { ca = JSON.parse(ca); } catch (e) { ca = []; }
+                }
+                if (Array.isArray(ca) && ca.length > 0) {
+                    for (const a of ca) {
+                        const cid = a.company_id || a.companyId;
+                        if (cid) {
+                            assignments.push({
+                                company_id: cid,
+                                days: Array.isArray(a.days) && a.days.length > 0 ? a.days : (student.scheduled_days || [])
+                            });
+                        }
+                    }
                 }
             }
 
-            if (missingDays.length > 0) {
-                if (!reminderList[company.email]) reminderList[company.email] = { name: company.company_name, students: [] };
-                reminderList[company.email].students.push({ name: student.name, days: missingDays });
+            if (assignments.length === 0 && student.company_id) {
+                const ids = typeof student.company_id === 'string'
+                    ? student.company_id.split(',').map((id: string) => id.trim()).filter(Boolean)
+                    : [student.company_id];
+                for (const cid of ids) {
+                    assignments.push({
+                        company_id: cid,
+                        days: student.scheduled_days || []
+                    });
+                }
+            }
+
+            if (assignments.length === 0) continue;
+
+            for (const assignment of assignments) {
+                const company = companies?.find(c => c.id === assignment.company_id);
+                if (!company || !company.email) continue;
+
+                const scheduled = assignment.days || [];
+                const missingDays: string[] = [];
+
+                for (const dayCode of scheduled) {
+                    const dateStr = weekDates[dayCode];
+                    if (!dateStr || dateStr > todayStr) continue;
+
+                    // Check if this date falls within a holiday
+                    const isHoliday = holidays?.some(h => dateStr >= h.start_date && dateStr <= h.end_date);
+                    if (isHoliday) continue;
+
+                    // Check if attendance record exists with a valid status or student_status
+                    const hasRecord = attendance?.some(a =>
+                        a.student_id === student.id &&
+                        a.date === dateStr &&
+                        (a.status || a.student_status)
+                    );
+
+                    if (!hasRecord) {
+                        missingDays.push(dayCode);
+                    }
+                }
+
+                if (missingDays.length > 0) {
+                    if (!reminderList[company.email]) {
+                        reminderList[company.email] = { name: company.company_name, students: [] };
+                    }
+                    reminderList[company.email].students.push({ name: student.name, days: missingDays });
+                }
             }
         }
 
