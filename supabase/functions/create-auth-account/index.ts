@@ -67,7 +67,7 @@ serve(async (req) => {
                     <div style="font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 24px; border: 1px solid #e2e8f0; border-radius: 12px; background: #ffffff;">
                         <div style="text-align: center; margin-bottom: 20px;">
                             <h2 style="color: #1e293b; margin: 0;">StageConnectie</h2>
-                            <p style="color: #64748b; font-size: 14px; margin-top: 4px;">Groene Hart Praktijkschool</p>
+                            <p style="color: #64748b; font-size: 14px; margin-top: 4px;">Groene Hart Pro College</p>
                         </div>
                         
                         <h3 style="color: #1e293b; margin-top: 0;">Beste ${recipientName},</h3>
@@ -103,7 +103,7 @@ serve(async (req) => {
                         <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 25px 0;">
                         <p style="font-size: 14px; color: #64748b; margin-bottom: 0;">
                             Met vriendelijke groet,<br>
-                            <strong>Het stage team van Groene Hart Praktijkschool</strong><br>
+                            <strong>het stageteam van Groene Hart Pro College</strong><br>
                             <span style="font-size: 12px; color: #94a3b8;">StageConnectie Support</span>
                         </p>
                     </div>
@@ -195,7 +195,7 @@ serve(async (req) => {
                     <div style="font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 24px; border: 1px solid #e2e8f0; border-radius: 12px; background: #ffffff;">
                         <div style="text-align: center; margin-bottom: 20px;">
                             <h2 style="color: #1e293b; margin: 0;">StageConnectie</h2>
-                            <p style="color: #64748b; font-size: 14px; margin-top: 4px;">Groene Hart Praktijkschool</p>
+                            <p style="color: #64748b; font-size: 14px; margin-top: 4px;">Groene Hart Pro College</p>
                         </div>
                         
                         <h3 style="color: #1e293b; margin-top: 0;">Beste ${userName || 'gebruiker'},</h3>
@@ -217,7 +217,7 @@ serve(async (req) => {
                         <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 25px 0;">
                         <p style="font-size: 14px; color: #64748b; margin-bottom: 0;">
                             Met vriendelijke groet,<br>
-                            <strong>Het stage team van Groene Hart Praktijkschool</strong>
+                            <strong>het stageteam van Groene Hart Pro College</strong>
                         </p>
                     </div>
                 `;
@@ -498,11 +498,11 @@ serve(async (req) => {
 
                 if (isInvite) {
                     if (role === 'employer') {
-                        subjectLine = 'Uitnodiging digitale aanwezigheidsregistratie - Groene Hart Praktijkschool';
+                        subjectLine = 'Uitnodiging digitale aanwezigheidsregistratie - Groene Hart Pro College';
                         htmlContent = `
                             <div style="font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 24px; border: 1px solid #e2e8f0; border-radius: 12px; background: #ffffff;">
                                 <h2 style="color: #1e293b; margin-top: 0;">Beste ${name || 'stagebegeleider / werkgever'},</h2>
-                                <p style="color: #334155; line-height: 1.6;">Wij nodigen u van harte uit voor de digitale aanwezigheidsregistratie van de <strong>Groene Hart Praktijkschool</strong> via StageConnectie.</p>
+                                <p style="color: #334155; line-height: 1.6;">Wij nodigen u van harte uit voor de digitale aanwezigheidsregistratie van het <strong>Groene Hart Pro College</strong> via StageConnectie.</p>
                                 <p style="color: #334155; line-height: 1.6;">Met behulp van deze website (geschikt voor laptop, tablet en smartphone) kunt u met 2 à 3 klikken snel doorgeven of een stagiair wel of niet aanwezig is op een stagedag.</p>
                                 
                                 <p style="color: #334155; line-height: 1.6; margin-top: 20px;">Klik op de onderstaande knop om uw account te activeren en uw eigen wachtwoord in te stellen:</p>
@@ -529,7 +529,7 @@ serve(async (req) => {
                                 <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 25px 0;">
                                 <p style="font-size: 14px; color: #64748b; margin-bottom: 0;">
                                     Met vriendelijke groet,<br>
-                                    <strong>Het stage team van Groene Hart Praktijkschool</strong>
+                                    <strong>het stageteam van Groene Hart Pro College</strong>
                                 </p>
                             </div>
                         `;
@@ -547,7 +547,7 @@ serve(async (req) => {
                                     <em>Let op: Deze activatielink is beperkt geldig.</em>
                                 </p>
                                 <p style="margin-top: 25px; font-size: 14px; color: #64748b;">
-                                    Met vriendelijke groet,<br>Het stage team van Groene Hart Praktijkschool
+                                    Met vriendelijke groet,<br>het stageteam van Groene Hart Pro College
                                 </p>
                             </div>
                         `;
@@ -567,7 +567,7 @@ serve(async (req) => {
                             <a href="${loginUrl || 'https://ghpc.stageconnectie.nl/login.html'}" style="display: inline-block; background: #2563eb; color: white; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: bold; margin-top: 10px;">Naar het Portaal</a>
                             <p style="margin-top: 25px; font-size: 14px; color: #64748b;">
                                 We raden je aan om je wachtwoord te wijzigen nadat je voor de eerste keer bent ingelogd.<br><br>
-                                Met vriendelijke groet,<br>Het stage team van Groene Hart Praktijkschool
+                                Met vriendelijke groet,<br>het stageteam van Groene Hart Pro College
                             </p>
                         </div>
                     `;

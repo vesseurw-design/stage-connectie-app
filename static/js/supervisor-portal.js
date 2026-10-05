@@ -1191,7 +1191,7 @@ async function exportSupervisorClassPDF() {
     reportContainer.innerHTML = `
         <div style="border-bottom: 3px solid #2563eb; padding-bottom: 12px; margin-bottom: 16px;">
             <h1 style="font-size: 22px; font-weight: bold; color: #1e40af; margin: 0;">📚 Klas-Aanwezigheidsoverzicht</h1>
-            <p style="font-size: 12px; color: #64748b; margin: 4px 0 0 0;">StageConnectie – Groene Hart Praktijkschool</p>
+            <p style="font-size: 12px; color: #64748b; margin: 4px 0 0 0;">StageConnectie – Groene Hart Pro College</p>
         </div>
 
         <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; margin-bottom: 16px; font-size: 12px;">
