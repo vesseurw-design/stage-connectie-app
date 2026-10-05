@@ -9,6 +9,18 @@ const SUPABASE_KEY = window.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ
 // Use the exact SAME initialization as Admin
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+(function autoPurgeStaleStudentDemoSession() {
+    const isDemoExplicit = sessionStorage.getItem('demo_unlocked') === 'true' || 
+                           new URLSearchParams(window.location.search).get('demo') === 'unlocked';
+    const storedEmail = localStorage.getItem('student_email');
+    if (!isDemoExplicit && (storedEmail === 'fake@leerling.nl' || storedEmail === 'test@test.nl')) {
+        console.log('🧹 Purging stale student demo session...');
+        localStorage.removeItem('student_email');
+        localStorage.removeItem('student_id');
+        localStorage.removeItem('stageconnect_student_session');
+    }
+})();
+
 const loginForm = document.getElementById('student-login-form');
 const errorMessage = document.getElementById('error-message');
 
