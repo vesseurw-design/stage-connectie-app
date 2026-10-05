@@ -98,22 +98,6 @@ async function init() {
 }
 
 async function continueEmployerInit() {
-    if (currentCompany?.id === 'demo-company' || currentCompany?.company_name === 'Demo Bedrijf' || currentCompany?.company_name === 'Testbedrijf' || localStorage.getItem('user_email') === 'test@testbedrijf.nl') {
-        const existingDemoBanner = document.getElementById('demo-mode-banner');
-        if (!existingDemoBanner) {
-            const banner = document.createElement('div');
-            banner.id = 'demo-mode-banner';
-            banner.className = 'bg-amber-600 text-white font-bold px-4 py-3 text-center text-sm flex flex-col sm:flex-row justify-between items-center gap-2 sticky top-0 z-50 shadow-md border-b border-amber-700';
-            banner.innerHTML = `
-                <span>⚠️ <strong>Demo Modus Actief</strong>: U bent ingelogd in het demo-account (<strong>${currentCompany?.company_name || 'Demo Bedrijf'}</strong>). Ingevulde aanwezigheid wordt <u>niet</u> opgeslagen voor uw eigen stagiairs.</span>
-                <button onclick="exitDemoMode()" class="bg-amber-950 hover:bg-black text-white px-4 py-1.5 rounded-lg text-xs font-semibold transition whitespace-nowrap shadow cursor-pointer">
-                    🚪 Uitloggen uit Demo & Inloggen met Eigen Account
-                </button>
-            `;
-            document.body.insertBefore(banner, document.body.firstChild);
-        }
-    }
-
     if (localStorage.getItem('admin_preview_mode') === 'true') {
         const existingBanner = document.getElementById('admin-preview-banner');
         if (!existingBanner) {
