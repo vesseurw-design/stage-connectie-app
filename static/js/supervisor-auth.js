@@ -7,17 +7,7 @@ const SUPABASE_URL = window.SUPABASE_URL || 'https://vdeipnqyesduiohxvuvu.supaba
 const SUPABASE_KEY = window.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZkZWlwbnF5ZXNkdWlvaHh2dXZ1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc1MjY5NTEsImV4cCI6MjA4MzEwMjk1MX0.IknEZ-GQvspcppJxLR00ayBDq1DbL0HiUKy9RDb59DU';
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-(function autoPurgeStaleSupervisorDemoSession() {
-    const isDemoExplicit = sessionStorage.getItem('demo_unlocked') === 'true' || 
-                           new URLSearchParams(window.location.search).get('demo') === 'unlocked';
-    const storedEmail = localStorage.getItem('supervisor_email');
-    if (!isDemoExplicit && (storedEmail === 'stage@begeleider.nl' || storedEmail === 'test@test.nl')) {
-        console.log('🧹 Purging stale supervisor demo session...');
-        localStorage.removeItem('supervisor_email');
-        localStorage.removeItem('supervisor_id');
-        localStorage.removeItem('stageconnect_supervisor_session');
-    }
-})();
+// Auto purge removed to prevent demo sessions from being unexpectedly logged out
 
 // Login form handler
 const loginForm = document.getElementById('supervisor-login-form');
@@ -176,28 +166,23 @@ function logout() {
 // Maak logout beschikbaar globaal
 window.supervisorLogout = logout;
 
-// Add Demo button dynamically if credentials are set and demo access is allowed
-const urlCode = new URLSearchParams(window.location.search).get('code');
-const isDemoUnlocked = sessionStorage.getItem('demo_unlocked') === 'true' || 
-                       new URLSearchParams(window.location.search).get('demo') === 'unlocked' ||
-                       (typeof window.validateDemoCode === 'function' && urlCode ? window.validateDemoCode(urlCode) : false);
-
-if (window.DEMO_CREDENTIALS && window.DEMO_CREDENTIALS.supervisor && isDemoUnlocked) {
+// Add Demo button dynamically if credentials are set
+function setupSupervisorDemoButton() {
+    const supervisorDemoEmail = (window.DEMO_CREDENTIALS && window.DEMO_CREDENTIALS.supervisor) || 'stage@begeleider.nl';
     const form = document.getElementById('supervisor-login-form');
-    if (form) {
+    if (form && !document.getElementById('demo-login-btn')) {
         const demoBtn = document.createElement('button');
         demoBtn.type = 'button';
-        demoBtn.className = 'w-full mt-4 bg-green-100 hover:bg-green-200 text-green-700 font-semibold py-3 px-4 rounded-lg transition duration-200 border border-green-300 shadow hover:shadow-md flex items-center justify-center gap-2';
-        demoBtn.innerHTML = '⚡ Snel inloggen (Demo)';
+        demoBtn.className = 'w-full mt-4 bg-green-100 hover:bg-green-200 text-green-700 font-semibold py-3 px-4 rounded-lg transition duration-200 border border-green-300 shadow hover:shadow-md flex items-center justify-center gap-2 cursor-pointer';
+        demoBtn.innerHTML = '⚡ Snel inloggen (Demo Stagebegeleider)';
         demoBtn.id = 'demo-login-btn';
         demoBtn.addEventListener('click', async () => {
             const emailInput = document.getElementById('email');
             const passwordInput = document.getElementById('password');
             if (emailInput && passwordInput) {
-                emailInput.value = window.DEMO_CREDENTIALS.supervisor;
-                passwordInput.value = 'Wel' + 'kom' + 'GHPC' + '2026!';
+                emailInput.value = supervisorDemoEmail;
+                passwordInput.value = 'WelkomGHPC2026!';
                 
-                // Submit the form using click on submit button
                 const submitBtn = form.querySelector('button[type="submit"]');
                 if (submitBtn) {
                     submitBtn.click();
@@ -205,7 +190,6 @@ if (window.DEMO_CREDENTIALS && window.DEMO_CREDENTIALS.supervisor && isDemoUnloc
             }
         });
         
-        // Insert right after the submit button
         const submitBtn = form.querySelector('button[type="submit"]');
         if (submitBtn) {
             submitBtn.parentNode.insertBefore(demoBtn, submitBtn.nextSibling);
@@ -213,5 +197,11 @@ if (window.DEMO_CREDENTIALS && window.DEMO_CREDENTIALS.supervisor && isDemoUnloc
             form.appendChild(demoBtn);
         }
     }
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', setupSupervisorDemoButton);
+} else {
+    setupSupervisorDemoButton();
 }
 
