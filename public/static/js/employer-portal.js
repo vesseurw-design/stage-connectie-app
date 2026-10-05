@@ -436,7 +436,8 @@ function getStudentStatusLabel(st) {
 function updateCellContent(cell, status, minutesLate, studentStatus = '', studentHours = 0, notes = '') {
     const icons = { 'present': '✅', 'absent': '❌', 'sick': '🤒', 'late': '⏱️', '': '' };
 
-    const cleanStudentStatus = (studentStatus && studentStatus !== 'undefined' && studentStatus !== 'null') ? studentStatus : '';
+    const cleanEmployerStatus = (status && status !== 'pending' && status !== 'undefined' && status !== 'null') ? status : '';
+    const cleanStudentStatus = (studentStatus && studentStatus !== 'pending' && studentStatus !== 'undefined' && studentStatus !== 'null') ? studentStatus : '';
     const hasStudentInput = Boolean(cleanStudentStatus || (studentHours && parseFloat(studentHours) > 0));
 
     // Reset specific borders & backgrounds
@@ -447,25 +448,25 @@ function updateCellContent(cell, status, minutesLate, studentStatus = '', studen
         'shadow-md', 'shadow-sm'
     );
 
-    if (status) {
+    if (cleanEmployerStatus) {
         // Employer has accorded/set status (Definitief geaccordeerd)
-        const content = icons[status] || status;
-        cell.innerHTML = `<div class="status-badge ${status}">${content}</div>`;
-        if (status === 'late' && minutesLate > 0) {
+        const content = icons[cleanEmployerStatus] || cleanEmployerStatus;
+        cell.innerHTML = `<div class="status-badge ${cleanEmployerStatus}">${content}</div>`;
+        if (cleanEmployerStatus === 'late' && minutesLate > 0) {
             cell.innerHTML += `<div class="late-minutes">${minutesLate}m</div>`;
         }
         // Active Status Coloring
-        if (status === 'present') cell.classList.add('border-green-400');
-        else if (status === 'absent') cell.classList.add('border-red-400');
-        else if (status === 'sick') cell.classList.add('border-orange-400');
-        else if (status === 'late') cell.classList.add('border-yellow-400');
+        if (cleanEmployerStatus === 'present') cell.classList.add('border-green-400');
+        else if (cleanEmployerStatus === 'absent') cell.classList.add('border-red-400');
+        else if (cleanEmployerStatus === 'sick') cell.classList.add('border-orange-400');
+        else if (cleanEmployerStatus === 'late') cell.classList.add('border-yellow-400');
         cell.classList.add('shadow-md');
     } else if (hasStudentInput) {
         // Student registered attendance, but employer has NOT yet accorded -> Show light colored tile with student entry & "Te goedkeuren"!
         const studentLabel = getStudentStatusLabel(cleanStudentStatus);
-        const icon = icons[cleanStudentStatus] || '📝';
+        const icon = icons[cleanStudentStatus] || (cleanStudentStatus ? '📝' : '');
         const hoursText = parseFloat(studentHours) > 0 ? `${studentHours}u` : '';
-        const detailText = [studentLabel, hoursText].filter(Boolean).join(' ') || 'Invoer';
+        const detailText = [icon, studentLabel, hoursText].filter(Boolean).join(' ') || 'Invoer';
 
         let bgClass = 'bg-amber-50/70';
         let borderClass = 'border-amber-300';
@@ -507,9 +508,8 @@ function updateCellContent(cell, status, minutesLate, studentStatus = '', studen
         cell.innerHTML = `
             <div class="flex flex-col items-center justify-center h-full gap-0.5 p-1">
                 <span class="text-[9px] font-extrabold ${badgeText} ${badgeBg} px-1.5 py-0.5 rounded-full border ${badgeBorder} shadow-sm leading-none tracking-tight">Te goedkeuren</span>
-                <span class="text-[10px] font-black ${textClass} leading-tight mt-0.5 text-center flex items-center gap-0.5">
-                    <span>${icon}</span>
-                    <span>${detailText}</span>
+                <span class="text-[10px] font-black ${textClass} leading-tight mt-0.5 text-center">
+                    ${detailText}
                 </span>
             </div>
         `;
@@ -521,7 +521,7 @@ function updateCellContent(cell, status, minutesLate, studentStatus = '', studen
     }
 
     // Small badge at bottom right for student hours if employer has accorded
-    if (status && hasStudentInput) {
+    if (cleanEmployerStatus && hasStudentInput) {
         const label = getStudentStatusLabel(cleanStudentStatus);
         const titleText = label ? `Eigen invoer student: ${label}` : 'Eigen invoer student';
         cell.innerHTML += `
@@ -532,7 +532,7 @@ function updateCellContent(cell, status, minutesLate, studentStatus = '', studen
     }
 
     // Store data (preserve notes for DB save)
-    cell.dataset.status = status || '';
+    cell.dataset.status = cleanEmployerStatus;
     cell.dataset.minutes = minutesLate || 0;
     cell.dataset.studentStatus = cleanStudentStatus;
     cell.dataset.studentHours = studentHours || 0;
