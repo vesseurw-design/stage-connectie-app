@@ -443,10 +443,15 @@ function updateCellContent(cell, status, minutesLate, studentStatus = '', studen
     const hasStudentInput = Boolean(cleanStudentStatus || (studentHours && parseFloat(studentHours) > 0));
 
     // Reset specific borders & backgrounds
-    cell.classList.remove('border-gray-300', 'border-gray-100', 'border-green-400', 'border-red-400', 'border-orange-400', 'border-yellow-400', 'border-amber-400', 'bg-amber-50/50', 'shadow-md', 'shadow-sm');
+    cell.classList.remove(
+        'border-gray-300', 'border-gray-100', 'border-green-400', 'border-red-400', 'border-orange-400', 'border-yellow-400', 'border-amber-400',
+        'bg-amber-50/50', 'bg-green-50/80', 'bg-red-50/80', 'bg-orange-50/80', 'bg-yellow-50/80',
+        'border-green-300', 'border-red-300', 'border-orange-300', 'border-yellow-300', 'border-amber-300', 'border-dashed',
+        'shadow-md', 'shadow-sm'
+    );
 
     if (status) {
-        // Employer has accorded/set status
+        // Employer has accorded/set status (Definitief geaccordeerd)
         const content = icons[status] || status;
         cell.innerHTML = `<div class="status-badge ${status}">${content}</div>`;
         if (status === 'late' && minutesLate > 0) {
@@ -459,16 +464,59 @@ function updateCellContent(cell, status, minutesLate, studentStatus = '', studen
         else if (status === 'late') cell.classList.add('border-yellow-400');
         cell.classList.add('shadow-md');
     } else if (hasStudentInput) {
-        // Student registered attendance, but employer has NOT yet accorded -> Show 'Te accorderen'!
+        // Student registered attendance, but employer has NOT yet accorded -> Show light colored tile with student entry & "Te goedkeuren"!
         const studentLabel = getStudentStatusLabel(cleanStudentStatus);
-        const hoursText = parseFloat(studentHours) > 0 ? `${studentHours}u` : (studentLabel || 'Invoer');
+        const icon = icons[cleanStudentStatus] || '📝';
+        const hoursText = parseFloat(studentHours) > 0 ? `${studentHours}u` : '';
+        const detailText = [studentLabel, hoursText].filter(Boolean).join(' ') || 'Invoer';
+
+        let bgClass = 'bg-amber-50/70';
+        let borderClass = 'border-amber-300';
+        let badgeBg = 'bg-amber-100';
+        let badgeBorder = 'border-amber-300';
+        let badgeText = 'text-amber-800';
+        let textClass = 'text-amber-900';
+
+        if (cleanStudentStatus === 'present') {
+            bgClass = 'bg-green-50/80';
+            borderClass = 'border-green-300';
+            badgeBg = 'bg-green-100';
+            badgeBorder = 'border-green-300';
+            badgeText = 'text-green-800';
+            textClass = 'text-green-900';
+        } else if (cleanStudentStatus === 'absent') {
+            bgClass = 'bg-red-50/80';
+            borderClass = 'border-red-300';
+            badgeBg = 'bg-red-100';
+            badgeBorder = 'border-red-300';
+            badgeText = 'text-red-800';
+            textClass = 'text-red-900';
+        } else if (cleanStudentStatus === 'sick') {
+            bgClass = 'bg-orange-50/80';
+            borderClass = 'border-orange-300';
+            badgeBg = 'bg-orange-100';
+            badgeBorder = 'border-orange-300';
+            badgeText = 'text-orange-800';
+            textClass = 'text-orange-900';
+        } else if (cleanStudentStatus === 'late') {
+            bgClass = 'bg-yellow-50/80';
+            borderClass = 'border-yellow-300';
+            badgeBg = 'bg-yellow-100';
+            badgeBorder = 'border-yellow-300';
+            badgeText = 'text-yellow-800';
+            textClass = 'text-yellow-900';
+        }
+
         cell.innerHTML = `
             <div class="flex flex-col items-center justify-center h-full gap-0.5 p-1">
-                <span class="text-[9px] font-extrabold text-amber-800 bg-amber-100 px-1.5 py-0.5 rounded-full border border-amber-300 shadow-sm leading-none tracking-tight">Te accorderen</span>
-                <span class="text-[10px] font-bold text-purple-700 leading-none mt-0.5">${hoursText}</span>
+                <span class="text-[9px] font-extrabold ${badgeText} ${badgeBg} px-1.5 py-0.5 rounded-full border ${badgeBorder} shadow-sm leading-none tracking-tight">Te goedkeuren</span>
+                <span class="text-[10px] font-black ${textClass} leading-tight mt-0.5 text-center flex items-center gap-0.5">
+                    <span>${icon}</span>
+                    <span>${detailText}</span>
+                </span>
             </div>
         `;
-        cell.classList.add('border-amber-400', 'bg-amber-50/50', 'shadow-sm');
+        cell.classList.add(borderClass, bgClass, 'border-dashed', 'shadow-sm');
     } else {
         // Empty State: Gray border = visible box with +
         cell.innerHTML = `<div class="status-badge empty"><span class="text-gray-300 text-3xl font-black">+</span></div>`;
@@ -499,10 +547,19 @@ function openActionSheet(studentId, date, element) {
     const sheet = document.getElementById('action-sheet');
     const overlay = document.getElementById('action-overlay');
 
-    // Header info: Student Name & Formatted Date
+    // Header info: Student Name & Formatted Date & Student Entry Hint
     const student = students.find(s => s.id === studentId);
     const studentNameElem = document.getElementById('action-student-name');
-    if (studentNameElem) studentNameElem.textContent = student ? student.name : '';
+    const studentStatus = element.dataset.studentStatus || '';
+    const studentHours = element.dataset.studentHours || '';
+    const studentLabel = getStudentStatusLabel(studentStatus);
+
+    let hint = student ? student.name : '';
+    if (studentLabel || (studentHours && parseFloat(studentHours) > 0)) {
+        const detail = [studentLabel, studentHours ? `${studentHours} uur` : ''].filter(Boolean).join(' • ');
+        hint += ` (Invoer leerling: ${detail})`;
+    }
+    if (studentNameElem) studentNameElem.textContent = hint;
 
     const dateObj = new Date(date);
     const dateOptions = { weekday: 'long', day: 'numeric', month: 'long' };
