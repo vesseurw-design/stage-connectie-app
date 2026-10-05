@@ -58,9 +58,7 @@ if (loginForm) {
 
 // Add Demo button dynamically if credentials are set and demo access is allowed
 const urlCode = new URLSearchParams(window.location.search).get('code');
-const isSubdomain = !['stageconnectie.nl', 'www.stageconnectie.nl'].includes(window.location.hostname.toLowerCase());
-const isDemoUnlocked = isSubdomain || 
-                       sessionStorage.getItem('demo_unlocked') === 'true' || 
+const isDemoUnlocked = sessionStorage.getItem('demo_unlocked') === 'true' || 
                        new URLSearchParams(window.location.search).get('demo') === 'unlocked' ||
                        (typeof window.validateDemoCode === 'function' && urlCode ? window.validateDemoCode(urlCode) : false);
 
