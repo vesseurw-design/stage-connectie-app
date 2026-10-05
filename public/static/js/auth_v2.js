@@ -114,23 +114,21 @@ window.addEventListener('DOMContentLoaded', () => {
 // Check if already logged in
 async function checkSession() {
     try {
+        const { data: { session } } = await supabaseClient.auth.getSession();
+
         const isDemoExplicit = sessionStorage.getItem('demo_unlocked') === 'true' || 
                                new URLSearchParams(window.location.search).get('demo') === 'unlocked';
-        const storedEmail = localStorage.getItem('user_email');
         const storedCompanyId = localStorage.getItem('company_id');
         const storedCompanyName = localStorage.getItem('company_name');
 
-        if (!isDemoExplicit && (storedEmail === 'test@testbedrijf.nl' || storedEmail === 'test@test.nl' || storedCompanyId === 'demo-company' || storedCompanyName === 'Demo Bedrijf')) {
+        if (!session && !isDemoExplicit && (storedCompanyId === 'demo-company' || storedCompanyName === 'Demo Bedrijf')) {
             console.log('🧹 Purging stale demo session on login page...');
             localStorage.removeItem('stageconnect_session');
             localStorage.removeItem('user_email');
             localStorage.removeItem('company_id');
             localStorage.removeItem('company_name');
-            await supabaseClient.auth.signOut().catch(() => {});
             return;
         }
-
-        const { data: { session } } = await supabaseClient.auth.getSession();
 
         if (session) {
             const user = session.user;
@@ -201,28 +199,23 @@ async function checkSession() {
 
 checkSession();
 
-// Add Demo button dynamically if credentials are set and demo access is allowed
-const urlCode = new URLSearchParams(window.location.search).get('code');
-const isDemoUnlocked = sessionStorage.getItem('demo_unlocked') === 'true' || 
-                       new URLSearchParams(window.location.search).get('demo') === 'unlocked' ||
-                       (typeof window.validateDemoCode === 'function' && urlCode ? window.validateDemoCode(urlCode) : false);
-
-if (window.DEMO_CREDENTIALS && window.DEMO_CREDENTIALS.employer && isDemoUnlocked) {
+// Add Demo button dynamically if credentials are set
+function setupEmployerDemoButton() {
+    const employerDemoEmail = (window.DEMO_CREDENTIALS && window.DEMO_CREDENTIALS.employer) || 'test@testbedrijf.nl';
     const form = document.getElementById('login-form');
-    if (form) {
+    if (form && !document.getElementById('demo-login-btn')) {
         const demoBtn = document.createElement('button');
         demoBtn.type = 'button';
-        demoBtn.className = 'w-full mt-4 bg-blue-100 hover:bg-blue-200 text-blue-700 font-semibold py-3 px-4 rounded-lg transition duration-200 border border-blue-300 shadow hover:shadow-md flex items-center justify-center gap-2';
-        demoBtn.innerHTML = '⚡ Snel inloggen (Demo)';
+        demoBtn.className = 'w-full mt-4 bg-blue-100 hover:bg-blue-200 text-blue-700 font-semibold py-3 px-4 rounded-lg transition duration-200 border border-blue-300 shadow hover:shadow-md flex items-center justify-center gap-2 cursor-pointer';
+        demoBtn.innerHTML = '⚡ Snel inloggen (Demo Stagebedrijf)';
         demoBtn.id = 'demo-login-btn';
         demoBtn.addEventListener('click', async () => {
             const emailInput = document.getElementById('email');
             const passwordInput = document.getElementById('password');
             if (emailInput && passwordInput) {
-                emailInput.value = window.DEMO_CREDENTIALS.employer;
-                passwordInput.value = 'Wel' + 'kom' + 'GHPC' + '2026!';
+                emailInput.value = employerDemoEmail;
+                passwordInput.value = 'WelkomGHPC2026!';
                 
-                // Submit the form using click on submit button
                 const submitBtn = form.querySelector('button[type="submit"]');
                 if (submitBtn) {
                     submitBtn.click();
@@ -230,7 +223,6 @@ if (window.DEMO_CREDENTIALS && window.DEMO_CREDENTIALS.employer && isDemoUnlocke
             }
         });
         
-        // Insert right after the submit button
         const submitBtn = form.querySelector('button[type="submit"]');
         if (submitBtn) {
             submitBtn.parentNode.insertBefore(demoBtn, submitBtn.nextSibling);
@@ -238,4 +230,10 @@ if (window.DEMO_CREDENTIALS && window.DEMO_CREDENTIALS.employer && isDemoUnlocke
             form.appendChild(demoBtn);
         }
     }
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', setupEmployerDemoButton);
+} else {
+    setupEmployerDemoButton();
 }
