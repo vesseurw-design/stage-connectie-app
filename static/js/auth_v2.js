@@ -114,6 +114,22 @@ window.addEventListener('DOMContentLoaded', () => {
 // Check if already logged in
 async function checkSession() {
     try {
+        const isDemoExplicit = sessionStorage.getItem('demo_unlocked') === 'true' || 
+                               new URLSearchParams(window.location.search).get('demo') === 'unlocked';
+        const storedEmail = localStorage.getItem('user_email');
+        const storedCompanyId = localStorage.getItem('company_id');
+        const storedCompanyName = localStorage.getItem('company_name');
+
+        if (!isDemoExplicit && (storedEmail === 'test@testbedrijf.nl' || storedEmail === 'test@test.nl' || storedCompanyId === 'demo-company' || storedCompanyName === 'Demo Bedrijf')) {
+            console.log('🧹 Purging stale demo session on login page...');
+            localStorage.removeItem('stageconnect_session');
+            localStorage.removeItem('user_email');
+            localStorage.removeItem('company_id');
+            localStorage.removeItem('company_name');
+            await supabaseClient.auth.signOut().catch(() => {});
+            return;
+        }
+
         const { data: { session } } = await supabaseClient.auth.getSession();
 
         if (session) {

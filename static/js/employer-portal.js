@@ -15,6 +15,21 @@ async function init() {
         let companyName = localStorage.getItem('company_name');
         let companyId = localStorage.getItem('company_id');
 
+        // Automatically purge any stale demo session so companies are never stuck in demo mode
+        const isDemoExplicit = sessionStorage.getItem('demo_unlocked') === 'true' || 
+                               new URLSearchParams(window.location.search).get('demo') === 'unlocked';
+
+        if (!isDemoExplicit && (userEmail === 'test@testbedrijf.nl' || userEmail === 'test@test.nl' || companyId === 'demo-company' || companyName === 'Demo Bedrijf')) {
+            console.log('🧹 Purging automatic demo session and redirecting to clean login...');
+            localStorage.removeItem('user_email');
+            localStorage.removeItem('company_id');
+            localStorage.removeItem('company_name');
+            localStorage.removeItem('stageconnect_session');
+            await supabaseClient.auth.signOut().catch(() => {});
+            window.location.href = 'login.html';
+            return;
+        }
+
         // Check if there is an active Supabase Auth session first
         if (!userEmail) {
             const { data: { session } } = await supabaseClient.auth.getSession();
