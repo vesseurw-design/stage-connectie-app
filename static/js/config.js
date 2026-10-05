@@ -9,7 +9,7 @@ const DB_CONFIGS = {
         url: 'https://vdeipnqyesduiohxvuvu.supabase.co',
         key: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZkZWlwbnF5ZXNkdWlvaHh2dXZ1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc1MjY5NTEsImV4cCI6MjA4MzEwMjk1MX0.IknEZ-GQvspcppJxLR00ayBDq1DbL0HiUKy9RDb59DU',
         maxStudents: 250,
-        schoolName: 'Groene Hart Praktijkschool',
+        schoolName: 'Groene Hart Pro College',
         logo: 'logo-ghpc-v2.png',
         demoCredentials: {
             student: 'fake@leerling.nl',
@@ -75,7 +75,7 @@ const DB_CONFIGS = {
         url: 'https://vdeipnqyesduiohxvuvu.supabase.co',
         key: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZkZWlwbnF5ZXNkdWlvaHh2dXZ1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc1MjY5NTEsImV4cCI6MjA4MzEwMjk1MX0.IknEZ-GQvspcppJxLR00ayBDq1DbL0HiUKy9RDb59DU',
         maxStudents: 250,
-        schoolName: 'Groene Hart Praktijkschool (Localhost)',
+        schoolName: 'Groene Hart Pro College (Localhost)',
         logo: 'logo-ghpc-v2.png',
         demoCredentials: {
             student: 'fake@leerling.nl',
