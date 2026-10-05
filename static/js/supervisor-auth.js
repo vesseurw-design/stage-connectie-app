@@ -7,6 +7,18 @@ const SUPABASE_URL = window.SUPABASE_URL || 'https://vdeipnqyesduiohxvuvu.supaba
 const SUPABASE_KEY = window.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZkZWlwbnF5ZXNkdWlvaHh2dXZ1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc1MjY5NTEsImV4cCI6MjA4MzEwMjk1MX0.IknEZ-GQvspcppJxLR00ayBDq1DbL0HiUKy9RDb59DU';
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+(function autoPurgeStaleSupervisorDemoSession() {
+    const isDemoExplicit = sessionStorage.getItem('demo_unlocked') === 'true' || 
+                           new URLSearchParams(window.location.search).get('demo') === 'unlocked';
+    const storedEmail = localStorage.getItem('supervisor_email');
+    if (!isDemoExplicit && (storedEmail === 'stage@begeleider.nl' || storedEmail === 'test@test.nl')) {
+        console.log('🧹 Purging stale supervisor demo session...');
+        localStorage.removeItem('supervisor_email');
+        localStorage.removeItem('supervisor_id');
+        localStorage.removeItem('stageconnect_supervisor_session');
+    }
+})();
+
 // Login form handler
 const loginForm = document.getElementById('supervisor-login-form');
 const errorMessage = document.getElementById('error-message');
