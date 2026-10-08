@@ -707,7 +707,10 @@
         }
 
         // Attendance History Functions
+        let currentStudentForModal = null;
+
         window.viewAttendance = async function (student) {
+            currentStudentForModal = student;
             document.getElementById('attendance-modal').classList.remove('hidden');
             document.getElementById('attendance-student-name').textContent = student.name;
 
@@ -731,80 +734,178 @@
                 return;
             }
 
-            if (!attendance || attendance.length === 0) {
-                document.getElementById('no-attendance').classList.remove('hidden');
-                document.getElementById('attendance-list').classList.add('hidden');
-                document.getElementById('attendance-stats').classList.add('hidden');
-                return;
-            }
+            const cleanAttendance = attendance || [];
 
             document.getElementById('no-attendance').classList.add('hidden');
             document.getElementById('attendance-list').classList.remove('hidden');
             document.getElementById('attendance-stats').classList.remove('hidden');
 
-            // Calculate stats
+            // Calculate stats using effective status
+            const getEffectiveStatus = a => {
+                if (a.status && a.status !== 'pending' && a.status !== 'undefined' && a.status !== 'null') return a.status;
+                if (a.student_status && a.student_status !== 'pending' && a.student_status !== 'undefined' && a.student_status !== 'null') return a.student_status;
+                return 'pending';
+            };
+
             const stats = {
-                present: attendance.filter(a => a.status === 'present').length,
-                absent: attendance.filter(a => a.status === 'absent').length,
-                sick: attendance.filter(a => a.status === 'sick').length,
-                late: attendance.filter(a => a.status === 'late').length
+                present: cleanAttendance.filter(a => getEffectiveStatus(a) === 'present').length,
+                absent: cleanAttendance.filter(a => getEffectiveStatus(a) === 'absent').length,
+                sick: cleanAttendance.filter(a => getEffectiveStatus(a) === 'sick').length,
+                late: cleanAttendance.filter(a => getEffectiveStatus(a) === 'late').length
             };
 
             // Render stats
             document.getElementById('attendance-stats').innerHTML = `
-                <div class="bg-green-50 p-3 rounded-lg">
+                <div class="bg-green-50 p-3 rounded-lg text-center">
                     <div class="text-xs text-green-600 font-medium">Aanwezig</div>
                     <div class="text-2xl font-bold text-green-700">${stats.present}</div>
                 </div>
-                <div class="bg-red-50 p-3 rounded-lg">
+                <div class="bg-red-50 p-3 rounded-lg text-center">
                     <div class="text-xs text-red-600 font-medium">Afwezig</div>
                     <div class="text-2xl font-bold text-red-700">${stats.absent}</div>
                 </div>
-                <div class="bg-orange-50 p-3 rounded-lg">
+                <div class="bg-orange-50 p-3 rounded-lg text-center">
                     <div class="text-xs text-orange-600 font-medium">Ziek</div>
                     <div class="text-2xl font-bold text-orange-700">${stats.sick}</div>
                 </div>
-                <div class="bg-yellow-50 p-3 rounded-lg">
+                <div class="bg-yellow-50 p-3 rounded-lg text-center">
                     <div class="text-xs text-yellow-600 font-medium">Te laat</div>
                     <div class="text-2xl font-bold text-yellow-700">${stats.late}</div>
                 </div>
             `;
 
-            // Render attendance list
             const statusColors = {
-                'present': 'bg-green-100 text-green-800',
-                'absent': 'bg-red-100 text-red-800',
-                'sick': 'bg-orange-100 text-orange-800',
-                'late': 'bg-yellow-100 text-yellow-800'
+                'present': 'bg-green-100 text-green-800 border-green-300',
+                'absent': 'bg-red-100 text-red-800 border-red-300',
+                'sick': 'bg-orange-100 text-orange-800 border-orange-300',
+                'late': 'bg-yellow-100 text-yellow-800 border-yellow-300',
+                'pending': 'bg-amber-100 text-amber-800 border-amber-300'
             };
 
             const statusLabels = {
                 'present': 'Aanwezig',
                 'absent': 'Afwezig',
                 'sick': 'Ziek',
-                'late': 'Te laat'
+                'late': 'Te laat',
+                'pending': 'Te goedkeuren'
             };
 
-            document.getElementById('attendance-list').innerHTML = attendance.map(record => {
-                const date = new Date(record.date);
-                const formattedDate = date.toLocaleDateString('nl-NL', {
-                    weekday: 'short',
-                    day: 'numeric',
-                    month: 'short',
-                    year: 'numeric'
-                });
-
-                return `
-                    <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition">
-                        <span class="text-sm font-medium text-gray-700">${formattedDate}</span>
-                        <div class="flex items-center gap-2">
-                            <span class="px-3 py-1 text-xs font-semibold rounded-full ${statusColors[record.status]}">
-                                ${statusLabels[record.status]}${record.status === 'late' && record.minutes_late ? ` (${record.minutes_late}m)` : ''}
-                            </span>
-                        </div>
+            // Form to manually add/update any past date
+            let listHTML = `
+                <div class="bg-blue-50 border border-blue-200 p-3 rounded-xl mb-4">
+                    <label class="block text-xs font-bold text-blue-900 mb-1.5">➕ Datum toevoegen of aanpassen:</label>
+                    <div class="flex gap-2 flex-wrap sm:flex-nowrap">
+                        <input type="date" id="modal-add-date" class="px-3 py-1.5 text-xs bg-white border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500">
+                        <select id="modal-add-status" class="px-3 py-1.5 text-xs bg-white border border-gray-300 rounded-lg outline-none font-medium">
+                            <option value="present">Aanwezig</option>
+                            <option value="absent">Afwezig</option>
+                            <option value="sick">Ziek</option>
+                            <option value="late">Te laat</option>
+                        </select>
+                        <button onclick="saveModalAttendanceDate('${student.id}')" class="px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-lg transition shadow">
+                            Opslaan
+                        </button>
                     </div>
-                `;
-            }).join('');
+                </div>
+            `;
+
+            if (cleanAttendance.length === 0) {
+                listHTML += `<div class="text-center py-6 text-gray-500 text-sm">Geen aanwezigheidsgegevens voor deze stagiair.</div>`;
+            } else {
+                listHTML += cleanAttendance.map(record => {
+                    const dateParts = record.date.split('-');
+                    let formattedDate = record.date;
+                    if (dateParts.length === 3) {
+                        const dateObj = new Date(dateParts[0], dateParts[1] - 1, dateParts[2]);
+                        formattedDate = dateObj.toLocaleDateString('nl-NL', {
+                            weekday: 'short',
+                            day: 'numeric',
+                            month: 'short',
+                            year: 'numeric'
+                        });
+                    }
+
+                    const effSt = getEffectiveStatus(record);
+                    const colorClass = statusColors[effSt] || 'bg-gray-100 text-gray-700 border-gray-300';
+                    const labelText = statusLabels[effSt] || effSt || 'Onbekend';
+                    const studentNote = record.student_hours ? ` (${record.student_hours}u ingevoerd)` : '';
+
+                    return `
+                        <div class="flex justify-between items-center p-3 bg-gray-50 rounded-xl hover:bg-gray-100 transition border border-gray-200">
+                            <div>
+                                <div class="text-sm font-bold text-gray-900">${formattedDate}</div>
+                                ${studentNote ? `<div class="text-[11px] text-purple-700 font-medium">${studentNote}</div>` : ''}
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <select onchange="updateAttendanceStatusDirect('${student.id}', '${record.date}', this.value)" 
+                                    class="text-xs font-bold px-3 py-1.5 rounded-lg border shadow-sm outline-none cursor-pointer ${colorClass}">
+                                    <option value="present" ${effSt === 'present' ? 'selected' : ''}>✅ Aanwezig</option>
+                                    <option value="absent" ${effSt === 'absent' ? 'selected' : ''}>❌ Afwezig</option>
+                                    <option value="sick" ${effSt === 'sick' ? 'selected' : ''}>🤒 Ziek</option>
+                                    <option value="late" ${effSt === 'late' ? 'selected' : ''}>⏱️ Te laat</option>
+                                    <option value="pending" ${effSt === 'pending' ? 'selected' : ''}>🟡 Te goedkeuren</option>
+                                </select>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            document.getElementById('attendance-list').innerHTML = listHTML;
+        };
+
+        window.updateAttendanceStatusDirect = async function (studentId, dateStr, newStatus) {
+            try {
+                const { error } = await supabaseClient
+                    .from('Attendance')
+                    .upsert({
+                        student_id: studentId,
+                        date: dateStr,
+                        status: newStatus,
+                        updated_at: new Date().toISOString()
+                    }, { onConflict: 'student_id,date' });
+
+                if (error) {
+                    alert('Fout bij opslaan: ' + error.message);
+                } else if (currentStudentForModal) {
+                    window.viewAttendance(currentStudentForModal);
+                }
+            } catch (e) {
+                console.error('Error updating status:', e);
+                alert('Fout bij opslaan: ' + e.message);
+            }
+        };
+
+        window.saveModalAttendanceDate = async function (studentId) {
+            const dateInput = document.getElementById('modal-add-date').value;
+            const statusInput = document.getElementById('modal-add-status').value;
+
+            if (!dateInput) {
+                alert('Kies eerst een datum.');
+                return;
+            }
+
+            try {
+                const { error } = await supabaseClient
+                    .from('Attendance')
+                    .upsert({
+                        student_id: studentId,
+                        date: dateInput,
+                        status: statusInput,
+                        updated_at: new Date().toISOString()
+                    }, { onConflict: 'student_id,date' });
+
+                if (error) {
+                    alert('Fout bij toevoegen: ' + error.message);
+                } else {
+                    if (currentStudentForModal) {
+                        window.viewAttendance(currentStudentForModal);
+                    }
+                }
+            } catch (e) {
+                console.error('Error adding date:', e);
+                alert('Fout bij toevoegen: ' + e.message);
+            }
         };
 
         function closeAttendanceModal() {

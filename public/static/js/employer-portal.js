@@ -20,6 +20,16 @@ async function init() {
         if (session && session.user && session.user.email) {
             userEmail = session.user.email;
             console.log('✅ Active Supabase session recovered for:', userEmail);
+
+            if (userEmail !== 'test@test.nl' && userEmail !== 'test@testbedrijf.nl') {
+                sessionStorage.removeItem('demo_unlocked');
+                if (companyId === 'demo-company' || companyName === 'Demo Bedrijf') {
+                    companyId = null;
+                    companyName = null;
+                    localStorage.removeItem('company_id');
+                    localStorage.removeItem('company_name');
+                }
+            }
         }
 
         // Automatically purge unauthenticated stale demo sessions (not valid logged in accounts)
@@ -302,7 +312,7 @@ function updateWeekDisplay() {
 
 function changeWeek(direction) {
     const newOffset = currentWeekOffset + direction;
-    if (newOffset < -1 || newOffset > 0) return; // Limit to previous week (-1) and current week (0)
+    if (newOffset < -52 || newOffset > 0) return; // Allow going back up to 52 weeks
     currentWeekOffset = newOffset;
     
     updateWeekButtons();
@@ -314,14 +324,14 @@ function updateWeekButtons() {
     const prevBtn = document.getElementById('prev-week-btn');
     const nextBtn = document.getElementById('next-week-btn');
     if (prevBtn) {
-        prevBtn.disabled = (currentWeekOffset <= -1);
-        prevBtn.style.opacity = currentWeekOffset <= -1 ? '0.5' : '1';
-        prevBtn.style.cursor = currentWeekOffset <= -1 ? 'not-allowed' : 'pointer';
+        prevBtn.disabled = (currentWeekOffset <= -52);
+        prevBtn.style.opacity = currentWeekOffset <= -52 ? '0.5' : '1';
+        prevBtn.style.cursor = currentWeekOffset <= -52 ? 'default' : 'pointer';
     }
     if (nextBtn) {
         nextBtn.disabled = (currentWeekOffset >= 0);
         nextBtn.style.opacity = currentWeekOffset >= 0 ? '0.5' : '1';
-        nextBtn.style.cursor = currentWeekOffset >= 0 ? 'not-allowed' : 'pointer';
+        nextBtn.style.cursor = currentWeekOffset >= 0 ? 'default' : 'pointer';
     }
 }
 

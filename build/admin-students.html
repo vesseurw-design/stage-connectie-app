@@ -4,375 +4,916 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Studenten Beheer - StageConnectie Admin</title>
+    <title>Stagiairs Beheer - StageConnect</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="icon" type="image/png" href="icon-v3.png">
-    <link rel="apple-touch-icon" href="icon-v3.png">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
     <style>
         body {
             font-family: 'Inter', sans-serif;
         }
     </style>
+    <script>
+        if (!localStorage.getItem('stageconnect_admin_session')) {
+            window.location.href = 'admin-login.html';
+        }
+    </script>
+    <link rel="icon" type="image/png" href="/icon-v3.png">
+    <link rel="apple-touch-icon" href="/icon-v3.png">
+    <link rel="apple-touch-icon-precomposed" href="/icon-v3.png">
+    <link rel="manifest" href="/manifest.json">
 </head>
 
-<body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen">
-    <nav
-        class="bg-white/80 backdrop-blur-md shadow-sm border-b border-white/20 sticky top-0 z-10 transition-all duration-300">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between h-16">
-                <div class="flex items-center">
-                    <h1
-                        class="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600">
-                        Studenten Beheer</h1>
-                </div>
-                <div class="flex items-center space-x-4">
-                    <a href="admin.html" class="text-sm font-medium text-gray-500 hover:text-blue-600 transition">Terug
-                        naar Dashboard</a>
-                    <button onclick="logout()"
-                        class="text-sm font-medium text-red-500 hover:text-red-700 bg-red-50 hover:bg-red-100 px-3 py-1.5 rounded-lg transition">Uitloggen</button>
+<body class="bg-gray-50">
+    <header class="bg-white shadow-sm border-b">
+        <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
+            <div class="flex items-center gap-4">
+                <a href="admin.html" class="text-gray-500 hover:text-gray-700">← Terug</a>
+                <div>
+                    <h1 class="text-2xl font-bold text-gray-800">Stagiairs Beheer</h1>
+                    <p class="text-sm text-gray-600">Beheer stagiairs en koppelingen</p>
                 </div>
             </div>
+            <button onclick="logout()" class="px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg">
+                Uitloggen
+            </button>
         </div>
-    </nav>
+    </header>
 
-    <div class="max-w-7xl mx-auto py-8 sm:px-6 lg:px-8">
-        <div class="px-4 py-2 sm:px-0">
-            <div class="flex justify-between items-center mb-8">
-                <div>
-                    <h2 class="text-3xl font-bold text-gray-800">Overzicht Studenten</h2>
-                    <p class="text-gray-500 mt-1">Beheer koppelingen met bedrijven en begeleiders</p>
+    <main class="max-w-7xl mx-auto px-4 py-8">
+        <div class="mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div class="flex flex-wrap items-center gap-3">
+                <div class="relative">
+                    <input type="text" id="search-input" placeholder="🔍 Zoek op naam, email, klas of 2627..."
+                        class="w-64 px-3 py-2 border rounded-lg text-sm bg-white shadow-sm focus:ring-2 focus:ring-blue-500 outline-none">
                 </div>
+                <select id="filter-class"
+                    class="px-3 py-2 border rounded-lg text-sm bg-white shadow-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                    <option value="">Alle Klassen</option>
+                </select>
+                <select id="filter-year"
+                    class="px-3 py-2 border rounded-lg text-sm bg-white shadow-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                    <option value="">Alle Schooljaren</option>
+                </select>
+                <button onclick="clearFilters()" class="text-sm text-gray-500 hover:text-blue-600 font-medium">Reset
+                    filters</button>
+            </div>
+            <div class="flex flex-wrap gap-2">
+                <button onclick="batchMigrateSchoolYear()"
+                    class="bg-emerald-50 text-emerald-700 hover:bg-emerald-100 px-3 py-2 rounded-lg transition text-xs font-semibold flex items-center gap-1 border border-emerald-200">
+                    📅 Zet 2025-2026 → 2026-2027
+                </button>
+                <a href="admin-import.html"
+                    class="bg-indigo-50 text-indigo-600 hover:bg-indigo-100 px-4 py-2 rounded-lg transition font-medium text-sm flex items-center gap-2">
+                    📥 CSV Import
+                </a>
                 <button onclick="openModal()"
-                    class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-xl shadow-lg hover:shadow-xl transition transform hover:-translate-y-0.5 flex items-center gap-2">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-                    </svg>
-                    Nieuwe Student
+                    class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg shadow text-sm whitespace-nowrap">
+                    + Nieuwe Stagiair
                 </button>
             </div>
-
-            <div class="bg-white/70 backdrop-blur rounded-2xl shadow-xl border border-white/50 overflow-hidden">
-                <table class="min-w-full divide-y divide-gray-200/60">
-                    <thead class="bg-gray-50/50">
-                        <tr>
-                            <th
-                                class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                                Naam</th>
-                            <th
-                                class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                                Email</th>
-                            <th
-                                class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                                Bedrijf</th>
-                            <th
-                                class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                                Begeleider</th>
-                            <th
-                                class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                                Dagen</th>
-                            <th
-                                class="px-6 py-4 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                                Acties</th>
-                        </tr>
-                    </thead>
-                    <tbody id="students-table-body" class="bg-white/40 divide-y divide-gray-100">
-                        <!-- Items injected here -->
-                    </tbody>
-                </table>
-            </div>
         </div>
-    </div>
+
+        <div class="bg-white rounded-lg shadow overflow-hidden">
+            <table class="w-full">
+                <thead class="bg-gray-50 border-b">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Naam</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">E-mailadres</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Klas</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Schooljaar</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Stagebedrijf</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Begeleider</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Dagen</th>
+                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Acties</th>
+                    </tr>
+                </thead>
+                <tbody id="students-table" class="divide-y">
+                    <!-- Loaded via JS -->
+                </tbody>
+            </table>
+        </div>
+    </main>
+
+    <footer class="max-w-7xl mx-auto px-4 py-8 text-center text-gray-400 text-sm">
+        <p>© 2026 StageConnectie. Alle rechten voorbehouden.</p>
+    </footer>
 
     <!-- Modal -->
-    <div id="student-modal"
-        class="hidden fixed inset-0 bg-gray-900/40 backdrop-blur-sm overflow-y-auto h-full w-full z-50 flex items-center justify-center transition-opacity">
-        <div
-            class="relative p-8 border w-full max-w-lg shadow-2xl rounded-2xl bg-white transform transition-all scale-100">
-            <div class="mb-6">
-                <h3 class="text-2xl font-bold text-gray-800" id="modal-title">Student Toevoegen</h3>
-                <p class="text-gray-500 text-sm mt-1">Vul de gegevens in</p>
-            </div>
-
-            <form id="student-form" class="space-y-5">
-                <input type="hidden" id="original-name">
-
+    <div id="modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl max-w-md w-full p-6">
+            <h2 id="modal-title" class="text-xl font-bold mb-4">Stagiair Toevoegen</h2>
+            <form id="form" class="space-y-4">
+                <input type="hidden" id="student-id">
+                <div>
+                    <label class="block text-sm font-medium mb-1">Naam *</label>
+                    <input type="text" id="name" required class="w-full px-3 py-2 border rounded-lg">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-1">E-mailadres</label>
+                    <input type="email" id="email" class="w-full px-3 py-2 border rounded-lg" placeholder="stagiair@school.nl">
+                </div>
+                <div id="password-container">
+                    <label class="block text-sm font-medium mb-1">Wachtwoord (voor inloggen)</label>
+                    <input type="password" id="password" class="w-full px-3 py-2 border rounded-lg" placeholder="••••••••">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-1">Stagiair Nummer</label>
+                    <input type="text" id="student_number" class="w-full px-3 py-2 border rounded-lg">
+                </div>
                 <div class="grid grid-cols-2 gap-4">
-                    <div class="col-span-2">
-                        <label class="block text-sm font-semibold text-gray-700 mb-1">Naam</label>
-                        <input type="text" id="name" required
-                            class="block w-full border border-gray-200 rounded-lg shadow-sm p-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition">
-                    </div>
-                    <div class="col-span-2">
-                        <label class="block text-sm font-semibold text-gray-700 mb-1">Email (voor student
-                            portaal)</label>
-                        <input type="email" id="email"
-                            class="block w-full border border-gray-200 rounded-lg shadow-sm p-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition">
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Klas</label>
+                        <input type="text" id="class" class="w-full px-3 py-2 border rounded-lg" placeholder="bijv. 4A">
                     </div>
                     <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-1">Student Nummer</label>
-                        <input type="text" id="student_number"
-                            class="block w-full border border-gray-200 rounded-lg shadow-sm p-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition">
+                        <label class="block text-sm font-medium mb-1">Schooljaar</label>
+                        <input type="text" id="school_year" class="w-full px-3 py-2 border rounded-lg"
+                            placeholder="bijv. 2025-2026">
+                    </div>
+                </div>
+                <div class="space-y-3 bg-gray-50 p-3 rounded-lg border border-gray-200">
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-1">Stagebedrijf 1</label>
+                        <select id="company_id" class="w-full px-3 py-2 border rounded-lg bg-white">
+                            <option value="">Geen stagebedrijf</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-600 mb-1">Stagedagen Bedrijf 1</label>
+                        <div class="flex gap-2 text-sm">
+                            <label class="cursor-pointer bg-white px-2.5 py-1 border rounded hover:bg-blue-50"><input type="checkbox" name="days_1" value="Ma" class="mr-1">Ma</label>
+                            <label class="cursor-pointer bg-white px-2.5 py-1 border rounded hover:bg-blue-50"><input type="checkbox" name="days_1" value="Di" class="mr-1">Di</label>
+                            <label class="cursor-pointer bg-white px-2.5 py-1 border rounded hover:bg-blue-50"><input type="checkbox" name="days_1" value="Wo" class="mr-1">Wo</label>
+                            <label class="cursor-pointer bg-white px-2.5 py-1 border rounded hover:bg-blue-50"><input type="checkbox" name="days_1" value="Do" class="mr-1">Do</label>
+                            <label class="cursor-pointer bg-white px-2.5 py-1 border rounded hover:bg-blue-50"><input type="checkbox" name="days_1" value="Vr" class="mr-1">Vr</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="space-y-3 bg-gray-50 p-3 rounded-lg border border-gray-200">
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-1">2e Stagebedrijf (Optioneel)</label>
+                        <select id="company_id_2" class="w-full px-3 py-2 border rounded-lg bg-white">
+                            <option value="">Geen 2e stagebedrijf</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-600 mb-1">Stagedagen Bedrijf 2</label>
+                        <div class="flex gap-2 text-sm">
+                            <label class="cursor-pointer bg-white px-2.5 py-1 border rounded hover:bg-blue-50"><input type="checkbox" name="days_2" value="Ma" class="mr-1">Ma</label>
+                            <label class="cursor-pointer bg-white px-2.5 py-1 border rounded hover:bg-blue-50"><input type="checkbox" name="days_2" value="Di" class="mr-1">Di</label>
+                            <label class="cursor-pointer bg-white px-2.5 py-1 border rounded hover:bg-blue-50"><input type="checkbox" name="days_2" value="Wo" class="mr-1">Wo</label>
+                            <label class="cursor-pointer bg-white px-2.5 py-1 border rounded hover:bg-blue-50"><input type="checkbox" name="days_2" value="Do" class="mr-1">Do</label>
+                            <label class="cursor-pointer bg-white px-2.5 py-1 border rounded hover:bg-blue-50"><input type="checkbox" name="days_2" value="Vr" class="mr-1">Vr</label>
+                        </div>
                     </div>
                 </div>
 
                 <div class="grid grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-1">Bedrijf</label>
-                        <select id="company_id"
-                            class="block w-full border border-gray-200 rounded-lg shadow-sm p-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition bg-white">
-                            <option value="">Geen bedrijf</option>
-                        </select>
+                        <label class="block text-sm font-medium mb-1">Startdatum Stage</label>
+                        <input type="date" id="stage_start_date" class="w-full px-3 py-2 border rounded-lg">
                     </div>
                     <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-1">Begeleider</label>
-                        <select id="supervisor_id"
-                            class="block w-full border border-gray-200 rounded-lg shadow-sm p-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition bg-white">
-                            <option value="">Geen begeleider</option>
-                        </select>
-                    </div>
-                    <div class="col-span-2">
-                        <label class="block text-sm font-semibold text-gray-700 mb-1">Uitschrijfdatum</label>
-                        <input type="date" id="unenrollment_date"
-                            class="block w-full border border-gray-200 rounded-lg shadow-sm p-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition">
-                        <p class="text-xs text-gray-400 mt-1">Gegevens worden 1 jaar na deze datum verwijderd</p>
+                        <label class="block text-sm font-medium mb-1">Einddatum Stage</label>
+                        <input type="date" id="stage_end_date" class="w-full px-3 py-2 border rounded-lg">
                     </div>
                 </div>
 
                 <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">Stagedagen</label>
-                    <div class="flex flex-wrap gap-2">
-                        <label
-                            class="cursor-pointer inline-flex items-center px-3 py-2 rounded-lg border border-gray-200 hover:bg-gray-50 has-[:checked]:bg-blue-50 has-[:checked]:border-blue-200 has-[:checked]:text-blue-700 transition">
-                            <input type="checkbox" name="days" value="Ma" class="hidden">
-                            <span class="text-sm font-medium">Ma</span>
-                        </label>
-                        <label
-                            class="cursor-pointer inline-flex items-center px-3 py-2 rounded-lg border border-gray-200 hover:bg-gray-50 has-[:checked]:bg-blue-50 has-[:checked]:border-blue-200 has-[:checked]:text-blue-700 transition">
-                            <input type="checkbox" name="days" value="Di" class="hidden">
-                            <span class="text-sm font-medium">Di</span>
-                        </label>
-                        <label
-                            class="cursor-pointer inline-flex items-center px-3 py-2 rounded-lg border border-gray-200 hover:bg-gray-50 has-[:checked]:bg-blue-50 has-[:checked]:border-blue-200 has-[:checked]:text-blue-700 transition">
-                            <input type="checkbox" name="days" value="Wo" class="hidden">
-                            <span class="text-sm font-medium">Wo</span>
-                        </label>
-                        <label
-                            class="cursor-pointer inline-flex items-center px-3 py-2 rounded-lg border border-gray-200 hover:bg-gray-50 has-[:checked]:bg-blue-50 has-[:checked]:border-blue-200 has-[:checked]:text-blue-700 transition">
-                            <input type="checkbox" name="days" value="Do" class="hidden">
-                            <span class="text-sm font-medium">Do</span>
-                        </label>
-                        <label
-                            class="cursor-pointer inline-flex items-center px-3 py-2 rounded-lg border border-gray-200 hover:bg-gray-50 has-[:checked]:bg-blue-50 has-[:checked]:border-blue-200 has-[:checked]:text-blue-700 transition">
-                            <input type="checkbox" name="days" value="Vr" class="hidden">
-                            <span class="text-sm font-medium">Vr</span>
-                        </label>
-                    </div>
+                    <label class="block text-sm font-medium mb-1">Begeleider</label>
+                    <select id="supervisor_id" class="w-full px-3 py-2 border rounded-lg">
+                        <option value="">Geen begeleider</option>
+                    </select>
                 </div>
-
-                <div class="flex justify-end gap-3 pt-4 border-t border-gray-100">
-                    <button type="button" onclick="closeModal()"
-                        class="bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 font-semibold py-2.5 px-5 rounded-xl transition">Annuleren</button>
-                    <button type="submit"
-                        class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 px-6 rounded-xl shadow-lg hover:shadow-xl transition">Opslaan</button>
+                <div>
+                    <label class="block text-sm font-medium mb-1">Uitschrijfdatum</label>
+                    <input type="date" id="unenrollment_date" class="w-full px-3 py-2 border rounded-lg">
+                    <p class="text-xs text-gray-500 mt-1">Gegevens worden 1 jaar na deze datum verwijderd</p>
+                </div>
+                <div class="flex justify-end gap-3 pt-4">
+                    <button type="button" onclick="closeModal()" class="px-4 py-2 border rounded-lg">Annuleren</button>
+                    <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg">Opslaan</button>
                 </div>
             </form>
         </div>
     </div>
 
+    <!-- Attendance History Modal -->
+    <div id="attendance-modal"
+        class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-xl max-w-2xl w-full p-6 max-h-[80vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-bold">Aanwezigheidshistorie</h2>
+                <button onclick="closeAttendanceModal()" class="text-gray-500 hover:text-gray-700">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
+                        </path>
+                    </svg>
+                </button>
+            </div>
+
+            <div class="mb-4">
+                <h3 id="attendance-student-name" class="text-lg font-semibold text-gray-800"></h3>
+                <p id="attendance-student-info" class="text-sm text-gray-600"></p>
+            </div>
+
+            <div id="attendance-stats" class="grid grid-cols-4 gap-3 mb-6">
+                <!-- Stats will be inserted here -->
+            </div>
+
+            <div class="space-y-2" id="attendance-list">
+                <!-- Attendance records will be inserted here -->
+            </div>
+
+            <div id="no-attendance" class="hidden text-center py-8 text-gray-500">
+                Geen aanwezigheidsgegevens gevonden voor deze stagiair.
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="./static/js/config.js?v=2"></script>
+    <script src="./static/js/config.js"></script>
     <script src="./static/js/company-helper.js?v=2"></script>
-    <script src="./static/js/admin-auth.js"></script>
     <script>
-        const supabaseClient = window.supabaseClient;
+        // Use the 'Dashboard Method' - hardcoded and direct
+        const SUPABASE_URL = window.SUPABASE_URL || 'https://vdeipnqyesduiohxvuvu.supabase.co';
+        const SUPABASE_KEY = window.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZkZWlwbnF5ZXNkdWlvaHh2dXZ1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc1MjY5NTEsImV4cCI6MjA4MzEwMjk1MX0.IknEZ-GQvspcppJxLR00ayBDq1DbL0HiUKy9RDb59DU';
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         let companies = [];
         let supervisors = [];
+        let allStudents = [];
 
         async function loadData() {
-            try {
-                // Load relations first (alphabetically sorted)
-                const { data: c } = await supabaseClient.from('Bedrijven').select('*').order('company_name', { ascending: true });
-                companies = c || [];
-                companies.sort((a, b) => (a.company_name || '').localeCompare(b.company_name || '', 'nl', { sensitivity: 'base' }));
+            // Load companies (alphabetically sorted)
+            const { data: c } = await supabaseClient.from('Bedrijven').select('*').order('company_name', { ascending: true });
+            companies = c || [];
+            companies.sort((a, b) => (a.company_name || '').localeCompare(b.company_name || '', 'nl', { sensitivity: 'base' }));
+            const companySelect = document.getElementById('company_id');
+            const companySelect2 = document.getElementById('company_id_2');
+            if (companySelect) companySelect.innerHTML = '<option value="">Geen stagebedrijf</option>';
+            if (companySelect2) companySelect2.innerHTML = '<option value="">Geen 2e stagebedrijf (Optioneel)</option>';
+            companies.forEach(c => {
+                if (companySelect) companySelect.innerHTML += `<option value="${c.id}">${c.company_name}</option>`;
+                if (companySelect2) companySelect2.innerHTML += `<option value="${c.id}">${c.company_name}</option>`;
+            });
 
-                const { data: s } = await supabaseClient.from('stagebegeleiders').select('*').order('name', { ascending: true });
-                supervisors = s || [];
-                supervisors.sort((a, b) => (a.name || '').localeCompare(b.name || '', 'nl', { sensitivity: 'base' }));
+            // Load supervisors (alphabetically sorted)
+            const { data: s } = await supabaseClient.from('stagebegeleiders').select('*').order('name', { ascending: true });
+            supervisors = s || [];
+            supervisors.sort((a, b) => (a.name || '').localeCompare(b.name || '', 'nl', { sensitivity: 'base' }));
+            const supervisorSelect = document.getElementById('supervisor_id');
+            supervisorSelect.innerHTML = '<option value="">Geen begeleider</option>';
+            supervisors.forEach(s => {
+                supervisorSelect.innerHTML += `<option value="${s.id}">${s.name}</option>`;
+            });
 
-                // Populate selects
-                const companySelect = document.getElementById('company_id');
-                companySelect.innerHTML = '<option value="">Geen bedrijf</option>';
-                companies.forEach(c => {
-                    companySelect.innerHTML += `<option value="${c.id}">${c.company_name}</option>`;
-                });
-
-                const supervisorSelect = document.getElementById('supervisor_id');
-                supervisorSelect.innerHTML = '<option value="">Geen begeleider</option>';
-                supervisors.forEach(s => {
-                    supervisorSelect.innerHTML += `<option value="${s.id}">${s.name}</option>`;
-                });
-
-                // Load students
-                const { data: students, error } = await supabaseClient
-                    .from('Students')
-                    .select('*')
-                    .order('name');
-
-                if (error) {
-                    console.error('Error loading students:', error);
-                    // Silent fail for nicer UX or show toast
-                    return;
-                }
-
-                renderStudents(students || []);
-
-            } catch (err) {
-                console.error('Unexpected error loading data:', err);
+            // Load students
+            const { data: students, error } = await supabaseClient.from('Students').select('*').order('name');
+            if (error) {
+                console.error('Error loading students:', error);
+                const tbody = document.getElementById('students-table');
+                if (tbody) tbody.innerHTML = `<tr><td colspan="8" class="px-6 py-8 text-center text-red-600 font-bold">⚠️ Database Fout: ${error.message}</td></tr>`;
+                return;
             }
+
+            allStudents = students || [];
+            updateFilters();
+            renderTable();
         }
 
-        function renderStudents(studentsList) {
-            const tbody = document.getElementById('students-table-body');
+        function normalizeSchoolYear(val) {
+            if (!val) return '';
+            let s = String(val).trim();
+            if (s === '2627' || s === '26/27' || s === '26-27' || s === '2026/2027' || s === '2026-2027') return '2026-2027';
+            if (s === '2526' || s === '25/26' || s === '25-26' || s === '2025/2026' || s === '2025-2026') return '2025-2026';
+            if (s === '2728' || s === '27/28' || s === '27-28' || s === '2027/2028' || s === '2027-2028') return '2027-2028';
+            const m4 = s.match(/^(\d{2})(\d{2})$/);
+            if (m4) return `20${m4[1]}-20${m4[2]}`;
+            const mSep = s.match(/^(\d{2})[\/\-](\d{2})$/);
+            if (mSep) return `20${mSep[1]}-20${mSep[2]}`;
+            const mFullSep = s.match(/^(20\d{2})[\/\-](20\d{2})$/);
+            if (mFullSep) return `${mFullSep[1]}-${mFullSep[2]}`;
+            return s;
+        }
+
+        function updateFilters() {
+            const classFilter = document.getElementById('filter-class');
+            const yearFilter = document.getElementById('filter-year');
+
+            const currentClassValue = classFilter.value;
+            const currentYearValue = yearFilter.value;
+
+            // Get unique values
+            const classes = [...new Set(allStudents.map(s => s.class).filter(Boolean))].sort();
+            const rawYears = [...new Set(allStudents.map(s => normalizeSchoolYear(s.school_year)).filter(Boolean))].sort().reverse();
+
+            classFilter.innerHTML = '<option value="">Alle Klassen</option>' +
+                classes.map(c => `<option value="${c}">${c}</option>`).join('');
+
+            yearFilter.innerHTML = '<option value="">Alle Schooljaren</option>' +
+                rawYears.map(y => {
+                    const shortLabel = y.includes('-') ? y.split('-').map(part => part.slice(-2)).join('') : y;
+                    return `<option value="${y}">${y} (${shortLabel})</option>`;
+                }).join('');
+
+            // Restore values
+            classFilter.value = currentClassValue;
+            yearFilter.value = currentYearValue;
+        }
+
+        function renderTable() {
+            const searchText = (document.getElementById('search-input')?.value || '').toLowerCase().trim();
+            const classFilter = document.getElementById('filter-class').value;
+            const yearFilter = document.getElementById('filter-year').value;
+
+            let filteredStudents = allStudents;
+
+            if (searchText) {
+                filteredStudents = filteredStudents.filter(s => {
+                    const company = companies.find(c => c.id === s.company_id);
+                    const supervisor = supervisors.find(sup => sup.id === s.supervisor_id);
+                    const normYr = normalizeSchoolYear(s.school_year);
+                    const shortYr = normYr.includes('-') ? normYr.split('-').map(p => p.slice(-2)).join('') : '';
+
+                    return (s.name || '').toLowerCase().includes(searchText) ||
+                        (s.email || '').toLowerCase().includes(searchText) ||
+                        (s.class || '').toLowerCase().includes(searchText) ||
+                        (s.school_year || '').toLowerCase().includes(searchText) ||
+                        normYr.toLowerCase().includes(searchText) ||
+                        shortYr.includes(searchText) ||
+                        (company?.company_name || '').toLowerCase().includes(searchText) ||
+                        (supervisor?.name || '').toLowerCase().includes(searchText);
+                });
+            }
+
+            if (classFilter) {
+                filteredStudents = filteredStudents.filter(s => s.class === classFilter);
+            }
+            if (yearFilter) {
+                filteredStudents = filteredStudents.filter(s => normalizeSchoolYear(s.school_year) === normalizeSchoolYear(yearFilter));
+            }
+
+            const tbody = document.getElementById('students-table');
             tbody.innerHTML = '';
 
-            studentsList.forEach(student => {
+            if (filteredStudents.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" class="px-6 py-8 text-center text-gray-500">Geen stagiairs gevonden met deze filters</td></tr>';
+                return;
+            }
+
+            filteredStudents.forEach(student => {
                 const assignments = getStudentCompanyAssignments(student, companies);
-                let companyBadges = '<span class="text-gray-400">-</span>';
+                let compNames = '-';
                 if (assignments.length > 0) {
-                    companyBadges = assignments.map(a => {
+                    compNames = assignments.map(a => {
                         const daysStr = (a.days && a.days.length > 0) ? ` (${a.days.join(', ')})` : '';
                         return `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 mr-1 mb-1">${a.company_name}${daysStr}</span>`;
                     }).join(' ');
                 }
+
                 const supervisor = supervisors.find(s => s.id === student.supervisor_id);
                 const days = (student.scheduled_days || []).join(', ');
-
-                // DATA PREP FOR EDIT
-                const safeStudent = JSON.stringify(student).replace(/'/g, "&#39;");
-                const safeName = student.name.replace(/'/g, "\\'");
+                const displayYear = normalizeSchoolYear(student.school_year) || student.school_year || '-';
 
                 tbody.innerHTML += `
-                <tr class="hover:bg-blue-50/50 transition duration-150">
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">${student.name}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${student.email || '-'}</td>
-                    <!-- td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${student.student_number || '-'}</td -->
-                    <td class="px-6 py-4 text-sm text-gray-600">
-                        ${companyBadges}
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">${supervisor?.name || '-'}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 space-x-1">
-                        ${(student.scheduled_days || []).length > 0 ? (student.scheduled_days || []).map(d => `<span class="bg-gray-100 text-gray-600 text-xs font-medium px-2 py-1 rounded">${d}</span>`).join('') : '<span class="text-gray-300 italic">Geen dagen</span>'}
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                        <button onclick='editStudent(${safeStudent})' class="text-indigo-600 hover:text-indigo-900 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-lg transition mr-2">
-                            Bewerk
-                        </button>
-                        <button onclick="deleteStudent('${safeName}')" class="text-red-600 hover:text-red-900 bg-red-50 hover:bg-red-100 px-3 py-1.5 rounded-lg transition">
-                            Verwijder
-                        </button>
-                    </td>
-                </tr>
-            `;
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-4 text-sm font-medium">${student.name}</td>
+                        <td class="px-6 py-4 text-sm text-gray-600">${student.email || '-'}</td>
+                        <td class="px-6 py-4 text-sm">${student.class || '-'}</td>
+                        <td class="px-6 py-4 text-sm font-semibold text-gray-800">${displayYear}</td>
+                        <td class="px-6 py-4 text-sm">${compNames}</td>
+                        <td class="px-6 py-4 text-sm">${supervisor?.name || '-'}</td>
+                        <td class="px-6 py-4 text-sm">${days || '-'}</td>
+                        <td class="px-6 py-4 text-sm text-right">
+                            <button onclick='viewAttendance(${JSON.stringify(student)})' class="text-green-600 hover:text-green-900 mr-2">📊 Aanwezigheid</button>
+                            <button onclick='editStudent(${JSON.stringify(student)})' class="text-blue-600 hover:text-blue-900 mr-2">Bewerk</button>
+                            <button onclick="deleteStudent('${student.name}')" class="text-red-600 hover:text-red-900">Verwijder</button>
+                        </td>
+                    </tr>
+                `;
             });
         }
 
-        function openModal(student = null) {
-            const modal = document.getElementById("student-modal");
-            const title = document.getElementById("modal-title");
-            const form = document.getElementById("student-form");
-            modal.classList.remove("hidden");
-
-            if (student) {
-                title.textContent = "Student Bewerken";
-                document.getElementById("original-name").value = student.name;
-                document.getElementById("name").value = student.name;
-                document.getElementById("email").value = student.email || "";
-                document.getElementById("student_number").value = student.student_number || "";
-                document.getElementById("company_id").value = student.company_id || "";
-                document.getElementById("supervisor_id").value = student.supervisor_id || "";
-                document.getElementById("unenrollment_date").value = student.unenrollment_date || "";
-                document.querySelectorAll('input[name="days"]').forEach(cb => cb.checked = false);
-                (student.scheduled_days || []).forEach(day => {
-                    const checkbox = document.querySelector(`input[name="days"][value="${day}"]`);
-                    if (checkbox) checkbox.checked = true
-                })
-            } else {
-                title.textContent = "Student Toevoegen";
-                form.reset();
-                document.getElementById("original-name").value = "";
-            }
+        function clearFilters() {
+            if (document.getElementById('search-input')) document.getElementById('search-input').value = '';
+            document.getElementById('filter-class').value = '';
+            document.getElementById('filter-year').value = '';
+            renderTable();
         }
 
-        function closeModal() { document.getElementById("student-modal").classList.add("hidden") }
-        window.editStudent = function (student) { openModal(student) };
+        function editStudent(student) {
+            openModal(student);
+        }
 
-        window.deleteStudent = async function (name) {
-            if (!confirm("Weet je zeker dat je " + name + " wilt verwijderen?")) return;
+        async function bulkPromoteTo2026() {
+            const oldStudents = allStudents.filter(s => {
+                const yr = normalizeSchoolYear(s.school_year);
+                return yr === '2025-2026' || yr === '2526' || yr === '25/26';
+            });
 
-            const { error } = await supabaseClient.from("Students").delete().eq("name", name);
-
-            if (error) {
-                console.error('Delete error:', error);
-                alert("Fout bij verwijderen: " + error.message);
-            } else {
-                loadData();
+            if (oldStudents.length === 0) {
+                alert('Geen stagiairs gevonden met schooljaar 2025-2026 om over te zetten.');
+                return;
             }
-        };
 
-        document.getElementById("student-form").addEventListener("submit", async (e) => {
-            e.preventDefault();
-            const originalName = document.getElementById("original-name").value;
-            const name = document.getElementById("name").value;
-            const email = document.getElementById("email").value.trim() || null;
-            const student_number = document.getElementById("student_number").value;
-            const company_id = document.getElementById("company_id").value || null;
-            const supervisor_id = document.getElementById("supervisor_id").value || null;
-            const unenrollment_date = document.getElementById("unenrollment_date").value || null;
-            const scheduled_days = Array.from(document.querySelectorAll('input[name="days"]:checked')).map(cb => cb.value);
-            const studentData = { name, email, student_number, company_id, supervisor_id, unenrollment_date, scheduled_days };
+            if (!confirm(`Weet je zeker dat je ${oldStudents.length} stagiairs wilt overzetten van 2025-2026 naar 2026-2027?`)) {
+                return;
+            }
 
-            let error = null;
+            let success = 0;
+            for (const s of oldStudents) {
+                const { error } = await supabaseClient.from('Students').update({ school_year: '2026-2027' }).eq('id', s.id);
+                if (!error) success++;
+            }
 
-            if (originalName) {
-                // Update based on Name
-                const { error: updateError } = await supabaseClient.from("Students").update(studentData).eq("name", originalName);
-                error = updateError;
-            } else {
-                // Check of de studentenlimiet is bereikt
-                if (window.MAX_STUDENTS) {
-                    try {
-                        const { count, error: countError } = await supabaseClient
-                            .from("Students")
-                            .select("*", { count: "exact", head: true });
+            alert(`✅ ${success} van de ${oldStudents.length} stagiairs zijn succesvol overgezet naar schooljaar 2026-2027!`);
+            loadData();
+        }
 
-                        if (countError) {
-                            console.error('Fout bij tellen studenten:', countError);
-                        } else if (count >= window.MAX_STUDENTS) {
-                            alert(`Limiet bereikt: Er kunnen maximaal ${window.MAX_STUDENTS} leerlingen worden toegevoegd aan dit schoolaccount. Neem contact op met de beheerder om uw limiet te verhogen.`);
-                            return;
-                        }
-                    } catch (countErr) {
-                        console.error('Count query exception:', countErr);
+        // Add event listeners for filters
+        document.getElementById('filter-class').addEventListener('change', renderTable);
+        document.getElementById('filter-year').addEventListener('change', renderTable);
+        if (document.getElementById('search-input')) {
+            document.getElementById('search-input').addEventListener('input', renderTable);
+        }
+
+        function openModal(student = null) {
+            document.getElementById('modal').classList.remove('hidden');
+            
+            // Clear all day checkboxes
+            document.querySelectorAll('input[name="days_1"]').forEach(cb => cb.checked = false);
+            document.querySelectorAll('input[name="days_2"]').forEach(cb => cb.checked = false);
+
+            if (student) {
+                document.getElementById('modal-title').textContent = 'Stagiair Bewerken';
+                document.getElementById('student-id').value = student.id || student.name;
+                document.getElementById('name').value = student.name;
+                document.getElementById('email').value = student.email || '';
+                document.getElementById('student_number').value = student.student_number || '';
+                
+                const assignments = getStudentCompanyAssignments(student, companies);
+                if (assignments.length > 0) {
+                    document.getElementById('company_id').value = assignments[0].company_id || '';
+                    (assignments[0].days || []).forEach(day => {
+                        const cb = document.querySelector(`input[name="days_1"][value="${day}"]`);
+                        if (cb) cb.checked = true;
+                    });
+                } else {
+                    document.getElementById('company_id').value = '';
+                }
+
+                if (assignments.length > 1) {
+                    if (document.getElementById('company_id_2')) {
+                        document.getElementById('company_id_2').value = assignments[1].company_id || '';
+                    }
+                    (assignments[1].days || []).forEach(day => {
+                        const cb = document.querySelector(`input[name="days_2"][value="${day}"]`);
+                        if (cb) cb.checked = true;
+                    });
+                } else {
+                    if (document.getElementById('company_id_2')) {
+                        document.getElementById('company_id_2').value = '';
                     }
                 }
 
-                // Insert
-                const { error: insertError } = await supabaseClient.from("Students").insert([studentData]);
-                error = insertError;
+                document.getElementById('supervisor_id').value = student.supervisor_id || '';
+                document.getElementById('class').value = student.class || '';
+                document.getElementById('school_year').value = student.school_year || '';
+                document.getElementById('stage_start_date').value = student.stage_start_date || student.start_date || '';
+                document.getElementById('stage_end_date').value = student.stage_end_date || student.end_date || '';
+                document.getElementById('unenrollment_date').value = student.unenrollment_date || '';
+                
+                // Hide password field during edit
+                document.getElementById('password-container').classList.add('hidden');
+                document.getElementById('password').value = '';
+            } else {
+                document.getElementById('modal-title').textContent = 'Stagiair Toevoegen';
+                document.getElementById('form').reset();
+                document.getElementById('student-id').value = '';
+                document.getElementById('company_id').value = '';
+                if (document.getElementById('company_id_2')) document.getElementById('company_id_2').value = '';
+                document.getElementById('stage_start_date').value = '';
+                document.getElementById('stage_end_date').value = '';
+                
+                // Show password field during add
+                document.getElementById('password-container').classList.remove('hidden');
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('modal').classList.add('hidden');
+        }
+
+        window.editStudent = openModal;
+
+        window.deleteStudent = async function (name) {
+            if (!confirm(`Weet je zeker dat je ${name} wilt verwijderen?`)) return;
+
+            try {
+                // Stap 1: Haal student gegevens op (voor het emailadres en id)
+                const { data: student, error: fetchError } = await supabaseClient
+                    .from('Students')
+                    .select('id, email')
+                    .eq('name', name)
+                    .single();
+
+                if (fetchError) {
+                    alert('Fout bij ophalen stagiair: ' + fetchError.message);
+                    return;
+                }
+
+                // Stap 2: Verwijder uit database
+                const { error: deleteError } = await supabaseClient.from('Students').delete().eq('name', name);
+                
+                if (deleteError) {
+                    alert('Error bij verwijderen uit database: ' + deleteError.message);
+                    return;
+                }
+
+                // Stap 3: Verwijder auth account via Edge Function (indien email of id bekend is)
+                if (student.email || student.id) {
+                    const functionUrl = `${SUPABASE_URL}/functions/v1/delete-auth-account`;
+                    
+                    try {
+                        const authRes = await fetch(functionUrl, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${SUPABASE_KEY}`
+                            },
+                            body: JSON.stringify({ 
+                                email: student.email,
+                                userId: student.id
+                            })
+                        });
+
+                        const authResult = await authRes.json();
+                        if (!authRes.ok || !authResult.success) {
+                            throw new Error(authResult?.error || 'Auth account delete failed');
+                        }
+                        
+                        alert('✅ Stagiair en inlog-account succesvol verwijderd!');
+                    } catch (authError) {
+                        console.warn('Auth account delete failed:', authError);
+                        alert('✅ Stagiair verwijderd uit database!\n\n⚠️ Let op: Het inlog-account kon niet automatisch worden verwijderd. (Fout: ' + authError.message + ')\nGa naar Supabase → Authentication → Users en verwijder handmatig indien nodig.');
+                    }
+                } else {
+                    alert('✅ Stagiair verwijderd!');
+                }
+
+                loadData();
+            } catch (err) {
+                console.error('Delete error:', err);
+                alert('Onverwachte fout: ' + err.message);
+            }
+        };
+
+        document.getElementById('form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+            const origBtnText = submitBtn ? submitBtn.textContent : 'Opslaan';
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.textContent = 'Opslaan...';
             }
 
-            if (error) {
-                console.error('Save error:', error);
-                alert("Fout bij opslaan: " + error.message);
-            } else {
+            try {
+                const id = document.getElementById('student-id').value;
+                const email = document.getElementById('email').value.trim().toLowerCase() || null;
+                const name = document.getElementById('name').value.trim();
+
+                if (!name) {
+                    alert('Naam is verplicht.');
+                    return;
+                }
+
+                let user_id = id || null;
+
+                // Als het een NIEUWE leerling betreft met e-mailadres, maak auth account aan
+                if (!id && email) {
+                    const password = document.getElementById('password').value;
+                    if (!password || password.length < 6) {
+                        alert('Wachtwoord is verplicht bij het aanmaken van een nieuwe stagiair en moet minimaal 6 tekens bevatten.');
+                        return;
+                    }
+
+                    const functionUrl = `${SUPABASE_URL}/functions/v1/create-auth-account`;
+                    const authRes = await fetch(functionUrl, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${SUPABASE_KEY}`
+                        },
+                        body: JSON.stringify({
+                            email: email,
+                            password: password,
+                            role: 'student',
+                            name: name,
+                            loginUrl: `${window.location.origin}/student-portal.html`,
+                            sendEmail: false
+                        })
+                    });
+
+                    const authResult = await authRes.json();
+                    if (!authRes.ok || !authResult.success) {
+                        throw new Error(authResult?.error || 'Aanmaken inlogaccount mislukt');
+                    }
+                    user_id = authResult.user_id;
+                }
+
+                const c1 = document.getElementById('company_id').value || '';
+                const days1 = Array.from(document.querySelectorAll('input[name="days_1"]:checked')).map(cb => cb.value);
+
+                const c2 = document.getElementById('company_id_2') ? document.getElementById('company_id_2').value : '';
+                const days2 = Array.from(document.querySelectorAll('input[name="days_2"]:checked')).map(cb => cb.value);
+
+                const company_assignments = [];
+                if (c1) {
+                    company_assignments.push({ company_id: c1, days: days1 });
+                }
+                if (c2) {
+                    company_assignments.push({ company_id: c2, days: days2 });
+                }
+
+                const primary_company_id = c1 || c2 || null;
+                const all_scheduled_days = [...new Set([...days1, ...days2])];
+
+                const stage_start_date = document.getElementById('stage_start_date')?.value || null;
+                const stage_end_date = document.getElementById('stage_end_date')?.value || null;
+
+                const studentPayload = {
+                    name: name,
+                    email: email,
+                    student_number: document.getElementById('student_number').value || null,
+                    company_id: primary_company_id,
+                    company_assignments: company_assignments,
+                    supervisor_id: document.getElementById('supervisor_id').value || null,
+                    class: document.getElementById('class').value || null,
+                    school_year: document.getElementById('school_year').value || null,
+                    stage_start_date: stage_start_date,
+                    stage_end_date: stage_end_date,
+                    unenrollment_date: document.getElementById('unenrollment_date').value || null,
+                    scheduled_days: all_scheduled_days
+                };
+
+                if (studentPayload.company_id === '') studentPayload.company_id = null;
+                if (studentPayload.supervisor_id === '') studentPayload.supervisor_id = null;
+                if (user_id) studentPayload.id = user_id;
+
+                // Opslaan/bijwerken in database via Admin Edge Function (omzeilt RLS en schema-fouten)
+                const functionUrl = `${SUPABASE_URL}/functions/v1/create-auth-account`;
+                const dbRes = await fetch(functionUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${SUPABASE_KEY}`
+                    },
+                    body: JSON.stringify({
+                        action: 'upsert-student',
+                        metadata: { student: studentPayload }
+                    })
+                });
+
+                const dbResult = await dbRes.json();
+                if (!dbRes.ok || !dbResult.success) {
+                    throw new Error(dbResult?.error || 'Opslaan van stagiair in database mislukt');
+                }
+
                 closeModal();
                 loadData();
+            } catch (err) {
+                console.error('Save error:', err);
+                alert('Fout bij opslaan: ' + err.message);
+            } finally {
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = origBtnText;
+                }
             }
         });
-        function logout() { localStorage.removeItem("stageconnect_admin_session"); window.location.href = "admin-login.html" }
 
+        async function logout() {
+            try {
+                await supabaseClient.auth.signOut();
+            } catch (e) {
+                console.warn('Error signing out of Supabase:', e);
+            }
+            localStorage.removeItem('stageconnect_admin_session');
+            localStorage.removeItem('admin_email');
+            localStorage.removeItem('admin_name');
+            window.location.href = 'admin-login.html';
+        }
+
+        // Attendance History Functions
+        let currentStudentForModal = null;
+
+        window.viewAttendance = async function (student) {
+            currentStudentForModal = student;
+            document.getElementById('attendance-modal').classList.remove('hidden');
+            document.getElementById('attendance-student-name').textContent = student.name;
+
+            const company = companies.find(c => c.id === student.company_id);
+            const supervisor = supervisors.find(s => s.id === student.supervisor_id);
+            document.getElementById('attendance-student-info').textContent =
+                `${company?.company_name || 'Geen stagebedrijf'} • ${supervisor?.name || 'Geen begeleider'}`;
+
+            // Load attendance for this student
+            const { data: attendance, error } = await supabaseClient
+                .from('Attendance')
+                .select('*')
+                .eq('student_id', student.id)
+                .order('date', { ascending: false });
+
+            if (error) {
+                console.error('Error loading attendance:', error);
+                document.getElementById('no-attendance').classList.remove('hidden');
+                document.getElementById('attendance-list').classList.add('hidden');
+                document.getElementById('attendance-stats').classList.add('hidden');
+                return;
+            }
+
+            const cleanAttendance = attendance || [];
+
+            document.getElementById('no-attendance').classList.add('hidden');
+            document.getElementById('attendance-list').classList.remove('hidden');
+            document.getElementById('attendance-stats').classList.remove('hidden');
+
+            // Calculate stats using effective status
+            const getEffectiveStatus = a => {
+                if (a.status && a.status !== 'pending' && a.status !== 'undefined' && a.status !== 'null') return a.status;
+                if (a.student_status && a.student_status !== 'pending' && a.student_status !== 'undefined' && a.student_status !== 'null') return a.student_status;
+                return 'pending';
+            };
+
+            const stats = {
+                present: cleanAttendance.filter(a => getEffectiveStatus(a) === 'present').length,
+                absent: cleanAttendance.filter(a => getEffectiveStatus(a) === 'absent').length,
+                sick: cleanAttendance.filter(a => getEffectiveStatus(a) === 'sick').length,
+                late: cleanAttendance.filter(a => getEffectiveStatus(a) === 'late').length
+            };
+
+            // Render stats
+            document.getElementById('attendance-stats').innerHTML = `
+                <div class="bg-green-50 p-3 rounded-lg text-center">
+                    <div class="text-xs text-green-600 font-medium">Aanwezig</div>
+                    <div class="text-2xl font-bold text-green-700">${stats.present}</div>
+                </div>
+                <div class="bg-red-50 p-3 rounded-lg text-center">
+                    <div class="text-xs text-red-600 font-medium">Afwezig</div>
+                    <div class="text-2xl font-bold text-red-700">${stats.absent}</div>
+                </div>
+                <div class="bg-orange-50 p-3 rounded-lg text-center">
+                    <div class="text-xs text-orange-600 font-medium">Ziek</div>
+                    <div class="text-2xl font-bold text-orange-700">${stats.sick}</div>
+                </div>
+                <div class="bg-yellow-50 p-3 rounded-lg text-center">
+                    <div class="text-xs text-yellow-600 font-medium">Te laat</div>
+                    <div class="text-2xl font-bold text-yellow-700">${stats.late}</div>
+                </div>
+            `;
+
+            const statusColors = {
+                'present': 'bg-green-100 text-green-800 border-green-300',
+                'absent': 'bg-red-100 text-red-800 border-red-300',
+                'sick': 'bg-orange-100 text-orange-800 border-orange-300',
+                'late': 'bg-yellow-100 text-yellow-800 border-yellow-300',
+                'pending': 'bg-amber-100 text-amber-800 border-amber-300'
+            };
+
+            const statusLabels = {
+                'present': 'Aanwezig',
+                'absent': 'Afwezig',
+                'sick': 'Ziek',
+                'late': 'Te laat',
+                'pending': 'Te goedkeuren'
+            };
+
+            // Form to manually add/update any past date
+            let listHTML = `
+                <div class="bg-blue-50 border border-blue-200 p-3 rounded-xl mb-4">
+                    <label class="block text-xs font-bold text-blue-900 mb-1.5">➕ Datum toevoegen of aanpassen:</label>
+                    <div class="flex gap-2 flex-wrap sm:flex-nowrap">
+                        <input type="date" id="modal-add-date" class="px-3 py-1.5 text-xs bg-white border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500">
+                        <select id="modal-add-status" class="px-3 py-1.5 text-xs bg-white border border-gray-300 rounded-lg outline-none font-medium">
+                            <option value="present">Aanwezig</option>
+                            <option value="absent">Afwezig</option>
+                            <option value="sick">Ziek</option>
+                            <option value="late">Te laat</option>
+                        </select>
+                        <button onclick="saveModalAttendanceDate('${student.id}')" class="px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-lg transition shadow">
+                            Opslaan
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            if (cleanAttendance.length === 0) {
+                listHTML += `<div class="text-center py-6 text-gray-500 text-sm">Geen aanwezigheidsgegevens voor deze stagiair.</div>`;
+            } else {
+                listHTML += cleanAttendance.map(record => {
+                    const dateParts = record.date.split('-');
+                    let formattedDate = record.date;
+                    if (dateParts.length === 3) {
+                        const dateObj = new Date(dateParts[0], dateParts[1] - 1, dateParts[2]);
+                        formattedDate = dateObj.toLocaleDateString('nl-NL', {
+                            weekday: 'short',
+                            day: 'numeric',
+                            month: 'short',
+                            year: 'numeric'
+                        });
+                    }
+
+                    const effSt = getEffectiveStatus(record);
+                    const colorClass = statusColors[effSt] || 'bg-gray-100 text-gray-700 border-gray-300';
+                    const labelText = statusLabels[effSt] || effSt || 'Onbekend';
+                    const studentNote = record.student_hours ? ` (${record.student_hours}u ingevoerd)` : '';
+
+                    return `
+                        <div class="flex justify-between items-center p-3 bg-gray-50 rounded-xl hover:bg-gray-100 transition border border-gray-200">
+                            <div>
+                                <div class="text-sm font-bold text-gray-900">${formattedDate}</div>
+                                ${studentNote ? `<div class="text-[11px] text-purple-700 font-medium">${studentNote}</div>` : ''}
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <select onchange="updateAttendanceStatusDirect('${student.id}', '${record.date}', this.value)" 
+                                    class="text-xs font-bold px-3 py-1.5 rounded-lg border shadow-sm outline-none cursor-pointer ${colorClass}">
+                                    <option value="present" ${effSt === 'present' ? 'selected' : ''}>✅ Aanwezig</option>
+                                    <option value="absent" ${effSt === 'absent' ? 'selected' : ''}>❌ Afwezig</option>
+                                    <option value="sick" ${effSt === 'sick' ? 'selected' : ''}>🤒 Ziek</option>
+                                    <option value="late" ${effSt === 'late' ? 'selected' : ''}>⏱️ Te laat</option>
+                                    <option value="pending" ${effSt === 'pending' ? 'selected' : ''}>🟡 Te goedkeuren</option>
+                                </select>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            document.getElementById('attendance-list').innerHTML = listHTML;
+        };
+
+        window.updateAttendanceStatusDirect = async function (studentId, dateStr, newStatus) {
+            try {
+                const { error } = await supabaseClient
+                    .from('Attendance')
+                    .upsert({
+                        student_id: studentId,
+                        date: dateStr,
+                        status: newStatus,
+                        updated_at: new Date().toISOString()
+                    }, { onConflict: 'student_id,date' });
+
+                if (error) {
+                    alert('Fout bij opslaan: ' + error.message);
+                } else if (currentStudentForModal) {
+                    window.viewAttendance(currentStudentForModal);
+                }
+            } catch (e) {
+                console.error('Error updating status:', e);
+                alert('Fout bij opslaan: ' + e.message);
+            }
+        };
+
+        window.saveModalAttendanceDate = async function (studentId) {
+            const dateInput = document.getElementById('modal-add-date').value;
+            const statusInput = document.getElementById('modal-add-status').value;
+
+            if (!dateInput) {
+                alert('Kies eerst een datum.');
+                return;
+            }
+
+            try {
+                const { error } = await supabaseClient
+                    .from('Attendance')
+                    .upsert({
+                        student_id: studentId,
+                        date: dateInput,
+                        status: statusInput,
+                        updated_at: new Date().toISOString()
+                    }, { onConflict: 'student_id,date' });
+
+                if (error) {
+                    alert('Fout bij toevoegen: ' + error.message);
+                } else {
+                    if (currentStudentForModal) {
+                        window.viewAttendance(currentStudentForModal);
+                    }
+                }
+            } catch (e) {
+                console.error('Error adding date:', e);
+                alert('Fout bij toevoegen: ' + e.message);
+            }
+        };
+
+        function closeAttendanceModal() {
+            document.getElementById('attendance-modal').classList.add('hidden');
+        }
+
+
+        // Direct initialization
         loadData();
     </script>
 </body>
