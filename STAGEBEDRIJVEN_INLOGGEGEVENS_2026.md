@@ -45,7 +45,7 @@ Dit zijn de recent geïmporteerde bedrijven voor het nieuwe schooljaar. Bedrijve
 | **SBR-Elektromontage** | Cor | `cor@sbr-elektromontage.nl` | Eigen wachtwoord via reset link |
 | **Verswinkel G.J. van der Kooy** | Gert-Jan van der Kooy | `info@gjvdkooy.nl` | Eigen wachtwoord via reset link |
 | **Hoogvliet Ridderhof** | Sander Westera | `380bl@hoogvliet.com` | Eigen wachtwoord via reset link |
-| **WIJdezorg Nieuwkoop** | Hellen Vork | `hvork@wijdezorg.com` | Eigen wachtwoord via reset link |
+| **WIJdezorg Nieuwkoop** | Hellen Vork | `hvork@wijdezorg.com` | `WelkomWIJdezorg2026!` |
 | **Rayer Healthcare** | Puck Zantvoord | `p.zantvoord@topzorggroep.nl` | Eigen wachtwoord via reset link |
 | **Zorgpartners Vijverhof** | Dorien Hamminga | `dorien.hamminga@zorgpartners.nl` | Eigen wachtwoord via reset link |
 | **Kruidvat Herenhof** | Mindel Gopal | `m.gopal@kvnl.asweuftores.com` | Eigen wachtwoord via reset link |
