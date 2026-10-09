@@ -53,10 +53,30 @@ async function init() {
             document.getElementById('company-name').textContent = companyName;
         }
 
-        const { data: companies, error: companyError } = await supabaseClient
-            .from('Bedrijven')
-            .select('*')
-            .ilike('email', userEmail);
+        const metaCompanyId = session?.user?.user_metadata?.company_id || session?.user?.app_metadata?.company_id || companyId;
+        let companies = [];
+        let companyError = null;
+
+        if (metaCompanyId && metaCompanyId !== 'demo-company') {
+            const { data, error } = await supabaseClient
+                .from('Bedrijven')
+                .select('*')
+                .eq('id', metaCompanyId);
+            if (data && data.length) {
+                companies = data;
+            } else {
+                companyError = error;
+            }
+        }
+
+        if (!companies.length) {
+            const { data, error } = await supabaseClient
+                .from('Bedrijven')
+                .select('*')
+                .ilike('email', userEmail);
+            companies = data || [];
+            if (error) companyError = error;
+        }
 
         if (companyError || !companies.length) {
             console.error('Company fetch error or empty:', companyError);
