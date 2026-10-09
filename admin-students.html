@@ -743,7 +743,6 @@
             // Calculate stats using effective status
             const getEffectiveStatus = a => {
                 if (a.status && a.status !== 'pending' && a.status !== 'undefined' && a.status !== 'null') return a.status;
-                if (a.student_status && a.student_status !== 'pending' && a.student_status !== 'undefined' && a.student_status !== 'null') return a.student_status;
                 return 'pending';
             };
 
