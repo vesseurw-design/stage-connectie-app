@@ -47,7 +47,7 @@ Dit zijn de recent geïmporteerde bedrijven voor het nieuwe schooljaar. Bedrijve
 | **Hoogvliet Ridderhof** | Sander Westera | `380bl@hoogvliet.com` | Eigen wachtwoord via reset link |
 | **WIJdezorg Nieuwkoop** | Hellen Vork | `hvork@wijdezorg.com` | `WelkomWIJdezorg2026!` |
 | **Rayer Healthcare** | Puck Zantvoord | `p.zantvoord@topzorggroep.nl` | Eigen wachtwoord via reset link |
-| **Zorgpartners Vijverhof** | Dorien Hamminga | `dorien.hamminga@zorgpartners.nl` | Eigen wachtwoord via reset link |
+| **Zorgpartners Vijverhof** | Dorien Hamminga | `dorien.hamminga@zorgpartners.nl` | `WelkomVijverhof2026!` |
 | **Kruidvat Herenhof** | Mindel Gopal | `m.gopal@kvnl.asweuftores.com` | Eigen wachtwoord via reset link |
 | **Ontmoetingscentrum De Vrienden** | Willeke Rombouts | `ocdevrienden@activite.nl` | Eigen wachtwoord via reset link |
 | **Garage Goudkuil** | Lars Goudkuil | `info@garagegoudkuil.nl` | Eigen wachtwoord via reset link |
