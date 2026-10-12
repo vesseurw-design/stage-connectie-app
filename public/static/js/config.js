@@ -11,6 +11,7 @@ const DB_CONFIGS = {
         maxStudents: 250,
         schoolName: 'Groene Hart Pro College',
         logo: 'logo-ghpc-v2.png',
+        canManageDemos: true,
         demoCredentials: {
             student: 'fake@leerling.nl',
             supervisor: 'stage@begeleider.nl',
@@ -29,6 +30,7 @@ const DB_CONFIGS = {
         maxStudents: 500,
         schoolName: 'StageConnectie',
         logo: 'logo-stageconnectie.png',
+        canManageDemos: true,
         demoCredentials: {
             student: 'fake@leerling.nl',
             supervisor: 'stage@begeleider.nl',
@@ -46,6 +48,7 @@ const DB_CONFIGS = {
         maxStudents: 500,
         schoolName: 'StageConnectie',
         logo: 'logo-stageconnectie.png',
+        canManageDemos: true,
         demoCredentials: {
             student: 'fake@leerling.nl',
             supervisor: 'stage@begeleider.nl',
@@ -77,6 +80,7 @@ const DB_CONFIGS = {
         maxStudents: 250,
         schoolName: 'Groene Hart Pro College (Localhost)',
         logo: 'logo-ghpc-v2.png',
+        canManageDemos: true,
         demoCredentials: {
             student: 'fake@leerling.nl',
             supervisor: 'stage@begeleider.nl',
@@ -116,68 +120,40 @@ const DB_CONFIGS = {
     window.SCHOOL_LOGO = config.logo || 'logo.png';
     window.DEMO_CREDENTIALS = config.demoCredentials || null;
     window.ABSENCE_STEPS = config.absenceSteps || [];
+    window.CAN_MANAGE_DEMOS = !!config.canManageDemos;
     
-    // Tijdelijke demo-codes met verloopdatum (YYYY-MM-DD)
-    window.DEMO_TEMPORARY_CODES = [
-        { code: 'PRESENTATIE', expires: '2026-10-09' }, // 1 week geldig
-        { code: 'DEMO-WEEK', expires: '2026-10-09' }     // 1 week geldig
-    ];
+    // Optionele vaste fallback demo-codes met verloopdatum (YYYY-MM-DD)
+    window.DEMO_TEMPORARY_CODES = [];
 
     /**
-     * Valideert of een ingevoerde demo-code geldig en niet verlopen is
+     * Valideert of een ingevoerde demo-code geldig en niet verlopen is.
+     * Controleert rechtstreeks in de Supabase DemoCodes tabel van het hoofdplatform.
      */
-    window.validateDemoCode = function(input) {
+    window.validateDemoCode = async function(input) {
         if (!input) return false;
         const code = input.trim().toUpperCase();
 
-        // 1. Vaste standaardcodes
-        const staticCodes = ['DEMO2026', 'PRESENTATIE', 'STAGE2026', 'STAGE2025', 'DEMO'];
-        if (staticCodes.includes(code)) return true;
-
-        // 2. Datum-gebaseerde tijdelijke codes (bijv. DEMO-0910, DEMO-1710, DEMO-0917 -> flexibele verloopdatum)
-        const matchDigits = code.match(/^(?:DEMO|STAGE|CODE|PRO|PRES)-(\d{2})(\d{2})$/);
-        if (matchDigits) {
-            let num1 = parseInt(matchDigits[1], 10);
-            let num2 = parseInt(matchDigits[2], 10);
-            let day, month;
-
-            if (num1 > 12 && num1 <= 31) {
-                // bijv. DEMO-1710 -> Dag 17, Maand 10 (17 oktober)
-                day = num1;
-                month = num2 - 1;
-            } else if (num2 > 12 && num2 <= 31) {
-                // bijv. DEMO-0917 of DEMO-1017 -> Dag 17, Maand 10/9
-                day = num2;
-                month = num1 - 1;
-            } else {
-                // bijv. DEMO-0910 -> Dag 9, Maand 10 (9 oktober)
-                day = num1;
-                month = num2 - 1;
-            }
-
-            const now = new Date();
-            if (month >= 0 && month <= 11 && day >= 1 && day <= 31) {
-                const expDate = new Date(now.getFullYear(), month, day, 23, 59, 59);
-                if (now <= expDate) {
+        // 1. Controleer in Supabase DemoCodes tabel (hoofdplatform)
+        try {
+            const todayStr = new Date().toISOString().split('T')[0];
+            const checkUrl = `https://vdeipnqyesduiohxvuvu.supabase.co/rest/v1/DemoCodes?code=eq.${encodeURIComponent(code)}&is_active=eq.true&expires_at=gte.${todayStr}&select=id,code,expires_at`;
+            const res = await fetch(checkUrl, {
+                headers: {
+                    'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZkZWlwbnF5ZXNkdWlvaHh2dXZ1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc1MjY5NTEsImV4cCI6MjA4MzEwMjk1MX0.IknEZ-GQvspcppJxLR00ayBDq1DbL0HiUKy9RDb59DU',
+                    'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZkZWlwbnF5ZXNkdWlvaHh2dXZ1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc1MjY5NTEsImV4cCI6MjA4MzEwMjk1MX0.IknEZ-GQvspcppJxLR00ayBDq1DbL0HiUKy9RDb59DU'
+                }
+            });
+            if (res.ok) {
+                const rows = await res.json();
+                if (Array.isArray(rows) && rows.length > 0) {
                     return true;
                 }
             }
+        } catch (err) {
+            console.warn('Demo code verificatie via database mislukt:', err);
         }
 
-        // 3. Volledige datum codes (bijv. DEMO-20261009 -> geldig t/m 9 okt 2026)
-        const matchFullDate = code.match(/^(?:DEMO|STAGE|CODE|PRO)-(\d{4})(\d{2})(\d{2})$/);
-        if (matchFullDate) {
-            const year = parseInt(matchFullDate[1], 10);
-            const month = parseInt(matchFullDate[2], 10) - 1;
-            const day = parseInt(matchFullDate[3], 10);
-            const now = new Date();
-            const expDate = new Date(year, month, day, 23, 59, 59);
-            if (now <= expDate) {
-                return true;
-            }
-        }
-
-        // 4. Custom tijdelijke codes uit window.DEMO_TEMPORARY_CODES
+        // 2. Veilige fallback uit window.DEMO_TEMPORARY_CODES (indien ingesteld)
         if (window.DEMO_TEMPORARY_CODES && Array.isArray(window.DEMO_TEMPORARY_CODES)) {
             const now = new Date();
             const found = window.DEMO_TEMPORARY_CODES.find(item => item.code.toUpperCase() === code);

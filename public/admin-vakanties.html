@@ -32,6 +32,7 @@
                 <a href="admin.html" class="px-4 py-2 bg-gray-50 text-gray-600 hover:bg-gray-100 rounded-lg transition font-medium">Dashboard</a>
                 <a href="admin-students-v2.html" class="px-4 py-2 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-lg transition font-medium">Studenten</a>
                 <a href="admin-vakanties.html" class="px-4 py-2 bg-pink-500 text-white rounded-lg shadow transition font-medium">🏖️ Vakanties</a>
+                <a id="nav-demo-codes" href="admin-demo-codes.html" class="px-4 py-2 bg-amber-50 text-amber-700 hover:bg-amber-100 rounded-lg transition font-medium hidden">🔑 Demo Codes</a>
                 <button onclick="adminLogout()" class="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition">Uitloggen</button>
             </div>
         </div>
@@ -182,6 +183,11 @@
         }
 
         // Init
+        const currentHost = window.location.hostname.toLowerCase();
+        if (window.CAN_MANAGE_DEMOS || currentHost.includes('ghpc') || currentHost.includes('stageconnectie') || currentHost === 'localhost' || currentHost === '127.0.0.1') {
+            const demoNav = document.getElementById('nav-demo-codes');
+            if (demoNav) demoNav.classList.remove('hidden');
+        }
         loadHolidays();
     </script>
 </body>

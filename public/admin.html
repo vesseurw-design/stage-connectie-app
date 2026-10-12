@@ -100,6 +100,19 @@
                     class="px-4 py-2 bg-pink-50 text-pink-600 hover:bg-pink-100 rounded-lg transition font-medium text-sm">
                     🏖️ Vakanties
                 </a>
+                <a id="nav-demo-codes" href="admin-demo-codes.html"
+                    class="px-4 py-2 bg-amber-50 text-amber-700 hover:bg-amber-100 rounded-lg transition font-medium text-sm">
+                    🔑 Demo Toegang
+                </a>
+                <script>
+                    (function() {
+                        const h = window.location.hostname.toLowerCase();
+                        if (!h.includes('ghpc') && !h.includes('stageconnectie') && h !== 'localhost' && h !== '127.0.0.1' && !window.CAN_MANAGE_DEMOS) {
+                            const btn = document.getElementById('nav-demo-codes');
+                            if (btn) btn.style.display = 'none';
+                        }
+                    })();
+                </script>
                 <a href="admin-import.html"
                     class="px-4 py-2 bg-indigo-50 text-indigo-600 hover:bg-indigo-100 rounded-lg transition font-medium text-sm">
                     📥 Importeer CSV
@@ -381,6 +394,13 @@
         async function init() {
             const isAuthenticated = await checkAuth();
             if (!isAuthenticated) return;
+
+            // Toon Demo Toegang knop uitsluitend voor GHPC / hoofdbeheer
+            const currentHost = window.location.hostname.toLowerCase();
+            if (window.CAN_MANAGE_DEMOS || currentHost.includes('ghpc') || currentHost.includes('stageconnectie') || currentHost === 'localhost' || currentHost === '127.0.0.1') {
+                const demoNav = document.getElementById('nav-demo-codes');
+                if (demoNav) demoNav.classList.remove('hidden');
+            }
 
             await Promise.all([loadCompanies(), loadStudents(), loadAttendance(), loadSupervisors()]);
             setupRealtimeSubscription();
