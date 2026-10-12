@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="nl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Demo Toegangscodes Beheer - StageConnectie</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+    <script>
+        if (!localStorage.getItem('stageconnect_admin_session')) { 
+            window.location.href = 'admin-login.html'; 
+        }
+    </script>
+    <link rel="icon" type="image/png" href="/icon-v3.png">
+    <link rel="apple-touch-icon" href="/icon-v3.png">
+    <link rel="apple-touch-icon-precomposed" href="/icon-v3.png">
+    <link rel="manifest" href="/manifest.json">
+</head>
+
+<body class="bg-gray-50 min-h-screen flex flex-col">
+    <!-- Header -->
+    <header class="bg-white shadow-sm border-b border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
+            <div>
+                <h1 class="text-2xl font-bold text-gray-800 flex items-center gap-2">
+                    <span>🔑 Demo Toegangscodes</span>
+                    <span class="text-xs bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full font-semibold">GHPC / Hoofdbeheer</span>
+                </h1>
+                <p class="text-sm text-gray-600">Beheer tijdelijke toegangscodes met verloopdatum voor demo's en presentaties</p>
+            </div>
+            <div class="flex gap-2 flex-wrap items-center">
+                <a href="admin.html" class="px-3 py-2 bg-gray-50 text-gray-600 hover:bg-gray-100 rounded-lg transition text-sm font-medium">Dashboard</a>
+                <a href="admin-students-v2.html" class="px-3 py-2 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-lg transition text-sm font-medium">Studenten</a>
+                <a href="admin-companies.html" class="px-3 py-2 bg-purple-50 text-purple-600 hover:bg-purple-100 rounded-lg transition text-sm font-medium">Stagebedrijven</a>
+                <a href="admin-vakanties.html" class="px-3 py-2 bg-pink-50 text-pink-600 hover:bg-pink-100 rounded-lg transition text-sm font-medium">🏖️ Vakanties</a>
+                <a href="admin-demo-codes.html" class="px-3 py-2 bg-amber-500 text-white rounded-lg shadow transition text-sm font-medium">🔑 Demo Codes</a>
+                <button onclick="adminLogout()" class="px-3 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition text-sm">Uitloggen</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-6xl mx-auto px-4 py-8 flex-1 w-full">
+
+        <!-- Info alert -->
+        <div class="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-r-lg mb-8 shadow-sm text-sm text-blue-900 flex justify-between items-start">
+            <div>
+                <p class="font-bold mb-1">ℹ️ Hoe werkt een demo-toegangscode?</p>
+                <p class="text-blue-800">
+                    Wanneer je een code aanmaakt, kunnen potentiële scholen of werkgevers deze invullen op <strong>stageconnectie.nl</strong> (of direct via een link). 
+                    Na afloop van de gekozen datum verloopt de code automatisch en wordt de toegang direct geblokkeerd.
+                </p>
+            </div>
+        </div>
+
+        <!-- Formulier: Nieuwe Demo Code Aanmaken -->
+        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 mb-8">
+            <h2 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                <span>➕ Nieuwe Demo Code Aanmaken</span>
+            </h2>
+            <form id="add-demo-form" class="space-y-4">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Bestemd voor / Contactpersoon *</label>
+                        <input type="text" id="recipient-name" required placeholder="bijv. Koning Willem I College - Mevr. Jansen"
+                            class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-amber-500 outline-none text-sm">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Geldig tot en met datum *</label>
+                        <input type="date" id="expires-at" required
+                            class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-amber-500 outline-none text-sm">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Toegangscode *</label>
+                        <div class="flex gap-2">
+                            <input type="text" id="demo-code" required placeholder="bijv. DEMO-KW1C" uppercase
+                                class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-amber-500 outline-none text-sm uppercase font-mono font-bold">
+                            <button type="button" onclick="generateRandomCode()" title="Genereer willekeurige code"
+                                class="px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-xs font-semibold whitespace-nowrap transition">
+                                🎲 Genereer
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Optionele notitie</label>
+                    <input type="text" id="notes" placeholder="bijv. Toegang verleend na pitch presentatie"
+                        class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-amber-500 outline-none text-sm">
+                </div>
+
+                <div class="flex items-center justify-between pt-2">
+                    <p id="form-msg" class="text-sm hidden"></p>
+                    <button type="submit" class="px-6 py-2.5 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-lg transition shadow-md text-sm ml-auto flex items-center gap-2">
+                        <span>Opslaan & Demo Link Aanmaken</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Overzicht van bestaande codes -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+            <div class="p-6 border-b border-gray-100 bg-gray-50 flex justify-between items-center flex-wrap gap-4">
+                <div>
+                    <h2 class="text-lg font-bold text-gray-800">Geregistreerde Demo Codes</h2>
+                    <p class="text-xs text-gray-500">Overzicht van alle actieve en verlopen demo-toegangen</p>
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="loadDemoCodes()" class="px-3 py-1.5 bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 rounded-lg text-xs font-medium transition shadow-sm">
+                        🔄 Verversen
+                    </button>
+                </div>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="w-full text-left">
+                    <thead class="bg-gray-50 text-gray-500 text-xs uppercase tracking-wider border-b">
+                        <tr>
+                            <th class="px-6 py-3 font-semibold">Code</th>
+                            <th class="px-6 py-3 font-semibold">Ontvanger / Organisatie</th>
+                            <th class="px-6 py-3 font-semibold">Geldig t/m</th>
+                            <th class="px-6 py-3 font-semibold">Status</th>
+                            <th class="px-6 py-3 font-semibold text-right">Acties</th>
+                        </tr>
+                    </thead>
+                    <tbody id="codes-list" class="divide-y divide-gray-100 text-sm">
+                        <tr><td colspan="5" class="p-6 text-center text-gray-500">Laden...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Toast notification voor kopiëren -->
+    <div id="copy-toast" class="fixed bottom-6 right-6 bg-slate-900 text-white px-4 py-2.5 rounded-lg shadow-xl text-sm font-medium transition-opacity duration-300 opacity-0 pointer-events-none z-50 flex items-center gap-2">
+        <span>✅ Demo-link gekopieerd naar klembord!</span>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="./static/js/config.js"></script>
+    <script src="./static/js/admin-auth.js?v=5.0"></script>
+    <script>
+        // Check of deze school demo codes mag beheren (alleen GHPC / StageConnectie hoofdbeheer)
+        const currentHost = window.location.hostname.toLowerCase();
+        const isAllowedSchool = (window.CAN_MANAGE_DEMOS === true) || 
+                                currentHost.includes('ghpc') || 
+                                currentHost.includes('stageconnectie') || 
+                                currentHost === 'localhost' || 
+                                currentHost === '127.0.0.1';
+
+        if (!isAllowedSchool) {
+            alert('Deze pagina is uitsluitend beschikbaar voor de hoofdbeheerder van StageConnectie.');
+            window.location.href = 'admin.html';
+        }
+
+        // Supabase client voor GHPC hoofdplatform
+        const supClient = window.supabase.createClient(
+            'https://vdeipnqyesduiohxvuvu.supabase.co',
+            'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZkZWlwbnF5ZXNkdWlvaHh2dXZ1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc1MjY5NTEsImV4cCI6MjA4MzEwMjk1MX0.IknEZ-GQvspcppJxLR00ayBDq1DbL0HiUKy9RDb59DU'
+        );
+
+        // Standaard datum op 7 dagen in de toekomst zetten
+        function setDefaultExpiryDate() {
+            const dateInput = document.getElementById('expires-at');
+            const d = new Date();
+            d.setDate(d.getDate() + 7);
+            const yyyy = d.getFullYear();
+            const mm = String(d.getMonth() + 1).padStart(2, '0');
+            const dd = String(d.getDate()).padStart(2, '0');
+            dateInput.value = `${yyyy}-${mm}-${dd}`;
+        }
+        setDefaultExpiryDate();
+
+        // Willekeurige demo code genereren
+        function generateRandomCode() {
+            const randNum = Math.floor(1000 + Math.random() * 9000);
+            document.getElementById('demo-code').value = `DEMO-${randNum}`;
+        }
+
+        // Lijst met demo codes inladen
+        async function loadDemoCodes() {
+            const list = document.getElementById('codes-list');
+            list.innerHTML = '<tr><td colspan="5" class="p-6 text-center text-gray-500">Laden...</td></tr>';
+
+            const { data, error } = await supClient
+                .from('DemoCodes')
+                .select('*')
+                .order('created_at', { ascending: false });
+
+            if (error) {
+                console.error(error);
+                list.innerHTML = `<tr><td colspan="5" class="p-6 text-center text-red-500">Fout bij laden: ${error.message}. Controleer of de tabel 'DemoCodes' is aangemaakt in Supabase.</td></tr>`;
+                return;
+            }
+
+            if (!data || data.length === 0) {
+                list.innerHTML = '<tr><td colspan="5" class="p-6 text-center text-gray-500 italic">Nog geen demo codes aangemaakt. Maak hierboven je eerste code aan.</td></tr>';
+                return;
+            }
+
+            const todayStr = new Date().toISOString().split('T')[0];
+
+            list.innerHTML = data.map(item => {
+                const isExpired = item.expires_at < todayStr;
+                const isActive = item.is_active && !isExpired;
+                
+                // Bereken dagen resterend
+                let statusBadge = '';
+                if (!item.is_active) {
+                    statusBadge = '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-600">Gedeactiveerd</span>';
+                } else if (isExpired) {
+                    statusBadge = '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-red-100 text-red-700">Verlopen</span>';
+                } else {
+                    const diffTime = new Date(item.expires_at + 'T23:59:59') - new Date();
+                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                    statusBadge = `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-green-100 text-green-700">Actief (nog ${diffDays}d)</span>`;
+                }
+
+                const demoUrl = `https://stageconnectie.nl/?code=${encodeURIComponent(item.code)}`;
+
+                return `
+                    <tr class="hover:bg-gray-50 transition">
+                        <td class="px-6 py-4 font-mono font-bold text-amber-700 tracking-wider">
+                            ${item.code}
+                        </td>
+                        <td class="px-6 py-4">
+                            <div class="font-medium text-gray-900">${item.recipient_name}</div>
+                            ${item.notes ? `<div class="text-xs text-gray-400 mt-0.5">${item.notes}</div>` : ''}
+                        </td>
+                        <td class="px-6 py-4 text-gray-600 font-medium">
+                            ${new Date(item.expires_at).toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' })}
+                        </td>
+                        <td class="px-6 py-4">
+                            ${statusBadge}
+                        </td>
+                        <td class="px-6 py-4 text-right space-x-2 whitespace-nowrap">
+                            <button onclick="copyDemoLink('${demoUrl}')" class="px-2.5 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded text-xs font-semibold transition" title="Kopieer directe link voor ontvanger">
+                                🔗 Kopieer Link
+                            </button>
+                            <button onclick="toggleActive('${item.id}', ${!item.is_active})" class="px-2.5 py-1.5 ${item.is_active ? 'bg-amber-50 hover:bg-amber-100 text-amber-700' : 'bg-green-50 hover:bg-green-100 text-green-700'} rounded text-xs font-semibold transition">
+                                ${item.is_active ? 'Deactiveer' : 'Activeer'}
+                            </button>
+                            <button onclick="deleteDemoCode('${item.id}', '${item.code}')" class="px-2.5 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 rounded text-xs font-semibold transition">
+                                🗑️
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        // Kopieer link functie
+        function copyDemoLink(url) {
+            navigator.clipboard.writeText(url).then(() => {
+                const toast = document.getElementById('copy-toast');
+                toast.classList.remove('opacity-0');
+                toast.classList.add('opacity-100');
+                setTimeout(() => {
+                    toast.classList.remove('opacity-100');
+                    toast.classList.add('opacity-0');
+                }, 2500);
+            }).catch(err => {
+                prompt('Kopieer deze link:', url);
+            });
+        }
+
+        // Formulier afhandelen
+        document.getElementById('add-demo-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const msg = document.getElementById('form-msg');
+            msg.className = 'text-sm text-gray-500';
+            msg.textContent = 'Opslaan...';
+            msg.classList.remove('hidden');
+
+            const recipient = document.getElementById('recipient-name').value.trim();
+            const expires = document.getElementById('expires-at').value;
+            const code = document.getElementById('demo-code').value.trim().toUpperCase();
+            const notes = document.getElementById('notes').value.trim();
+
+            if (!code || !recipient || !expires) {
+                msg.className = 'text-sm text-red-500';
+                msg.textContent = 'Vul alle verplichte velden in.';
+                return;
+            }
+
+            const { error } = await supClient.from('DemoCodes').insert([{
+                code: code,
+                recipient_name: recipient,
+                expires_at: expires,
+                notes: notes,
+                is_active: true
+            }]);
+
+            if (error) {
+                console.error(error);
+                msg.className = 'text-sm text-red-500';
+                if (error.code === '23505') {
+                    msg.textContent = 'Deze code bestaat al. Kies een andere code.';
+                } else {
+                    msg.textContent = `Fout bij opslaan: ${error.message}`;
+                }
+            } else {
+                msg.className = 'text-sm text-green-600 font-bold';
+                msg.textContent = `✅ Code ${code} succesvol aangemaakt!`;
+                document.getElementById('add-demo-form').reset();
+                setDefaultExpiryDate();
+                loadDemoCodes();
+                setTimeout(() => msg.classList.add('hidden'), 4000);
+            }
+        });
+
+        // Actief/inactief toggle
+        async function toggleActive(id, newStatus) {
+            const { error } = await supClient
+                .from('DemoCodes')
+                .update({ is_active: newStatus })
+                .eq('id', id);
+
+            if (error) {
+                alert('Fout bij bijwerken: ' + error.message);
+            } else {
+                loadDemoCodes();
+            }
+        }
+
+        // Verwijderen
+        async function deleteDemoCode(id, code) {
+            if (!confirm(`Weet je zeker dat je demo-code "${code}" wilt verwijderen? Toegang met deze code stopt dan per direct.`)) return;
+
+            const { error } = await supClient.from('DemoCodes').delete().eq('id', id);
+            if (error) {
+                alert('Fout bij verwijderen: ' + error.message);
+            } else {
+                loadDemoCodes();
+            }
+        }
+
+        // Initieel laden
+        loadDemoCodes();
+    </script>
+</body>
+
+</html>
