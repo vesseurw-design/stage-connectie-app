@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="nl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSV Import - Admin Portal - Stage Connectie App</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+    <script>
+        if (!localStorage.getItem('stageconnect_admin_session')) {
+            window.location.href = 'admin-login.html';
+        }
+    </script>
+    <link rel="icon" type="image/png" href="/icon-v3.png">
+    <link rel="apple-touch-icon" href="/icon-v3.png">
+    <link rel="apple-touch-icon-precomposed" href="/icon-v3.png">
+    <link rel="manifest" href="/manifest.json">
+</head>
+
+<body class="bg-gray-50">
+    <!-- Header -->
+    <header class="bg-white shadow-sm border-b border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
+            <div>
+                <h1 class="text-2xl font-bold text-gray-800">Admin Portal</h1>
+                <p class="text-sm text-gray-600">StageConnectie - Bulk Import</p>
+            </div>
+            <div class="flex gap-4">
+                <a href="admin.html" class="px-4 py-2 bg-gray-50 text-gray-600 hover:bg-gray-100 rounded-lg transition font-medium">Dashboard</a>
+                <a href="admin-students-v2.html" class="px-4 py-2 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-lg transition font-medium">Stagiairs Beheer</a>
+                <a href="admin-companies.html" class="px-4 py-2 bg-purple-50 text-purple-600 hover:bg-purple-100 rounded-lg transition font-medium">Stagebedrijven Beheer</a>
+                <a href="admin-begeleiders-v3.html" class="px-4 py-2 bg-green-50 text-green-600 hover:bg-green-100 rounded-lg transition font-medium">Begeleiders Beheer</a>
+                <button onclick="adminLogout()" class="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition">Uitloggen</button>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 py-8">
+        
+        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-8 text-sm text-blue-800">
+            <strong>Instructies voor CSV Import:</strong>
+            <ul class="list-disc ml-5 mt-2 space-y-1">
+                <li>Zorg dat de eerste rij van de CSV de kolomnamen bevat (bijv. <code>naam, email, wachtwoord</code> of split met <code>voornaam, achternaam</code>).</li>
+                <li>Bij het importeren worden direct de accounts aangemaakt in de database met de exacte wachtwoorden uit de CSV. Er worden <strong>geen standaardwachtwoorden</strong> gebruikt.</li>
+                <li>Leerlingen kunnen hun wachtwoord <strong>niet zelf resetten of wijzigen</strong>.</li>
+            </ul>
+        </div>
+
+        <!-- Stille Modus Info Banner -->
+        <div class="mb-6 p-4 bg-emerald-50 border border-emerald-200 rounded-xl flex items-start gap-3">
+            <span class="text-xl">🛡️</span>
+            <div>
+                <h3 class="font-bold text-emerald-900 text-sm">Stille Her-import Modus Actief</h3>
+                <p class="text-xs text-emerald-800 mt-0.5">
+                    Bij het opnieuw importeren van CSV-bestanden blijven alle al ingestelde <strong>wachtwoorden en accounts van bedrijven, begeleiders en leerlingen 100% behouden</strong>. 
+                    Er worden <strong>geen e-mails of resetberichten verstuurd</strong>. Bedrijven en leerlingen kunnen direct inloggen met hun vertrouwde/ingelezen wachtwoord. Schooljaren (bijv. <code>2627</code> of <code>26/27</code>) worden automatisch direct gekoppeld als <strong>2026-2027</strong>.
+                </p>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <!-- Leerlingen Import -->
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                <h2 class="text-xl font-bold text-gray-800 mb-4">Stagiairs Importeren</h2>
+                
+                <p class="text-sm text-gray-600 mb-4">Verplichte kolommen in je CSV: <strong>naam (of voornaam en achternaam), email, wachtwoord (of WW/inlogcode)</strong><br><br>Optioneel voor directe koppeling: <strong>klas, schooljaar, stagebedrijf (naam), stagebedrijf_email (optioneel, voor inlogaccount), begeleider (naam), begeleider_email (optioneel), startdatum, einddatum</strong>.<br><br><em>Let op: De exacte wachtwoorden uit de CSV worden direct ingesteld. Leerlingen kunnen hun wachtwoord niet zelf wijzigen.</em></p>
+                
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">CSV Bestand voor Stagiairs</label>
+                    <input type="file" id="students-csv" accept=".csv" onchange="if(this.files[0]){ const info = document.getElementById('students-file-info'); info.classList.remove('hidden'); info.textContent = '📄 Geselecteerd: ' + this.files[0].name + ' (' + Math.round(this.files[0].size/1024) + ' KB)'; }" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 border border-gray-200 rounded-lg">
+                    <div id="students-file-info" class="mt-1 text-xs text-blue-600 font-medium hidden"></div>
+                </div>
+
+                <div class="mb-6 flex items-center">
+                    <input id="send-welcome-students" type="checkbox" class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500">
+                    <label for="send-welcome-students" class="ml-2 text-sm font-medium text-gray-900">Stuur direct welkomstmail naar deze stagiairs</label>
+                </div>
+
+                <button id="btn-import-students" onclick="if(window.triggerStudentImport){ window.triggerStudentImport(); } else { alert('Bezig met laden... Probeer opnieuw.'); }" class="w-full px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition font-medium flex justify-center items-center">
+                    Start Stagiairs Import
+                </button>
+                
+                <div id="students-progress" class="mt-4 hidden">
+                    <div class="w-full bg-gray-200 rounded-full h-2.5">
+                        <div id="students-progress-bar" class="bg-blue-600 h-2.5 rounded-full" style="width: 0%"></div>
+                    </div>
+                    <p id="students-progress-text" class="text-sm text-gray-600 mt-2 text-center">0 / 0 verwerkt</p>
+                </div>
+                <div id="students-results" class="mt-4 text-sm max-h-40 overflow-y-auto hidden"></div>
+            </div>
+
+            <!-- Bedrijven Import -->
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                <h2 class="text-xl font-bold text-gray-800 mb-4">🏢 Stagebedrijven Importeren</h2>
+                
+                <p class="text-sm text-gray-600 mb-4">Verplichte kolommen: <strong>bedrijfsnaam, email, contactpersoon, telefoonnummer</strong> (optioneel: <strong>adres, postcode, plaats</strong>)</p>
+                
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">CSV Bestand voor Stagebedrijven</label>
+                    <input type="file" id="companies-csv" accept=".csv" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-purple-50 file:text-purple-700 hover:file:bg-purple-100 border border-gray-200 rounded-lg">
+                </div>
+
+                <div class="mb-6 flex items-center">
+                    <input id="send-welcome-companies" type="checkbox" class="w-4 h-4 text-purple-600 bg-gray-100 border-gray-300 rounded focus:ring-purple-500">
+                    <label for="send-welcome-companies" class="ml-2 text-sm font-medium text-gray-900">Stuur direct welkomstmail naar deze stagebedrijven</label>
+                </div>
+
+                <button id="btn-import-companies" onclick="window.triggerCompanyImport()" class="w-full px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition font-medium flex justify-center items-center">
+                    Start Stagebedrijven Import
+                </button>
+
+                <div id="companies-progress" class="mt-4 hidden">
+                    <div class="w-full bg-gray-200 rounded-full h-2.5">
+                        <div id="companies-progress-bar" class="bg-purple-600 h-2.5 rounded-full" style="width: 0%"></div>
+                    </div>
+                    <p id="companies-progress-text" class="text-sm text-gray-600 mt-2 text-center">0 / 0 verwerkt</p>
+                </div>
+                <div id="companies-results" class="mt-4 text-sm max-h-40 overflow-y-auto hidden"></div>
+            </div>
+
+            <!-- Begeleiders Import -->
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                <h2 class="text-xl font-bold text-gray-800 mb-4">🏫 Begeleiders Importeren</h2>
+                
+                <p class="text-sm text-gray-600 mb-4">Verplichte kolommen: <strong>naam, email, telefoonnummer</strong> (optioneel: <strong>whatsapp</strong> met <code>true</code> of <code>false</code>)</p>
+                
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">CSV Bestand voor Begeleiders</label>
+                    <input type="file" id="supervisors-csv" accept=".csv" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-green-50 file:text-green-700 hover:file:bg-green-100 border border-gray-200 rounded-lg">
+                </div>
+
+                <div class="mb-6 flex items-center">
+                    <input id="send-welcome-supervisors" type="checkbox" class="w-4 h-4 text-green-600 bg-gray-100 border-gray-300 rounded focus:ring-green-500">
+                    <label for="send-welcome-supervisors" class="ml-2 text-sm font-medium text-gray-900">Stuur direct uitnodiging naar deze begeleiders</label>
+                </div>
+
+                <button id="btn-import-supervisors" onclick="window.triggerSupervisorImport()" class="w-full px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition font-medium flex justify-center items-center">
+                    Start Begeleiders Import
+                </button>
+
+                <div id="supervisors-progress" class="mt-4 hidden">
+                    <div class="w-full bg-gray-200 rounded-full h-2.5">
+                        <div id="supervisors-progress-bar" class="bg-green-600 h-2.5 rounded-full" style="width: 0%"></div>
+                    </div>
+                    <p id="supervisors-progress-text" class="text-sm text-gray-600 mt-2 text-center">0 / 0 verwerkt</p>
+                </div>
+                <div id="supervisors-results" class="mt-4 text-sm max-h-40 overflow-y-auto hidden"></div>
+            </div>
+        </div>
+
+        <!-- Uitgestelde Uitnodigingen Versturen -->
+        <div class="mt-8 bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+            <h2 class="text-xl font-bold text-gray-800 mb-2">✉️ Uitnodigingen Achteraf Versturen</h2>
+            <p class="text-sm text-gray-600 mb-6">Heb je gebruikers geïmporteerd zonder direct een e-mail te sturen? Gebruik de onderstaande knoppen om alsnog de uitnodigings-/activatiemails te verzenden naar gebruikers die nog niet hebben ingelogd (waarvan de gebruikersvoorwaarden nog niet zijn geaccepteerd).</p>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- Stagiairs Uitnodigen -->
+                <div class="p-4 bg-blue-50 rounded-lg border border-blue-100">
+                    <h3 class="font-semibold text-blue-900 mb-2">Stagiairs Uitnodigen</h3>
+                    <p class="text-xs text-blue-700 mb-4">Verstuurt activatiemails naar alle stagiairs die nog niet eerder hebben ingelogd.</p>
+                    <button id="btn-invite-students" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg transition w-full">
+                        Verstuur mails naar stagiairs
+                    </button>
+                    <div id="invite-students-progress" class="mt-3 text-xs text-blue-800 hidden"></div>
+                </div>
+
+                <!-- Bedrijven Uitnodigen -->
+                <div class="p-4 bg-purple-50 rounded-lg border border-purple-100">
+                    <h3 class="font-semibold text-purple-900 mb-2">🏢 Stagebedrijven Uitnodigen</h3>
+                    <p class="text-xs text-purple-700 mb-4">Verstuurt uitnodigingsmails naar alle stagebedrijven die nog niet eerder hebben ingelogd.</p>
+                    <button id="btn-invite-companies" class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white text-sm font-semibold rounded-lg transition w-full">
+                        Verstuur mails naar stagebedrijven
+                    </button>
+                    <div id="invite-companies-progress" class="mt-3 text-xs text-purple-800 hidden"></div>
+                </div>
+
+                <!-- Begeleiders Uitnodigen -->
+                <div class="p-4 bg-green-50 rounded-lg border border-green-100">
+                    <h3 class="font-semibold text-green-900 mb-2">🏫 Stagebegeleiders Uitnodigen</h3>
+                    <p class="text-xs text-green-700 mb-4">Verstuurt uitnodigingsmails naar alle stagebegeleiders die nog niet eerder hebben ingelogd.</p>
+                    <button id="btn-invite-supervisors" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-semibold rounded-lg transition w-full">
+                        Verstuur mails naar stagebegeleiders
+                    </button>
+                    <div id="invite-supervisors-progress" class="mt-3 text-xs text-green-800 hidden"></div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Supabase & PapaParse -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="./static/js/config.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    <script src="./static/js/admin-auth.js?v=6.0"></script>
+    <script src="./static/js/admin-import.js?v=20260912_37"></script>
+</body>
+
+</html>

@@ -301,7 +301,153 @@ function renderGrid(existingAttendance) {
 
         container.appendChild(cell);
     });
+
+    checkStudent1700Reminder(existingAttendance);
 }
+
+function checkStudent1700Reminder(existingAttendance) {
+    if (!currentStudent) return;
+
+    const now = new Date();
+    const currentHour = now.getHours();
+
+    // Alleen om of na 17:00 uur
+    if (currentHour < 17) {
+        hideStudentReminder();
+        return;
+    }
+
+    const dayIndex = now.getDay(); // 0 = Zo, 1 = Ma, 2 = Di, 3 = Wo, 4 = Do, 5 = Vr, 6 = Za
+    // Alleen op doordeweekse dagen
+    if (dayIndex === 0 || dayIndex === 6) {
+        hideStudentReminder();
+        return;
+    }
+
+    const dayMap = ['Zo', 'Ma', 'Di', 'Wo', 'Do', 'Vr', 'Za'];
+    const todayDayCode = dayMap[dayIndex]; // 'Ma', 'Di', 'Wo', 'Do', 'Vr'
+
+    // Formatteer lokale datum YYYY-MM-DD
+    const yyyy = now.getFullYear();
+    const mm = String(now.getMonth() + 1).padStart(2, '0');
+    const dd = String(now.getDate()).padStart(2, '0');
+    const todayStr = `${yyyy}-${mm}-${dd}`;
+
+    // Geen melding tijdens vakanties
+    if (typeof isHoliday === 'function' && isHoliday(todayStr)) {
+        hideStudentReminder();
+        return;
+    }
+
+    // Controleer of vandaag een stagedag is voor deze stagiair
+    let isScheduledToday = false;
+    if (Array.isArray(currentStudent.scheduled_days) && currentStudent.scheduled_days.length > 0) {
+        if (currentStudent.scheduled_days.includes(todayDayCode)) {
+            isScheduledToday = true;
+        }
+    }
+    if (!isScheduledToday && currentStudent.company_assignments) {
+        let ca = currentStudent.company_assignments;
+        if (typeof ca === 'string') {
+            try { ca = JSON.parse(ca); } catch (e) { ca = []; }
+        }
+        if (Array.isArray(ca) && ca.length > 0) {
+            isScheduledToday = ca.some(a => Array.isArray(a.days) && a.days.includes(todayDayCode));
+        }
+    }
+    if (!isScheduledToday && (!currentStudent.scheduled_days || currentStudent.scheduled_days.length === 0)) {
+        isScheduledToday = true;
+    }
+
+    if (!isScheduledToday) {
+        hideStudentReminder();
+        return;
+    }
+
+    // Als de student de melding handmatig heeft gesloten deze sessie
+    if (sessionStorage.getItem('dismissed_1700_reminder_' + todayStr)) {
+        hideStudentReminder();
+        return;
+    }
+
+    // Controleer of de registratie voor vandaag al is ingevuld
+    let hasRecord = false;
+    if (existingAttendance && Array.isArray(existingAttendance)) {
+        hasRecord = existingAttendance.some(a => 
+            a.date === todayStr && 
+            (a.student_status || (a.student_hours !== null && a.student_hours !== undefined && a.student_hours > 0) || a.status)
+        );
+    }
+
+    const todayCell = document.querySelector(`#student-week-row > div[data-date="${todayStr}"]`);
+    if (todayCell) {
+        const cellStatus = todayCell.dataset.status;
+        const cellHours = parseFloat(todayCell.dataset.hours) || 0;
+        if (cellStatus || cellHours > 0) {
+            hasRecord = true;
+        }
+    }
+
+    if (hasRecord) {
+        hideStudentReminder();
+        return;
+    }
+
+    showStudentReminder();
+}
+
+function showStudentReminder() {
+    let banner = document.getElementById('student-1700-reminder');
+    if (!banner) {
+        const content = document.getElementById('content');
+        if (!content) return;
+
+        banner = document.createElement('div');
+        banner.id = 'student-1700-reminder';
+        banner.className = 'bg-purple-50 border border-purple-200 border-l-4 border-l-purple-600 p-4 rounded-2xl shadow-sm mb-4 flex items-center justify-between transition-all duration-300';
+        banner.innerHTML = `
+            <div class="flex items-center gap-3">
+                <div class="bg-purple-100 text-purple-700 p-2 rounded-xl flex-shrink-0">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                </div>
+                <div>
+                    <div class="text-sm font-bold text-gray-800">Herinnering aanwezigheid invullen</div>
+                    <div class="text-xs text-gray-600 mt-0.5">Het is 17:00 uur geweest. Vergeet niet je aanwezigheid en stage-uren van vandaag in te vullen en op 'Week Opslaan' te klikken.</div>
+                </div>
+            </div>
+            <button onclick="dismissStudentReminder()" class="text-xs font-bold text-gray-400 hover:text-gray-700 p-2 rounded-lg hover:bg-purple-100/50 transition flex-shrink-0 ml-3">
+                Sluiten
+            </button>
+        `;
+
+        content.insertBefore(banner, content.firstChild);
+    } else {
+        banner.classList.remove('hidden');
+    }
+}
+
+function hideStudentReminder() {
+    const banner = document.getElementById('student-1700-reminder');
+    if (banner) {
+        banner.classList.add('hidden');
+    }
+}
+
+function dismissStudentReminder() {
+    const now = new Date();
+    const yyyy = now.getFullYear();
+    const mm = String(now.getMonth() + 1).padStart(2, '0');
+    const dd = String(now.getDate()).padStart(2, '0');
+    const todayStr = `${yyyy}-${mm}-${dd}`;
+    sessionStorage.setItem('dismissed_1700_reminder_' + todayStr, '1');
+    hideStudentReminder();
+}
+
+window.dismissStudentReminder = dismissStudentReminder;
+window.checkStudent1700Reminder = checkStudent1700Reminder;
+window.hideStudentReminder = hideStudentReminder;
 
 function updateCellContent(cell, status, hours, minutes, notes = '', employerId = null) {
     const dateStr = cell.dataset.date;
@@ -732,6 +878,7 @@ async function saveWeek() {
             }
             
             showToast();
+            hideStudentReminder();
         } else {
             showToast();
         }
@@ -1059,3 +1206,10 @@ async function exportStudentPDF() {
 window.exportStudentPDF = exportStudentPDF;
 
 init();
+
+// Controleer periodiek (elke minuut) of het 17:00 is op een stagedag
+setInterval(() => {
+    if (currentStudent && typeof checkStudent1700Reminder === 'function') {
+        checkStudent1700Reminder();
+    }
+}, 60000);

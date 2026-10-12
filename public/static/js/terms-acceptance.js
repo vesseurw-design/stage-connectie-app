@@ -72,7 +72,7 @@ async function checkTermsAcceptance(table, userId, termsAcceptedAt, continueCall
                     <button id="terms-btn-decline" style="flex: 1; padding: 11px 16px; border: 1px solid #cbd5e1; background: white; border-radius: 12px; font-size: 13px; font-weight: 600; color: #475569; cursor: pointer; transition: all 0.2s;">
                         Weigeren (Uitloggen)
                     </button>
-                    <button id="terms-btn-accept" disabled style="flex: 1; padding: 11px 16px; border: none; background: #cbd5e1; color: #94a3b8; border-radius: 12px; font-size: 13px; font-weight: 700; cursor: not-allowed; transition: all 0.2s;">
+                    <button id="terms-btn-accept" disabled style="flex: 1; padding: 11px 16px; border: none; background: #cbd5e1; color: #94a3b8; border-radius: 12px; font-size: 13px; font-weight: 700; cursor: default; transition: all 0.2s;">
                         Akkoord & Doorgaan
                     </button>
                 </div>
@@ -109,7 +109,7 @@ async function checkTermsAcceptance(table, userId, termsAcceptedAt, continueCall
             acceptBtn.disabled = true;
             acceptBtn.style.background = '#cbd5e1';
             acceptBtn.style.color = '#94a3b8';
-            acceptBtn.style.cursor = 'not-allowed';
+            acceptBtn.style.cursor = 'default';
         }
     });
 

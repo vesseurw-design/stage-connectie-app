@@ -186,6 +186,181 @@ function updateClassFilter() {
     classSel.value = currentVal;
 }
 
+let isInitialAttendanceLoaded = false;
+let notificationTimeout = null;
+const notifiedAttendanceKeys = new Map();
+
+function formatDateNL(dateStr) {
+    if (!dateStr) return '';
+    try {
+        const parts = String(dateStr).split('-');
+        if (parts.length === 3) {
+            const d = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
+            return d.toLocaleDateString('nl-NL', { weekday: 'short', day: 'numeric', month: 'short' });
+        }
+    } catch (e) {}
+    return dateStr;
+}
+
+function playNotificationSound() {
+    try {
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        if (!AudioContextClass) return;
+        const ctx = new AudioContextClass();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(587.33, ctx.currentTime);
+        osc.frequency.setValueAtTime(880, ctx.currentTime + 0.1);
+        gain.gain.setValueAtTime(0.12, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.4);
+    } catch (e) {}
+}
+
+function showNotification(title, message) {
+    let banner = document.getElementById('notification-banner');
+    if (!banner) {
+        banner = document.createElement('div');
+        banner.id = 'notification-banner';
+        banner.className = 'fixed top-20 left-0 right-0 z-50 mx-4 animate-slide-down';
+        banner.innerHTML = `
+            <div class="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-4 py-3 rounded-lg shadow-lg flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <svg class="w-6 h-6 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9">
+                        </path>
+                    </svg>
+                    <div>
+                        <p class="font-semibold text-sm" id="notification-title"></p>
+                        <p class="text-xs sm:text-sm opacity-90" id="notification-message"></p>
+                    </div>
+                </div>
+                <button onclick="closeNotificationBanner()" class="text-white hover:text-gray-200 p-1">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
+                        </path>
+                    </svg>
+                </button>
+            </div>
+        `;
+        document.body.appendChild(banner);
+    }
+
+    const titleEl = document.getElementById('notification-title');
+    const msgEl = document.getElementById('notification-message');
+    if (titleEl) titleEl.textContent = title;
+    if (msgEl) msgEl.textContent = message;
+
+    banner.classList.remove('hidden');
+
+    const badge = document.getElementById('notification-badge');
+    if (badge) {
+        const count = (parseInt(badge.textContent) || 0) + 1;
+        badge.textContent = count;
+        badge.classList.remove('hidden');
+    }
+
+    playNotificationSound();
+
+    try {
+        if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+            new Notification(title, { body: message, icon: '/icon-v3.png' });
+        }
+    } catch (e) {}
+
+    if (notificationTimeout) clearTimeout(notificationTimeout);
+    notificationTimeout = setTimeout(() => {
+        closeNotificationBanner();
+    }, 8000);
+}
+window.showNotification = showNotification;
+
+function closeNotificationBanner() {
+    const banner = document.getElementById('notification-banner');
+    if (banner) {
+        banner.classList.add('hidden');
+    }
+}
+window.closeNotificationBanner = closeNotificationBanner;
+
+function notifyAttendanceChange(record, existingRecord = null) {
+    if (!record || !record.student_id) return;
+
+    const student = students.find(s => s.id === record.student_id);
+    if (!student) return;
+
+    if (!existingRecord) {
+        existingRecord = allAttendance.find(a => a.student_id === record.student_id && a.date === record.date);
+    }
+
+    const dedupeKey = `${record.student_id}_${record.date}`;
+    const dedupeVal = `${record.status || ''}_${record.student_status || ''}_${record.student_hours || 0}_${record.minutes_late || 0}`;
+
+    const last = notifiedAttendanceKeys.get(dedupeKey);
+    if (last && last.val === dedupeVal && (Date.now() - last.time < 12000)) {
+        return;
+    }
+    notifiedAttendanceKeys.set(dedupeKey, { val: dedupeVal, time: Date.now() });
+
+    const statusMap = {
+        'present': 'Aanwezig',
+        'absent': 'Afwezig',
+        'sick': 'Ziek',
+        'late': 'Te laat',
+        'pending': 'Te goedkeuren'
+    };
+
+    const dateFormatted = formatDateNL(record.date);
+    let title = 'Nieuwe aanwezigheid geregistreerd';
+    let message = `${student.name} op ${dateFormatted}`;
+
+    const hasNewEmployerStatus = Boolean(record.status && (!existingRecord || existingRecord.status !== record.status || (record.status === 'late' && existingRecord.minutes_late !== record.minutes_late)));
+    const hasNewStudentInput = Boolean((record.student_status || (record.student_hours !== null && record.student_hours !== undefined && record.student_hours > 0)) &&
+        (!existingRecord || existingRecord.student_status !== record.student_status || existingRecord.student_hours !== record.student_hours));
+
+    if (hasNewEmployerStatus) {
+        title = 'Stagebedrijf: aanwezigheid ingevuld';
+        let stText = statusMap[record.status] || record.status;
+        if (record.status === 'late' && record.minutes_late > 0) {
+            stText = `Te laat (${record.minutes_late} min)`;
+        }
+        message = `${student.name}: ${stText} (${dateFormatted})`;
+    } else if (hasNewStudentInput) {
+        title = 'Stagiair: uren/aanwezigheid ingevuld';
+        let stText = statusMap[record.student_status] || record.student_status || '';
+        if (record.student_status === 'absent') {
+            stText = 'Afwezig gemeld';
+        } else if (record.student_status === 'sick') {
+            stText = 'Ziek gemeld';
+        } else if (record.student_status === 'late') {
+            stText = `Te laat${record.student_hours ? ` (${record.student_hours}u)` : ''}`;
+        } else if (record.student_status === 'present') {
+            stText = `Aanwezig${record.student_hours ? ` (${record.student_hours}u)` : ''}`;
+        } else if (record.student_hours > 0) {
+            stText = `${record.student_hours} uur ingevoerd`;
+        }
+        message = `${student.name}: ${stText} (${dateFormatted})`;
+    } else if (record.status) {
+        title = 'Aanwezigheid bijgewerkt';
+        let stText = statusMap[record.status] || record.status;
+        if (record.status === 'late' && record.minutes_late > 0) {
+            stText = `Te laat (${record.minutes_late} min)`;
+        }
+        message = `${student.name}: ${stText} (${dateFormatted})`;
+    } else if (record.student_status || record.student_hours > 0) {
+        title = 'Stagiair registratie bijgewerkt';
+        let stText = statusMap[record.student_status] || (record.student_hours ? `${record.student_hours} uur` : 'Invoer');
+        message = `${student.name}: ${stText} (${dateFormatted})`;
+    }
+
+    showNotification(title, message);
+}
+
 async function loadAttendance(retryCount = 0) {
     // IMPORTANT: student_id column is a UUID type. 
     // Passing names here will cause the entire query to fail with a syntax error.
@@ -210,7 +385,26 @@ async function loadAttendance(retryCount = 0) {
 
         if (error) throw error;
 
-        allAttendance = data || [];
+        const fetchedData = data || [];
+
+        // Check for updates if this is not the initial load
+        if (isInitialAttendanceLoaded && fetchedData.length > 0) {
+            fetchedData.forEach(freshRecord => {
+                const existing = allAttendance.find(a => a.student_id === freshRecord.student_id && a.date === freshRecord.date);
+                const isChanged = !existing || 
+                    existing.status !== freshRecord.status ||
+                    existing.student_status !== freshRecord.student_status ||
+                    existing.student_hours !== freshRecord.student_hours ||
+                    existing.minutes_late !== freshRecord.minutes_late;
+
+                if (isChanged) {
+                    notifyAttendanceChange(freshRecord, existing);
+                }
+            });
+        }
+
+        allAttendance = fetchedData;
+        isInitialAttendanceLoaded = true;
 
         // If we found truly nothing and it's the first try, wait a bit
         if (allAttendance.length === 0 && retryCount < 2) {
@@ -224,7 +418,18 @@ async function loadAttendance(retryCount = 0) {
     } catch (err) {
         console.error('Attendance load error, trying fallback:', err);
         const { data: dataLow } = await supabaseClient.from('attendance').select('*').in('student_id', studentIds);
-        if (dataLow) allAttendance = dataLow;
+        if (dataLow) {
+            if (isInitialAttendanceLoaded && dataLow.length > 0) {
+                dataLow.forEach(freshRecord => {
+                    const existing = allAttendance.find(a => a.student_id === freshRecord.student_id && a.date === freshRecord.date);
+                    if (!existing || existing.status !== freshRecord.status || existing.student_status !== freshRecord.student_status) {
+                        notifyAttendanceChange(freshRecord, existing);
+                    }
+                });
+            }
+            allAttendance = dataLow;
+            isInitialAttendanceLoaded = true;
+        }
     }
 }
 
@@ -237,6 +442,9 @@ function setupRealtimeSubscription() {
             table: 'Attendance'
         }, (payload) => {
             console.log('🔔 Real-time update:', payload);
+            if (payload && payload.new && (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE')) {
+                notifyAttendanceChange(payload.new);
+            }
             loadAttendance().then(renderDashboard);
         })
         .subscribe();
@@ -640,17 +848,25 @@ function renderAttendanceHistory(attendance, monthFilter) {
         historyContainer.innerHTML = '<p class="text-sm text-gray-500">Geen aanwezigheidsdata voor deze periode</p>';
     } else {
         historyContainer.innerHTML = filteredAttendance.map(a => {
+            const effSt = (a.status && a.status !== 'pending' && a.status !== 'undefined' && a.status !== 'null') 
+                ? a.status 
+                : ((a.student_status && a.student_status !== 'pending' && a.student_status !== 'undefined' && a.student_status !== 'null') 
+                    ? a.student_status 
+                    : 'pending');
+
             const statusColors = {
                 present: 'bg-green-100 text-green-800',
                 absent: 'bg-red-100 text-red-800',
                 sick: 'bg-orange-100 text-orange-800',
-                late: 'bg-yellow-100 text-yellow-800'
+                late: 'bg-yellow-100 text-yellow-800',
+                pending: 'bg-amber-100 text-amber-800'
             };
             const statusLabels = {
                 present: 'Aanwezig',
                 absent: 'Afwezig',
                 sick: 'Ziek',
-                late: `Te laat (${a.minutes_late}m)`
+                late: `Te laat (${a.minutes_late || 0}m)`,
+                pending: 'Te goedkeuren'
             };
 
             // Format date nicely
@@ -677,8 +893,8 @@ function renderAttendanceHistory(attendance, monthFilter) {
                     <div class="flex justify-between items-center">
                         <span class="text-sm font-bold text-gray-800">${formattedDate}</span>
                         <div class="flex items-center gap-2">
-                            <span class="px-2 py-0.5 text-[9px] font-bold uppercase rounded-full ${statusColors[a.status] || 'bg-gray-100 text-gray-500'}">
-                                ${statusLabels[a.status] || 'Geen status'}
+                            <span class="px-2 py-0.5 text-[9px] font-bold uppercase rounded-full ${statusColors[effSt] || 'bg-amber-100 text-amber-800'}">
+                                ${statusLabels[effSt] || 'Te goedkeuren'}
                             </span>
                             <button onclick="openSupervisorActionSheet('${a.student_id}', '${a.date}')" class="text-xs font-black text-blue-600 hover:text-blue-800 transition">
                                 Aanpassen
@@ -837,6 +1053,8 @@ async function saveSupervisorAttendance(explicitStatus) {
     };
 
     try {
+        const dedupeKey = `${studentId}_${date}`;
+        notifiedAttendanceKeys.set(dedupeKey, { val: `${statusToSave || ''}_${minutesLate || 0}`, time: Date.now() });
         const { error } = await supabaseClient.from('Attendance').upsert(record, { onConflict: 'student_id,date' });
         if (error) throw error;
 
@@ -943,6 +1161,8 @@ async function saveCorrection() {
     };
 
     try {
+        const dedupeKey = `${currentStudent.id}_${dateVal}`;
+        notifiedAttendanceKeys.set(dedupeKey, { val: `${selectedCorrectStatus || ''}_${record.student_hours || 0}_${record.minutes_late || 0}`, time: Date.now() });
         const { error } = await supabaseClient.from('Attendance').upsert(record, { onConflict: 'student_id,date' });
         if (error) throw error;
 

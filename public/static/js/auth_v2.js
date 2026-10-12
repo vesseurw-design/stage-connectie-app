@@ -37,12 +37,30 @@ if (loginForm) {
 
             console.log('✅ Auth successful:', authData.user.email);
 
-            // Haal bedrijfsgegevens op via email (case-insensitive matching)
-            const { data: companyData, error: companyError } = await supabaseClient
-                .from('Bedrijven')
-                .select('*')
-                .ilike('email', email)
-                .maybeSingle();
+            // Haal bedrijfsgegevens op via company_id in metadata of via email matching
+            const metaCompanyId = authData.user.user_metadata?.company_id || authData.user.app_metadata?.company_id;
+            let companyData = null;
+            let companyError = null;
+
+            if (metaCompanyId) {
+                const res = await supabaseClient
+                    .from('Bedrijven')
+                    .select('*')
+                    .eq('id', metaCompanyId)
+                    .maybeSingle();
+                companyData = res.data;
+                companyError = res.error;
+            }
+
+            if (!companyData) {
+                const res = await supabaseClient
+                    .from('Bedrijven')
+                    .select('*')
+                    .ilike('email', email)
+                    .maybeSingle();
+                companyData = res.data;
+                companyError = res.error;
+            }
 
             const userRole = authData.user.user_metadata?.role || authData.user.app_metadata?.role;
             if (!companyData && userRole !== 'employer') {
@@ -57,6 +75,7 @@ if (loginForm) {
             console.log('✅ Company data loaded:', companyData.company_name);
 
             // Store session
+            sessionStorage.removeItem('demo_unlocked');
             localStorage.setItem('stageconnect_session', 'true');
             localStorage.setItem('user_email', email);
             localStorage.setItem('company_id', companyData.id);
@@ -162,12 +181,27 @@ async function checkSession() {
                 console.log('🔄 Restoring employer session keys in localStorage...');
                 const email = user.email;
 
-                // Haal bedrijfsgegevens op
-                const { data: companyData } = await supabaseClient
-                    .from('Bedrijven')
-                    .select('*')
-                    .ilike('email', email)
-                    .single();
+                // Haal bedrijfsgegevens op via company_id in metadata of email matching
+                const metaCompanyId = user.user_metadata?.company_id || user.app_metadata?.company_id;
+                let companyData = null;
+
+                if (metaCompanyId) {
+                    const { data } = await supabaseClient
+                        .from('Bedrijven')
+                        .select('*')
+                        .eq('id', metaCompanyId)
+                        .maybeSingle();
+                    companyData = data;
+                }
+
+                if (!companyData) {
+                    const { data } = await supabaseClient
+                        .from('Bedrijven')
+                        .select('*')
+                        .ilike('email', email)
+                        .maybeSingle();
+                    companyData = data;
+                }
 
                 if (companyData) {
                     localStorage.setItem('stageconnect_session', 'true');

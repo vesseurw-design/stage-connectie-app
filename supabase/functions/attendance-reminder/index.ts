@@ -145,10 +145,47 @@ serve(async (req) => {
             }
         }
 
+        // 3b. Check Stagiairs for reminders on today's internship day
+        const studentReminders: Array<{ email: string; name: string }> = [];
+        if (utcDay >= 1 && utcDay <= 5) {
+            const todayDayCode = dayMap[utcDay - 1]; // Ma, Di, Wo, Do, Vr
+            for (const student of students || []) {
+                const isUnenrolled = (student.unenrollment_date && new Date(student.unenrollment_date) <= now) ||
+                                     (student.enrollment_end_date && new Date(student.enrollment_end_date) <= now) ||
+                                     (student.end_date && new Date(student.end_date) <= now);
+                if (isUnenrolled || !student.email) continue;
+
+                // Check if today is a scheduled day for this student
+                let isScheduledToday = (student.scheduled_days || []).includes(todayDayCode);
+                if (!isScheduledToday && student.company_assignments) {
+                    let ca = student.company_assignments;
+                    if (typeof ca === 'string') {
+                        try { ca = JSON.parse(ca); } catch (e) { ca = []; }
+                    }
+                    if (Array.isArray(ca)) {
+                        isScheduledToday = ca.some((a: any) => (a.days || []).includes(todayDayCode));
+                    }
+                }
+
+                if (!isScheduledToday) continue;
+
+                // Check if student has already registered for today
+                const hasRecordToday = attendance?.some(a =>
+                    a.student_id === student.id &&
+                    a.date === todayStr &&
+                    (a.student_status || (a.student_hours !== null && a.student_hours !== undefined && a.student_hours > 0) || a.status)
+                );
+
+                if (!hasRecordToday) {
+                    studentReminders.push({ email: student.email, name: student.name });
+                }
+            }
+        }
+
         // 4. Send with Delay (to avoid 429 rate limit)
         const results = [];
         const emails = Object.entries(reminderList);
-        console.log(`✉️ Preparing to send ${emails.length} emails with rate-limiting...`);
+        console.log(`✉️ Preparing to send ${emails.length} company emails and ${studentReminders.length} student reminders...`);
 
         for (const [email, info] of emails) {
             const studentDetails = info.students.map((s: any) => `${s.name} (${s.days.join(', ')})`).join('\n');
@@ -182,6 +219,37 @@ serve(async (req) => {
             results.push({ email, success: response.ok, resData });
 
             // Wait 500ms before next send to stay under Resend's 2/sec limit
+            await delay(500);
+        }
+
+        // 4b. Send stagiair reminders
+        for (const sr of studentReminders) {
+            console.log(`📧 Sending reminder to student ${sr.email} via no-reply@stageconnectie.nl`);
+            const firstName = sr.name.split(' ')[0] || sr.name;
+
+            const response = await fetch('https://api.resend.com/emails', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${RESEND_API_KEY}` },
+                body: JSON.stringify({
+                    from: 'StageConnectie <no-reply@stageconnectie.nl>',
+                    to: sr.email,
+                    subject: 'Herinnering: Vul je stage-uren van vandaag in',
+                    html: `
+                        <div style="font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 8px;">
+                            <h2 style="color: #1e293b;">Hoi ${firstName},</h2>
+                            <p>Vergeet je niet om je gewerkte stage-uren en aanwezigheid voor vandaag in te vullen in StageConnectie?</p>
+                            <p>Het invullen kost je minder dan een minuutje.</p>
+                            <a href="https://stageconnectie.nl/student-login.html" style="display: inline-block; background: #9333ea; color: white; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: bold; margin-top: 10px;">Stage-uren invullen</a>
+                            <p style="margin-top: 25px; font-size: 14px; color: #64748b;">Met vriendelijke groet,<br>StageConnectie</p>
+                        </div>
+                    `
+                })
+            });
+
+            const resData = await response.json();
+            console.log(`📬 Student response:`, resData);
+            results.push({ email: sr.email, type: 'student', success: response.ok, resData });
+
             await delay(500);
         }
 

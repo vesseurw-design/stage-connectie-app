@@ -148,3 +148,4 @@ function checkAdminSession() {
 
 // Maak check functie beschikbaar
 window.checkAdminSession = checkAdminSession;
+

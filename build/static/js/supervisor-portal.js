@@ -640,17 +640,25 @@ function renderAttendanceHistory(attendance, monthFilter) {
         historyContainer.innerHTML = '<p class="text-sm text-gray-500">Geen aanwezigheidsdata voor deze periode</p>';
     } else {
         historyContainer.innerHTML = filteredAttendance.map(a => {
+            const effSt = (a.status && a.status !== 'pending' && a.status !== 'undefined' && a.status !== 'null') 
+                ? a.status 
+                : ((a.student_status && a.student_status !== 'pending' && a.student_status !== 'undefined' && a.student_status !== 'null') 
+                    ? a.student_status 
+                    : 'pending');
+
             const statusColors = {
                 present: 'bg-green-100 text-green-800',
                 absent: 'bg-red-100 text-red-800',
                 sick: 'bg-orange-100 text-orange-800',
-                late: 'bg-yellow-100 text-yellow-800'
+                late: 'bg-yellow-100 text-yellow-800',
+                pending: 'bg-amber-100 text-amber-800'
             };
             const statusLabels = {
                 present: 'Aanwezig',
                 absent: 'Afwezig',
                 sick: 'Ziek',
-                late: `Te laat (${a.minutes_late}m)`
+                late: `Te laat (${a.minutes_late || 0}m)`,
+                pending: 'Te goedkeuren'
             };
 
             // Format date nicely
@@ -677,8 +685,8 @@ function renderAttendanceHistory(attendance, monthFilter) {
                     <div class="flex justify-between items-center">
                         <span class="text-sm font-bold text-gray-800">${formattedDate}</span>
                         <div class="flex items-center gap-2">
-                            <span class="px-2 py-0.5 text-[9px] font-bold uppercase rounded-full ${statusColors[a.status] || 'bg-gray-100 text-gray-500'}">
-                                ${statusLabels[a.status] || 'Geen status'}
+                            <span class="px-2 py-0.5 text-[9px] font-bold uppercase rounded-full ${statusColors[effSt] || 'bg-amber-100 text-amber-800'}">
+                                ${statusLabels[effSt] || 'Te goedkeuren'}
                             </span>
                             <button onclick="openSupervisorActionSheet('${a.student_id}', '${a.date}')" class="text-xs font-black text-blue-600 hover:text-blue-800 transition">
                                 Aanpassen
@@ -692,7 +700,7 @@ function renderAttendanceHistory(attendance, monthFilter) {
                         
                         ${a.student_status ? `
                             <div class="bg-purple-100 text-purple-800 px-2 py-0.5 rounded-md flex items-center gap-1" title="Invoer stagiair">
-                                <span>Stagiair: ${a.student_status === 'late' ? `Te laat (${a.minutes_late || 0}m)` : (a.student_status === 'present' ? 'Aanwezig' : (a.student_status === 'absent' ? 'Afwezig' : (a.student_status === 'sick' ? 'Ziek' : a.student_status)))}</span>
+                                <span>Stagiair: ${a.student_status === 'late' ? `Te laat (${a.minutes_late || 0}m)` : (a.student_status === 'present' ? 'Aanwezig' : (a.student_status === 'absent' ? 'Afwezig' : (a.student_status === 'sick' ? 'Ziek' : '')))}</span>
                             </div>
                         ` : ''}
                     </div>
@@ -1191,7 +1199,7 @@ async function exportSupervisorClassPDF() {
     reportContainer.innerHTML = `
         <div style="border-bottom: 3px solid #2563eb; padding-bottom: 12px; margin-bottom: 16px;">
             <h1 style="font-size: 22px; font-weight: bold; color: #1e40af; margin: 0;">📚 Klas-Aanwezigheidsoverzicht</h1>
-            <p style="font-size: 12px; color: #64748b; margin: 4px 0 0 0;">StageConnectie – Groene Hart Praktijkschool</p>
+            <p style="font-size: 12px; color: #64748b; margin: 4px 0 0 0;">StageConnectie – Groene Hart Pro College</p>
         </div>
 
         <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; margin-bottom: 16px; font-size: 12px;">
