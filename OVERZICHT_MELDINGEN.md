@@ -18,25 +18,28 @@ Behoud van de applicatie:
 Er zijn geen wijzigingen gemaakt aan het inlogsysteem, de authenticatie, de layout van pagina's of andere functies.
 
 
-DEEL 2: HERINNERING OM 17:00 UUR VOOR DE STAGIAIR OP STAGEDAGEN
+DEEL 2: PUSHBERICHT OM 17:00 UUR VOOR DE STAGIAIR OP STAGEDAGEN (WEB PUSH)
 
 Doel:
-Stagiairs worden om 17:00 uur herinnerd om hun gewerkte uren en aanwezigheid van die dag in te vullen als zij dat nog niet hebben gedaan.
+Stagiairs ontvangen om 17:00 uur een officieel pushbericht op hun telefoon als zij hun stage-uren van die dag nog niet hebben ingevuld.
+Er worden GEEN e-mails meer naar stagiairs gestuurd en er is GEEN storende paarse meldingsbalk meer in de app zelf.
 
-Voorwaarden voor de melding:
-De melding wordt alleen getoond en verstuurd als aan alle onderstaande voorwaarden is voldaan:
-1. Het is 17:00 uur of later op de dag.
-2. De dag is een doordeweekse stagedag volgens het rooster van de specifieke stagiair. Schooldagen worden automatisch overgeslagen.
-3. Het is geen schoolvakantie volgens de vakantietabel.
-4. De registratie of uren voor die specifieke dag zijn nog niet ingevuld of opgeslagen.
+Kenmerken van de Web Push oplossing:
+1. 100% Gratis: Werkt via de gratis Web Push standaard van Apple en Google.
+2. Geen telefoonnummers: Er is geen 06-nummer of sms voor nodig; de anonieme browser-sleutel (VAPID) wordt veilig opgeslagen bij het studentenprofiel.
+3. Pop-up op het vergrendelscherm: De melding licht op zoals bij een WhatsApp-bericht of Nu.nl-melding: 'Herinnering stage-uren: Hoi [Naam], wil je de stage-uren van vandaag invullen?'. Bij aantikken opent het portaal direct.
 
-Hoe het werkt in het portaal:
-Als de stagiair het portaal opent na 17:00 uur op een stagedag, verschijnt er bovenaan een paarse meldingsbalk met de tekst: Het is 17:00 uur geweest. Vergeet niet je aanwezigheid en stage-uren van vandaag in te vullen en op Week Opslaan te klikken.
-Als de stagiair de uren invult en op Week Opslaan klikt, verdwijnt de melding meteen.
-De stagiair kan de melding ook handmatig sluiten via de knop Sluiten.
+Voorwaarden voor het versturen van het pushbericht:
+1. Het is 17:00 uur op een stagedag.
+2. De dag is een ingeroosterde stagedag van de leerling (schooldagen worden overgeslagen).
+3. Het is geen schoolvakantie.
+4. De registratie of uren voor die dag zijn om 17:00 uur nog niet ingevuld.
+5. De leerling heeft toestemming gegeven voor meldingen op zijn/haar telefoon.
 
-Hoe het werkt via e-mail:
-De achtergrondfunctie (Edge Function) controleert om 17:00 uur automatisch welke actieve stagiairs op die dag stage hadden maar nog niets hebben ingevuld. Deze stagiairs ontvangen een herinneringsmail met een directe knop naar het portaal.
+Hoe de toestemming wordt gevraagd:
+- Gekoppeld aan de Gebruikersvoorwaarden (eerste inlog):
+  In de gebruikersovereenkomst is artikel 5 toegevoegd ('Herinneringen op stagedagen'). Zodra de leerling op 'Akkoord & Doorgaan' klikt, verschijnt direct de officiële pop-up van de telefoon: 'StageConnectie wil je meldingen sturen: Toestaan / Weigeren'.
+- Leerlingen die al eerder akkoord waren gegaan krijgen in het portaal een discrete knop om pushmeldingen met één klik in te schakelen.
 
 Behoud van de applicatie:
-De layout, inlogpagina's en alle overige werking van het stagiair-portaal zijn volledig intact gelaten.
+De layout, inlogpagina's en alle overige werking van het portaal zijn volledig intact gelaten.

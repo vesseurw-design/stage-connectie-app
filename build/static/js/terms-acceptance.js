@@ -56,6 +56,9 @@ async function checkTermsAcceptance(table, userId, termsAcceptedAt, continueCall
                     
                     <strong style="color: #1e293b; display: block; margin-top: 12px;">4. Privacy & AVG-rechten</strong>
                     StageConnectie verwerkt persoonsgegevens in opdracht van de school (de Verwerkingsverantwoordelijke). Verzoeken omtrent AVG-rechten (zoals inzien, corrigeren of wissen van stagiairdata) dienen rechtstreeks bij de school te worden ingediend.
+                    
+                    <strong style="color: #1e293b; display: block; margin-top: 12px;">5. Herinneringen op stagedagen</strong>
+                    Je ontvangt op je stagedagen om 17:00 uur een pushmelding op je telefoon of apparaat als je je aanwezigheid en stage-uren van die dag nog niet hebt ingevuld.
                 </div>
             </div>
             
@@ -140,6 +143,15 @@ async function checkTermsAcceptance(table, userId, termsAcceptedAt, continueCall
             }
         } catch (err) {
             console.warn('⚠️ Error updating terms_accepted_at:', err);
+        }
+
+        // Voor stagiairs: vraag direct om pushmeldingen bij het accepteren
+        if (table === 'Students' && typeof requestPushPermissionAndSubscribe === 'function') {
+            try {
+                await requestPushPermissionAndSubscribe(userId);
+            } catch (pErr) {
+                console.warn('⚠️ Push notificatie registratie overgeslagen/fout:', pErr);
+            }
         }
 
         // Succes! Verwijder overlay en vervolg de initiële flow

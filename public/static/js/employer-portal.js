@@ -32,17 +32,14 @@ async function init() {
             }
         }
 
-        // Automatically purge unauthenticated stale demo sessions (not valid logged in accounts)
+        // Automatically purge unexpected demo sessions if not explicitly unlocked
         const isDemoExplicit = sessionStorage.getItem('demo_unlocked') === 'true' || 
                                new URLSearchParams(window.location.search).get('demo') === 'unlocked';
+        const isDemoCompany = companyId === 'demo-company' || companyName === 'Demo Bedrijf' || companyName === 'Testbedrijf' || userEmail === 'test@testbedrijf.nl' || userEmail === 'test@test.nl';
 
-        if (!session && !isDemoExplicit && (companyId === 'demo-company' || companyName === 'Demo Bedrijf')) {
+        if (!isDemoExplicit && isDemoCompany) {
             console.log('🧹 Purging automatic demo session and redirecting to clean login...');
-            localStorage.removeItem('user_email');
-            localStorage.removeItem('company_id');
-            localStorage.removeItem('company_name');
-            localStorage.removeItem('stageconnect_session');
-            window.location.href = 'login.html';
+            exitDemoMode();
             return;
         }
 
@@ -128,6 +125,22 @@ async function init() {
 }
 
 async function continueEmployerInit() {
+    if (currentCompany?.id === 'demo-company' || currentCompany?.company_name === 'Demo Bedrijf' || currentCompany?.company_name === 'Testbedrijf' || localStorage.getItem('user_email') === 'test@testbedrijf.nl' || localStorage.getItem('user_email') === 'test@test.nl') {
+        const existingDemoBanner = document.getElementById('demo-mode-banner');
+        if (!existingDemoBanner) {
+            const banner = document.createElement('div');
+            banner.id = 'demo-mode-banner';
+            banner.className = 'bg-amber-600 text-white font-bold px-4 py-3 text-center text-sm flex flex-col sm:flex-row justify-between items-center gap-2 sticky top-0 z-50 shadow-md border-b border-amber-700';
+            banner.innerHTML = `
+                <span>⚠️ <strong>Demo Modus Actief</strong>: U bent ingelogd in het demonstratie-account (<strong>${currentCompany?.company_name || 'Demo Bedrijf'}</strong>). Ingevulde aanwezigheid wordt <u>niet</u> opgeslagen voor uw eigen stagiairs.</span>
+                <button onclick="exitDemoMode()" class="bg-amber-950 hover:bg-black text-white px-4 py-1.5 rounded-lg text-xs font-semibold transition whitespace-nowrap shadow cursor-pointer">
+                    🚪 Uitloggen uit Demo & Inloggen met Eigen Account
+                </button>
+            `;
+            document.body.insertBefore(banner, document.body.firstChild);
+        }
+    }
+
     if (localStorage.getItem('admin_preview_mode') === 'true') {
         const existingBanner = document.getElementById('admin-preview-banner');
         if (!existingBanner) {

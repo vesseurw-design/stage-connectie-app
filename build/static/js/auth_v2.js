@@ -37,12 +37,30 @@ if (loginForm) {
 
             console.log('✅ Auth successful:', authData.user.email);
 
-            // Haal bedrijfsgegevens op via email (case-insensitive matching)
-            const { data: companyData, error: companyError } = await supabaseClient
-                .from('Bedrijven')
-                .select('*')
-                .ilike('email', email)
-                .maybeSingle();
+            // Haal bedrijfsgegevens op via company_id in metadata of via email matching
+            const metaCompanyId = authData.user.user_metadata?.company_id || authData.user.app_metadata?.company_id;
+            let companyData = null;
+            let companyError = null;
+
+            if (metaCompanyId) {
+                const res = await supabaseClient
+                    .from('Bedrijven')
+                    .select('*')
+                    .eq('id', metaCompanyId)
+                    .maybeSingle();
+                companyData = res.data;
+                companyError = res.error;
+            }
+
+            if (!companyData) {
+                const res = await supabaseClient
+                    .from('Bedrijven')
+                    .select('*')
+                    .ilike('email', email)
+                    .maybeSingle();
+                companyData = res.data;
+                companyError = res.error;
+            }
 
             const userRole = authData.user.user_metadata?.role || authData.user.app_metadata?.role;
             if (!companyData && userRole !== 'employer') {
@@ -121,13 +139,25 @@ async function checkSession() {
                                new URLSearchParams(window.location.search).get('demo') === 'unlocked';
         const storedCompanyId = localStorage.getItem('company_id');
         const storedCompanyName = localStorage.getItem('company_name');
+        const storedEmail = localStorage.getItem('user_email');
 
-        if (!session && !isDemoExplicit && (storedCompanyId === 'demo-company' || storedCompanyName === 'Demo Bedrijf')) {
+        // Check if there is an active demo auth session or demo localStorage keys
+        const isDemoUser = (session && (session.user.email === 'test@testbedrijf.nl' || session.user.email === 'test@test.nl')) ||
+                           storedCompanyId === 'demo-company' || 
+                           storedCompanyName === 'Demo Bedrijf' ||
+                           storedEmail === 'test@testbedrijf.nl' || 
+                           storedEmail === 'test@test.nl';
+
+        if (!isDemoExplicit && isDemoUser) {
             console.log('🧹 Purging stale demo session on login page...');
             localStorage.removeItem('stageconnect_session');
             localStorage.removeItem('user_email');
             localStorage.removeItem('company_id');
             localStorage.removeItem('company_name');
+            sessionStorage.removeItem('demo_unlocked');
+            if (session) {
+                await supabaseClient.auth.signOut().catch(() => {});
+            }
             return;
         }
 
@@ -163,12 +193,27 @@ async function checkSession() {
                 console.log('🔄 Restoring employer session keys in localStorage...');
                 const email = user.email;
 
-                // Haal bedrijfsgegevens op
-                const { data: companyData } = await supabaseClient
-                    .from('Bedrijven')
-                    .select('*')
-                    .ilike('email', email)
-                    .single();
+                // Haal bedrijfsgegevens op via company_id in metadata of email matching
+                const metaCompanyId = user.user_metadata?.company_id || user.app_metadata?.company_id;
+                let companyData = null;
+
+                if (metaCompanyId) {
+                    const { data } = await supabaseClient
+                        .from('Bedrijven')
+                        .select('*')
+                        .eq('id', metaCompanyId)
+                        .maybeSingle();
+                    companyData = data;
+                }
+
+                if (!companyData) {
+                    const { data } = await supabaseClient
+                        .from('Bedrijven')
+                        .select('*')
+                        .ilike('email', email)
+                        .maybeSingle();
+                    companyData = data;
+                }
 
                 if (companyData) {
                     localStorage.setItem('stageconnect_session', 'true');
@@ -200,11 +245,17 @@ async function checkSession() {
 
 checkSession();
 
-// Add Demo button dynamically if credentials are set
+// Add Demo button dynamically only when demo access is explicitly unlocked
 function setupEmployerDemoButton() {
+    const urlCode = new URLSearchParams(window.location.search).get('code');
+    const isDemoUnlocked = sessionStorage.getItem('demo_unlocked') === 'true' || 
+                           new URLSearchParams(window.location.search).get('demo') === 'unlocked' ||
+                           (typeof window.validateDemoCode === 'function' && urlCode ? window.validateDemoCode(urlCode) : false);
+
     const employerDemoEmail = (window.DEMO_CREDENTIALS && window.DEMO_CREDENTIALS.employer) || 'test@testbedrijf.nl';
     const form = document.getElementById('login-form');
-    if (form && !document.getElementById('demo-login-btn')) {
+
+    if (isDemoUnlocked && form && !document.getElementById('demo-login-btn')) {
         const demoBtn = document.createElement('button');
         demoBtn.type = 'button';
         demoBtn.className = 'w-full mt-4 bg-blue-100 hover:bg-blue-200 text-blue-700 font-semibold py-3 px-4 rounded-lg transition duration-200 border border-blue-300 shadow hover:shadow-md flex items-center justify-center gap-2 cursor-pointer';
@@ -229,6 +280,16 @@ function setupEmployerDemoButton() {
             submitBtn.parentNode.insertBefore(demoBtn, submitBtn.nextSibling);
         } else {
             form.appendChild(demoBtn);
+        }
+    } else if (!isDemoUnlocked && !document.getElementById('demo-unlock-link')) {
+        const linksContainer = document.querySelector('.mt-6.text-center');
+        if (linksContainer) {
+            const demoLink = document.createElement('a');
+            demoLink.id = 'demo-unlock-link';
+            demoLink.href = 'login.html?demo=unlocked';
+            demoLink.className = 'block text-xs text-blue-500 hover:text-blue-700 underline mt-4';
+            demoLink.textContent = 'Demo-omgeving bekijken (zonder account) →';
+            linksContainer.appendChild(demoLink);
         }
     }
 }

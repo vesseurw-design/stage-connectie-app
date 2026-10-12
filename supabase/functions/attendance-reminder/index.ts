@@ -1,5 +1,6 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.7'
+import { sendPushNotification } from 'https://esm.sh/@mmmike/web-push@1.3.0'
 
 const corsHeaders = {
     'Access-Control-Allow-Origin': '*',
@@ -145,15 +146,15 @@ serve(async (req) => {
             }
         }
 
-        // 3b. Check Stagiairs for reminders on today's internship day
-        const studentReminders: Array<{ email: string; name: string }> = [];
+        // 3b. Check Stagiairs for push reminders on today's internship day
+        const studentPushTargets: Array<{ student: any; subscriptions: any[] }> = [];
         if (utcDay >= 1 && utcDay <= 5) {
             const todayDayCode = dayMap[utcDay - 1]; // Ma, Di, Wo, Do, Vr
             for (const student of students || []) {
                 const isUnenrolled = (student.unenrollment_date && new Date(student.unenrollment_date) <= now) ||
                                      (student.enrollment_end_date && new Date(student.enrollment_end_date) <= now) ||
                                      (student.end_date && new Date(student.end_date) <= now);
-                if (isUnenrolled || !student.email) continue;
+                if (isUnenrolled) continue;
 
                 // Check if today is a scheduled day for this student
                 let isScheduledToday = (student.scheduled_days || []).includes(todayDayCode);
@@ -177,15 +178,48 @@ serve(async (req) => {
                 );
 
                 if (!hasRecordToday) {
-                    studentReminders.push({ email: student.email, name: student.name });
+                    const subs: any[] = [];
+                    if (student.push_subscription) {
+                        try {
+                            const parsed = typeof student.push_subscription === 'string'
+                                ? JSON.parse(student.push_subscription)
+                                : student.push_subscription;
+                            if (parsed && parsed.endpoint) {
+                                subs.push(parsed);
+                            }
+                        } catch (e) {
+                            console.warn(`Could not parse push_subscription for ${student.name}`);
+                        }
+                    }
+                    studentPushTargets.push({ student, subscriptions: subs });
                 }
             }
+        }
+
+        // Haal eventueel aanvullende subscriptions op uit push_subscriptions tabel
+        try {
+            const { data: dbSubscriptions } = await supabaseAdmin.from('push_subscriptions').select('*');
+            if (dbSubscriptions && Array.isArray(dbSubscriptions)) {
+                for (const target of studentPushTargets) {
+                    const matches = dbSubscriptions.filter((row: any) => row.student_id === target.student.id);
+                    for (const m of matches) {
+                        try {
+                            const sub = typeof m.subscription === 'string' ? JSON.parse(m.subscription) : m.subscription;
+                            if (sub && sub.endpoint && !target.subscriptions.some(s => s.endpoint === sub.endpoint)) {
+                                target.subscriptions.push(sub);
+                            }
+                        } catch (e) { /* ignore */ }
+                    }
+                }
+            }
+        } catch (subTableErr: any) {
+            console.log('ℹ️ push_subscriptions tabel controle overgeslagen:', subTableErr?.message);
         }
 
         // 4. Send with Delay (to avoid 429 rate limit)
         const results = [];
         const emails = Object.entries(reminderList);
-        console.log(`✉️ Preparing to send ${emails.length} company emails and ${studentReminders.length} student reminders...`);
+        console.log(`✉️ Preparing to send ${emails.length} company emails and checking ${studentPushTargets.length} student push targets...`);
 
         for (const [email, info] of emails) {
             const studentDetails = info.students.map((s: any) => `${s.name} (${s.days.join(', ')})`).join('\n');
@@ -222,35 +256,46 @@ serve(async (req) => {
             await delay(500);
         }
 
-        // 4b. Send stagiair reminders
-        for (const sr of studentReminders) {
-            console.log(`📧 Sending reminder to student ${sr.email} via no-reply@stageconnectie.nl`);
-            const firstName = sr.name.split(' ')[0] || sr.name;
+        // 4b. Send Web Push reminders to stagiairs (100% gratis, geen telefoonnummers)
+        const vapidConfig = {
+            subject: 'mailto:info@stageconnectie.nl',
+            publicKey: Deno.env.get('VAPID_PUBLIC_KEY') ?? 'BDY-DajSxRxC2rO1x-dc6umHYGJE0kYjrPS87UumkI9bBNo8CYfnlQc0Xh3cQa8alAY0SSiDNduuV5ng9-WChjE',
+            privateKey: Deno.env.get('VAPID_PRIVATE_KEY') ?? 'mOHiwg_aClI127HPgEichC4YDtGMx4u-3GQUeRgJLVc',
+        };
 
-            const response = await fetch('https://api.resend.com/emails', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${RESEND_API_KEY}` },
-                body: JSON.stringify({
-                    from: 'StageConnectie <no-reply@stageconnectie.nl>',
-                    to: sr.email,
-                    subject: 'Herinnering: Vul je stage-uren van vandaag in',
-                    html: `
-                        <div style="font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 8px;">
-                            <h2 style="color: #1e293b;">Hoi ${firstName},</h2>
-                            <p>Vergeet je niet om je gewerkte stage-uren en aanwezigheid voor vandaag in te vullen in StageConnectie?</p>
-                            <p>Het invullen kost je minder dan een minuutje.</p>
-                            <a href="https://stageconnectie.nl/student-login.html" style="display: inline-block; background: #9333ea; color: white; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: bold; margin-top: 10px;">Stage-uren invullen</a>
-                            <p style="margin-top: 25px; font-size: 14px; color: #64748b;">Met vriendelijke groet,<br>StageConnectie</p>
-                        </div>
-                    `
-                })
-            });
+        console.log(`📲 Controleren van ${studentPushTargets.length} stagiairs op pushberichten...`);
 
-            const resData = await response.json();
-            console.log(`📬 Student response:`, resData);
-            results.push({ email: sr.email, type: 'student', success: response.ok, resData });
+        for (const target of studentPushTargets) {
+            const firstName = target.student.name.split(' ')[0] || target.student.name;
+            const pushPayload = {
+                title: 'Herinnering stage-uren',
+                body: `Hoi ${firstName}, wil je de stage-uren van vandaag invullen?`,
+                icon: '/icon-192.png',
+                badge: '/icon-192.png',
+                url: '/student-portal.html'
+            };
 
-            await delay(500);
+            if (!target.subscriptions || target.subscriptions.length === 0) {
+                console.log(`ℹ️ Geen actief push-abonnement voor stagiair ${target.student.name} (nog geen toestemming gegeven op telefoon)`);
+                continue;
+            }
+
+            for (const sub of target.subscriptions) {
+                try {
+                    console.log(`📲 Verzenden Web Push notificatie naar stagiair ${target.student.name}...`);
+                    const delivered = await sendPushNotification(sub, pushPayload, vapidConfig);
+                    if (delivered) {
+                        console.log(`✅ Web Push succesvol ontvangen door device van ${target.student.name}`);
+                        results.push({ student: target.student.name, type: 'web_push', success: true });
+                    } else {
+                        console.log(`⚠️ Push endpoint verlopen voor ${target.student.name} (404/410)`);
+                        results.push({ student: target.student.name, type: 'web_push', success: false, reason: 'expired' });
+                    }
+                } catch (pushErr: any) {
+                    console.error(`❌ Fout bij Web Push naar ${target.student.name}:`, pushErr.message);
+                    results.push({ student: target.student.name, type: 'web_push', success: false, error: pushErr.message });
+                }
+            }
         }
 
         return new Response(JSON.stringify({ success: true, processed: results }), { status: 200 });
