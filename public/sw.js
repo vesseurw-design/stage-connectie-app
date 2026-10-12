@@ -27,7 +27,7 @@ self.addEventListener('push', (event) => {
 
   const title = data.title || 'Herinnering stage-uren';
   const options = {
-    body: data.body || 'Vergeet niet je stage-uren van vandaag in te vullen.',
+    body: data.body || 'Hoi! Wil je de stage-uren van vandaag invullen?',
     icon: data.icon || '/icon-192.png',
     badge: data.badge || '/icon-192.png',
     vibrate: [200, 100, 200],

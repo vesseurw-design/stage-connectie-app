@@ -27,7 +27,7 @@ Er worden GEEN e-mails meer naar stagiairs gestuurd en er is GEEN storende paars
 Kenmerken van de Web Push oplossing:
 1. 100% Gratis: Werkt via de gratis Web Push standaard van Apple en Google.
 2. Geen telefoonnummers: Er is geen 06-nummer of sms voor nodig; de anonieme browser-sleutel (VAPID) wordt veilig opgeslagen bij het studentenprofiel.
-3. Pop-up op het vergrendelscherm: De melding licht op zoals bij een WhatsApp-bericht of Nu.nl-melding: 'Herinnering stage-uren: Hoi [Naam], vergeet niet je stage-uren van vandaag in te vullen!'. Bij aantikken opent het portaal direct.
+3. Pop-up op het vergrendelscherm: De melding licht op zoals bij een WhatsApp-bericht of Nu.nl-melding: 'Herinnering stage-uren: Hoi [Naam], wil je de stage-uren van vandaag invullen?'. Bij aantikken opent het portaal direct.
 
 Voorwaarden voor het versturen van het pushbericht:
 1. Het is 17:00 uur op een stagedag.

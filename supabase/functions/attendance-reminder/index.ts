@@ -269,7 +269,7 @@ serve(async (req) => {
             const firstName = target.student.name.split(' ')[0] || target.student.name;
             const pushPayload = {
                 title: 'Herinnering stage-uren',
-                body: `Hoi ${firstName}, vergeet niet je stage-uren van vandaag in te vullen!`,
+                body: `Hoi ${firstName}, wil je de stage-uren van vandaag invullen?`,
                 icon: '/icon-192.png',
                 badge: '/icon-192.png',
                 url: '/student-portal.html'
