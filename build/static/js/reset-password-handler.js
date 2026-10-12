@@ -1,0 +1,349 @@
+/**
+ * Reset Password Handler voor StageConnect
+ * Verwerkt het daadwerkelijk wijzigen van het wachtwoord
+ */
+
+const SUPABASE_URL = window.SUPABASE_URL || 'https://vdeipnqyesduiohxvuvu.supabase.co';
+const SUPABASE_KEY = window.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZkZWlwbnF5ZXNkdWlvaHh2dXZ1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc1MjY5NTEsImV4cCI6MjA4MzEwMjk1MX0.IknEZ-GQvspcppJxLR00ayBDq1DbL0HiUKy9RDb59DU';
+// Capture initial URL hash/search before Supabase JS SDK parses and strips them from the location bar
+const INITIAL_HASH = window.location.hash || '';
+const INITIAL_SEARCH = window.location.search || '';
+const HAS_INITIAL_TOKEN = INITIAL_HASH.includes('access_token=') || INITIAL_HASH.includes('type=') || INITIAL_SEARCH.includes('code=') || INITIAL_SEARCH.includes('token_hash=');
+const HAS_INITIAL_ERROR = INITIAL_HASH.includes('error=') || INITIAL_SEARCH.includes('error=');
+
+let activeSupabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const supabaseClient = activeSupabaseClient;
+
+const MAIN_DB_URL = 'https://vdeipnqyesduiohxvuvu.supabase.co';
+const MAIN_DB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZkZWlwbnF5ZXNkdWlvaHh2dXZ1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc1MjY5NTEsImV4cCI6MjA4MzEwMjk1MX0.IknEZ-GQvspcppJxLR00ayBDq1DbL0HiUKy9RDb59DU';
+const fallbackClient = (SUPABASE_URL !== MAIN_DB_URL) ? window.supabase.createClient(MAIN_DB_URL, MAIN_DB_KEY) : null;
+
+// DOM Elements
+const resetForm = document.getElementById('reset-password-form');
+const passwordInput = document.getElementById('password');
+const passwordConfirmInput = document.getElementById('password-confirm');
+const togglePasswordBtn = document.getElementById('toggle-password');
+const eyeIcon = document.getElementById('eye-icon');
+const submitBtn = document.getElementById('submit-btn');
+const btnText = document.getElementById('btn-text');
+const btnLoading = document.getElementById('btn-loading');
+const successMessage = document.getElementById('success-message');
+const errorMessage = document.getElementById('error-message');
+const errorText = document.getElementById('error-text');
+const strengthBar = document.getElementById('strength-bar');
+const strengthText = document.getElementById('strength-text');
+
+// Password Requirements Elements
+const reqLength = document.getElementById('req-length');
+const reqUppercase = document.getElementById('req-uppercase');
+const reqLowercase = document.getElementById('req-lowercase');
+const reqNumber = document.getElementById('req-number');
+
+// Toggle Password Visibility
+togglePasswordBtn.addEventListener('click', () => {
+    const type = passwordInput.type === 'password' ? 'text' : 'password';
+    passwordInput.type = type;
+
+    // Update icon
+    if (type === 'text') {
+        eyeIcon.innerHTML = `
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+        `;
+    } else {
+        eyeIcon.innerHTML = `
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+        `;
+    }
+});
+
+// Password Strength Checker
+passwordInput.addEventListener('input', () => {
+    const password = passwordInput.value;
+    const strength = calculatePasswordStrength(password);
+    updatePasswordStrength(strength);
+    updateRequirements(password);
+});
+
+function calculatePasswordStrength(password) {
+    let strength = 0;
+
+    if (password.length >= 8) strength += 25;
+    if (password.length >= 12) strength += 10;
+    if (/[a-z]/.test(password)) strength += 20;
+    if (/[A-Z]/.test(password)) strength += 20;
+    if (/[0-9]/.test(password)) strength += 15;
+    if (/[^a-zA-Z0-9]/.test(password)) strength += 10;
+
+    return Math.min(strength, 100);
+}
+
+function updatePasswordStrength(strength) {
+    let color, text;
+
+    if (strength < 40) {
+        color = '#ef4444'; // red
+        text = 'Zwak';
+    } else if (strength < 70) {
+        color = '#f59e0b'; // orange
+        text = 'Gemiddeld';
+    } else if (strength < 90) {
+        color = '#10b981'; // green
+        text = 'Sterk';
+    } else {
+        color = '#059669'; // dark green
+        text = 'Zeer Sterk';
+    }
+
+    strengthBar.style.width = strength + '%';
+    strengthBar.style.backgroundColor = color;
+    strengthText.textContent = text;
+    strengthText.style.color = color;
+}
+
+function updateRequirements(password) {
+    // Length
+    updateRequirement(reqLength, password.length >= 8);
+
+    // Uppercase
+    updateRequirement(reqUppercase, /[A-Z]/.test(password));
+
+    // Lowercase
+    updateRequirement(reqLowercase, /[a-z]/.test(password));
+
+    // Number
+    updateRequirement(reqNumber, /[0-9]/.test(password));
+}
+
+function updateRequirement(element, met) {
+    const bullet = element.querySelector('span');
+    if (met) {
+        bullet.textContent = '✓';
+        bullet.style.color = '#10b981';
+        element.style.color = '#10b981';
+    } else {
+        bullet.textContent = '○';
+        bullet.style.color = '#6b7280';
+        element.style.color = '#6b7280';
+    }
+}
+
+// Validate Password
+function validatePassword(password) {
+    const errors = [];
+
+    if (password.length < 8) {
+        errors.push('Wachtwoord moet minimaal 8 karakters bevatten');
+    }
+
+    if (!/[A-Z]/.test(password)) {
+        errors.push('Wachtwoord moet minimaal 1 hoofdletter bevatten');
+    }
+
+    if (!/[a-z]/.test(password)) {
+        errors.push('Wachtwoord moet minimaal 1 kleine letter bevatten');
+    }
+
+    if (!/[0-9]/.test(password)) {
+        errors.push('Wachtwoord moet minimaal 1 cijfer bevatten');
+    }
+
+    return errors;
+}
+
+// Form Submit Handler
+resetForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const password = passwordInput.value;
+    const passwordConfirm = passwordConfirmInput.value;
+
+    // Validatie
+    const validationErrors = validatePassword(password);
+    if (validationErrors.length > 0) {
+        showError(validationErrors.join('. '));
+        return;
+    }
+
+    if (password !== passwordConfirm) {
+        showError('Wachtwoorden komen niet overeen');
+        return;
+    }
+
+    // Disable form
+    submitBtn.disabled = true;
+    btnText.classList.add('hidden');
+    btnLoading.classList.remove('hidden');
+    hideMessages();
+
+    try {
+        // Controleer of de gebruiker een student is (stagiairs mogen hun wachtwoord niet zelf wijzigen)
+        const { data: { user } } = await supabaseClient.auth.getUser();
+        if (user && (user.user_metadata?.role === 'student' || user.email)) {
+            const { data: student } = await supabaseClient
+                .from('Students')
+                .select('id')
+                .eq('email', user.email?.toLowerCase() || '')
+                .maybeSingle();
+
+            if (student || user.user_metadata?.role === 'student') {
+                showError('Stagiairs kunnen hun wachtwoord niet zelf aanpassen. Neem contact op met je stagebegeleider.');
+                submitBtn.disabled = false;
+                btnText.classList.remove('hidden');
+                btnLoading.classList.add('hidden');
+                return;
+            }
+        }
+
+        // Update password via Supabase Auth
+        const { data, error } = await supabaseClient.auth.updateUser({
+            password: password
+        });
+
+        if (error) {
+            throw error;
+        }
+
+        // Success
+        showSuccess();
+
+        // Redirect to login after 2 seconds
+        setTimeout(async () => {
+            const userRole = data.user?.user_metadata?.role;
+            const email = data.user?.email || '';
+
+            if (userRole === 'admin') {
+                window.location.href = 'admin-login.html';
+                return;
+            }
+
+            // Check if user is a stagebedrijf in Bedrijven table
+            if (email) {
+                const { data: isCompany } = await supabaseClient
+                    .from('Bedrijven')
+                    .select('id')
+                    .ilike('email', email)
+                    .maybeSingle();
+
+                if (isCompany || userRole === 'employer') {
+                    window.location.href = 'index.html';
+                    return;
+                }
+            }
+
+            window.location.href = 'supervisor-login.html';
+        }, 2000);
+
+    } catch (error) {
+        console.error('Password reset error:', error);
+
+        let errorMsg = 'Er is een fout opgetreden bij het wijzigen van je wachtwoord.';
+
+        if (error.message.includes('expired')) {
+            errorMsg = 'De reset link is verlopen. Vraag een nieuwe reset link aan.';
+        } else if (error.message.includes('invalid')) {
+            errorMsg = 'De reset link is ongeldig. Vraag een nieuwe reset link aan.';
+        }
+
+        showError(errorMsg);
+
+        // Re-enable form
+        submitBtn.disabled = false;
+        btnText.classList.remove('hidden');
+        btnLoading.classList.add('hidden');
+    }
+});
+
+// Helper Functions
+function showSuccess() {
+    successMessage.classList.remove('hidden');
+    errorMessage.classList.add('hidden');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function showError(message) {
+    errorText.textContent = message;
+    errorMessage.classList.remove('hidden');
+    successMessage.classList.add('hidden');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function hideMessages() {
+    successMessage.classList.add('hidden');
+    errorMessage.classList.add('hidden');
+}
+
+let isSessionActive = false;
+
+function markSessionValid() {
+    isSessionActive = true;
+    hideMessages();
+    if (submitBtn) submitBtn.disabled = false;
+}
+
+// 1. Listen for Supabase Auth events (handles async URL token verification)
+supabaseClient.auth.onAuthStateChange((event, session) => {
+    console.log('🔑 Auth state change:', event, !!session);
+    if (session || event === 'PASSWORD_RECOVERY' || event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED') {
+        markSessionValid();
+    }
+});
+
+// 2. Page load verification with token parsing window
+window.addEventListener('load', async () => {
+    try {
+        const hash = window.location.hash || INITIAL_HASH;
+        const search = window.location.search || INITIAL_SEARCH;
+        const hasTokenInUrl = HAS_INITIAL_TOKEN || hash.includes('access_token=') || hash.includes('type=') || search.includes('code=') || search.includes('token_hash=');
+
+        // Check if there was an explicit error in hash or query (e.g. link expired)
+        if (HAS_INITIAL_ERROR || hash.includes('error=') || search.includes('error=')) {
+            let detail = 'De activatie- of resetlink is verlopen of al gebruikt.';
+            if (hash.includes('expired') || search.includes('expired') || INITIAL_HASH.includes('expired')) {
+                detail = 'De activatielink is verlopen. Vraag een nieuwe uitnodiging aan of gebruik "Wachtwoord vergeten" op het inlogscherm.';
+            }
+            showError(detail);
+            if (submitBtn) submitBtn.disabled = true;
+            return;
+        }
+
+        // If URL initially contained token parameters, poll up to 3 seconds to allow Supabase SDK to parse session
+        if (hasTokenInUrl) {
+            for (let attempt = 0; attempt < 30; attempt++) {
+                const { data: { session } } = await supabaseClient.auth.getSession();
+                if (session || isSessionActive) {
+                    markSessionValid();
+                    return;
+                }
+                if (fallbackClient) {
+                    const { data: { session: fbSession } } = await fallbackClient.auth.getSession();
+                    if (fbSession) {
+                        activeSupabaseClient = fallbackClient;
+                        markSessionValid();
+                        return;
+                    }
+                }
+                await new Promise(res => setTimeout(res, 100));
+            }
+        }
+
+        // Check current session
+        let { data: { session } } = await supabaseClient.auth.getSession();
+        if (!session && fallbackClient) {
+            const { data: { session: fbSession } } = await fallbackClient.auth.getSession();
+            if (fbSession) {
+                activeSupabaseClient = fallbackClient;
+                session = fbSession;
+            }
+        }
+
+        if (session || isSessionActive) {
+            markSessionValid();
+        } else {
+            showError('Geen geldige activatie- of resetlink gevonden. Vraag een nieuwe uitnodiging aan of stel je wachtwoord opnieuw in via "Wachtwoord vergeten".');
+            if (submitBtn) submitBtn.disabled = true;
+        }
+    } catch (error) {
+        console.error('Session check error:', error);
+    }
+});

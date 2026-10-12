@@ -239,7 +239,7 @@ window.sendCompanyInvite = async function (company) {
                 role: 'employer',
                 sendEmail: false,
                 name: company.contact_person || company.company_name,
-                loginUrl: `${window.location.origin}/reset-password.html`,
+                loginUrl: `${window.location.origin.includes('localhost') || window.location.origin.includes('127.0.0.1') ? 'https://ghpc.stageconnectie.nl' : window.location.origin}/reset-password.html`,
                 metadata: {
                     company_name: company.company_name,
                     company_id: company.id
@@ -471,7 +471,7 @@ document.getElementById('company-form').addEventListener('submit', async (e) => 
                         role: 'employer',
                         sendEmail: false,
                         name: contactPerson || companyName,
-                        loginUrl: `${window.location.origin}/reset-password.html`,
+                        loginUrl: `${window.location.origin.includes('localhost') || window.location.origin.includes('127.0.0.1') ? 'https://ghpc.stageconnectie.nl' : window.location.origin}/reset-password.html`,
                         metadata: {
                             company_name: companyName
                         }

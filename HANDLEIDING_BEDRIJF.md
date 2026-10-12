@@ -1,173 +1,123 @@
-# Gebruikershandleiding voor bedrijven
-## StageConnectie - Aanwezigheidsregistratie
+GEBRUIKERSHANDLEIDING VOOR BEDRIJVEN
+StageConnectie - Aanwezigheidsregistratie en Urenverantwoording
 
----
+Versie: 2026
+Website: https://stageconnectie.nl
 
-## Inhoudsopgave
 
-1. [Inloggen](#inloggen)
-2. [Dashboardoverzicht](#dashboard-overzicht)
-3. [Aanwezigheid registreren](#aanwezigheid-registreren)
-4. [Veelgestelde vragen](#veelgestelde-vragen)
+INHOUDSOPGAVE
 
----
+1. Inloggen en account activeren
+2. Dashboardoverzicht
+3. Aanwezigheid registreren en statussen
+4. Goedkeuren van invoer door de stagiair (Te goedkeuren)
+5. Terugbladeren in de historie (tot 52 weken)
+6. Contact met de schoolbegeleider
+7. Veelgestelde vragen en ondersteuning
 
-## Inloggen & account activeren
 
-### Eerste keer inloggen (account activeren)
+1. INLOGGEN EN ACCOUNT ACTIVEREN
 
-Als nieuw stagebedrijf maakt u niet zelf een account aan. In plaats daarvan ontvangt u een uitnodiging per e-mail zodra de school uw bedrijf heeft geregistreerd.
+1.1 Eerste keer inloggen (account activeren)
+Als stagebedrijf maak je niet zelf een account aan. Je ontvangt automatisch een uitnodigingsmail zodra de school jouw organisatie heeft geregistreerd.
+1. Open de welkomstmail met het onderwerp: Uitnodiging voor StageConnectie - Activeer je account.
+2. Klik op de knop Account Activeren in de e-mail.
+3. Je wordt doorgestuurd naar de webpagina om een persoonlijk wachtwoord in te stellen.
+4. Vul een veilig wachtwoord in (minimaal 8 tekens) en klik op Wachtwoord wijzigen.
+5. Hierna kun je inloggen via het inlogadres van de school met je geregistreerde e-mailadres en zelfgekozen wachtwoord.
 
-1. **Open de uitnodigingsmail** met het onderwerp: *Uitnodiging voor StageConnectie - Activeer je account* (of *Activeer uw account*).
-2. **Klik op de knop "Account Activeren"** in de e-mail.
-3. U wordt doorgestuurd naar de website om een **eigen wachtwoord in te stellen**.
-4. Vul een sterk wachtwoord in (minimaal 8 tekens, waaronder ten minste 1 hoofdletter, 1 kleine letter en 1 cijfer) en klik op **"Wachtwoord wijzigen"**.
-5. Hierna kunt u inloggen via: https://stageconnectie.nl met uw **e-mailadres** en uw **zelfgekozen wachtwoord**.
+1.2 Wachtwoord vergeten
+Mocht je je wachtwoord zijn vergeten, dan kun je dit eenvoudig zelf resetten:
+1. Ga naar de inlogpagina voor bedrijven.
+2. Klik op de link Wachtwoord vergeten onder het inlogformulier.
+3. Vul het e-mailadres van je bedrijf in en klik op Verzenden.
+4. Open de e-mail met de herstellink en stel een nieuw wachtwoord in.
 
-### Wachtwoord vergeten?
 
-Mocht u uw wachtwoord zijn vergeten, dan kunt u dit eenvoudig zelf resetten:
+2. DASHBOARDOVERZICHT
 
-1. **Ga naar de inlogpagina:** https://stageconnectie.nl
-2. **Klik op:** "Wachtwoord vergeten?" (onder het formulier)
-3. **Vul uw e-mailadres in** en klik op versturen.
-4. **Check uw inbox** voor een e-mail met een reset-link.
-5. **Klik op de link** in de e-mail en stel een nieuw wachtwoord in.
+Na het inloggen opent het Bedrijvenportaal:
 
----
+Bovenaan de pagina:
+- Bedrijfsnaam: de naam van je bedrijf zoals geregistreerd bij de school.
+- Contactgegevens stagebegeleider: je ziet direct de naam en het telefoonnummer van de schoolbegeleider. Met de directe knoppen kun je direct bellen of, indien de school dit heeft ingeschakeld, direct een WhatsApp-bericht sturen.
+- Uitlogknop: rechtsboven om je sessie veilig af te sluiten.
 
-## Dashboardoverzicht
+Het weekoverzicht:
+- Weeknummer en datums: toont de geselecteerde stageweek van maandag tot en met vrijdag.
+- Navigatieknoppen: met de pijltjes naast het weeknummer blader je terug in de tijd (tot 52 weken) om eerdere registraties in te zien of in te halen, en weer terug naar de huidige week.
+- Stagiairsoverzicht: alle stagiairs die bij jouw bedrijf geplaatst zijn met hun naam en klas.
+- Dagen van de week: per stagiair zie je vakjes voor elke stagedag. Alleen de daadwerkelijk ingeroosterde stagedagen zijn actief.
 
-Na het inloggen ziet u het **Bedrijf Portal Dashboard** met:
 
-### Bovenaan (header)
-- **Bedrijfsnaam** - Uw bedrijf
-- **Datum** - Vandaag
-- **Ververs-knop** - Om de nieuwste data te laden
-- **Uitloggen-knop** - Om veilig uit te loggen
-- **Contactgegevens stagebegeleider** - Direct onder de header ziet u de naam en het telefoonnummer van de stagebegeleider. Als dit door de school is geactiveerd, kunt u ook direct via de knop een WhatsApp-bericht sturen.
+3. AANWEZIGHEID REGISTREREN EN STATUSSEN
 
-### Wekelijks overzicht (rooster)
-- **Weeknummer en datum** - Toont de geselecteerde stageweek. Met de pijltjesknoppen naast het weeknummer kunt u navigeren naar de huidige week of tot 1 week teruggaan om aanwezigheid alsnog in te vullen of te bewerken.
-- **Stagiair** - Een overzicht van alle stagiairs die bij uw bedrijf stage lopen.
-- **Dagen van de week (maandag t/m vrijdag)** - Per dag ziet u een statusvakje per stagiair.
-- **Statusbadges** - Kleurcode per dag voor de status van de student:
-  - **Grijs (gestippeld)** - Nog geen status ingevuld.
-  - **Groen** - Aanwezig.
-  - **Rood** - Afwezig.
-  - **Oranje** - Ziek.
-  - **Geel** - Te laat (inclusief het aantal minuten).
+3.1 Dagelijkse aanwezigheid invullen
+Het invullen kost minder dan een minuut per dag:
+1. Klik op het statusvakje van de betreffende stagiair onder de juiste dag (bijvoorbeeld Maandag).
+2. Er opent een statusmenu met de volgende keuzes:
+   Aanwezig: de stagiair heeft de volledige stagedag naar behoren gewerkt.
+   Afwezig: de stagiair is zonder geldige afmelding niet op stage verschenen.
+   Ziek: de stagiair is ziek gemeld.
+   Te laat: de stagiair kwam te laat binnen. Stel met de schuifbalk of het getal exact in hoeveel minuten de stagiair te laat was.
+   Wissen of Geen status: gebruik deze knop als je een eerdere invoer wilt herstellen of leegmaken.
+3. Het statusvakje in het overzicht verandert direct in de gekozen statuskleur.
+4. Belangrijk: klik na het invullen altijd op de grote blauwe knop Wijzigingen opslaan bovenaan het scherm. Pas na het klikken op deze knop worden de gegevens definitief doorgestuurd naar de school.
 
----
+3.2 Statuskleuren in het rooster
+- Groen: Aanwezig.
+- Rood: Afwezig.
+- Oranje: Ziek.
+- Geel: Te laat (inclusief het aantal minuten).
+- Gestippeld of wit: Nog geen status ingevuld.
 
-## Aanwezigheid registreren
 
-### Dagelijkse aanwezigheid invullen
+4. GOEDKEUREN VAN INVOER DOOR DE STAGIAIR (TE GOEDKEUREN)
 
-**Dit doet u elke dag voor elke student:**
+Stagiairs hebben de mogelijkheid om aan het eind van de stagedag zelf via hun stagiairportaal hun gewerkte uren en aanwezigheid door te geven. Als zij dit om 17:00 uur op een stagedag nog niet hebben gedaan, ontvangen zij automatisch een herinnering.
 
-1. **Klik op het statusvakje** van de betreffende student onder de juiste dag (bijvoorbeeld onder 'maandag').
-2. **Een statusmenu verschijnt** onderaan het scherm (of in het midden op een computer).
-3. **Kies de juiste status:**
-   - **Aanwezig:** Klik op de groene knop met het vinkje.
-   - **Afwezig:** Klik op de rode knop met het kruisje.
-   - **Ziek:** Klik op de oranje knop met de zieke emoji.
-   - **Te laat:** Klik op de gele knop met de klok, vul het aantal minuten in dat de student te laat was en klik op **"Opslaan"**.
-4. Het statusvakje in het overzicht verandert nu in de gekozen kleur.
-5. **Belangrijk:** Klik na het invullen van de aanwezigheid(en) op de grote blauwe knop **"Wijzigingen opslaan"** (bovenaan de pagina). Pas dan worden de gegevens definitief in het systeem opgeslagen en ontvangt u de melding: *"Wijzigingen opgeslagen!"*.
+Hoe dit werkt in jouw bedrijvenportaal:
+1. Wanneer een stagiair zelf een invoer heeft gedaan en je hebt deze dag nog niet geaccordeerd, kleurt het vakje in een lichte tint met de ingevoerde status en het aantal uren van de stagiair, voorzien van de badge Te goedkeuren.
+2. Klik op het betreffende vakje.
+3. Je ziet exact wat de stagiair heeft ingevuld en eventueel welk dagverslag is toegevoegd.
+4. Je kunt de invoer van de stagiair overnemen of, indien nodig, corrigeren naar de werkelijke situatie.
+5. Klik vervolgens op de grote knop Wijzigingen opslaan om de aanwezigheid definitief te fiatteren. De status verandert nu in een volwaardige, definitieve registratie die direct zichtbaar is voor de school. De stagebegeleider op school krijgt hier direct een live melding van.
 
-### Tips voor aanwezigheid
 
-- **Vul dagelijks in** - Bij voorkeur 's ochtends.
-- **Wijzigen mogelijk** - Klik opnieuw op het statusvakje om de status aan te passen of te wissen (via de knop *"Wissen / Geen status"*).
-- **Vergeet niet op te slaan** - De wijzigingen worden pas definitief bewaard als u op de grote blauwe knop *"Wijzigingen opslaan"* heeft geklikt.
+5. TERUGBLADEREN IN DE HISTORIE (TOT 52 WEKEN)
 
-### Wat gebeurt er na het opslaan?
+Moet je een vergeten stagedag van vorige week of vorige maand alsnog invullen?
+1. Klik op het pijltje naar links naast het weeknummer. Je kunt tot 52 weken terug in het schooljaar bladeren.
+2. Selecteer de gewenste week.
+3. Vul de aanwezigheid in of pas bestaande vakjes aan.
+4. Klik op Wijzigingen opslaan.
+5. Gebruik het pijltje naar rechts om weer terug te keren naar de actuele week. Je kunt niet vooruitkijken naar toekomstige weken.
 
-1. **De data wordt opgeslagen** in de database.
-2. **De stagebegeleider krijgt een melding** (als deze online is).
-3. **De school kan de data direct inzien** voor rapportage.
 
----
+6. CONTACT MET DE SCHOOLBEGELEIDER
 
-## Veelgestelde vragen
+Bij vragen, twijfels over verzuim of bijzondere omstandigheden kun je direct schakelen met de schoolcoach:
+- Direct bellen: klik op het telefoonnummer of de belknop bovenaan het scherm om direct telefonisch contact te leggen.
+- WhatsApp: als de begeleider WhatsApp beschikbaar heeft gesteld, verschijnt er een groene WhatsApp-knop. Hiermee open je direct een chatbericht op je telefoon of computer.
 
-### Algemeen
 
-**Q: Kan ik aanwezigheid van gisteren of vorige week nog invullen?**
-A: Ja! Voor gisteren klikt u direct op het statusvakje onder de gewenste dag. Als u de aanwezigheid van de vorige week wilt invullen of aanpassen, kunt u met de pijlknop naar links navigeren naar de vorige week.
+7. VEELGESTELDE VRAGEN EN ONDERSTEUNING
 
-**Q: Kan ik een fout herstellen?**
-A: Ja! Klik opnieuw op het statusvakje en kies de juiste status (of wis de status met de knop "Wissen / Geen status"). Vergeet daarna niet op "Wijzigingen opslaan" te klikken.
+Vraag: Moet ik elke dag apart opslaan?
+Antwoord: Je kunt ervoor kiezen om elke ochtend even op te slaan, of aan het einde van de week meerdere dagen in een keer te accorderen en vervolgens op Wijzigingen opslaan te klikken. Het verdient de voorkeur om verzuim direct 's ochtends in te voeren zodat de school meteen op de hoogte is.
 
-**Q: Hoeveel studenten kan ik hebben?**
-A: Onbeperkt! Alle studenten die aan uw bedrijf zijn gekoppeld verschijnen automatisch.
+Vraag: Kan ik een gemaakte fout corrigeren?
+Antwoord: Ja. Klik eenvoudig opnieuw op het vakje, kies de juiste status (of klik op Wissen) en klik weer op Wijzigingen opslaan.
 
-**Q: Moet ik elke dag inloggen?**
-A: Nee, u blijft 7 dagen ingelogd. Daarna moet u opnieuw inloggen.
+Vraag: Wat moet ik doen tijdens officiële schoolvakanties?
+Antwoord: Tijdens schoolvakanties hoef je in principe niets in te vullen. Mocht een stagiair in een vakantieperiode toch stage lopen (bijvoorbeeld om uren in te halen), dan kun je de vakantiedag gewoon aanklikken en als aanwezig registreren.
 
-**Q: Wat moet ik doen tijdens schoolvakanties?**
-A: Tijdens schoolvakanties hoeft u niets in te vullen. Mocht een leerling tijdens een vakantie toch stage lopen (bijvoorbeeld om uren in te halen), dan kunt u dit wel gewoon registreren in het overzicht.
+Vraag: Werkt het portaal ook op mijn smartphone?
+Antwoord: Ja. Het portaal is volledig geschikt voor mobiele telefoons en tablets. Je kunt de website opslaan als snelkoppeling op je startscherm zodat je het portaal met een tik kunt openen.
 
-### Technisch
+Vraag: Ik zie een stagiair niet in mijn lijst staan.
+Antwoord: Neem in dat geval contact op met de stagebegeleider of schoolbeheerder. Zij kunnen de stagiair direct aan jouw bedrijfskoppeling toevoegen.
 
-**Q: Werkt de app op mijn telefoon?**
-A: Ja! De app is responsive en werkt op alle apparaten (telefoon, tablet, computer).
-
-**Q: Welke browser moet ik gebruiken?**
-A: Chrome, Safari, Firefox, of Edge. Alle moderne browsers werken.
-
-**Q: Is mijn data veilig?**
-A: Ja! We gebruiken HTTPS versleuteling en hosten in de EU (GDPR compliant).
-
-**Q: Wat als ik geen internet heb?**
-A: De app werkt alleen met internet. Vul de aanwezigheid in zodra u weer online bent.
-
-### Problemen
-
-**Q: Ik zie geen studenten**
-A: Neem contact op met de school. Zij moeten studenten aan uw bedrijf koppelen.
-
-**Q: Ik kan niet inloggen**
-A: Check of uw e-mailadres en wachtwoord correct zijn. Gebruik "Wachtwoord vergeten" als nodig.
-
-**Q: De app laadt niet**
-A: Probeer de pagina te verversen (Cmd+R of Ctrl+R). Check uw internetverbinding.
-
-**Q: Ik zie een foutmelding**
-A: Noteer de foutmelding en neem contact op met de school of support.
-
----
-
-## Contact & support
-
-### Hulp nodig?
-
-**Neem contact op met de school:**
-- Zij kunnen u helpen met technische problemen
-- Zij kunnen studenten toevoegen/verwijderen
-- Zij kunnen uw wachtwoord resetten
-
-### Tips voor succesvol gebruik
-
-1. **Vul dagelijks in** - Maak er een gewoonte van
-2. **Check 's ochtends** - Zo weet de school direct wie er is
-3. **Wees accuraat** - Correcte data helpt de student
-4. **Communiceer** - Bij twijfel, bel de stagebegeleider
-
----
-
-## Snelstart-checklist
-
-- [ ] Account activeren en wachtwoord instellen via de e-mail link
-- [ ] Inloggen met e-mailadres en gekozen wachtwoord
-- [ ] Dashboard bekijken
-- [ ] Eerste student aanwezigheid invullen
-- [ ] Geschiedenis bekijken
-- [ ] Bookmark de website voor snelle toegang
-
----
-
-**Bedankt voor het gebruik van StageConnectie!**
-
-*Versie 2.0 - Januari 2026*
+Ondersteuning nodig?
+Voor inhoudelijke vragen over de stagiair kun je direct bellen met de stagebegeleider via de knop bovenaan het scherm.
+Voor technische ondersteuning: support@stageconnectie.nl.

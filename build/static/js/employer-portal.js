@@ -16,15 +16,37 @@ async function init() {
         let companyId = localStorage.getItem('company_id');
 
         // Check if there is an active Supabase Auth session first
-        if (!userEmail) {
-            const { data: { session } } = await supabaseClient.auth.getSession();
-            if (session && session.user && session.user.email) {
-                userEmail = session.user.email;
-                console.log('✅ Active Supabase session recovered for:', userEmail);
+        const { data: { session } } = await supabaseClient.auth.getSession();
+        if (session && session.user && session.user.email) {
+            userEmail = session.user.email;
+            console.log('✅ Active Supabase session recovered for:', userEmail);
+
+            if (userEmail !== 'test@test.nl' && userEmail !== 'test@testbedrijf.nl') {
+                sessionStorage.removeItem('demo_unlocked');
+                if (companyId === 'demo-company' || companyName === 'Demo Bedrijf') {
+                    companyId = null;
+                    companyName = null;
+                    localStorage.removeItem('company_id');
+                    localStorage.removeItem('company_name');
+                }
             }
         }
 
-        if (!userEmail) { window.location.href = 'index.html'; return; }
+        // Automatically purge unauthenticated stale demo sessions (not valid logged in accounts)
+        const isDemoExplicit = sessionStorage.getItem('demo_unlocked') === 'true' || 
+                               new URLSearchParams(window.location.search).get('demo') === 'unlocked';
+
+        if (!session && !isDemoExplicit && (companyId === 'demo-company' || companyName === 'Demo Bedrijf')) {
+            console.log('🧹 Purging automatic demo session and redirecting to clean login...');
+            localStorage.removeItem('user_email');
+            localStorage.removeItem('company_id');
+            localStorage.removeItem('company_name');
+            localStorage.removeItem('stageconnect_session');
+            window.location.href = 'login.html';
+            return;
+        }
+
+        if (!userEmail) { window.location.href = 'login.html'; return; }
 
         // Show company name from localStorage immediately
         if (companyName) {
@@ -107,6 +129,19 @@ async function continueEmployerInit() {
     setupRealtimeSubscription();
 }
 
+function exitDemoMode() {
+    localStorage.removeItem('user_email');
+    localStorage.removeItem('company_id');
+    localStorage.removeItem('company_name');
+    localStorage.removeItem('stageconnect_session');
+    sessionStorage.removeItem('demo_unlocked');
+    if (window.supabaseClient) {
+        window.supabaseClient.auth.signOut().catch(() => {});
+    }
+    window.location.href = 'login.html';
+}
+window.exitDemoMode = exitDemoMode;
+
 async function loadStudents() {
     let { data, error } = await supabaseClient.from('Students').select('*');
 
@@ -184,7 +219,14 @@ function populateSupervisorDropdown() {
     supervisors.forEach(sup => {
         const option = document.createElement('option');
         option.value = sup.id;
-        option.textContent = sup.name;
+
+        // Find students assigned to this supervisor
+        const supStudents = students.filter(s => s.supervisor_id === sup.id);
+        const studentLabel = supStudents.length > 0
+            ? supStudents.map(s => s.name.split(' ')[0]).join(' & ')
+            : '';
+
+        option.textContent = studentLabel ? `${sup.name} (Begeleider van ${studentLabel})` : sup.name;
         select.appendChild(option);
     });
 
@@ -270,7 +312,7 @@ function updateWeekDisplay() {
 
 function changeWeek(direction) {
     const newOffset = currentWeekOffset + direction;
-    if (newOffset < -1 || newOffset > 0) return; // Limit to previous week (-1) and current week (0)
+    if (newOffset < -52 || newOffset > 0) return; // Allow going back up to 52 weeks
     currentWeekOffset = newOffset;
     
     updateWeekButtons();
@@ -282,14 +324,14 @@ function updateWeekButtons() {
     const prevBtn = document.getElementById('prev-week-btn');
     const nextBtn = document.getElementById('next-week-btn');
     if (prevBtn) {
-        prevBtn.disabled = (currentWeekOffset <= -1);
-        prevBtn.style.opacity = currentWeekOffset <= -1 ? '0.5' : '1';
-        prevBtn.style.cursor = currentWeekOffset <= -1 ? 'not-allowed' : 'pointer';
+        prevBtn.disabled = (currentWeekOffset <= -52);
+        prevBtn.style.opacity = currentWeekOffset <= -52 ? '0.5' : '1';
+        prevBtn.style.cursor = currentWeekOffset <= -52 ? 'default' : 'pointer';
     }
     if (nextBtn) {
         nextBtn.disabled = (currentWeekOffset >= 0);
         nextBtn.style.opacity = currentWeekOffset >= 0 ? '0.5' : '1';
-        nextBtn.style.cursor = currentWeekOffset >= 0 ? 'not-allowed' : 'pointer';
+        nextBtn.style.cursor = currentWeekOffset >= 0 ? 'default' : 'pointer';
     }
 }
 
@@ -374,49 +416,120 @@ function renderGrid(existingAttendance) {
     });
 }
 
+function getStudentStatusLabel(st) {
+    if (!st || st === 'undefined' || st === 'null') return '';
+    switch (st) {
+        case 'present': return 'Aanwezig';
+        case 'absent': return 'Afwezig';
+        case 'sick': return 'Ziek';
+        case 'late': return 'Te laat';
+        default: return '';
+    }
+}
+
 function updateCellContent(cell, status, minutesLate, studentStatus = '', studentHours = 0, notes = '') {
     const icons = { 'present': '✅', 'absent': '❌', 'sick': '🤒', 'late': '⏱️', '': '' };
-    const studentIcons = { 'present': '', 'absent': '', 'late': '', '': '' };
 
-    // Employer Status (Big icon)
-    const content = status ? icons[status] : '<span class="text-gray-300 text-3xl font-black">+</span>';
-    cell.innerHTML = `<div class="status-badge ${status || 'empty'}">${content}</div>`;
+    const cleanEmployerStatus = (status && status !== 'pending' && status !== 'undefined' && status !== 'null') ? status : '';
+    const cleanStudentStatus = (studentStatus && studentStatus !== 'pending' && studentStatus !== 'undefined' && studentStatus !== 'null') ? studentStatus : '';
+    const hasStudentInput = Boolean(cleanStudentStatus || (studentHours && parseFloat(studentHours) > 0));
 
-    if (status === 'late' && minutesLate > 0) {
-        cell.innerHTML += `<div class="late-minutes">${minutesLate}m</div>`;
+    // Reset specific borders & backgrounds
+    cell.classList.remove(
+        'border-gray-300', 'border-gray-100', 'border-green-400', 'border-red-400', 'border-orange-400', 'border-yellow-400', 'border-amber-400',
+        'bg-amber-50/50', 'bg-green-50/80', 'bg-red-50/80', 'bg-orange-50/80', 'bg-yellow-50/80',
+        'border-green-300', 'border-red-300', 'border-orange-300', 'border-yellow-300', 'border-amber-300', 'border-dashed',
+        'shadow-md', 'shadow-sm'
+    );
+
+    if (cleanEmployerStatus) {
+        // Employer has accorded/set status (Definitief geaccordeerd)
+        const content = icons[cleanEmployerStatus] || cleanEmployerStatus;
+        cell.innerHTML = `<div class="status-badge ${cleanEmployerStatus}">${content}</div>`;
+        if (cleanEmployerStatus === 'late' && minutesLate > 0) {
+            cell.innerHTML += `<div class="late-minutes">${minutesLate}m</div>`;
+        }
+        // Active Status Coloring
+        if (cleanEmployerStatus === 'present') cell.classList.add('border-green-400');
+        else if (cleanEmployerStatus === 'absent') cell.classList.add('border-red-400');
+        else if (cleanEmployerStatus === 'sick') cell.classList.add('border-orange-400');
+        else if (cleanEmployerStatus === 'late') cell.classList.add('border-yellow-400');
+        cell.classList.add('shadow-md');
+    } else if (hasStudentInput) {
+        // Student registered attendance, but employer has NOT yet accorded -> Show light colored tile with student entry & "Te goedkeuren"!
+        const studentLabel = getStudentStatusLabel(cleanStudentStatus);
+        const icon = icons[cleanStudentStatus] || (cleanStudentStatus ? '📝' : '');
+        const hoursText = parseFloat(studentHours) > 0 ? `${studentHours}u` : '';
+        const detailText = [icon, studentLabel, hoursText].filter(Boolean).join(' ') || 'Invoer';
+
+        let bgClass = 'bg-amber-50/70';
+        let borderClass = 'border-amber-300';
+        let badgeBg = 'bg-amber-100';
+        let badgeBorder = 'border-amber-300';
+        let badgeText = 'text-amber-800';
+        let textClass = 'text-amber-900';
+
+        if (cleanStudentStatus === 'present') {
+            bgClass = 'bg-green-50/80';
+            borderClass = 'border-green-300';
+            badgeBg = 'bg-green-100';
+            badgeBorder = 'border-green-300';
+            badgeText = 'text-green-800';
+            textClass = 'text-green-900';
+        } else if (cleanStudentStatus === 'absent') {
+            bgClass = 'bg-red-50/80';
+            borderClass = 'border-red-300';
+            badgeBg = 'bg-red-100';
+            badgeBorder = 'border-red-300';
+            badgeText = 'text-red-800';
+            textClass = 'text-red-900';
+        } else if (cleanStudentStatus === 'sick') {
+            bgClass = 'bg-orange-50/80';
+            borderClass = 'border-orange-300';
+            badgeBg = 'bg-orange-100';
+            badgeBorder = 'border-orange-300';
+            badgeText = 'text-orange-800';
+            textClass = 'text-orange-900';
+        } else if (cleanStudentStatus === 'late') {
+            bgClass = 'bg-yellow-50/80';
+            borderClass = 'border-yellow-300';
+            badgeBg = 'bg-yellow-100';
+            badgeBorder = 'border-yellow-300';
+            badgeText = 'text-yellow-800';
+            textClass = 'text-yellow-900';
+        }
+
+        cell.innerHTML = `
+            <div class="flex flex-col items-center justify-center h-full gap-0.5 p-1">
+                <span class="text-[9px] font-extrabold ${badgeText} ${badgeBg} px-1.5 py-0.5 rounded-full border ${badgeBorder} shadow-sm leading-none tracking-tight">Te goedkeuren</span>
+                <span class="text-[10px] font-black ${textClass} leading-tight mt-0.5 text-center">
+                    ${detailText}
+                </span>
+            </div>
+        `;
+        cell.classList.add(borderClass, bgClass, 'border-dashed', 'shadow-sm');
+    } else {
+        // Empty State: Gray border = visible box with +
+        cell.innerHTML = `<div class="status-badge empty"><span class="text-gray-300 text-3xl font-black">+</span></div>`;
+        cell.classList.add('border-gray-300');
     }
 
-    // Student Input (Small badge at the bottom)
-    if (studentStatus || studentHours > 0) {
+    // Small badge at bottom right for student hours if employer has accorded
+    if (cleanEmployerStatus && hasStudentInput) {
+        const label = getStudentStatusLabel(cleanStudentStatus);
+        const titleText = label ? `Eigen invoer student: ${label}` : 'Eigen invoer student';
         cell.innerHTML += `
-            <div class="absolute bottom-1 right-1 flex items-center gap-0.5 bg-purple-100 text-purple-700 text-[9px] font-black px-1 rounded shadow-sm" title="Eigen invoer student: ${studentStatus}">
-                ${studentHours > 0 ? `<span>${studentHours}u</span>` : ''}
+            <div class="absolute bottom-1 right-1 flex items-center gap-0.5 bg-purple-100 text-purple-700 text-[9px] font-black px-1 rounded shadow-sm" title="${titleText}">
+                ${parseFloat(studentHours) > 0 ? `<span>${studentHours}u</span>` : ''}
             </div>
         `;
     }
 
-    // Reset specific borders
-    cell.classList.remove('border-gray-300', 'border-gray-100', 'border-green-400', 'border-red-400', 'border-orange-400', 'border-yellow-400');
-
-    if (status) {
-        // Active Status Coloring
-        if (status === 'present') cell.classList.add('border-green-400');
-        else if (status === 'absent') cell.classList.add('border-red-400');
-        else if (status === 'sick') cell.classList.add('border-orange-400');
-        else if (status === 'late') cell.classList.add('border-yellow-400');
-
-        cell.classList.add('shadow-md');
-    } else {
-        // Empty State: Gray border = visible box
-        cell.classList.add('border-gray-300');
-        cell.classList.remove('shadow-md');
-    }
-
     // Store data (preserve notes for DB save)
-    cell.dataset.status = status;
-    cell.dataset.minutes = minutesLate;
-    cell.dataset.studentStatus = studentStatus;
-    cell.dataset.studentHours = studentHours;
+    cell.dataset.status = cleanEmployerStatus;
+    cell.dataset.minutes = minutesLate || 0;
+    cell.dataset.studentStatus = cleanStudentStatus;
+    cell.dataset.studentHours = studentHours || 0;
     cell.dataset.notes = notes || '';
 }
 
@@ -425,10 +538,19 @@ function openActionSheet(studentId, date, element) {
     const sheet = document.getElementById('action-sheet');
     const overlay = document.getElementById('action-overlay');
 
-    // Header info: Student Name & Formatted Date
+    // Header info: Student Name & Formatted Date & Student Entry Hint
     const student = students.find(s => s.id === studentId);
     const studentNameElem = document.getElementById('action-student-name');
-    if (studentNameElem) studentNameElem.textContent = student ? student.name : '';
+    const studentStatus = element.dataset.studentStatus || '';
+    const studentHours = element.dataset.studentHours || '';
+    const studentLabel = getStudentStatusLabel(studentStatus);
+
+    let hint = student ? student.name : '';
+    if (studentLabel || (studentHours && parseFloat(studentHours) > 0)) {
+        const detail = [studentLabel, studentHours ? `${studentHours} uur` : ''].filter(Boolean).join(' • ');
+        hint += ` (Invoer leerling: ${detail})`;
+    }
+    if (studentNameElem) studentNameElem.textContent = hint;
 
     const dateObj = new Date(date);
     const dateOptions = { weekday: 'long', day: 'numeric', month: 'long' };
@@ -436,12 +558,25 @@ function openActionSheet(studentId, date, element) {
     const dateLabelElem = document.getElementById('action-date-label');
     if (dateLabelElem) dateLabelElem.textContent = formattedDate.charAt(0).toUpperCase() + formattedDate.slice(1);
 
+    // Pre-fill hours input with student's hours or default 8
+    const currentHours = parseFloat(element.dataset.studentHours) || 8;
+    const hoursInput = document.getElementById('employer-hours-input');
+    if (hoursInput) hoursInput.value = currentHours;
+
     sheet.classList.remove('hidden');
     overlay.classList.remove('hidden');
     const grid = document.getElementById('status-buttons-grid');
     if (grid) grid.classList.remove('hidden');
     document.getElementById('late-input-container').classList.add('hidden');
     setTimeout(() => { sheet.classList.remove('translate-y-full'); }, 10);
+}
+
+function adjustEmployerHours(delta) {
+    const input = document.getElementById('employer-hours-input');
+    if (!input) return;
+    let val = parseFloat(input.value) || 0;
+    val = Math.max(0, Math.min(24, val + delta));
+    input.value = val;
 }
 
 function closeActions() {
@@ -461,8 +596,10 @@ function setStatus(status) {
     if (!activeCell) return;
     const notes = activeCell.element.dataset.notes || '';
     const studentStatus = activeCell.element.dataset.studentStatus || '';
-    const studentHours = activeCell.element.dataset.studentHours || 0;
-    updateCellContent(activeCell.element, status, 0, studentStatus, studentHours, notes);
+    const hoursInput = document.getElementById('employer-hours-input');
+    const updatedHours = hoursInput ? (parseFloat(hoursInput.value) || 0) : (parseFloat(activeCell.element.dataset.studentHours) || 0);
+    const finalHours = (status === 'present' || status === 'late') ? updatedHours : 0;
+    updateCellContent(activeCell.element, status, 0, studentStatus, finalHours, notes);
     closeActions();
 }
 
@@ -522,8 +659,9 @@ function confirmLate() {
     
     const notes = activeCell.element.dataset.notes || '';
     const studentStatus = activeCell.element.dataset.studentStatus || '';
-    const studentHours = activeCell.element.dataset.studentHours || 0;
-    updateCellContent(activeCell.element, 'late', minutes, studentStatus, studentHours, notes);
+    const hoursInput = document.getElementById('employer-hours-input');
+    const updatedHours = hoursInput ? (parseFloat(hoursInput.value) || 0) : (parseFloat(activeCell.element.dataset.studentHours) || 0);
+    updateCellContent(activeCell.element, 'late', minutes, studentStatus, updatedHours, notes);
     closeActions();
 }
 
@@ -544,6 +682,7 @@ async function saveWeek() {
                 status: status || null,
                 employer_id: currentCompany.id,
                 minutes_late: status === 'late' ? parseInt(cell.dataset.minutes || 0) : 0,
+                student_hours: parseFloat(cell.dataset.studentHours || 0),
                 notes: notes
             });
         }

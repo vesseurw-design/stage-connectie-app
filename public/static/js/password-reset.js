@@ -64,7 +64,7 @@ if (resetForm) {
                 body: JSON.stringify({
                     action: 'request-password-reset',
                     email: email,
-                    loginUrl: `${window.location.origin}/reset-password.html`
+                    loginUrl: `${window.location.origin.includes('localhost') || window.location.origin.includes('127.0.0.1') ? 'https://ghpc.stageconnectie.nl' : window.location.origin}/reset-password.html`
                 })
             });
 

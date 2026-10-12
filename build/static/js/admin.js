@@ -1,1 +1,293 @@
-const SUPABASE_URL='https://ninkkvffhvkxrrxddgrz.supabase.co';const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5pbmtrdmZmaHZreHJyeGRkZ3J6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM5OTc2NTcsImV4cCI6MjA3OTU3MzY1N30.Kq6jojYu5Hopmtzmdqwc9dwUyIZBOm7c27N-OCv1aCM';const supabase=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);let allAttendance=[],companies=[],students=[];async function init(){await Promise.all([loadCompanies(),loadStudents(),loadAttendance()]),setupRealtimeSubscription(),setupFilters(),updateDashboard()}async function loadCompanies(){const{data:e}=await supabase.from("Bedrijven").select("*");companies=e||[];const t=document.getElementById("filter-company");companies.forEach(e=>{t.innerHTML+= `<option value="${e.id}">${e.company_name}</option>`})}async function loadStudents(){const{data:e}=await supabase.from("Students").select("*");students=e||[]}async function loadAttendance(){const{data:e,error:t}=await supabase.from("Attendance").select("*").order("date",{ascending:!1});t&&console.error("Error loading attendance:",t),allAttendance=e||[]}function setupRealtimeSubscription(){supabase.channel("public:Attendance").on("postgres_changes",{event:"*",schema:"public",table:"Attendance"},e=>{console.log("Real-time update:",e),loadAttendance().then(updateDashboard)}).subscribe()}function setupFilters(){["filter-date","filter-company","filter-status"].forEach(e=>{document.getElementById(e).addEventListener("change",updateDashboard)}),document.getElementById("filter-date").valueAsDate=new Date}function updateDashboard(){const e=document.getElementById("filter-date").value,t=document.getElementById("filter-company").value,n=document.getElementById("filter-status").value;let s=allAttendance;e&&(s=s.filter(t=>t.date===e)),t&&(s=s.filter(e=>e.employer_id===t)),n&&(s=s.filter(e=>e.status===n)),updateStats(s),renderTable(s)}function updateStats(e){const t={present:e.filter(e=>"present"===e.status).length,absent:e.filter(e=>"absent"===e.status).length,sick:e.filter(e=>"sick"===e.status).length,late:e.filter(e=>"late"===e.status).length};document.getElementById("stat-present").textContent=t.present,document.getElementById("stat-absent").textContent=t.absent,document.getElementById("stat-sick").textContent=t.sick,document.getElementById("stat-late").textContent=t.late}function renderTable(e){const t=document.getElementById("attendance-table-body");t.innerHTML="",e.forEach(e=>{const n=students.find(t=>t.name===e.student_id)||{name:e.student_id},s=companies.find(t=>t.id===e.employer_id)||{company_name:"Onbekend"},a={present:"bg-green-100 text-green-800",absent:"bg-red-100 text-red-800",sick:"bg-orange-100 text-orange-800",late:"bg-yellow-100 text-yellow-800"},o={present:"Aanwezig",absent:"Afwezig",sick:"Ziek",late:`Te laat (${e.minutes_late}m)`},r=`<tr class="hover:bg-gray-50"><td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${n.name}</td><td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${s.company_name}</td><td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${e.date}</td><td class="px-6 py-4 whitespace-nowrap"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${a[e.status]}">${o[e.status]}</span></td><td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${"late"===e.status?`${e.minutes_late} minuten`:"-"}</td></tr>`;t.innerHTML+=r})}init();
+// Conditional initialization to prevent redeclaration errors
+if (typeof window.SUPABASE_URL === 'undefined') {
+    window.SUPABASE_URL = 'https://vdeipnqyesduiohxvuvu.supabase.co';
+}
+if (typeof window.SUPABASE_KEY === 'undefined') {
+    window.SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZkZWlwbnF5ZXNkdWlvaHh2dXZ1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc1MjY5NTEsImV4cCI6MjA4MzEwMjk1MX0.IknEZ-GQvspcppJxLR00ayBDq1DbL0HiUKy9RDb59DU';
+}
+if (typeof window.supabaseClient === 'undefined') {
+    window.supabaseClient = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_KEY);
+}
+var supabaseDB = window.supabaseClient;
+
+let allAttendance = [];
+let companies = [];
+let students = [];
+let currentUser = null;
+
+async function checkAuth() {
+    console.log('🔐 Checking authentication...');
+    const { data: { session }, error } = await supabaseDB.auth.getSession();
+
+    if (error) {
+        console.error('❌ Auth error:', error);
+        window.location.href = 'admin-login.html';
+        return false;
+    }
+
+    if (!session) {
+        console.log('⚠️ No active session, redirecting to login...');
+        window.location.href = 'admin-login.html';
+        return false;
+    }
+
+    currentUser = session.user;
+    console.log('✅ Authenticated as:', currentUser.email);
+    console.log('👤 User role:', currentUser.user_metadata?.role);
+
+    // Verify admin role
+    if (currentUser.user_metadata?.role !== 'admin') {
+        console.error('❌ User is not an admin');
+        alert('Je hebt geen admin rechten!');
+        window.location.href = 'admin-login.html';
+        return false;
+    }
+
+    return true;
+}
+
+async function init() {
+    console.log('🚀 Initializing admin dashboard...');
+
+    // First check if user is authenticated
+    const isAuthenticated = await checkAuth();
+    if (!isAuthenticated) {
+        return; // Will redirect to login
+    }
+
+    await loadCompanies();
+    await loadStudents();
+    await loadAttendance();
+    setupRealtimeSubscription();
+    setupFilters();
+    updateDashboard();
+}
+
+async function loadCompanies() {
+    console.log('📦 Loading companies...');
+    const { data, error } = await supabaseDB
+        .from('Bedrijven')
+        .select('*');
+
+    if (error) {
+        console.error('❌ Error loading companies:', error);
+        showAdminError('Fout bij laden bedrijven: ' + error.message);
+        return;
+    }
+
+    companies = data || [];
+    console.log('✅ Loaded companies:', companies.length);
+
+    const filterCompany = document.getElementById('filter-company');
+    companies.forEach(company => {
+        filterCompany.innerHTML += `<option value="${company.id}">${company.company_name}</option>`;
+    });
+}
+
+async function loadStudents() {
+    console.log('👥 Loading students...');
+    const { data, error } = await supabaseDB
+        .from('Students')
+        .select('*');
+
+    if (error) {
+        console.error('❌ Error loading students:', error);
+        showAdminError('Fout bij laden studenten: ' + error.message);
+        return;
+    }
+
+    students = data || [];
+    console.log('✅ Loaded students:', students.length, students);
+    updateClassFilter();
+}
+
+function updateClassFilter() {
+    const classSel = document.getElementById('filter-class');
+    if (!classSel) return;
+    const currentVal = classSel.value;
+    const classes = [...new Set(students.map(s => s.class).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'nl', { numeric: true, sensitivity: 'base' }));
+    classSel.innerHTML = '<option value="">Alle klassen</option>' + classes.map(c => `<option value="${c}">${c}</option>`).join('');
+    classSel.value = currentVal;
+}
+
+async function loadAttendance() {
+    console.log('📊 Loading attendance...');
+    const { data, error } = await supabaseDB
+        .from('Attendance')
+        .select('*')
+        .order('date', { ascending: false });
+
+    if (error) {
+        console.error('❌ Error loading attendance:', error);
+        return;
+    }
+
+    allAttendance = data || [];
+    console.log('✅ Loaded attendance records:', allAttendance.length, allAttendance);
+}
+
+function setupRealtimeSubscription() {
+    supabaseDB
+        .channel('public:Attendance')
+        .on('postgres_changes',
+            { event: '*', schema: 'public', table: 'Attendance' },
+            (payload) => {
+                console.log('🔄 Real-time update:', payload);
+                loadAttendance().then(updateDashboard);
+            }
+        )
+        .subscribe();
+}
+
+function setupFilters() {
+    ['filter-date', 'filter-class', 'filter-company', 'filter-status'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.addEventListener('change', updateDashboard);
+    });
+
+    // Set default date to today
+    const dateInput = document.getElementById('filter-date');
+    if (dateInput) dateInput.valueAsDate = new Date();
+}
+
+function updateDashboard() {
+    const dateFilter = document.getElementById('filter-date')?.value;
+    const classFilter = document.getElementById('filter-class')?.value;
+    const companyFilter = document.getElementById('filter-company')?.value;
+    const statusFilter = document.getElementById('filter-status')?.value;
+
+    console.log('🔍 Filtering with:', { dateFilter, classFilter, companyFilter, statusFilter });
+
+    let filtered = allAttendance;
+
+    if (dateFilter) {
+        filtered = filtered.filter(a => a.date === dateFilter);
+    }
+
+    if (classFilter) {
+        filtered = filtered.filter(a => {
+            const st = students.find(s => s.id === a.student_id);
+            return st && st.class === classFilter;
+        });
+    }
+
+    if (companyFilter) {
+        filtered = filtered.filter(a => a.employer_id === companyFilter);
+    }
+
+    if (statusFilter) {
+        filtered = filtered.filter(a => a.status === statusFilter);
+    }
+
+    console.log('📋 Filtered attendance:', filtered.length, filtered);
+
+    updateStats(filtered);
+    renderTable(filtered);
+}
+
+function updateStats(attendance) {
+    const stats = {
+        present: attendance.filter(a => (a.status === 'present' || a.student_status === 'present')).length,
+        absent: attendance.filter(a => (a.status === 'absent' || a.student_status === 'absent')).length,
+        sick: attendance.filter(a => (a.status === 'sick' || a.student_status === 'sick')).length,
+        late: attendance.filter(a => (a.status === 'late' || a.student_status === 'late')).length
+    };
+
+    document.getElementById('stat-present').textContent = stats.present;
+    document.getElementById('stat-absent').textContent = stats.absent;
+    document.getElementById('stat-sick').textContent = stats.sick;
+    document.getElementById('stat-late').textContent = stats.late;
+}
+
+function renderTable(attendance) {
+    const tbody = document.getElementById('attendance-table-body');
+    tbody.innerHTML = '';
+
+    console.log('🎨 Rendering table with', attendance.length, 'records');
+
+    if (attendance.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="5" class="px-6 py-8 text-center text-gray-500">
+                    Geen aanwezigheidsgegevens gevonden voor de geselecteerde filters
+                </td>
+            </tr>
+        `;
+        return;
+    }
+
+    attendance.forEach(record => {
+        console.log('📝 Processing record:', record);
+        console.log('🔍 Looking for student with id:', record.student_id);
+
+        // FIX: Search by id instead of name
+        const student = students.find(s => s.id === record.student_id);
+        console.log('👤 Found student:', student);
+
+        const company = companies.find(c => c.id === record.employer_id);
+        console.log('🏢 Found company:', company);
+
+        const statusClasses = {
+            'present': 'bg-green-100 text-green-800',
+            'absent': 'bg-red-100 text-red-800',
+            'sick': 'bg-orange-100 text-orange-800',
+            'late': 'bg-yellow-100 text-yellow-800'
+        };
+
+        const statusLabels = {
+            'present': 'Aanwezig',
+            'absent': 'Afwezig',
+            'sick': 'Ziek',
+            'late': `Te laat (${record.minutes_late}m)`
+        };
+
+        const studentName = student ? student.name : `ID: ${record.student_id}`;
+        const companyName = company ? company.company_name : 'Onbekend';
+
+        const row = `
+            <tr class="hover:bg-gray-50">
+                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                    ${studentName}
+                    <div class="text-xs font-normal text-gray-500">${student?.class || '-'}</div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    ${companyName}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    ${record.date}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${statusClasses[record.status]}">
+                        ${statusLabels[record.status]}
+                    </span>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    ${record.status === 'late' ? `${record.minutes_late} minuten` : '-'}
+                </td>
+            </tr>
+        `;
+
+        tbody.innerHTML += row;
+    });
+}
+
+// Visual Error Helper
+function showAdminError(message) {
+    const errorContainer = document.getElementById('admin-error-container');
+    if (!errorContainer) {
+        const div = document.createElement('div');
+        div.id = 'admin-error-container';
+        div.className = 'bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-6';
+        div.role = 'alert';
+        div.innerHTML = `<p class="font-bold">Database Fout</p><p>${message}</p>`;
+        const main = document.querySelector('main');
+        if (main) main.prepend(div);
+    } else {
+        errorContainer.insertAdjacentHTML('beforeend', `<p>${message}</p>`);
+    }
+}
+
+// Initialize on page load with a slight delay to ensure Auth is ready
+window.addEventListener('load', () => {
+    setTimeout(init, 500);
+});
