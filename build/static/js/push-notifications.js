@@ -50,11 +50,29 @@ async function requestPushPermissionAndSubscribe(studentId) {
             return null;
         }
 
-        // Zorg dat Service Worker gereed is
-        let reg = await navigator.serviceWorker.ready;
-        if (!reg) {
-            reg = await registerServiceWorker();
-            reg = await navigator.serviceWorker.ready;
+        // Zorg dat Service Worker gereed is (eerst registreren!)
+        let reg = await registerServiceWorker();
+        if (!reg && ('serviceWorker' in navigator)) {
+            try {
+                reg = await navigator.serviceWorker.getRegistration();
+            } catch (e) {}
+        }
+
+        // Wacht op navigator.serviceWorker.ready met een timeout van 3 seconden zodat het nooit blokkeert
+        if ('serviceWorker' in navigator) {
+            try {
+                const readyPromise = navigator.serviceWorker.ready;
+                const timeoutPromise = new Promise(resolve => setTimeout(() => resolve(null), 3000));
+                const readyReg = await Promise.race([readyPromise, timeoutPromise]);
+                if (readyReg) reg = readyReg;
+            } catch (swErr) {
+                console.warn('⚠️ Service worker ready check overgeslagen:', swErr);
+            }
+        }
+
+        if (!reg || !reg.pushManager) {
+            console.warn('⚠️ PushManager niet beschikbaar op ServiceWorkerRegistration');
+            return null;
         }
 
         // Haal bestaand abonnement op of maak nieuw abonnement aan
@@ -68,12 +86,14 @@ async function requestPushPermissionAndSubscribe(studentId) {
             console.log('✅ Nieuw Web Push abonnement aangemaakt via VAPID');
         }
 
-        const subJson = subscription.toJSON();
+        const subJson = subscription ? subscription.toJSON() : null;
+        if (!subJson) return null;
 
         // Sla push_subscription op bij het student-record in Supabase
-        if (studentId && window.supabaseClient) {
+        const client = window.supabaseClient || (typeof supabaseClient !== 'undefined' ? supabaseClient : null);
+        if (studentId && client) {
             try {
-                const { error: updateErr } = await window.supabaseClient
+                const { error: updateErr } = await client
                     .from('Students')
                     .update({ push_subscription: subJson })
                     .eq('id', studentId);
@@ -89,7 +109,7 @@ async function requestPushPermissionAndSubscribe(studentId) {
 
             // Probeer ook in multi-device tabel push_subscriptions op te slaan
             try {
-                await window.supabaseClient
+                await client
                     .from('push_subscriptions')
                     .insert({
                         student_id: studentId,

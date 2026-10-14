@@ -54,6 +54,7 @@ Dit zijn de recent geïmporteerde bedrijven voor het nieuwe schooljaar. Bedrijve
 | **Elysee Dental** | Davey Gramberg | `michelle.noppen@elysee-dental.nl` | Eigen wachtwoord via reset link |
 | **Car Cleaning rt** | Ramadan Taher | `info@carcleaningrt.nl` | Eigen wachtwoord via reset link |
 | **van Ettikhoven bv** | Gerrit van Ettikhoven | `info@vanettikhoven.nl` | Eigen wachtwoord via reset link |
+| **van der Vlist** | Monique van de Groep | `m.vdgroep@vdvlistbeton.nl` | `WelkomVlist2026!` |
 
 ---
 
