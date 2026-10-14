@@ -133,29 +133,37 @@ async function checkTermsAcceptance(table, userId, termsAcceptedAt, continueCall
         localStorage.setItem(`terms_accepted_${userId}`, now);
         
         try {
-            const { error } = await supabaseClient
-                .from(table)
-                .update({ terms_accepted_at: now })
-                .eq('id', userId);
-                
-            if (error) {
-                console.warn('⚠️ Could not save terms_accepted_at to DB (column may be missing):', error.message);
+            const client = window.supabaseClient || (typeof supabaseClient !== 'undefined' ? supabaseClient : null);
+            if (client) {
+                const { error } = await client
+                    .from(table)
+                    .update({ terms_accepted_at: now })
+                    .eq('id', userId);
+                    
+                if (error) {
+                    console.warn('⚠️ Could not save terms_accepted_at to DB:', error.message);
+                }
             }
         } catch (err) {
             console.warn('⚠️ Error updating terms_accepted_at:', err);
         }
 
-        // Voor stagiairs: vraag direct om pushmeldingen bij het accepteren
+        // Succes! Verwijder direct overlay en vervolg de flow zodat de leerling direct verder kan
+        overlay.remove();
+        continueCallback(now);
+
+        // Voor stagiairs: vraag pushmeldingen veilig op de achtergrond aan
         if (table === 'Students' && typeof requestPushPermissionAndSubscribe === 'function') {
             try {
-                await requestPushPermissionAndSubscribe(userId);
+                Promise.race([
+                    requestPushPermissionAndSubscribe(userId),
+                    new Promise(resolve => setTimeout(resolve, 3000))
+                ]).catch(pErr => {
+                    console.warn('⚠️ Push notificatie registratie overgeslagen/fout:', pErr);
+                });
             } catch (pErr) {
                 console.warn('⚠️ Push notificatie registratie overgeslagen/fout:', pErr);
             }
         }
-
-        // Succes! Verwijder overlay en vervolg de initiële flow
-        overlay.remove();
-        continueCallback(now);
     });
 }
