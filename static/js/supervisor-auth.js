@@ -7,26 +7,7 @@ const SUPABASE_URL = window.SUPABASE_URL || 'https://vdeipnqyesduiohxvuvu.supaba
 const SUPABASE_KEY = window.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZkZWlwbnF5ZXNkdWlvaHh2dXZ1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc1MjY5NTEsImV4cCI6MjA4MzEwMjk1MX0.IknEZ-GQvspcppJxLR00ayBDq1DbL0HiUKy9RDb59DU';
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-(async function autoPurgeStaleSupervisorDemoSession() {
-    const isDemoExplicit = sessionStorage.getItem('demo_unlocked') === 'true' || 
-                           new URLSearchParams(window.location.search).get('demo') === 'unlocked';
-    const storedEmail = localStorage.getItem('supervisor_email');
-    const { data: { session } } = await supabaseClient.auth.getSession().catch(() => ({ data: { session: null } }));
-    const isDemoUser = (session && session.user && (session.user.email === 'stage@begeleider.nl' || session.user.email === 'test@test.nl')) ||
-                       storedEmail === 'stage@begeleider.nl' || storedEmail === 'test@test.nl';
-
-    if (!isDemoExplicit && isDemoUser) {
-        console.log('🧹 Purging stale supervisor demo session...');
-        localStorage.removeItem('supervisor_email');
-        localStorage.removeItem('supervisor_id');
-        localStorage.removeItem('supervisor_name');
-        localStorage.removeItem('stageconnect_supervisor_session');
-        sessionStorage.removeItem('demo_unlocked');
-        if (session) {
-            await supabaseClient.auth.signOut().catch(() => {});
-        }
-    }
-})();
+// Auto purge removed to keep demo environment accessible
 
 // Login form handler
 const loginForm = document.getElementById('supervisor-login-form');
@@ -185,23 +166,19 @@ function logout() {
 // Maak logout beschikbaar globaal
 window.supervisorLogout = logout;
 
-// Add Demo button dynamically only when demo access is explicitly unlocked
+// Add Demo button dynamically if credentials are set
 function setupSupervisorDemoButton() {
-    const urlCode = new URLSearchParams(window.location.search).get('code');
-    const isDemoUnlocked = sessionStorage.getItem('demo_unlocked') === 'true' || 
-                           new URLSearchParams(window.location.search).get('demo') === 'unlocked' ||
-                           (typeof window.validateDemoCode === 'function' && urlCode ? window.validateDemoCode(urlCode) : false);
-
     const supervisorDemoEmail = (window.DEMO_CREDENTIALS && window.DEMO_CREDENTIALS.supervisor) || 'stage@begeleider.nl';
     const form = document.getElementById('supervisor-login-form');
 
-    if (isDemoUnlocked && form && !document.getElementById('demo-login-btn')) {
+    if (form && !document.getElementById('demo-login-btn')) {
         const demoBtn = document.createElement('button');
         demoBtn.type = 'button';
         demoBtn.className = 'w-full mt-4 bg-green-100 hover:bg-green-200 text-green-700 font-semibold py-3 px-4 rounded-lg transition duration-200 border border-green-300 shadow hover:shadow-md flex items-center justify-center gap-2 cursor-pointer';
         demoBtn.innerHTML = '⚡ Snel inloggen (Demo Stagebegeleider)';
         demoBtn.id = 'demo-login-btn';
         demoBtn.addEventListener('click', async () => {
+            sessionStorage.setItem('demo_unlocked', 'true');
             const emailInput = document.getElementById('email');
             const passwordInput = document.getElementById('password');
             if (emailInput && passwordInput) {
@@ -220,16 +197,6 @@ function setupSupervisorDemoButton() {
             submitBtn.parentNode.insertBefore(demoBtn, submitBtn.nextSibling);
         } else {
             form.appendChild(demoBtn);
-        }
-    } else if (!isDemoUnlocked && !document.getElementById('demo-unlock-link')) {
-        const linksContainer = document.querySelector('.mt-6.text-center');
-        if (linksContainer) {
-            const demoLink = document.createElement('a');
-            demoLink.id = 'demo-unlock-link';
-            demoLink.href = 'supervisor-login.html?demo=unlocked';
-            demoLink.className = 'block text-xs text-green-600 hover:text-green-800 underline mt-4';
-            demoLink.textContent = 'Demo-omgeving bekijken (zonder account) →';
-            linksContainer.appendChild(demoLink);
         }
     }
 }

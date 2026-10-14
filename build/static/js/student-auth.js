@@ -9,23 +9,7 @@ const SUPABASE_KEY = window.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ
 // Use the exact SAME initialization as Admin
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-(async function autoPurgeStaleStudentDemoSession() {
-    const isDemoExplicit = sessionStorage.getItem('demo_unlocked') === 'true' || 
-                           new URLSearchParams(window.location.search).get('demo') === 'unlocked';
-    const storedEmail = localStorage.getItem('student_email');
-    const { data: { session } } = await supabaseClient.auth.getSession().catch(() => ({ data: { session: null } }));
-    const isDemoUser = (session && session.user && session.user.email === 'fake@leerling.nl') || storedEmail === 'fake@leerling.nl';
-
-    if (!isDemoExplicit && isDemoUser) {
-        console.log('🧹 Purging stale student demo session...');
-        localStorage.removeItem('student_email');
-        localStorage.removeItem('stageconnect_student_session');
-        sessionStorage.removeItem('demo_unlocked');
-        if (session) {
-            await supabaseClient.auth.signOut().catch(() => {});
-        }
-    }
-})();
+// Auto purge removed to keep demo environment accessible
 
 const loginForm = document.getElementById('student-login-form');
 const errorMessage = document.getElementById('error-message');
@@ -74,23 +58,19 @@ if (loginForm) {
     });
 }
 
-// Add Demo button dynamically only when demo access is explicitly unlocked
+// Add Demo button dynamically if credentials are set
 function setupStudentDemoButton() {
-    const urlCode = new URLSearchParams(window.location.search).get('code');
-    const isDemoUnlocked = sessionStorage.getItem('demo_unlocked') === 'true' || 
-                           new URLSearchParams(window.location.search).get('demo') === 'unlocked' ||
-                           (typeof window.validateDemoCode === 'function' && urlCode ? window.validateDemoCode(urlCode) : false);
-
     const studentDemoEmail = (window.DEMO_CREDENTIALS && window.DEMO_CREDENTIALS.student) || 'fake@leerling.nl';
     const form = document.getElementById('student-login-form');
 
-    if (isDemoUnlocked && form && !document.getElementById('demo-login-btn')) {
+    if (form && !document.getElementById('demo-login-btn')) {
         const demoBtn = document.createElement('button');
         demoBtn.type = 'button';
         demoBtn.className = 'w-full mt-4 bg-purple-100 hover:bg-purple-200 text-purple-700 font-semibold py-3 px-4 rounded-lg transition duration-200 border border-purple-300 shadow hover:shadow-md flex items-center justify-center gap-2 cursor-pointer';
         demoBtn.innerHTML = '⚡ Snel inloggen (Demo Stagiair)';
         demoBtn.id = 'demo-login-btn';
         demoBtn.addEventListener('click', async () => {
+            sessionStorage.setItem('demo_unlocked', 'true');
             const emailInput = document.getElementById('email');
             const passwordInput = document.getElementById('password');
             if (emailInput && passwordInput) {
@@ -109,16 +89,6 @@ function setupStudentDemoButton() {
             submitBtn.parentNode.insertBefore(demoBtn, submitBtn.nextSibling);
         } else {
             form.appendChild(demoBtn);
-        }
-    } else if (!isDemoUnlocked && !document.getElementById('demo-unlock-link')) {
-        const linksContainer = document.querySelector('.mt-6.text-center');
-        if (linksContainer) {
-            const demoLink = document.createElement('a');
-            demoLink.id = 'demo-unlock-link';
-            demoLink.href = 'student-login.html?demo=unlocked';
-            demoLink.className = 'block text-xs text-purple-600 hover:text-purple-800 underline mt-4';
-            demoLink.textContent = 'Demo-omgeving bekijken (zonder account) →';
-            linksContainer.appendChild(demoLink);
         }
     }
 }

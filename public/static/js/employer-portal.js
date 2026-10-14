@@ -32,17 +32,6 @@ async function init() {
             }
         }
 
-        // Automatically purge unexpected demo sessions if not explicitly unlocked
-        const isDemoExplicit = sessionStorage.getItem('demo_unlocked') === 'true' || 
-                               new URLSearchParams(window.location.search).get('demo') === 'unlocked';
-        const isDemoCompany = companyId === 'demo-company' || companyName === 'Demo Bedrijf' || companyName === 'Testbedrijf' || userEmail === 'test@testbedrijf.nl' || userEmail === 'test@test.nl';
-
-        if (!isDemoExplicit && isDemoCompany) {
-            console.log('🧹 Purging automatic demo session and redirecting to clean login...');
-            exitDemoMode();
-            return;
-        }
-
         if (!userEmail) { window.location.href = 'login.html'; return; }
 
         // Show company name from localStorage immediately
