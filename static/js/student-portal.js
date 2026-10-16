@@ -851,6 +851,7 @@ async function loadAttendanceHistory() {
         absent:  { label: 'Afwezig',  icon: '❌', bg: 'bg-red-50',   border: 'border-red-200',   text: 'text-red-800'   },
         sick:    { label: 'Ziek',     icon: '🤒', bg: 'bg-orange-50',border: 'border-orange-200',text: 'text-orange-800' },
         late:    { label: 'Te laat',  icon: '⏱️', bg: 'bg-yellow-50',border: 'border-yellow-200',text: 'text-yellow-800' },
+        pending: { label: 'Te bevestigen', icon: '⏳', bg: 'bg-gray-50', border: 'border-gray-200', text: 'text-gray-700' },
     };
 
     const today = new Date();

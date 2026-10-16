@@ -238,7 +238,8 @@ function renderTable(attendance) {
             'present': 'Aanwezig',
             'absent': 'Afwezig',
             'sick': 'Ziek',
-            'late': `Te laat (${record.minutes_late}m)`
+            'late': `Te laat (${record.minutes_late}m)`,
+            'pending': 'Te bevestigen'
         };
 
         const studentName = student ? student.name : `ID: ${record.student_id}`;
