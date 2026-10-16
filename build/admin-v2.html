@@ -542,7 +542,10 @@
                 'present': '✅ Aanwezig',
                 'absent': '❌ Afwezig',
                 'sick': '🤒 Ziek',
-                'late': '⏱️ Te laat'
+                'late': '⏱️ Te laat',
+                'pending': '⏳ Te bevestigen',
+                'PENDING': '⏳ Te bevestigen',
+                'Pending': '⏳ Te bevestigen'
             };
 
             let rowsAdded = 0;
@@ -670,7 +673,7 @@
             const record = allAttendance.find(a => a.student_id === studentId && a.date === date);
             const empInfoBox = document.getElementById('modal-employer-info');
             const empStatusText = document.getElementById('modal-employer-status-text');
-            const statusLabelsRaw = { present: 'Aanwezig', absent: 'Afwezig', sick: 'Ziek', late: 'Te laat' };
+            const statusLabelsRaw = { present: 'Aanwezig', absent: 'Afwezig', sick: 'Ziek', late: 'Te laat', pending: 'Te bevestigen' };
             if (record && record.status) {
                 const empLabel = statusLabelsRaw[record.status] || record.status;
                 const lateStr = (record.status === 'late' && record.minutes_late > 0) ? ` (${record.minutes_late} min te laat)` : '';
@@ -1079,7 +1082,7 @@
                             </tr>`;
                         }
                         const record = allAttendance.find(a => String(a.student_id) === String(student.id) && a.date === wd.dateStr);
-                        const statusLabelsFull = { present: 'Aanwezig', absent: 'Afwezig', sick: 'Ziek', late: 'Te laat' };
+                        const statusLabelsFull = { present: 'Aanwezig', absent: 'Afwezig', sick: 'Ziek', late: 'Te laat', pending: 'Te bevestigen', PENDING: 'Te bevestigen', Pending: 'Te bevestigen' };
                         const statusBgColors = { present: '#bbf7d0', absent: '#fecaca', sick: '#fed7aa', late: '#fef08a' };
                         let ingevuldCell, ingevuldUren, werkgeverCheckCell, rowBg;
                         if (record && record.student_status) {

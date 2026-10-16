@@ -101,15 +101,15 @@
                     🏖️ Vakanties
                 </a>
                 <a id="nav-demo-codes" href="admin-demo-codes.html"
+                    style="display: none;"
                     class="px-4 py-2 bg-amber-50 text-amber-700 hover:bg-amber-100 rounded-lg transition font-medium text-sm">
                     🔑 Demo Toegang
                 </a>
                 <script>
                     (function() {
-                        const h = window.location.hostname.toLowerCase();
-                        if (!h.includes('ghpc') && !h.includes('stageconnectie') && h !== 'localhost' && h !== '127.0.0.1' && !window.CAN_MANAGE_DEMOS) {
+                        if (window.CAN_MANAGE_DEMOS === true) {
                             const btn = document.getElementById('nav-demo-codes');
-                            if (btn) btn.style.display = 'none';
+                            if (btn) btn.style.display = 'inline-block';
                         }
                     })();
                 </script>
@@ -555,7 +555,10 @@
                 'present': '✅ Aanwezig',
                 'absent': '❌ Afwezig',
                 'sick': '🤒 Ziek',
-                'late': '⏱️ Te laat'
+                'late': '⏱️ Te laat',
+                'pending': '⏳ Te bevestigen',
+                'PENDING': '⏳ Te bevestigen',
+                'Pending': '⏳ Te bevestigen'
             };
 
             let rowsAdded = 0;
@@ -683,7 +686,7 @@
             const record = allAttendance.find(a => a.student_id === studentId && a.date === date);
             const empInfoBox = document.getElementById('modal-employer-info');
             const empStatusText = document.getElementById('modal-employer-status-text');
-            const statusLabelsRaw = { present: 'Aanwezig', absent: 'Afwezig', sick: 'Ziek', late: 'Te laat' };
+            const statusLabelsRaw = { present: 'Aanwezig', absent: 'Afwezig', sick: 'Ziek', late: 'Te laat', pending: 'Te bevestigen' };
             if (record && record.status) {
                 const empLabel = statusLabelsRaw[record.status] || record.status;
                 const lateStr = (record.status === 'late' && record.minutes_late > 0) ? ` (${record.minutes_late} min te laat)` : '';
@@ -1092,7 +1095,7 @@
                             </tr>`;
                         }
                         const record = allAttendance.find(a => String(a.student_id) === String(student.id) && a.date === wd.dateStr);
-                        const statusLabelsFull = { present: 'Aanwezig', absent: 'Afwezig', sick: 'Ziek', late: 'Te laat' };
+                        const statusLabelsFull = { present: 'Aanwezig', absent: 'Afwezig', sick: 'Ziek', late: 'Te laat', pending: 'Te bevestigen', PENDING: 'Te bevestigen', Pending: 'Te bevestigen' };
                         const statusBgColors = { present: '#bbf7d0', absent: '#fecaca', sick: '#fed7aa', late: '#fef08a' };
                         let ingevuldCell, ingevuldUren, werkgeverCheckCell, rowBg;
                         if (record && record.student_status) {

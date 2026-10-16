@@ -530,7 +530,8 @@ function renderStudentCards(attendance) {
         present: 'Aanwezig',
         absent: 'Afwezig',
         sick: 'Ziek',
-        late: 'Te laat'
+        late: 'Te laat',
+        pending: 'Te bevestigen'
     };
 
     let html = '';
@@ -1406,7 +1407,7 @@ async function exportSupervisorClassPDF() {
     reportContainer.style.zIndex = '-999';
     document.body.appendChild(reportContainer);
 
-    const statusLabels = { present: 'Aanwezig', absent: 'Afwezig', sick: 'Ziek', late: 'Te laat' };
+    const statusLabels = { present: 'Aanwezig', absent: 'Afwezig', sick: 'Ziek', late: 'Te laat', pending: 'Te bevestigen' };
 
     reportContainer.innerHTML = `
         <div style="border-bottom: 3px solid #2563eb; padding-bottom: 12px; margin-bottom: 16px;">
