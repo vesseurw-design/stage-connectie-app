@@ -183,8 +183,7 @@
         }
 
         // Init
-        const currentHost = window.location.hostname.toLowerCase();
-        if (window.CAN_MANAGE_DEMOS || currentHost.includes('ghpc') || currentHost.includes('stageconnectie') || currentHost === 'localhost' || currentHost === '127.0.0.1') {
+        if (window.CAN_MANAGE_DEMOS === true) {
             const demoNav = document.getElementById('nav-demo-codes');
             if (demoNav) demoNav.classList.remove('hidden');
         }
