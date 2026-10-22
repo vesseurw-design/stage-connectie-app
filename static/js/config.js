@@ -60,7 +60,21 @@ const DB_CONFIGS = {
             "🏫 Mijn ouders hebben naar school gebeld voor ziekmelding."
         ]
     },
-    // ProZoetermeer (Nieuwe school)
+    // De Poort praktijkonderwijs (Nieuwe school per 1 januari)
+    'depoort.stageconnectie.nl': {
+        url: 'https://vvfvakpnotvehjcndrxh.supabase.co',
+        key: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ2ZnZha3Bub3R2ZWhqY25kcnhoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTIxNDMzMTgsImV4cCI6MjEwNzcxOTMxOH0.TpgkP6EvWxrCf0NN0g0qySvikd3NdWOH7lVef5E_Oeg',
+        maxStudents: 100,
+        schoolName: 'De Poort praktijkonderwijs',
+        logo: 'logo-depoort.png',
+        canManageDemos: false,
+        absenceSteps: [
+            "📞 Ik heb mijn stagebedrijf gebeld om mijn afwezigheid te melden.",
+            "💬 Ik heb mijn stagebegeleider een bericht gestuurd via WhatsApp/Teams.",
+            "🏫 Mijn ouders/verzorgers hebben de school gebeld voor ziekmelding."
+        ]
+    },
+    // ProZoetermeer (Toekomstige school)
     'prozoetermeer.stageconnectie.nl': {
         url: 'https://your-prozoetermeer-project.supabase.co', // TODO: Vervangen door daadwerkelijke Supabase URL
         key: 'hier-komt-de-anon-key-van-de-nieuwe-school',
@@ -78,7 +92,7 @@ const DB_CONFIGS = {
         url: 'https://vdeipnqyesduiohxvuvu.supabase.co',
         key: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZkZWlwbnF5ZXNkdWlvaHh2dXZ1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc1MjY5NTEsImV4cCI6MjA4MzEwMjk1MX0.IknEZ-GQvspcppJxLR00ayBDq1DbL0HiUKy9RDb59DU',
         maxStudents: 250,
-        schoolName: 'Groene Hart Pro College (Localhost)',
+        schoolName: 'Groene Hart Pro College',
         logo: 'logo-ghpc-v2.png',
         canManageDemos: true,
         demoCredentials: {
@@ -102,7 +116,9 @@ const DB_CONFIGS = {
     
     // Als er geen exacte match is, controleer op subdomeinen of lokaal/file protocol
     if (!config) {
-        if (hostname.includes('ghpc') || hostname === '' || hostname === 'localhost' || hostname === '127.0.0.1') {
+        if (hostname.includes('depoort')) {
+            config = DB_CONFIGS['depoort.stageconnectie.nl'];
+        } else if (hostname.includes('ghpc') || hostname === '' || hostname === 'localhost' || hostname === '127.0.0.1') {
             config = DB_CONFIGS['ghpc.stageconnectie.nl'];
         } else if (hostname.includes('prozoetermeer')) {
             config = DB_CONFIGS['prozoetermeer.stageconnectie.nl'];
@@ -111,6 +127,24 @@ const DB_CONFIGS = {
             config = DB_CONFIGS['ghpc.stageconnectie.nl'];
         }
     }
+
+    // Ondersteun ?school=depoort voor veilig testen zonder dat het subdomein live hoeft te staan
+    try {
+        const urlParams = new URLSearchParams(window.location.search);
+        let schoolParam = (urlParams.get('school') || '').toLowerCase();
+        
+        if (schoolParam) {
+            sessionStorage.setItem('sc_school_override', schoolParam);
+        } else {
+            schoolParam = (sessionStorage.getItem('sc_school_override') || '').toLowerCase();
+        }
+
+        if (schoolParam === 'depoort') {
+            config = DB_CONFIGS['depoort.stageconnectie.nl'];
+        } else if (schoolParam === 'ghpc') {
+            config = DB_CONFIGS['ghpc.stageconnectie.nl'];
+        }
+    } catch (e) {}
     
     // Zet de configuratie op het window-object
     window.SUPABASE_URL = config.url;

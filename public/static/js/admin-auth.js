@@ -3,21 +3,18 @@
  * Versie: 2.0 - Secure Authentication
  */
 
-// Conditional initialization to prevent redeclaration errors
 if (typeof window.SUPABASE_URL === 'undefined') {
     window.SUPABASE_URL = 'https://vdeipnqyesduiohxvuvu.supabase.co';
 }
 if (typeof window.SUPABASE_KEY === 'undefined') {
     window.SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZkZWlwbnF5ZXNkdWlvaHh2dXZ1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc1MjY5NTEsImV4cCI6MjA4MzEwMjk1MX0.IknEZ-GQvspcppJxLR00ayBDq1DbL0HiUKy9RDb59DU';
 }
-if (typeof window.supabaseClient === 'undefined') {
-    if (typeof window.supabase !== 'undefined' && window.supabase.createClient) {
-        window.supabaseClient = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_KEY);
-    }
+if (typeof window.supabase !== 'undefined' && window.supabase.createClient) {
+    window.supabaseClient = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_KEY);
 }
 
-// Use var to allow redeclaration if needed
 var supabaseClient = window.supabaseClient;
+console.log('🔌 Admin Auth Client connected to:', window.SUPABASE_URL, 'School:', window.SCHOOL_NAME);
 
 // Login form handler
 const loginForm = document.getElementById('admin-login-form');

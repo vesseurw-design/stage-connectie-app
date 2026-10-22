@@ -257,11 +257,19 @@
             <a href="#contact" class="btn-blue">Kennismaking aanvragen →</a>
             <a href="screenshots.html" class="btn-white">Bekijk Screenshots</a>
         </div>
-        <div style="margin-top: 1.25rem;">
+        <div style="margin-top: 1.25rem;" id="hero-demo-code-container">
             <button onclick="openDemoCodeModal()" style="color: #64748b; font-size: 0.85rem; font-weight: 600; background: none; border: none; cursor: pointer; text-decoration: underline;">
                 Heb je een demo-inlogcode? Vul hem hier in →
             </button>
         </div>
+        <script>
+            (function() {
+                if (window.CAN_MANAGE_DEMOS !== true) {
+                    const c = document.getElementById('hero-demo-code-container');
+                    if (c) c.style.display = 'none';
+                }
+            })();
+        </script>
         <div class="hero-image" style="margin-top: 3.5rem; display: flex; justify-content: center;">
             <img src="brochure-photo.png" alt="StageConnectie impressie 1" onerror="this.style.display='none'" style="width: 100%; max-width: 450px; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.05); border: 1px solid #e9eef5; object-fit: cover; max-height: 320px;">
         </div>
@@ -275,7 +283,7 @@
         <h2 class="section-title" style="margin-bottom: 0.75rem;">Benieuwd hoe de portalen eruitzien?</h2>
         <p class="section-sub" style="margin: 0 auto 1.75rem;">Bekijk voorbeelden en screenshots van de omgevingen voor stagiairs, stagebedrijven, docenten en schoolbeheerders op onze aparte impressiepagina.</p>
         <a href="screenshots.html" class="btn-white" style="border-color: #8fb584; color: #8fb584; font-weight: 700; padding: 0.8rem 1.6rem; border-radius: 99px; font-size: 0.95rem; display: inline-flex; align-items: center; gap: 0.5rem;">
-            Bekijk alle Screenshots & Mockups →
+            Bekijk alle Screenshots & Voorbeelden →
         </a>
     </div>
 </section>
