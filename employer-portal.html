@@ -124,7 +124,7 @@
         }
     </style>
     <script>
-        if (!localStorage.getItem('stageconnect_session')) {
+        if (!localStorage.getItem('stageconnect_session') && !window.location.search.includes('etoken=') && !window.location.hash.includes('access_token=')) {
             window.location.href = 'login.html';
         }
     </script>
@@ -162,6 +162,9 @@
     </header>
 
     <main class="max-w-7xl mx-auto px-4 py-8">
+        <!-- 1-Click Auto-Approve Notification Banner -->
+        <div id="auto-approve-banner" class="hidden mb-6 bg-green-50 border-2 border-green-400 text-green-900 rounded-2xl p-5 shadow-md"></div>
+
         <!-- Supervisor Contact Panel -->
         <div class="mb-8 bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
             <div class="flex flex-col md:flex-row justify-between items-center gap-4">
@@ -198,7 +201,7 @@
 
         <!-- Week Controls -->
         <div
-            class="flex flex-col sm:flex-row justify-between items-center gap-6 mb-8 bg-white/90 backdrop-blur rounded-2xl shadow-lg border border-gray-200 p-6">
+            class="flex flex-col lg:flex-row justify-between items-center gap-4 mb-8 bg-white/90 backdrop-blur rounded-2xl shadow-lg border border-gray-200 p-6">
             <div class="flex items-center gap-4">
                 <button onclick="changeWeek(-1)" id="prev-week-btn"
                     class="p-3 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-xl transition text-gray-600 focus:outline-none flex items-center justify-center">
@@ -217,15 +220,21 @@
                     </svg>
                 </button>
             </div>
-            <button onclick="saveWeek()"
-                class="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-10 rounded-xl shadow-lg hover:shadow-xl transition transform hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-2 text-lg">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4">
-                    </path>
-                </svg>
-                Wijzigingen Opslaan
-            </button>
+            <div class="flex flex-col sm:flex-row items-center gap-3 w-full lg:w-auto">
+                <button id="approve-week-btn" onclick="approveEntireWeek()"
+                    class="w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white font-bold py-3.5 px-6 rounded-xl shadow-md hover:shadow-lg transition transform hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-2 text-base">
+                    <span>✅ Keur hele week met 1 klik goed</span>
+                </button>
+                <button onclick="saveWeek()"
+                    class="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 px-6 rounded-xl shadow-md hover:shadow-lg transition transform hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-2 text-base">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M5 13l4 4L19 7">
+                        </path>
+                    </svg>
+                    <span>Wijzigingen Opslaan</span>
+                </button>
+            </div>
         </div>
 
         <!-- Weekly Grid -->
@@ -379,7 +388,7 @@
     <script src="./static/js/config.js"></script>
     <script src="./static/js/company-helper.js?v=20260916_1"></script>
     <script src="./static/js/terms-acceptance.js"></script>
-    <script src="./static/js/employer-portal.js?v=20261014_1"></script>
+    <script src="./static/js/employer-portal.js?v=20261024_1"></script>
     <script src="./static/js/info-modal-demo.js"></script>
     <style>
         .animate-slide-up {

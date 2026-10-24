@@ -10,20 +10,106 @@ const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 // Login form handler
 const loginForm = document.getElementById('login-form');
 const errorMessage = document.getElementById('error-message');
+const successMessage = document.getElementById('success-message');
+let isPasswordMode = false;
+
+window.togglePasswordMode = function (forcePassword) {
+    const pwSection = document.getElementById('password-section');
+    const pwInput = document.getElementById('password');
+    const submitBtn = document.getElementById('login-submit-btn');
+    const toggleBtn = document.getElementById('toggle-password-mode-btn');
+
+    isPasswordMode = typeof forcePassword === 'boolean' ? forcePassword : !isPasswordMode;
+
+    if (errorMessage) errorMessage.classList.add('hidden');
+    if (successMessage) successMessage.classList.add('hidden');
+
+    if (isPasswordMode) {
+        if (pwSection) pwSection.classList.remove('hidden');
+        if (pwInput) pwInput.required = true;
+        if (submitBtn) submitBtn.innerHTML = '🔑 Inloggen met Wachtwoord';
+        if (toggleBtn) toggleBtn.textContent = '← Terug naar inloggen zonder wachtwoord (via e-mail)';
+    } else {
+        if (pwSection) pwSection.classList.add('hidden');
+        if (pwInput) {
+            pwInput.required = false;
+            pwInput.value = '';
+        }
+        if (submitBtn) submitBtn.innerHTML = '✉️ Stuur Directe Inloglink (Geen wachtwoord)';
+        if (toggleBtn) toggleBtn.textContent = 'Liever inloggen met een wachtwoord?';
+    }
+};
 
 if (loginForm) {
     loginForm.addEventListener('submit', async (e) => {
         e.preventDefault();
 
-        // FIX: Trim input to remove accidental spaces
         const email = document.getElementById('email').value.trim();
-        const password = document.getElementById('password').value;
-        const rememberMe = document.getElementById('remember-me')?.checked || false;
+        const password = document.getElementById('password')?.value || '';
+        const rememberMe = document.getElementById('remember-me')?.checked ?? true;
+        const submitBtn = document.getElementById('login-submit-btn') || loginForm.querySelector('button[type="submit"]');
 
-        errorMessage.classList.add('hidden');
+        if (errorMessage) errorMessage.classList.add('hidden');
+        if (successMessage) successMessage.classList.add('hidden');
+
+        // Default: Wachtwoordloos inloggen (tenzij wachtwoord-modus actief is en een wachtwoord is ingevuld)
+        if (!isPasswordMode && !password) {
+            const origText = submitBtn ? submitBtn.innerHTML : '';
+            try {
+                if (submitBtn) {
+                    submitBtn.disabled = true;
+                    submitBtn.innerHTML = '⏳ Inloglink wordt verstuurd...';
+                }
+
+                const originUrl = (window.location.origin.includes('localhost') || window.location.origin.includes('127.0.0.1'))
+                    ? 'https://ghpc.stageconnectie.nl'
+                    : window.location.origin;
+
+                const res = await fetch(`${SUPABASE_URL}/functions/v1/create-auth-account`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${SUPABASE_KEY}`
+                    },
+                    body: JSON.stringify({
+                        action: 'request-employer-magic-link',
+                        email: email,
+                        portalUrl: `${originUrl}/employer-portal.html`,
+                        schoolName: window.SCHOOL_NAME || 'Groene Hart Pro College'
+                    })
+                });
+
+                const result = await res.json();
+                if (!res.ok || !result.success) {
+                    throw new Error(result?.error || 'Kon inloglink niet versturen.');
+                }
+
+                localStorage.setItem('remember_employer_email', email);
+
+                if (successMessage) {
+                    successMessage.innerHTML = `
+                        <div class="font-bold text-green-900 mb-1">✅ Directe inloglink verstuurd naar ${email}!</div>
+                        <p class="text-xs text-green-800">Open uw e-mail en klik op de blauwe knop <strong>"Direct Inloggen"</strong>. U bent dan meteen ingelogd zonder wachtwoord.</p>
+                    `;
+                    successMessage.classList.remove('hidden');
+                }
+            } catch (err) {
+                console.error('❌ Magic link error:', err);
+                if (errorMessage) {
+                    errorMessage.textContent = err.message || 'Kon inloglink niet versturen. Controleer uw e-mailadres.';
+                    errorMessage.classList.remove('hidden');
+                }
+            } finally {
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = origText || '✉️ Stuur Directe Inloglink (Geen wachtwoord)';
+                }
+            }
+            return;
+        }
 
         try {
-            console.log('🔐 Attempting employer login...');
+            console.log('🔐 Attempting employer password login...');
 
             // Login met Supabase Auth
             const { data: authData, error: authError } = await supabaseClient.auth.signInWithPassword({
@@ -99,7 +185,7 @@ if (loginForm) {
             let errorMsg = 'Inloggen mislukt. Controleer je gegevens.';
 
             if (error.message.includes('Invalid login credentials')) {
-                errorMsg = 'Onjuist email adres of wachtwoord.';
+                errorMsg = 'Onjuist email adres of wachtwoord. Tip: kies voor inloggen zonder wachtwoord via e-mail!';
             } else if (error.message.includes('Email not confirmed')) {
                 errorMsg = 'Je email adres is nog niet bevestigd. Check je inbox.';
             } else if (error.message.includes('geen werkgever')) {
@@ -234,6 +320,9 @@ function setupEmployerDemoButton() {
         demoBtn.id = 'demo-login-btn';
         demoBtn.addEventListener('click', async () => {
             sessionStorage.setItem('demo_unlocked', 'true');
+            if (typeof window.togglePasswordMode === 'function') {
+                window.togglePasswordMode(true);
+            }
             const emailInput = document.getElementById('email');
             const passwordInput = document.getElementById('password');
             if (emailInput && passwordInput) {

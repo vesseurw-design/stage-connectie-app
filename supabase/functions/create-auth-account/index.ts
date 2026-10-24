@@ -6,6 +6,166 @@ const corsHeaders = {
     'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+function toBase64Url(bytes: Uint8Array): string {
+    let binary = ''
+    for (let i = 0; i < bytes.byteLength; i++) {
+        binary += String.fromCharCode(bytes[i])
+    }
+    return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
+}
+
+function fromBase64Url(str: string): Uint8Array {
+    const padded = str.replace(/-/g, '+').replace(/_/g, '/') + '==='.slice((str.length + 3) % 4)
+    const binary = atob(padded)
+    const bytes = new Uint8Array(binary.length)
+    for (let i = 0; i < binary.length; i++) {
+        bytes[i] = binary.charCodeAt(i)
+    }
+    return bytes
+}
+
+async function signEmployerToken(payload: { cid: string; email: string; exp?: number }, secret: string): Promise<string> {
+    const dataObj = {
+        cid: payload.cid,
+        email: payload.email.trim().toLowerCase(),
+        exp: payload.exp || (Date.now() + 45 * 24 * 60 * 60 * 1000) // 45 dagen geldig
+    }
+    const encoder = new TextEncoder()
+    const payloadB64 = toBase64Url(encoder.encode(JSON.stringify(dataObj)))
+    const key = await crypto.subtle.importKey(
+        'raw',
+        encoder.encode(secret),
+        { name: 'HMAC', hash: 'SHA-256' },
+        false,
+        ['sign']
+    )
+    const sigBuffer = await crypto.subtle.sign('HMAC', key, encoder.encode(payloadB64))
+    const sigB64 = toBase64Url(new Uint8Array(sigBuffer))
+    return `${payloadB64}.${sigB64}`
+}
+
+async function verifyEmployerToken(token: string, secret: string): Promise<{ cid: string; email: string; exp: number } | null> {
+    try {
+        if (!token || !token.includes('.')) return null
+        const [payloadB64, sigB64] = token.split('.')
+        const encoder = new TextEncoder()
+        const key = await crypto.subtle.importKey(
+            'raw',
+            encoder.encode(secret),
+            { name: 'HMAC', hash: 'SHA-256' },
+            false,
+            ['verify']
+        )
+        const sigBytes = fromBase64Url(sigB64)
+        const isValid = await crypto.subtle.verify('HMAC', key, sigBytes, encoder.encode(payloadB64))
+        if (!isValid) return null
+
+        const payloadJson = new TextDecoder().decode(fromBase64Url(payloadB64))
+        const parsed = JSON.parse(payloadJson)
+        if (!parsed.exp || Date.now() > parsed.exp) return null
+        return parsed
+    } catch (_e) {
+        return null
+    }
+}
+
+function isStudentAssignedToCompanyHelper(student: any, companyId: string): boolean {
+    if (!student || !companyId) return false
+    if (student.company_assignments) {
+        try {
+            const arr = typeof student.company_assignments === 'string'
+                ? JSON.parse(student.company_assignments)
+                : student.company_assignments
+            if (Array.isArray(arr) && arr.length > 0) {
+                if (arr.some((a: any) => (a.company_id || a.companyId) === companyId)) return true
+            }
+        } catch (_e) {}
+    }
+    if (student.company_id) {
+        return String(student.company_id).includes(companyId)
+    }
+    return false
+}
+
+function isStudentScheduledForCompanyHelper(student: any, companyId: string, dayCode: string): boolean {
+    if (!student) return false
+    if (student.company_assignments) {
+        try {
+            const arr = typeof student.company_assignments === 'string'
+                ? JSON.parse(student.company_assignments)
+                : student.company_assignments
+            if (Array.isArray(arr) && arr.length > 0) {
+                const assignment = arr.find((a: any) => (a.company_id || a.companyId) === companyId)
+                if (assignment) {
+                    const days = Array.isArray(assignment.days) ? assignment.days : []
+                    return days.length === 0 || days.includes(dayCode)
+                }
+            }
+        } catch (_e) {}
+    }
+    const days = Array.isArray(student.scheduled_days) ? student.scheduled_days : []
+    return days.length === 0 || days.includes(dayCode)
+}
+
+function getMondayDateStr(dateInput?: string): string {
+    const d = dateInput ? new Date(dateInput + 'T12:00:00Z') : new Date()
+    const day = d.getUTCDay()
+    const diff = d.getUTCDate() - day + (day === 0 ? -6 : 1)
+    d.setUTCDate(diff)
+    return d.toISOString().split('T')[0]
+}
+
+function getWeekDatesFromMonday(mondayStr: string): string[] {
+    const base = new Date(mondayStr + 'T12:00:00Z')
+    return [0, 1, 2, 3, 4].map(offset => {
+        const dt = new Date(base)
+        dt.setUTCDate(base.getUTCDate() + offset)
+        return dt.toISOString().split('T')[0]
+    })
+}
+
+async function ensureEmployerAuthAndMagicHash(supabaseAdmin: any, email: string, company: any): Promise<string> {
+    const cleanEmail = email.trim().toLowerCase()
+    const meta = {
+        role: 'employer',
+        company_id: company.id,
+        company_name: company.company_name
+    }
+
+    // Probeer direct een magiclink te genereren
+    let linkRes = await supabaseAdmin.auth.admin.generateLink({
+        type: 'magiclink',
+        email: cleanEmail,
+        options: { data: meta }
+    })
+
+    if (linkRes.error) {
+        // Maak eerst het auth account aan als deze nog niet bestond
+        await supabaseAdmin.auth.admin.createUser({
+            email: cleanEmail,
+            email_confirm: true,
+            user_metadata: meta,
+            app_metadata: meta
+        })
+        linkRes = await supabaseAdmin.auth.admin.generateLink({
+            type: 'magiclink',
+            email: cleanEmail,
+            options: { data: meta }
+        })
+    } else if (linkRes.data?.user) {
+        const u = linkRes.data.user
+        if (u.user_metadata?.role !== 'employer' || u.user_metadata?.company_id !== company.id) {
+            await supabaseAdmin.auth.admin.updateUserById(u.id, {
+                email_confirm: true,
+                user_metadata: { ...(u.user_metadata || {}), ...meta },
+                app_metadata: { ...(u.app_metadata || {}), ...meta }
+            })
+        }
+    }
+
+    return linkRes.data?.properties?.hashed_token || ''
+}
+
 serve(async (req) => {
     // Handle CORS preflight requests
     if (req.method === 'OPTIONS') {
@@ -16,10 +176,13 @@ serve(async (req) => {
         const body = await req.json()
         const { action, email, password, role, metadata, sendEmail, name, loginUrl, recipients, subject } = body
 
+        const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? ''
+        const SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+
         // Create Supabase client with Admin rights
         const supabaseAdmin = createClient(
-            Deno.env.get('SUPABASE_URL') ?? '',
-            Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+            SUPABASE_URL,
+            SERVICE_KEY,
             {
                 auth: {
                     autoRefreshToken: false,
@@ -27,6 +190,477 @@ serve(async (req) => {
                 }
             }
         )
+
+        // Default portal URL op basis van Supabase project (GHPC vs De Poort)
+        const defaultPortalBase = SUPABASE_URL.includes('vvfvakpnotvehjcndrxh')
+            ? 'https://depoort.stageconnectie.nl/employer-portal.html'
+            : 'https://ghpc.stageconnectie.nl/employer-portal.html'
+        const defaultSchoolName = SUPABASE_URL.includes('vvfvakpnotvehjcndrxh')
+            ? 'De Poort praktijkonderwijs'
+            : 'Groene Hart Pro College'
+
+        // ============================================================================
+        // ACTIE 1: Wachtwoordloos inloggen vanaf login.html (Magic Link voor bedrijven)
+        // ============================================================================
+        if (action === 'request-employer-magic-link') {
+            if (!email) throw new Error('Vul een geldig e-mailadres in.')
+            const cleanEmail = email.trim().toLowerCase()
+
+            const { data: companies } = await supabaseAdmin
+                .from('Bedrijven')
+                .select('*')
+                .ilike('email', cleanEmail)
+
+            const company = companies?.[0]
+            if (!company) {
+                return new Response(
+                    JSON.stringify({
+                        success: false,
+                        error: 'Dit e-mailadres is niet gevonden als geregistreerd stagebedrijf. Controleer het e-mailadres of neem contact op met de stagecoördinator.'
+                    }),
+                    { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+                )
+            }
+
+            // Zorg dat auth user klaarstaat
+            await ensureEmployerAuthAndMagicHash(supabaseAdmin, cleanEmail, company)
+
+            const etoken = await signEmployerToken({ cid: company.id, email: cleanEmail }, SERVICE_KEY)
+            const portalUrl = (body.portalUrl || defaultPortalBase).split('?')[0]
+            const directLoginLink = `${portalUrl}?etoken=${encodeURIComponent(etoken)}`
+            const schoolTitle = body.schoolName || defaultSchoolName
+
+            const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY')
+            if (!RESEND_API_KEY) throw new Error('E-mailservice (RESEND_API_KEY) is niet geconfigureerd.')
+
+            const recipientName = company.contact_person || company.company_name || 'stagebegeleider / werkgever'
+            const htmlContent = `
+                <div style="font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 24px; border: 1px solid #e2e8f0; border-radius: 14px; background: #ffffff;">
+                    <div style="text-align: center; margin-bottom: 20px;">
+                        <h2 style="color: #1e293b; margin: 0;">StageConnectie</h2>
+                        <p style="color: #64748b; font-size: 14px; margin-top: 4px;">${schoolTitle}</p>
+                    </div>
+                    <h3 style="color: #1e293b; margin-top: 0;">Beste ${recipientName},</h3>
+                    <p style="color: #334155; line-height: 1.6;">
+                        Klik op de onderstaande knop om direct (zonder wachtwoord) in te loggen op het Stagebedrijf Portaal voor <strong>${company.company_name}</strong>:
+                    </p>
+                    <div style="text-align: center; margin: 28px 0;">
+                        <a href="${directLoginLink}" style="display: inline-block; background: #2563eb; color: #ffffff; padding: 16px 32px; border-radius: 10px; text-decoration: none; font-weight: bold; font-size: 16px; box-shadow: 0 4px 6px rgba(37, 99, 235, 0.2);">
+                            🚀 Direct Inloggen (Geen wachtwoord nodig)
+                        </a>
+                    </div>
+                    <div style="background: #f0fdf4; border-left: 4px solid #16a34a; padding: 14px; border-radius: 8px; margin: 20px 0;">
+                        <p style="margin: 0; font-size: 13px; color: #166534; line-height: 1.5;">
+                            ✅ <strong>Handig:</strong> Na 1 klik bent u direct ingelogd en onthoudt uw telefoon of computer uw sessie automatisch. U hoeft geen wachtwoord meer te onthouden.
+                        </p>
+                    </div>
+                    <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 24px 0;">
+                    <p style="font-size: 13px; color: #64748b; margin-bottom: 0;">
+                        Met vriendelijke groet,<br>
+                        <strong>het stageteam van ${schoolTitle}</strong>
+                    </p>
+                </div>
+            `
+
+            const mailRes = await fetch('https://api.resend.com/emails', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${RESEND_API_KEY}`
+                },
+                body: JSON.stringify({
+                    from: 'StageConnectie <no-reply@stageconnectie.nl>',
+                    to: cleanEmail,
+                    subject: `Direct inloggen op StageConnectie - ${company.company_name}`,
+                    html: htmlContent
+                })
+            })
+
+            if (!mailRes.ok) {
+                const errText = await mailRes.text()
+                throw new Error('Kon e-mail niet verzenden: ' + errText)
+            }
+
+            return new Response(
+                JSON.stringify({
+                    success: true,
+                    message: 'Directe inloglink is verzonden naar ' + cleanEmail
+                }),
+                { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
+            )
+        }
+
+        // ============================================================================
+        // ACTIE 2: Verifieer etoken vanuit e-mail + optioneel 1-klik week goedkeuren
+        // ============================================================================
+        if (action === 'verify-employer-token') {
+            const { etoken, autoApproveWeek } = body
+            const verified = await verifyEmployerToken(etoken, SERVICE_KEY)
+            if (!verified) {
+                return new Response(
+                    JSON.stringify({
+                        success: false,
+                        error: 'Deze inloglink is verlopen of ongeldig. Vraag op de inlogpagina met 1 klik een nieuwe link aan.'
+                    }),
+                    { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+                )
+            }
+
+            let company = null
+            if (verified.cid) {
+                const { data } = await supabaseAdmin.from('Bedrijven').select('*').eq('id', verified.cid).maybeSingle()
+                company = data
+            }
+            if (!company && verified.email) {
+                const { data } = await supabaseAdmin.from('Bedrijven').select('*').ilike('email', verified.email).maybeSingle()
+                company = data
+            }
+            if (!company) {
+                return new Response(
+                    JSON.stringify({ success: false, error: 'Stagebedrijf niet gevonden.' }),
+                    { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 404 }
+                )
+            }
+
+            const cleanEmail = (company.email || verified.email).trim().toLowerCase()
+            const tokenHash = await ensureEmployerAuthAndMagicHash(supabaseAdmin, cleanEmail, company)
+
+            let approvedCount = 0
+            const approvedDetails: string[] = []
+            let targetMonday = ''
+
+            if (autoApproveWeek) {
+                targetMonday = autoApproveWeek === 'current' ? getMondayDateStr() : getMondayDateStr(autoApproveWeek)
+                const weekDates = getWeekDatesFromMonday(targetMonday)
+                const dayCodes = ['Ma', 'Di', 'Wo', 'Do', 'Vr']
+
+                const { data: allStudents } = await supabaseAdmin.from('Students').select('*')
+                const now = new Date()
+                const companyStudents = (allStudents || []).filter((s: any) => {
+                    const isUnenrolled =
+                        (s.unenrollment_date && new Date(s.unenrollment_date) <= now) ||
+                        (s.enrollment_end_date && new Date(s.enrollment_end_date) <= now) ||
+                        (s.stage_end_date && new Date(s.stage_end_date) <= now) ||
+                        (s.end_date && new Date(s.end_date) <= now)
+                    if (isUnenrolled) return false
+                    return isStudentAssignedToCompanyHelper(s, company.id)
+                })
+
+                if (companyStudents.length > 0) {
+                    const studentIds = companyStudents.map((s: any) => s.id)
+                    const { data: existingAtt } = await supabaseAdmin
+                        .from('Attendance')
+                        .select('*')
+                        .in('student_id', studentIds)
+                        .in('date', weekDates)
+
+                    const attMap = new Map<string, any>()
+                    ;(existingAtt || []).forEach((r: any) => {
+                        attMap.set(`${r.student_id}_${r.date}`, r)
+                    })
+
+                    const upserts: any[] = []
+                    for (const student of companyStudents) {
+                        for (let i = 0; i < 5; i++) {
+                            const dateStr = weekDates[i]
+                            const dayCode = dayCodes[i]
+                            if (!isStudentScheduledForCompanyHelper(student, company.id, dayCode)) continue
+
+                            const existing = attMap.get(`${student.id}_${dateStr}`)
+                            const existingEmployerStatus = existing?.status && existing.status !== 'pending' && existing.status !== 'null' && existing.status !== 'undefined'
+                                ? existing.status
+                                : ''
+
+                            // Alleen goedkeuren als het bedrijf deze dag nog niet zelf had ingevuld
+                            if (!existingEmployerStatus) {
+                                const studentSt = existing?.student_status && existing.student_status !== 'pending' && existing.student_status !== 'null' && existing.student_status !== 'undefined'
+                                    ? existing.student_status
+                                    : ''
+                                const finalStatus = ['present', 'absent', 'sick', 'late'].includes(studentSt) ? studentSt : 'present'
+                                const rawHours = parseFloat(existing?.student_hours)
+                                const finalHours = (finalStatus === 'present' || finalStatus === 'late')
+                                    ? (rawHours > 0 ? rawHours : 8)
+                                    : 0
+
+                                upserts.push({
+                                    student_id: student.id,
+                                    date: dateStr,
+                                    employer_id: company.id,
+                                    status: finalStatus,
+                                    minutes_late: existing?.minutes_late || 0,
+                                    student_hours: finalHours,
+                                    notes: existing?.notes || null
+                                })
+                                approvedDetails.push(`${student.name} (${dayCode})`)
+                            }
+                        }
+                    }
+
+                    if (upserts.length > 0) {
+                        const { error: upsertErr } = await supabaseAdmin
+                            .from('Attendance')
+                            .upsert(upserts, { onConflict: 'student_id,date' })
+                        if (!upsertErr) {
+                            approvedCount = upserts.length
+                        }
+                    }
+                }
+            }
+
+            return new Response(
+                JSON.stringify({
+                    success: true,
+                    company: {
+                        id: company.id,
+                        company_name: company.company_name,
+                        email: cleanEmail
+                    },
+                    email: cleanEmail,
+                    token_hash: tokenHash,
+                    autoApproved: Boolean(autoApproveWeek),
+                    approvedCount,
+                    approvedDetails,
+                    weekMonday: targetMonday
+                }),
+                { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
+            )
+        }
+
+        // ============================================================================
+        // ACTIE 3: Vrijdagmiddag Herinneringsmail (ALLEEN naar bedrijven die deze week nog niets hebben ingevuld)
+        // ============================================================================
+        if (action === 'send-weekly-unfilled-reminders') {
+            const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY')
+            const dryRun = Boolean(body.dryRun)
+            if (!dryRun && !RESEND_API_KEY) {
+                throw new Error('RESEND_API_KEY is niet ingesteld')
+            }
+
+            const mondayStr = getMondayDateStr(body.weekMonday)
+            const weekDates = getWeekDatesFromMonday(mondayStr)
+            const dayCodes = ['Ma', 'Di', 'Wo', 'Do', 'Vr']
+            const dayLabelsFull = ['Maandag', 'Dinsdag', 'Woensdag', 'Donderdag', 'Vrijdag']
+
+            const { data: allStudents } = await supabaseAdmin.from('Students').select('*')
+            const { data: allCompanies } = await supabaseAdmin.from('Bedrijven').select('*')
+            const { data: weekAttendance } = await supabaseAdmin
+                .from('Attendance')
+                .select('*')
+                .in('date', weekDates)
+
+            const now = new Date()
+            const activeStudents = (allStudents || []).filter((s: any) => {
+                const emailLower = (s.email || '').toLowerCase()
+                if (emailLower === 'fake@leerling.nl' || (s.name || '').toLowerCase().includes('test leerling')) return false
+                const isUnenrolled =
+                    (s.unenrollment_date && new Date(s.unenrollment_date) <= now) ||
+                    (s.enrollment_end_date && new Date(s.enrollment_end_date) <= now) ||
+                    (s.stage_end_date && new Date(s.stage_end_date) <= now) ||
+                    (s.end_date && new Date(s.end_date) <= now)
+                return !isUnenrolled
+            })
+
+            const attMap = new Map<string, any>()
+            ;(weekAttendance || []).forEach((r: any) => {
+                attMap.set(`${r.student_id}_${r.date}`, r)
+            })
+
+            const portalUrl = (body.portalUrl || defaultPortalBase).split('?')[0]
+            const schoolTitle = body.schoolName || defaultSchoolName
+
+            const statusLabelsNl: Record<string, string> = {
+                present: '✅ Aanwezig',
+                absent: '❌ Afwezig',
+                sick: '🤒 Ziek',
+                late: '⏱️ Te laat'
+            }
+
+            const targetCompanies: any[] = []
+            const skippedAlreadyFilled: any[] = []
+
+            for (const comp of (allCompanies || [])) {
+                if (!comp.email) continue
+                const cleanEmail = comp.email.trim().toLowerCase()
+                if (cleanEmail === 'test@testbedrijf.nl' || cleanEmail === 'test@test.nl') continue
+                if (body.companyId && comp.id !== body.companyId) continue
+
+                const compStudents = activeStudents.filter((s: any) => isStudentAssignedToCompanyHelper(s, comp.id))
+                if (compStudents.length === 0) continue
+
+                let employerFilledCount = 0
+                let scheduledCount = 0
+                const studentSummaries: { studentName: string; studentClass: string; daysHtml: string[] }[] = []
+
+                for (const student of compStudents) {
+                    const daysHtml: string[] = []
+                    for (let i = 0; i < 5; i++) {
+                        const dayCode = dayCodes[i]
+                        const dateStr = weekDates[i]
+                        if (!isStudentScheduledForCompanyHelper(student, comp.id, dayCode)) continue
+
+                        scheduledCount++
+                        const rec = attMap.get(`${student.id}_${dateStr}`)
+                        const empStatus = rec?.status && rec.status !== 'pending' && rec.status !== 'null' && rec.status !== 'undefined'
+                            ? rec.status
+                            : ''
+                        const stuStatus = rec?.student_status && rec.student_status !== 'pending' && rec.student_status !== 'null' && rec.student_status !== 'undefined'
+                            ? rec.student_status
+                            : ''
+                        const stuHours = parseFloat(rec?.student_hours) || 0
+
+                        const dtFormatted = new Date(dateStr + 'T12:00:00Z').toLocaleDateString('nl-NL', { day: 'numeric', month: 'short' })
+
+                        if (empStatus) {
+                            employerFilledCount++
+                        } else if (stuStatus) {
+                            const label = statusLabelsNl[stuStatus] || stuStatus
+                            const hoursTxt = stuHours > 0 ? ` (${stuHours} uur)` : ''
+                            daysHtml.push(`<li><strong>${dayLabelsFull[i]} ${dtFormatted}:</strong> ${label}${hoursTxt} <span style="color:#d97706;font-size:12px;">(ingevuld door stagiair)</span></li>`)
+                        } else {
+                            daysHtml.push(`<li><strong>${dayLabelsFull[i]} ${dtFormatted}:</strong> Geplande stagedag <span style="color:#64748b;font-size:12px;">(standaard: Aanwezig, 8 uur)</span></li>`)
+                        }
+                    }
+
+                    if (daysHtml.length > 0) {
+                        studentSummaries.push({
+                            studentName: student.name,
+                            studentClass: student.class || '',
+                            daysHtml
+                        })
+                    }
+                }
+
+                if (scheduledCount === 0) continue
+
+                // ALLEEN versturen naar bedrijven die deze week nog NIETS hebben ingevuld!
+                if (employerFilledCount > 0) {
+                    skippedAlreadyFilled.push({
+                        id: comp.id,
+                        company_name: comp.company_name,
+                        email: cleanEmail,
+                        employerFilledCount,
+                        scheduledCount
+                    })
+                    continue
+                }
+
+                targetCompanies.push({
+                    company: comp,
+                    email: cleanEmail,
+                    scheduledCount,
+                    studentSummaries
+                })
+            }
+
+            if (dryRun) {
+                return new Response(
+                    JSON.stringify({
+                        success: true,
+                        dryRun: true,
+                        weekMonday: mondayStr,
+                        toSendCount: targetCompanies.length,
+                        alreadyFilledCount: skippedAlreadyFilled.length,
+                        companiesToSend: targetCompanies.map(t => ({
+                            id: t.company.id,
+                            company_name: t.company.company_name,
+                            email: t.email,
+                            students: t.studentSummaries.map((s: any) => s.studentName)
+                        })),
+                        alreadyFilledCompanies: skippedAlreadyFilled
+                    }),
+                    { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
+                )
+            }
+
+            const sendResults: any[] = []
+            for (const item of targetCompanies) {
+                const { company, email: cleanEmail, studentSummaries } = item
+                const etoken = await signEmployerToken({ cid: company.id, email: cleanEmail }, SERVICE_KEY)
+                const approveOneClickLink = `${portalUrl}?etoken=${encodeURIComponent(etoken)}&autoApproveWeek=${mondayStr}`
+                const openPortalLink = `${portalUrl}?etoken=${encodeURIComponent(etoken)}`
+                const recipientName = company.contact_person || company.company_name || 'stagebegeleider / werkgever'
+
+                const studentsBlocksHtml = studentSummaries.map((st: any) => `
+                    <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px 16px; margin-bottom: 12px;">
+                        <div style="font-weight: bold; color: #0f172a; font-size: 15px; margin-bottom: 6px;">
+                            👤 ${st.studentName} ${st.studentClass ? `<span style="color:#2563eb;font-size:12px;">(${st.studentClass})</span>` : ''}
+                        </div>
+                        <ul style="margin: 0; padding-left: 18px; color: #334155; font-size: 13.5px; line-height: 1.7;">
+                            ${st.daysHtml.join('')}
+                        </ul>
+                    </div>
+                `).join('')
+
+                const htmlContent = `
+                    <div style="font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 24px; border: 1px solid #e2e8f0; border-radius: 14px; background: #ffffff;">
+                        <div style="text-align: center; margin-bottom: 18px;">
+                            <h2 style="color: #1e293b; margin: 0;">StageConnectie</h2>
+                            <p style="color: #64748b; font-size: 14px; margin-top: 4px;">${schoolTitle} • Weekoverzicht</p>
+                        </div>
+
+                        <h3 style="color: #1e293b; margin-top: 0;">Beste ${recipientName},</h3>
+                        <p style="color: #334155; line-height: 1.6;">
+                            Voor <strong>${company.company_name}</strong> staat de aanwezigheid van deze week nog open. U kunt deze week hieronder <strong>met 1 klik direct goedkeuren</strong> (zonder wachtwoord):
+                        </p>
+
+                        ${studentsBlocksHtml}
+
+                        <div style="text-align: center; margin: 26px 0 16px 0;">
+                            <a href="${approveOneClickLink}" style="display: inline-block; background: #16a34a; color: #ffffff; padding: 16px 28px; border-radius: 10px; text-decoration: none; font-weight: bold; font-size: 16px; box-shadow: 0 4px 6px rgba(22, 163, 74, 0.25);">
+                                ✅ Keur deze week met 1 klik goed
+                            </a>
+                        </div>
+
+                        <div style="text-align: center; margin-bottom: 24px;">
+                            <a href="${openPortalLink}" style="display: inline-block; background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; padding: 12px 22px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 14px;">
+                                ✏️ Was de stagiair ziek, te laat of afwezig? Pas aan in portaal
+                            </a>
+                        </div>
+
+                        <p style="font-size: 12.5px; color: #64748b; text-align: center; line-height: 1.5;">
+                            🔒 <em>Geen wachtwoord nodig: bovenstaande knoppen loggen u veilig en direct in voor <strong>${company.company_name}</strong>.</em>
+                        </p>
+
+                        <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 22px 0;">
+                        <p style="font-size: 13px; color: #64748b; margin-bottom: 0;">
+                            Hartelijk dank voor het begeleiden van onze stagiair(s)!<br>
+                            <strong>het stageteam van ${schoolTitle}</strong>
+                        </p>
+                    </div>
+                `
+
+                try {
+                    const sendRes = await fetch('https://api.resend.com/emails', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${RESEND_API_KEY}`
+                        },
+                        body: JSON.stringify({
+                            from: 'StageConnectie <no-reply@stageconnectie.nl>',
+                            to: cleanEmail,
+                            subject: `Stage-uren deze week met 1 klik goedkeuren - ${company.company_name}`,
+                            html: htmlContent
+                        })
+                    })
+                    const sendData = await sendRes.json()
+                    sendResults.push({ company: company.company_name, email: cleanEmail, success: sendRes.ok, data: sendData })
+                } catch (err: any) {
+                    sendResults.push({ company: company.company_name, email: cleanEmail, success: false, error: err.message })
+                }
+            }
+
+            return new Response(
+                JSON.stringify({
+                    success: true,
+                    weekMonday: mondayStr,
+                    sentCount: sendResults.filter(r => r.success).length,
+                    alreadyFilledCount: skippedAlreadyFilled.length,
+                    results: sendResults
+                }),
+                { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
+            )
+        }
 
         if (action === 'send-broadcast-email') {
             const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY');
@@ -286,13 +920,23 @@ serve(async (req) => {
             }
             const { data: existing } = await existingQuery.maybeSingle();
 
-            let res;
-            if (existing) {
-                const updatePayload = { ...studentPayload };
-                delete updatePayload.id; // Preserve existing primary key ID to avoid breaking Attendance foreign keys
-                res = await supabaseAdmin.from('Students').update(updatePayload).eq('id', existing.id).select();
-            } else {
-                res = await supabaseAdmin.from('Students').insert([studentPayload]).select();
+            const runUpsert = async (payload: Record<string, any>) => {
+                if (existing) {
+                    const updatePayload = { ...payload };
+                    delete updatePayload.id; // Preserve existing primary key ID to avoid breaking Attendance foreign keys
+                    return await supabaseAdmin.from('Students').update(updatePayload).eq('id', existing.id).select();
+                } else {
+                    return await supabaseAdmin.from('Students').insert([payload]).select();
+                }
+            };
+
+            let res = await runUpsert(studentPayload);
+            if (res.error && res.error.message?.includes('column')) {
+                const fallbackPayload = { ...studentPayload };
+                delete fallbackPayload.stage_start_date;
+                delete fallbackPayload.stage_end_date;
+                delete fallbackPayload.company_assignments;
+                res = await runUpsert(fallbackPayload);
             }
 
             if (res.error) throw res.error;
@@ -498,38 +1142,44 @@ serve(async (req) => {
 
                 if (isInvite) {
                     if (role === 'employer') {
-                        subjectLine = 'Uitnodiging digitale aanwezigheidsregistratie - Groene Hart Pro College';
+                        const cleanEmpEmail = email.trim().toLowerCase();
+                        let compId = metadata?.company_id || '';
+                        if (!compId) {
+                            const { data: compRow } = await supabaseAdmin.from('Bedrijven').select('id').ilike('email', cleanEmpEmail).maybeSingle();
+                            compId = compRow?.id || '';
+                        }
+                        const etoken = await signEmployerToken({ cid: compId, email: cleanEmpEmail }, SERVICE_KEY);
+                        const portalBase = (loginUrl && loginUrl.includes('employer-portal.html'))
+                            ? loginUrl.split('?')[0]
+                            : defaultPortalBase;
+                        const passwordlessPortalLink = `${portalBase}?etoken=${encodeURIComponent(etoken)}`;
+
+                        subjectLine = `Uitnodiging digitale aanwezigheidsregistratie - ${defaultSchoolName}`;
                         htmlContent = `
                             <div style="font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 24px; border: 1px solid #e2e8f0; border-radius: 12px; background: #ffffff;">
                                 <h2 style="color: #1e293b; margin-top: 0;">Beste ${name || 'stagebegeleider / werkgever'},</h2>
-                                <p style="color: #334155; line-height: 1.6;">Wij nodigen u van harte uit voor de digitale aanwezigheidsregistratie van het <strong>Groene Hart Pro College</strong> via StageConnectie.</p>
-                                <p style="color: #334155; line-height: 1.6;">Met behulp van deze website (geschikt voor laptop, tablet en smartphone) kunt u met 2 à 3 klikken snel doorgeven of een stagiair wel of niet aanwezig is op een stagedag.</p>
+                                <p style="color: #334155; line-height: 1.6;">Wij nodigen u van harte uit voor de digitale aanwezigheidsregistratie van het <strong>${defaultSchoolName}</strong> via StageConnectie.</p>
+                                <p style="color: #334155; line-height: 1.6;">Met behulp van deze website (geschikt voor smartphone, tablet en computer) kunt u <strong>met 1 klik</strong> de stage-uren van uw stagiair(s) goedkeuren of aanpassen — <strong>zonder dat u een wachtwoord hoeft aan te maken of te onthouden</strong>.</p>
                                 
-                                <p style="color: #334155; line-height: 1.6; margin-top: 20px;">Klik op de onderstaande knop om uw account te activeren en uw eigen wachtwoord in te stellen:</p>
+                                <p style="color: #334155; line-height: 1.6; margin-top: 20px;">Klik op de onderstaande knop om direct uw Stagebedrijf Portaal te openen:</p>
                                 
                                 <div style="text-align: center; margin: 25px 0;">
-                                    <a href="${actionLink}" style="display: inline-block; background: #2563eb; color: white; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 15px;">Account Activeren & Wachtwoord Instellen</a>
+                                    <a href="${passwordlessPortalLink}" style="display: inline-block; background: #2563eb; color: white; padding: 15px 30px; border-radius: 10px; text-decoration: none; font-weight: bold; font-size: 16px;">🚀 Direct Bedrijfsportaal Openen (Geen wachtwoord nodig)</a>
                                 </div>
 
                                 <div style="background: #f8fafc; border-left: 4px solid #2563eb; padding: 15px; border-radius: 6px; margin: 20px 0;">
                                     <p style="margin: 0; font-size: 13px; color: #475569; line-height: 1.5;">
-                                        💡 <strong>Hulp of uitleg nodig?</strong><br>
-                                        Voor een korte uitleg over de registratie verwijzen wij u graag naar de <strong>Info-knop (📖)</strong> rechts bovenaan de pagina in het portaal. U kunt daarin eenvoudig zoeken op <em>StageConnectie</em>.<br><br>
-                                        ✉️ <strong>Problemen met inloggen of vragen?</strong><br>
-                                        Neem even contact op met de stagecoördinator Willemien Vesseur (<a href="mailto:wvs@youscope.nl" style="color: #2563eb; text-decoration: underline; font-weight: 500;">wvs@youscope.nl</a>).
+                                        💡 <strong>Geen wachtwoord meer nodig:</strong><br>
+                                        Na 1 klik bent u direct ingelogd en onthoudt uw apparaat uw sessie automatisch. Ook ontvangt u op vrijdagmiddag alleen een kort berichtje met een <strong>"1-Klik Goedkeuren"</strong> knop als de week nog niet is ingevuld.<br><br>
+                                        ✉️ <strong>Vragen?</strong><br>
+                                        Neem gerust contact op met de stagecoördinator Willemien Vesseur (<a href="mailto:wvs@youscope.nl" style="color: #2563eb; text-decoration: underline; font-weight: 500;">wvs@youscope.nl</a>).
                                     </p>
                                 </div>
-
-                                <p style="font-size: 13px; color: #64748b; margin-top: 20px;">
-                                    Uw portaal is bereikbaar via:<br>
-                                    <a href="${loginUrl || 'https://ghpc.stageconnectie.nl/employer-portal.html'}" style="color: #2563eb; font-weight: bold; text-decoration: underline;">${loginUrl || 'https://ghpc.stageconnectie.nl/employer-portal.html'}</a><br><br>
-                                    <em>Let op: Deze activatielink is beperkt geldig.</em>
-                                </p>
 
                                 <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 25px 0;">
                                 <p style="font-size: 14px; color: #64748b; margin-bottom: 0;">
                                     Met vriendelijke groet,<br>
-                                    <strong>het stageteam van Groene Hart Pro College</strong>
+                                    <strong>het stageteam van ${defaultSchoolName}</strong>
                                 </p>
                             </div>
                         `;

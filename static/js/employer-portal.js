@@ -11,6 +11,87 @@ let isSaving = false;
 
 async function init() {
     try {
+        // 1. Check of het bedrijf via een directe e-maillink (?etoken=...) binnenkomt
+        const urlParams = new URLSearchParams(window.location.search);
+        const etoken = urlParams.get('etoken');
+        const autoApproveWeek = urlParams.get('autoApproveWeek');
+
+        if (etoken) {
+            const compNameEl = document.getElementById('company-name');
+            if (compNameEl) compNameEl.textContent = autoApproveWeek ? 'Bezig met 1-klik goedkeuren...' : 'Automatisch inloggen...';
+
+            try {
+                const verifyRes = await fetch(`${SUPABASE_URL}/functions/v1/create-auth-account`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${SUPABASE_KEY}`
+                    },
+                    body: JSON.stringify({
+                        action: 'verify-employer-token',
+                        etoken: etoken,
+                        autoApproveWeek: autoApproveWeek || ''
+                    })
+                });
+                const verifyData = await verifyRes.json();
+                if (verifyRes.ok && verifyData.success && verifyData.company) {
+                    // Activeer direct de echte Supabase Auth sessie zonder wachtwoord
+                    if (verifyData.token_hash) {
+                        await supabaseClient.auth.verifyOtp({
+                            token_hash: verifyData.token_hash,
+                            type: 'magiclink'
+                        }).catch(e => console.warn('OTP session notice:', e));
+                    }
+
+                    localStorage.setItem('stageconnect_session', 'true');
+                    localStorage.setItem('user_email', verifyData.email);
+                    localStorage.setItem('company_id', verifyData.company.id);
+                    localStorage.setItem('company_name', verifyData.company.company_name);
+                    localStorage.setItem('remember_employer_email', verifyData.email);
+                    localStorage.removeItem('admin_preview_mode');
+                    sessionStorage.removeItem('demo_unlocked');
+
+                    // Als er een specifieke week is goedgekeurd, spring naar die week
+                    if (verifyData.weekMonday) {
+                        const targetMon = new Date(verifyData.weekMonday + 'T12:00:00');
+                        const currentMon = getMonday(new Date());
+                        const diffWeeks = Math.round((targetMon - currentMon) / (7 * 24 * 60 * 60 * 1000));
+                        if (!isNaN(diffWeeks) && diffWeeks <= 0 && diffWeeks >= -52) {
+                            currentWeekOffset = diffWeeks;
+                        }
+                    }
+
+                    if (verifyData.autoApproved) {
+                        const banner = document.getElementById('auto-approve-banner');
+                        if (banner) {
+                            const countTxt = verifyData.approvedCount > 0
+                                ? `(${verifyData.approvedCount} stagedag${verifyData.approvedCount === 1 ? '' : 'en'} direct bevestigd)`
+                                : '(alle geplande stagedagen van deze week staan op goedgekeurd)';
+                            banner.innerHTML = `
+                                <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                                    <div>
+                                        <div class="text-lg font-black text-green-900">🎉 Bedankt! Deze week is met 1 klik goedgekeurd en opgeslagen ${countTxt}.</div>
+                                        <div class="text-sm text-green-800 mt-0.5">U hoeft verder niets te doen. Wilt u toch nog een dag wijzigen (bijv. Ziek of Te laat)? Klik dan hieronder op de betreffende dag.</div>
+                                    </div>
+                                    <button onclick="document.getElementById('auto-approve-banner').classList.add('hidden')" class="px-3 py-1.5 bg-green-200 hover:bg-green-300 text-green-900 rounded-lg text-xs font-bold shrink-0">Sluiten</button>
+                                </div>
+                            `;
+                            banner.classList.remove('hidden');
+                        }
+                    }
+
+                    // Haal etoken uit de adresbalk zodat verversen netjes werkt
+                    window.history.replaceState({}, document.title, window.location.pathname);
+                } else {
+                    alert(verifyData?.error || 'Deze inloglink is verlopen. Vraag op de inlogpagina een nieuwe link aan.');
+                    window.location.href = 'login.html';
+                    return;
+                }
+            } catch (tokenErr) {
+                console.error('Error verifying employer token:', tokenErr);
+            }
+        }
+
         let userEmail = localStorage.getItem('user_email');
         let companyName = localStorage.getItem('company_name');
         let companyId = localStorage.getItem('company_id');
@@ -380,6 +461,7 @@ function renderGrid(existingAttendance) {
 
     if (students.length === 0) {
         container.innerHTML = '<div class="p-12 text-center text-gray-500">Geen stagiairs gevonden voor dit stagebedrijf.</div>';
+        updateApprovalButtonsState();
         return;
     }
 
@@ -388,8 +470,15 @@ function renderGrid(existingAttendance) {
         row.className = 'week-grid mb-1';
 
         const nameCell = document.createElement('div');
-        nameCell.className = 'week-cell student-name pl-6 bg-white rounded-xl shadow-sm border border-gray-200 justify-start';
-        nameCell.innerHTML = `<div><div class="text-gray-900 font-black text-sm uppercase tracking-wide">${student.name}</div><div class="text-xs text-blue-600 font-bold mt-0.5">${student.class || ''} ${student.student_number ? '• ' + student.student_number : ''}</div></div>`;
+        nameCell.className = 'week-cell student-name pl-5 pr-3 py-2 bg-white rounded-xl shadow-sm border border-gray-200 justify-start';
+        nameCell.dataset.studentRowId = student.id;
+        nameCell.innerHTML = `
+            <div class="w-full">
+                <div class="text-gray-900 font-black text-sm uppercase tracking-wide leading-tight">${student.name}</div>
+                <div class="text-xs text-blue-600 font-bold mt-0.5">${student.class || ''} ${student.student_number ? '• ' + student.student_number : ''}</div>
+                <div class="student-quick-approve-slot mt-1.5" data-slot-student-id="${student.id}"></div>
+            </div>
+        `;
         row.appendChild(nameCell);
 
         const dayMap = ['Ma', 'Di', 'Wo', 'Do', 'Vr'];
@@ -436,6 +525,61 @@ function renderGrid(existingAttendance) {
 
         container.appendChild(row);
     });
+
+    updateApprovalButtonsState();
+}
+
+function updateApprovalButtonsState() {
+    let totalUnapproved = 0;
+
+    students.forEach(student => {
+        const cells = document.querySelectorAll(`.week-cell[data-student-id="${student.id}"]`);
+        let unapproved = 0;
+        let hasStudentPending = 0;
+
+        cells.forEach(cell => {
+            const st = cell.dataset.status || '';
+            const stuSt = cell.dataset.studentStatus || '';
+            const stuHrs = parseFloat(cell.dataset.studentHours || 0);
+            if (!st) {
+                unapproved++;
+                totalUnapproved++;
+                if (stuSt || stuHrs > 0) hasStudentPending++;
+            }
+        });
+
+        const slot = document.querySelector(`.student-quick-approve-slot[data-slot-student-id="${student.id}"]`);
+        if (slot) {
+            if (unapproved > 0) {
+                const labelTxt = hasStudentPending > 0
+                    ? `✅ Keur invoer goed (${unapproved}d)`
+                    : `✅ Week Aanwezig (${unapproved}d)`;
+                slot.innerHTML = `
+                    <button type="button" onclick="approveStudentWeek('${student.id}')"
+                        class="px-2.5 py-1 bg-green-600 hover:bg-green-700 text-white text-[11px] font-bold rounded-lg shadow-sm transition flex items-center gap-1 cursor-pointer active:scale-95">
+                        <span>${labelTxt}</span>
+                    </button>
+                `;
+            } else if (cells.length > 0) {
+                slot.innerHTML = `<span class="inline-block text-[10px] font-bold text-green-700 bg-green-50 border border-green-200 px-2 py-0.5 rounded-md">✓ Week ingevuld</span>`;
+            } else {
+                slot.innerHTML = '';
+            }
+        }
+    });
+
+    const topApproveBtn = document.getElementById('approve-week-btn');
+    if (topApproveBtn) {
+        if (totalUnapproved > 0) {
+            topApproveBtn.disabled = false;
+            topApproveBtn.className = 'w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white font-bold py-3.5 px-6 rounded-xl shadow-md hover:shadow-lg transition transform hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-2 text-base cursor-pointer';
+            topApproveBtn.innerHTML = `<span>✅ Keur hele week met 1 klik goed (${totalUnapproved}d)</span>`;
+        } else {
+            topApproveBtn.disabled = false;
+            topApproveBtn.className = 'w-full sm:w-auto bg-green-50 text-green-800 border-2 border-green-300 font-bold py-3.5 px-6 rounded-xl flex items-center justify-center gap-2 text-base';
+            topApproveBtn.innerHTML = `<span>✅ Hele week is ingevuld</span>`;
+        }
+    }
 }
 
 function getStudentStatusLabel(st) {
@@ -614,15 +758,46 @@ function closeActions() {
     }, 300);
 }
 
+async function autoSaveCell(cell, customToastMsg) {
+    if (!cell || !currentCompany) return;
+    isSaving = true;
+    const status = cell.dataset.status || null;
+    const notes = cell.dataset.notes || null;
+    const payload = {
+        student_id: cell.dataset.studentId,
+        date: cell.dataset.date,
+        status: status,
+        employer_id: currentCompany.id,
+        minutes_late: status === 'late' ? parseInt(cell.dataset.minutes || 0) : 0,
+        student_hours: parseFloat(cell.dataset.studentHours || 0),
+        notes: notes
+    };
+
+    try {
+        const { error } = await supabaseClient.from('Attendance').upsert([payload], { onConflict: 'student_id,date' });
+        if (error) {
+            console.error('❌ Auto-save error:', error);
+            alert('Fout bij automatisch opslaan: ' + error.message);
+        } else {
+            showToast(customToastMsg || '✅ Direct opgeslagen!');
+        }
+    } finally {
+        updateApprovalButtonsState();
+        setTimeout(() => { isSaving = false; }, 1000);
+    }
+}
+
 function setStatus(status) {
     if (!activeCell) return;
-    const notes = activeCell.element.dataset.notes || '';
-    const studentStatus = activeCell.element.dataset.studentStatus || '';
+    const cellElem = activeCell.element;
+    const notes = cellElem.dataset.notes || '';
+    const studentStatus = cellElem.dataset.studentStatus || '';
     const hoursInput = document.getElementById('employer-hours-input');
-    const updatedHours = hoursInput ? (parseFloat(hoursInput.value) || 0) : (parseFloat(activeCell.element.dataset.studentHours) || 0);
+    const updatedHours = hoursInput ? (parseFloat(hoursInput.value) || 0) : (parseFloat(cellElem.dataset.studentHours) || 0);
     const finalHours = (status === 'present' || status === 'late') ? updatedHours : 0;
-    updateCellContent(activeCell.element, status, 0, studentStatus, finalHours, notes);
+    updateCellContent(cellElem, status, 0, studentStatus, finalHours, notes);
     closeActions();
+    autoSaveCell(cellElem, status ? '✅ Direct opgeslagen!' : '🗑️ Status gewist & opgeslagen');
 }
 
 let isCustomLate = false;
@@ -668,6 +843,7 @@ function validateMinuteInput() {
 
 function confirmLate() {
     if (!activeCell) return;
+    const cellElem = activeCell.element;
     
     let minutes;
     if (isCustomLate) {
@@ -679,15 +855,64 @@ function confirmLate() {
         if (minutes > 120) minutes = 120;
     }
     
-    const notes = activeCell.element.dataset.notes || '';
-    const studentStatus = activeCell.element.dataset.studentStatus || '';
+    const notes = cellElem.dataset.notes || '';
+    const studentStatus = cellElem.dataset.studentStatus || '';
     const hoursInput = document.getElementById('employer-hours-input');
-    const updatedHours = hoursInput ? (parseFloat(hoursInput.value) || 0) : (parseFloat(activeCell.element.dataset.studentHours) || 0);
-    updateCellContent(activeCell.element, 'late', minutes, studentStatus, updatedHours, notes);
+    const updatedHours = hoursInput ? (parseFloat(hoursInput.value) || 0) : (parseFloat(cellElem.dataset.studentHours) || 0);
+    updateCellContent(cellElem, 'late', minutes, studentStatus, updatedHours, notes);
     closeActions();
+    autoSaveCell(cellElem, '✅ Te laat geregistreerd & opgeslagen!');
 }
 
-async function saveWeek() {
+async function approveStudentWeek(studentId) {
+    const cells = document.querySelectorAll(`.week-cell[data-student-id="${studentId}"]`);
+    let count = 0;
+    cells.forEach(cell => {
+        const currentEmpStatus = cell.dataset.status || '';
+        if (!currentEmpStatus) {
+            const stuStatus = cell.dataset.studentStatus || '';
+            const finalStatus = ['present', 'absent', 'sick', 'late'].includes(stuStatus) ? stuStatus : 'present';
+            const rawHours = parseFloat(cell.dataset.studentHours || 0);
+            const finalHours = (finalStatus === 'present' || finalStatus === 'late') ? (rawHours > 0 ? rawHours : 8) : 0;
+            const mins = parseInt(cell.dataset.minutes || 0);
+            const notes = cell.dataset.notes || '';
+            updateCellContent(cell, finalStatus, mins, stuStatus, finalHours, notes);
+            count++;
+        }
+    });
+    if (count > 0) {
+        await saveWeek(`✅ ${count} stagedag${count === 1 ? '' : 'en'} met 1 klik goedgekeurd!`);
+    } else {
+        showToast('Alle dagen van deze stagiair zijn al goedgekeurd!');
+    }
+}
+window.approveStudentWeek = approveStudentWeek;
+
+async function approveEntireWeek() {
+    const cells = document.querySelectorAll('.week-cell[data-student-id]');
+    let count = 0;
+    cells.forEach(cell => {
+        const currentEmpStatus = cell.dataset.status || '';
+        if (!currentEmpStatus) {
+            const stuStatus = cell.dataset.studentStatus || '';
+            const finalStatus = ['present', 'absent', 'sick', 'late'].includes(stuStatus) ? stuStatus : 'present';
+            const rawHours = parseFloat(cell.dataset.studentHours || 0);
+            const finalHours = (finalStatus === 'present' || finalStatus === 'late') ? (rawHours > 0 ? rawHours : 8) : 0;
+            const mins = parseInt(cell.dataset.minutes || 0);
+            const notes = cell.dataset.notes || '';
+            updateCellContent(cell, finalStatus, mins, stuStatus, finalHours, notes);
+            count++;
+        }
+    });
+    if (count > 0) {
+        await saveWeek(`✅ Hele week (${count} dag${count === 1 ? '' : 'en'}) met 1 klik goedgekeurd!`);
+    } else {
+        showToast('Alle geplande stagedagen van deze week zijn al ingevuld!');
+    }
+}
+window.approveEntireWeek = approveEntireWeek;
+
+async function saveWeek(customMessage) {
     isSaving = true;
     const cells = document.querySelectorAll('.week-cell[data-student-id]');
     console.log('💾 Saving week - found cells:', cells.length);
@@ -724,7 +949,8 @@ async function saveWeek() {
     }
 
     console.log('✅ Attendance saved successfully!');
-    showToast();
+    updateApprovalButtonsState();
+    showToast(typeof customMessage === 'string' ? customMessage : 'Wijzigingen opgeslagen!');
 
     // Wait a bit before re-enabling realtime to avoid race condition
     setTimeout(() => {
@@ -733,11 +959,17 @@ async function saveWeek() {
     }, 1500);
 }
 
-function showToast() {
+function showToast(msg) {
     const toast = document.getElementById('toast');
+    const msgEl = document.getElementById('toast-message');
+    if (msgEl && typeof msg === 'string' && msg) {
+        msgEl.textContent = msg;
+    } else if (msgEl) {
+        msgEl.textContent = 'Wijzigingen opgeslagen!';
+    }
     toast.style.opacity = '1';
     toast.style.transform = 'translate(-50%, 0) scale(1)';
-    setTimeout(() => { toast.style.opacity = '0'; toast.style.transform = 'translate(-50%, 0) scale(0.9)'; }, 2000);
+    setTimeout(() => { toast.style.opacity = '0'; toast.style.transform = 'translate(-50%, 0) scale(0.9)'; }, 2200);
 }
 
 async function logout() {

@@ -50,7 +50,12 @@
                     <option value="">Alle Branches</option>
                 </select>
             </div>
-            <div class="flex gap-2">
+            <div class="flex flex-wrap gap-2">
+                <button id="weekly-reminder-btn" onclick="sendWeeklyUnfilledReminders()"
+                    class="bg-amber-50 text-amber-800 border border-amber-200 hover:bg-amber-100 px-4 py-2 rounded-lg transition font-medium flex items-center gap-2"
+                    title="Verstuur 1-klik goedkeuringsmail alleen naar bedrijven die deze week nog niets hebben ingevuld">
+                    📬 Vrijdag-mail (Niet-ingevuld)
+                </button>
                 <a href="admin-import.html"
                     class="bg-indigo-50 text-indigo-600 hover:bg-indigo-100 px-4 py-2 rounded-lg transition font-medium flex items-center gap-2">
                     📥 CSV Import

@@ -237,9 +237,9 @@ window.sendCompanyInvite = async function (company) {
                 email: company.email.trim().toLowerCase(),
                 password: '',
                 role: 'employer',
-                sendEmail: false,
+                sendEmail: true,
                 name: company.contact_person || company.company_name,
-                loginUrl: `${window.location.origin.includes('localhost') || window.location.origin.includes('127.0.0.1') ? 'https://ghpc.stageconnectie.nl' : window.location.origin}/reset-password.html`,
+                loginUrl: `${window.location.origin.includes('localhost') || window.location.origin.includes('127.0.0.1') ? 'https://ghpc.stageconnectie.nl' : window.location.origin}/employer-portal.html`,
                 metadata: {
                     company_name: company.company_name,
                     company_id: company.id
@@ -252,9 +252,104 @@ window.sendCompanyInvite = async function (company) {
             throw new Error(authResult?.error || 'Verzenden uitnodiging mislukt');
         }
 
-        alert(`✅ Uitnodigingsmail is succesvol verzonden naar ${company.email}!`);
+        alert(`✅ Uitnodigingsmail met directe inloglink (zonder wachtwoord) is succesvol verzonden naar ${company.email}!`);
     } catch (err) {
         alert('Fout bij verzenden van uitnodiging: ' + err.message);
+    }
+};
+
+// Verstuur de wekelijkse 1-klik goedkeuringsmail ALLEEN naar bedrijven die deze week nog niets hebben ingevuld
+window.sendWeeklyUnfilledReminders = async function () {
+    const btn = document.getElementById('weekly-reminder-btn');
+    const originalText = btn ? btn.innerHTML : '';
+    try {
+        if (btn) {
+            btn.disabled = true;
+            btn.innerHTML = '⏳ Controleren wie nog niets heeft ingevuld...';
+        }
+
+        const baseUrl = window.location.origin.includes('localhost') || window.location.origin.includes('127.0.0.1')
+            ? 'https://ghpc.stageconnectie.nl'
+            : window.location.origin;
+
+        const functionUrl = `${window.SUPABASE_URL}/functions/v1/create-auth-account`;
+        const previewRes = await fetch(functionUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${window.SUPABASE_KEY}`
+            },
+            body: JSON.stringify({
+                action: 'send-weekly-unfilled-reminders',
+                dryRun: true,
+                baseUrl
+            })
+        });
+
+        const preview = await previewRes.json();
+        if (!previewRes.ok || !preview.success) {
+            throw new Error(preview?.error || 'Kon overzicht niet ophalen.');
+        }
+
+        const unfilledCount = preview.toSendCount ?? preview.unfilledCount ?? 0;
+        const weekLabel = preview.weekMonday || preview.weekStart || 'deze week';
+
+        if (unfilledCount === 0) {
+            alert(
+                `🎉 Geweldig! Voor de week vanaf ${weekLabel} hebben alle ingeroosterde bedrijven hun uren al ingevuld (${preview.alreadyFilledCount} bedrijven).\n\nEr hoeft geen herinneringsmail verstuurd te worden.`
+            );
+            return;
+        }
+
+        const sampleList = (preview.companiesToSend || preview.companies || [])
+            .slice(0, 8)
+            .map(c => `• ${c.company_name} (${c.email})`)
+            .join('\n');
+        const moreText = unfilledCount > 8 ? `\n...en nog ${unfilledCount - 8} andere bedrijven.` : '';
+
+        const confirmed = confirm(
+            `📬 Vrijdag-herinnering (Week vanaf ${weekLabel})\n\n` +
+            `• Al ingevuld deze week (worden overgeslagen): ${preview.alreadyFilledCount} bedrijven\n` +
+            `• Nog NIETS ingevuld deze week: ${unfilledCount} bedrijven\n\n` +
+            `Bedrijven die de 1-klik goedkeuringsmail ontvangen:\n${sampleList}${moreText}\n\n` +
+            `Wil je nu de 1-klik goedkeuringsmail versturen naar deze ${unfilledCount} bedrijven?`
+        );
+
+        if (!confirmed) return;
+
+        if (btn) {
+            btn.innerHTML = `📨 Verzenden naar ${unfilledCount} bedrijven...`;
+        }
+
+        const sendRes = await fetch(functionUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${window.SUPABASE_KEY}`
+            },
+            body: JSON.stringify({
+                action: 'send-weekly-unfilled-reminders',
+                dryRun: false,
+                baseUrl
+            })
+        });
+
+        const sendResult = await sendRes.json();
+        if (!sendRes.ok || !sendResult.success) {
+            throw new Error(sendResult?.error || 'Verzenden mislukt');
+        }
+
+        alert(
+            `✅ Klaar! Er zijn ${sendResult.sentCount} herinneringsmails met 1-klik goedkeuring verzonden.\n` +
+            `(${sendResult.alreadyFilledCount} bedrijven hadden al ingevuld en zijn netjes overgeslagen.)`
+        );
+    } catch (err) {
+        alert('Fout bij wekelijkse herinnering: ' + err.message);
+    } finally {
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+        }
     }
 };
 
@@ -469,9 +564,9 @@ document.getElementById('company-form').addEventListener('submit', async (e) => 
                         email: email,
                         password: '',
                         role: 'employer',
-                        sendEmail: false,
+                        sendEmail: true,
                         name: contactPerson || companyName,
-                        loginUrl: `${window.location.origin.includes('localhost') || window.location.origin.includes('127.0.0.1') ? 'https://ghpc.stageconnectie.nl' : window.location.origin}/reset-password.html`,
+                        loginUrl: `${window.location.origin.includes('localhost') || window.location.origin.includes('127.0.0.1') ? 'https://ghpc.stageconnectie.nl' : window.location.origin}/employer-portal.html`,
                         metadata: {
                             company_name: companyName
                         }
