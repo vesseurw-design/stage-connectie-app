@@ -580,7 +580,8 @@ serve(async (req) => {
             const now = new Date()
             const activeStudents = (allStudents || []).filter((s: any) => {
                 const emailLower = (s.email || '').toLowerCase()
-                if (emailLower === 'fake@leerling.nl' || (s.name || '').toLowerCase().includes('test leerling')) return false
+                const nameLower = (s.name || '').toLowerCase()
+                if (emailLower === 'fake@leerling.nl' || nameLower.includes('test leerling') || nameLower.includes('ben voorbeeld')) return false
                 const isUnenrolled =
                     (s.unenrollment_date && new Date(s.unenrollment_date) <= now) ||
                     (s.enrollment_end_date && new Date(s.enrollment_end_date) <= now) ||
@@ -610,7 +611,7 @@ serve(async (req) => {
             for (const comp of (allCompanies || [])) {
                 if (!comp.email) continue
                 const cleanEmail = comp.email.trim().toLowerCase()
-                if (cleanEmail === 'test@testbedrijf.nl' || cleanEmail === 'test@test.nl') continue
+                if (cleanEmail === 'test@testbedrijf.nl' || cleanEmail === 'test@test.nl' || cleanEmail === 'test2@bedrijf.nl') continue
                 if (body.companyId && comp.id !== body.companyId) continue
 
                 const compStudents = activeStudents.filter((s: any) => isStudentAssignedToCompanyHelper(s, comp.id))
@@ -803,6 +804,267 @@ serve(async (req) => {
                     sentCount: sendResults.filter(r => r.success).length,
                     alreadyFilledCount: skippedAlreadyFilled.length,
                     results: sendResults
+                }),
+                { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
+            )
+        }
+
+        // ============================================================================
+        // ACTIE 4: Aankondigingsmail vernieuwde procedure naar alle actieve bedrijven
+        //          + ter info naar alle stagebegeleiders van Groene Hart Pro College
+        // ============================================================================
+        if (action === 'send-new-procedure-announcement') {
+            const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY')
+            const dryRun = Boolean(body.dryRun)
+            if (!dryRun && !RESEND_API_KEY) {
+                throw new Error('RESEND_API_KEY is niet ingesteld')
+            }
+
+            const portalUrl = 'https://ghpc.stageconnectie.nl/employer-portal.html'
+            const schoolTitle = 'Groene Hart Pro College'
+
+            const { data: allStudents } = await supabaseAdmin.from('Students').select('*')
+            const { data: allCompanies } = await supabaseAdmin.from('Bedrijven').select('*')
+            const { data: allSupervisors } = await supabaseAdmin.from('stagebegeleiders').select('*')
+
+            const now = new Date()
+            const activeStudents = (allStudents || []).filter((s: any) => {
+                const emailLower = (s.email || '').toLowerCase()
+                const nameLower = (s.name || '').toLowerCase()
+                if (emailLower === 'fake@leerling.nl' || nameLower.includes('test leerling') || nameLower.includes('ben voorbeeld')) return false
+                const isUnenrolled =
+                    (s.unenrollment_date && new Date(s.unenrollment_date) <= now) ||
+                    (s.enrollment_end_date && new Date(s.enrollment_end_date) <= now) ||
+                    (s.stage_end_date && new Date(s.stage_end_date) <= now) ||
+                    (s.end_date && new Date(s.end_date) <= now)
+                return !isUnenrolled
+            })
+
+            const activeCompanies = (allCompanies || []).filter((comp: any) => {
+                if (!comp.email) return false
+                const cleanEmail = comp.email.trim().toLowerCase()
+                if (cleanEmail === 'test@testbedrijf.nl' || cleanEmail === 'test@test.nl' || cleanEmail === 'test2@bedrijf.nl') return false
+                if (body.companyId && comp.id !== body.companyId) return false
+                return activeStudents.some((s: any) => isStudentAssignedToCompanyHelper(s, comp.id))
+            })
+
+            const supervisorsList = (allSupervisors || []).filter((sup: any) => {
+                if (!sup.email) return false
+                const cleanSup = sup.email.trim().toLowerCase()
+                return cleanSup && !cleanSup.includes('test@')
+            })
+
+            if (dryRun) {
+                return new Response(
+                    JSON.stringify({
+                        success: true,
+                        dryRun: true,
+                        companiesCount: activeCompanies.length,
+                        supervisorsCount: supervisorsList.length,
+                        companies: activeCompanies.map((c: any) => ({ id: c.id, company_name: c.company_name, email: c.email })),
+                        supervisors: supervisorsList.map((s: any) => ({ name: s.name, email: s.email }))
+                    }),
+                    { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
+                )
+            }
+
+            const companyResults: any[] = []
+            for (const company of activeCompanies) {
+                const cleanEmail = company.email.trim().toLowerCase()
+                const etoken = await signEmployerToken({ cid: company.id, email: cleanEmail }, SERVICE_KEY)
+                const openPortalLink = `${portalUrl}?etoken=${encodeURIComponent(etoken)}`
+                const recipientName = company.contact_person || company.company_name || 'werkgever / praktijkbegeleider'
+
+                const whatsappText = encodeURIComponent(
+                    `Hoi! Via deze link kun je op je telefoon direct (zonder wachtwoord) de stage-uren goedkeuren voor ${company.company_name} (${schoolTitle}):\n\n${openPortalLink}`
+                )
+                const whatsappShareUrl = `https://wa.me/?text=${whatsappText}`
+
+                const htmlContent = `
+                    <div style="font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 26px; border: 1px solid #e2e8f0; border-radius: 14px; background: #ffffff; color: #1e293b;">
+                        <div style="text-align: center; margin-bottom: 20px;">
+                            <h2 style="color: #1e293b; margin: 0;">StageConnectie</h2>
+                            <p style="color: #64748b; font-size: 14px; margin-top: 4px;">${schoolTitle}</p>
+                        </div>
+
+                        <h3 style="color: #1e293b; margin-top: 0;">Beste ${recipientName},</h3>
+
+                        <p style="color: #334155; line-height: 1.6;">
+                            Allereerst hartelijk dank dat u dit schooljaar een stagiair van onze school begeleidt bij <strong>${company.company_name}</strong>! Samen helpen we de leerling om werkervaring op te doen en te groeien.
+                        </p>
+
+                        <div style="background: #eff6ff; border-left: 4px solid #2563eb; padding: 14px 16px; border-radius: 8px; margin: 18px 0;">
+                            <p style="margin: 0; color: #1e3a8a; font-size: 14px; line-height: 1.55;">
+                                <strong>Waarom het bijhouden van de aanwezigheid zo belangrijk is voor de stagiair:</strong><br>
+                                Een kloppende aanwezigheidsregistratie helpt de leerling enorm. Zo kunnen we de leerling vanuit school goed begeleiden én tellen alle gewerkte stage-uren direct mee voor de schoolvoortgang en het behalen van het diploma.
+                            </p>
+                        </div>
+
+                        <p style="color: #334155; line-height: 1.6;">
+                            Om dit voor u als werkgever zo makkelijk mogelijk te maken, hebben we <strong>StageConnectie</strong> vernieuwd. Het kost nu nog maar een paar seconden per week:
+                        </p>
+
+                        <ul style="color: #334155; line-height: 1.7; padding-left: 20px; font-size: 14.5px;">
+                            <li style="margin-bottom: 8px;">🔓 <strong>Geen wachtwoord meer nodig:</strong> Via de groene knop hieronder opent u direct uw portaal. Uw telefoon of computer onthoudt uw toegang het hele schooljaar.</li>
+                            <li style="margin-bottom: 8px;">✅ <strong>Met 1 klik goedkeuren &amp; automatisch opslaan:</strong> U kunt in het portaal met 1 klik de hele week goedkeuren. Past u een dag aan (bijv. <em>Ziek</em> of <em>Te laat</em>)? Dan slaat het systeem dit direct automatisch op.</li>
+                            <li style="margin-bottom: 8px;">👥 <strong>Begeleiden één of meerdere collega's de stagiair op de werkvloer?</strong> Klik hieronder op de WhatsApp-knop (of gebruik de knop <em>"👥 Collega toegang"</em> in het portaal) om één of meerdere collega's direct toegang te geven op hun eigen telefoon.</li>
+                            <li style="margin-bottom: 8px;">📬 <strong>Handige vrijdagmiddag-herinnering:</strong> Is het een drukke week geweest en zijn de uren op vrijdagmiddag nog niet ingevuld? Dan ontvangt u (alleen in dat geval) op vrijdagmiddag een korte mail waarmee u de week <strong>direct vanuit de mail met 1 klik kunt goedkeuren</strong>.</li>
+                        </ul>
+
+                        <div style="text-align: center; margin: 28px 0 14px 0;">
+                            <a href="${openPortalLink}" style="display: inline-block; background: #16a34a; color: #ffffff; padding: 16px 28px; border-radius: 10px; text-decoration: none; font-weight: bold; font-size: 16px; box-shadow: 0 4px 6px rgba(22, 163, 74, 0.25);">
+                                🚀 Open direct het Stageportaal van ${company.company_name}
+                            </a>
+                        </div>
+
+                        <div style="text-align: center; margin-bottom: 24px;">
+                            <a href="${whatsappShareUrl}" style="display: inline-block; background: #25D366; color: #ffffff; padding: 13px 22px; border-radius: 10px; text-decoration: none; font-weight: bold; font-size: 14.5px; box-shadow: 0 3px 5px rgba(37, 211, 102, 0.22);">
+                                📲 Stuur toegang door naar collega('s) via WhatsApp
+                            </a>
+                        </div>
+
+                        <p style="color: #334155; line-height: 1.6;">
+                            Heeft u vragen? Neem gerust contact op met de stagebegeleider van school of stuur een bericht naar <a href="mailto:wvs@youscope.nl" style="color: #2563eb; font-weight: 600;">wvs@youscope.nl</a>.<br>
+                            Veel dank voor de fijne samenwerking en inzet voor onze leerling!
+                        </p>
+
+                        <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 22px 0;">
+                        <p style="font-size: 13.5px; color: #64748b; margin-bottom: 0; line-height: 1.5;">
+                            Met vriendelijke groet,<br>
+                            <strong style="color: #1e293b;">Willemien Vesseur</strong> (<a href="mailto:wvs@youscope.nl" style="color: #2563eb; text-decoration: none;">wvs@youscope.nl</a>)<br>
+                            Het stageteam van <strong>${schoolTitle}</strong>
+                        </p>
+                    </div>
+                `
+
+                const extraRecipients = String(company.extra_email || '')
+                    .split(/[,;\s]+/)
+                    .map((s: string) => s.trim().toLowerCase())
+                    .filter((s: string) => s && s !== cleanEmail)
+                const toList = [cleanEmail, ...extraRecipients]
+
+                try {
+                    const sendRes = await fetch('https://api.resend.com/emails', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${RESEND_API_KEY}`
+                        },
+                        body: JSON.stringify({
+                            from: 'StageConnectie <no-reply@stageconnectie.nl>',
+                            reply_to: 'wvs@youscope.nl',
+                            to: toList,
+                            subject: `Nog makkelijker stage-uren goedkeuren voor ${company.company_name} (geen wachtwoord meer nodig!)`,
+                            html: htmlContent
+                        })
+                    })
+                    companyResults.push({ company: company.company_name, email: toList.join(', '), success: sendRes.ok })
+                } catch (err: any) {
+                    companyResults.push({ company: company.company_name, email: toList.join(', '), success: false, error: err.message })
+                }
+            }
+
+            // Stuur ook een informatie-exemplaar naar alle stagebegeleiders van school
+            const supervisorResults: any[] = []
+            const supEmails = Array.from(new Set([
+                ...supervisorsList.map((s: any) => s.email.trim().toLowerCase()),
+                'wvs@youscope.nl'
+            ]))
+
+            for (const supEmail of supEmails) {
+                const supObj = supervisorsList.find((s: any) => s.email.trim().toLowerCase() === supEmail)
+                const supName = supObj?.name || 'collega'
+
+                const supHtml = `
+                    <div style="font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 26px; border: 1px solid #e2e8f0; border-radius: 14px; background: #ffffff; color: #1e293b;">
+                        <div style="background: #fef3c7; border: 1px solid #f59e0b; color: #92400e; padding: 12px 16px; border-radius: 10px; margin-bottom: 20px; font-size: 13.5px; line-height: 1.5;">
+                            ℹ️ <strong>Ter informatie voor de stagebegeleiders (Hoi ${supName}):</strong><br>
+                            Onderstaande e-mail is vanochtend verstuurd naar alle actieve stagebedrijven van het <strong>Groene Hart Pro College</strong>. Bedrijven hebben voortaan geen wachtwoord meer nodig en kunnen toegang ook via WhatsApp/QR met collega's op de werkvloer delen.
+                        </div>
+
+                        <div style="text-align: center; margin-bottom: 20px;">
+                            <h2 style="color: #1e293b; margin: 0;">StageConnectie</h2>
+                            <p style="color: #64748b; font-size: 14px; margin-top: 4px;">${schoolTitle}</p>
+                        </div>
+
+                        <h3 style="color: #1e293b; margin-top: 0;">Beste praktijkbegeleider / werkgever,</h3>
+
+                        <p style="color: #334155; line-height: 1.6;">
+                            Allereerst hartelijk dank dat u dit schooljaar een stagiair van onze school begeleidt! Samen helpen we de leerling om werkervaring op te doen en te groeien.
+                        </p>
+
+                        <div style="background: #eff6ff; border-left: 4px solid #2563eb; padding: 14px 16px; border-radius: 8px; margin: 18px 0;">
+                            <p style="margin: 0; color: #1e3a8a; font-size: 14px; line-height: 1.55;">
+                                <strong>Waarom het bijhouden van de aanwezigheid zo belangrijk is voor de stagiair:</strong><br>
+                                Een kloppende aanwezigheidsregistratie helpt de leerling enorm. Zo kunnen we de leerling vanuit school goed begeleiden én tellen alle gewerkte stage-uren direct mee voor de schoolvoortgang en het behalen van het diploma.
+                            </p>
+                        </div>
+
+                        <p style="color: #334155; line-height: 1.6;">
+                            Om dit voor u als werkgever zo makkelijk mogelijk te maken, hebben we <strong>StageConnectie</strong> vernieuwd. Het kost nu nog maar een paar seconden per week:
+                        </p>
+
+                        <ul style="color: #334155; line-height: 1.7; padding-left: 20px; font-size: 14.5px;">
+                            <li style="margin-bottom: 8px;">🔓 <strong>Geen wachtwoord meer nodig:</strong> Via de groene knop hieronder opent u direct uw portaal. Uw telefoon of computer onthoudt uw toegang het hele schooljaar.</li>
+                            <li style="margin-bottom: 8px;">✅ <strong>Met 1 klik goedkeuren &amp; automatisch opslaan:</strong> U kunt in het portaal met 1 klik de hele week goedkeuren. Past u een dag aan (bijv. <em>Ziek</em> of <em>Te laat</em>)? Dan slaat het systeem dit direct automatisch op.</li>
+                            <li style="margin-bottom: 8px;">👥 <strong>Begeleiden één of meerdere collega's de stagiair op de werkvloer?</strong> Klik hieronder op de WhatsApp-knop (of gebruik de knop <em>"👥 Collega toegang"</em> in het portaal) om één of meerdere collega's direct toegang te geven op hun eigen telefoon.</li>
+                            <li style="margin-bottom: 8px;">📬 <strong>Handige vrijdagmiddag-herinnering:</strong> Is het een drukke week geweest en zijn de uren op vrijdagmiddag nog niet ingevuld? Dan ontvangt u (alleen in dat geval) op vrijdagmiddag een korte mail waarmee u de week <strong>direct vanuit de mail met 1 klik kunt goedkeuren</strong>.</li>
+                        </ul>
+
+                        <div style="text-align: center; margin: 28px 0 14px 0;">
+                            <span style="display: inline-block; background: #16a34a; color: #ffffff; padding: 16px 28px; border-radius: 10px; font-weight: bold; font-size: 16px;">
+                                🚀 Open direct het Stageportaal van [Naam Stagebedrijf]
+                            </span>
+                        </div>
+
+                        <div style="text-align: center; margin-bottom: 24px;">
+                            <span style="display: inline-block; background: #25D366; color: #ffffff; padding: 13px 22px; border-radius: 10px; font-weight: bold; font-size: 14.5px;">
+                                📲 Stuur toegang door naar collega('s) via WhatsApp
+                            </span>
+                        </div>
+
+                        <p style="color: #334155; line-height: 1.6;">
+                            Heeft u vragen? Neem gerust contact op met de stagebegeleider van school of stuur een bericht naar <a href="mailto:wvs@youscope.nl" style="color: #2563eb; font-weight: 600;">wvs@youscope.nl</a>.<br>
+                            Veel dank voor de fijne samenwerking en inzet voor onze leerling!
+                        </p>
+
+                        <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 22px 0;">
+                        <p style="font-size: 13.5px; color: #64748b; margin-bottom: 0; line-height: 1.5;">
+                            Met vriendelijke groet,<br>
+                            <strong style="color: #1e293b;">Willemien Vesseur</strong> (<a href="mailto:wvs@youscope.nl" style="color: #2563eb; text-decoration: none;">wvs@youscope.nl</a>)<br>
+                            Het stageteam van <strong>${schoolTitle}</strong>
+                        </p>
+                    </div>
+                `
+
+                try {
+                    const sendRes = await fetch('https://api.resend.com/emails', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${RESEND_API_KEY}`
+                        },
+                        body: JSON.stringify({
+                            from: 'StageConnectie <no-reply@stageconnectie.nl>',
+                            reply_to: 'wvs@youscope.nl',
+                            to: supEmail,
+                            subject: `[Ter info voor stagebegeleiders] Vernieuwde procedure StageConnectie voor bedrijven`,
+                            html: supHtml
+                        })
+                    })
+                    supervisorResults.push({ email: supEmail, success: sendRes.ok })
+                } catch (err: any) {
+                    supervisorResults.push({ email: supEmail, success: false, error: err.message })
+                }
+            }
+
+            return new Response(
+                JSON.stringify({
+                    success: true,
+                    companiesSent: companyResults.filter(r => r.success).length,
+                    supervisorsSent: supervisorResults.filter(r => r.success).length,
+                    companyResults,
+                    supervisorResults
                 }),
                 { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
             )
