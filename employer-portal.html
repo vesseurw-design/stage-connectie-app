@@ -141,7 +141,12 @@
                 <h1 class="text-2xl font-black text-gray-900 tracking-tight">Stagebedrijf Portaal</h1>
                 <p class="text-sm text-blue-600 font-bold" id="company-name">Laden...</p>
             </div>
-            <div class="flex items-center gap-3">
+            <div class="flex flex-wrap items-center gap-2 sm:gap-3">
+                <button onclick="openColleagueModal()"
+                    class="px-3.5 py-2 text-sm font-bold bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border-2 border-emerald-200 rounded-xl transition shadow-sm flex items-center gap-1.5 active:scale-95"
+                    title="Geef een collega op de werkvloer direct toegang via WhatsApp, QR-code of e-mail">
+                    <span>👥 Collega toegang</span>
+                </button>
                 <button id="refresh-btn" onclick="refreshData()"
                     class="px-3.5 py-2 text-sm font-bold bg-blue-50 text-blue-600 hover:bg-blue-100 border-2 border-blue-100 rounded-xl transition shadow-sm flex items-center gap-1.5 active:scale-95">
                     <svg id="refresh-icon" class="w-4 h-4 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -384,11 +389,71 @@
         </div>
     </div>
 
+    <!-- Colleague Access Modal (WhatsApp / QR / Extra E-mail) -->
+    <div id="colleague-access-modal" class="fixed inset-0 bg-gray-900/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4" onclick="if(event.target===this) closeColleagueModal()">
+        <div class="bg-white rounded-3xl shadow-2xl max-w-lg w-full p-6 md:p-8 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-start mb-4">
+                <div>
+                    <h3 class="text-xl font-black text-gray-900">👥 Collega op de werkvloer toegang geven</h3>
+                    <p class="text-xs text-gray-500 mt-1">Begeleidt een collega de stagiair? Geef in 1 klik toegang zonder wachtwoord.</p>
+                </div>
+                <button onclick="closeColleagueModal()" class="text-gray-400 hover:text-gray-700 text-2xl font-bold leading-none px-2">&times;</button>
+            </div>
+
+            <!-- Manier 1: Directe link via WhatsApp of QR-code -->
+            <div class="bg-emerald-50 border-2 border-emerald-200 rounded-2xl p-4 mb-5">
+                <div class="font-extrabold text-emerald-900 text-sm mb-1">📲 Optie 1: Direct delen via WhatsApp of QR-code</div>
+                <p class="text-xs text-emerald-800 mb-3">
+                    Uw collega klikt 1 keer op de link op zijn/haar telefoon en blijft het <strong>hele schooljaar automatisch ingelogd</strong> (zonder toegang tot uw mailbox nodig te hebben).
+                </p>
+                <div class="flex flex-col sm:flex-row gap-2 mb-3">
+                    <a id="colleague-whatsapp-btn" href="#" target="_blank"
+                        class="flex-1 bg-[#25D366] hover:bg-[#1ebe5d] text-white font-bold py-3 px-4 rounded-xl text-center text-sm shadow-sm transition flex items-center justify-center gap-2">
+                        <span>📲 Stuur via WhatsApp</span>
+                    </a>
+                    <button type="button" onclick="copyColleagueShareLink()"
+                        class="bg-white hover:bg-emerald-100 text-emerald-800 border border-emerald-300 font-bold py-3 px-4 rounded-xl text-sm transition flex items-center justify-center gap-1.5">
+                        <span id="copy-colleague-link-label">📋 Kopieer link</span>
+                    </button>
+                </div>
+                <div class="bg-white rounded-xl p-3 border border-emerald-100 flex items-center gap-3">
+                    <img id="colleague-qr-img" src="" alt="QR Code" class="w-20 h-20 rounded-lg border border-gray-200 shrink-0 bg-gray-50" />
+                    <div class="text-xs text-gray-600 leading-relaxed">
+                        <strong>Staat uw collega naast u?</strong><br>
+                        Laat uw collega deze QR-code scannen met de telefooncamera. Het portaal opent direct!
+                    </div>
+                </div>
+            </div>
+
+            <!-- Manier 2: Eigen e-mailadres van collega op de werkvloer -->
+            <div class="bg-blue-50 border-2 border-blue-200 rounded-2xl p-4">
+                <div class="font-extrabold text-blue-900 text-sm mb-1">✉️ Optie 2: Eigen e-mailadres van collega toevoegen</div>
+                <p class="text-xs text-blue-800 mb-3">
+                    Vul het e-mailadres van uw collega in. Uw collega kan dan met zijn/haar <strong>eigen e-mailadres</strong> inloggen én ontvangt op vrijdag de 1-klik goedkeuringsmail.
+                </p>
+                <div class="flex flex-col sm:flex-row gap-2">
+                    <input type="email" id="colleague-extra-email" placeholder="bijv. collega@bedrijf.nl"
+                        class="flex-1 px-3.5 py-2.5 rounded-xl border border-blue-300 bg-white text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                    <button type="button" id="save-colleague-email-btn" onclick="saveColleagueEmail()"
+                        class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-4 rounded-xl text-sm shadow-sm transition whitespace-nowrap">
+                        Opslaan &amp; Stuur link
+                    </button>
+                </div>
+                <p id="colleague-email-feedback" class="hidden text-xs font-bold text-green-700 mt-2"></p>
+            </div>
+
+            <button type="button" onclick="closeColleagueModal()"
+                class="w-full mt-5 py-2.5 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold text-sm transition">
+                Sluiten
+            </button>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="./static/js/config.js"></script>
     <script src="./static/js/company-helper.js?v=20260916_1"></script>
     <script src="./static/js/terms-acceptance.js"></script>
-    <script src="./static/js/employer-portal.js?v=20261024_1"></script>
+    <script src="./static/js/employer-portal.js?v=20261024_2"></script>
     <script src="./static/js/info-modal-demo.js"></script>
     <style>
         .animate-slide-up {

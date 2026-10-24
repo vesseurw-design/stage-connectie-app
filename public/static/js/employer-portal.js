@@ -1036,4 +1036,126 @@ async function refreshData() {
     }
 }
 
+let currentColleagueShareLink = '';
+
+async function openColleagueModal() {
+    const modal = document.getElementById('colleague-access-modal');
+    if (!modal) return;
+    modal.classList.remove('hidden');
+
+    const feedback = document.getElementById('colleague-email-feedback');
+    if (feedback) feedback.classList.add('hidden');
+
+    if (!currentCompany || !currentCompany.id) return;
+
+    try {
+        const portalUrl = `${window.location.origin}${window.location.pathname}`;
+        const res = await fetch(`${window.SUPABASE_URL}/functions/v1/create-auth-account`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${window.SUPABASE_KEY}`
+            },
+            body: JSON.stringify({
+                action: 'get-colleague-access',
+                companyId: currentCompany.id,
+                portalUrl
+            })
+        });
+        const data = await res.json();
+        if (data && data.success && data.shareLink) {
+            currentColleagueShareLink = data.shareLink;
+            const waBtn = document.getElementById('colleague-whatsapp-btn');
+            if (waBtn) {
+                const waText = encodeURIComponent(
+                    `Hoi! Via deze link kun je op je telefoon direct (zonder wachtwoord) de stage-uren goedkeuren voor ${currentCompany.company_name}:\n\n${currentColleagueShareLink}`
+                );
+                waBtn.href = `https://wa.me/?text=${waText}`;
+            }
+            const qrImg = document.getElementById('colleague-qr-img');
+            if (qrImg) {
+                qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(currentColleagueShareLink)}`;
+            }
+            const extraInput = document.getElementById('colleague-extra-email');
+            if (extraInput) {
+                extraInput.value = data.extraEmail || '';
+            }
+        }
+    } catch (e) {
+        console.warn('Could not load colleague share link:', e);
+    }
+}
+window.openColleagueModal = openColleagueModal;
+
+function closeColleagueModal() {
+    const modal = document.getElementById('colleague-access-modal');
+    if (modal) modal.classList.add('hidden');
+}
+window.closeColleagueModal = closeColleagueModal;
+
+async function copyColleagueShareLink() {
+    if (!currentColleagueShareLink) return;
+    try {
+        await navigator.clipboard.writeText(currentColleagueShareLink);
+        const label = document.getElementById('copy-colleague-link-label');
+        if (label) {
+            label.textContent = '✅ Link gekopieerd!';
+            setTimeout(() => { label.textContent = '📋 Kopieer link'; }, 2500);
+        }
+        showToast('✅ Directe inloglink voor collega gekopieerd!');
+    } catch (e) {
+        prompt('Kopieer deze link voor uw collega:', currentColleagueShareLink);
+    }
+}
+window.copyColleagueShareLink = copyColleagueShareLink;
+
+async function saveColleagueEmail() {
+    if (!currentCompany || !currentCompany.id) return;
+    const extraInput = document.getElementById('colleague-extra-email');
+    const saveBtn = document.getElementById('save-colleague-email-btn');
+    const feedback = document.getElementById('colleague-email-feedback');
+    const extraEmail = extraInput ? extraInput.value.trim().toLowerCase() : '';
+
+    if (saveBtn) {
+        saveBtn.disabled = true;
+        saveBtn.textContent = 'Bezig...';
+    }
+    try {
+        const portalUrl = `${window.location.origin}${window.location.pathname}`;
+        const res = await fetch(`${window.SUPABASE_URL}/functions/v1/create-auth-account`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${window.SUPABASE_KEY}`
+            },
+            body: JSON.stringify({
+                action: 'save-colleague-email',
+                companyId: currentCompany.id,
+                extraEmail,
+                portalUrl,
+                sendInvite: Boolean(extraEmail)
+            })
+        });
+        const data = await res.json();
+        if (!res.ok || !data.success) {
+            throw new Error(data?.error || 'Opslaan mislukt');
+        }
+        if (feedback) {
+            feedback.textContent = extraEmail
+                ? `✅ Opgeslagen! Er is direct een toegangslink gestuurd naar ${extraEmail}.`
+                : '✅ Extra e-mailadres verwijderd.';
+            feedback.classList.remove('hidden');
+        }
+        showToast(extraEmail ? '✅ Collega e-mail opgeslagen & link verstuurd!' : '✅ Opgeslagen!');
+    } catch (e) {
+        alert('Fout bij opslaan collega e-mail: ' + e.message);
+    } finally {
+        if (saveBtn) {
+            saveBtn.disabled = false;
+            saveBtn.textContent = 'Opslaan & Stuur link';
+        }
+    }
+}
+window.saveColleagueEmail = saveColleagueEmail;
+
 init();

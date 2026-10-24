@@ -28,7 +28,7 @@ async function signEmployerToken(payload: { cid: string; email: string; exp?: nu
     const dataObj = {
         cid: payload.cid,
         email: payload.email.trim().toLowerCase(),
-        exp: payload.exp || (Date.now() + 45 * 24 * 60 * 60 * 1000) // 45 dagen geldig
+        exp: payload.exp || (Date.now() + 365 * 24 * 60 * 60 * 1000) // 365 dagen (heel schooljaar) geldig
     }
     const encoder = new TextEncoder()
     const payloadB64 = toBase64Url(encoder.encode(JSON.stringify(dataObj)))
@@ -200,35 +200,49 @@ serve(async (req) => {
             : 'Groene Hart Pro College'
 
         // ============================================================================
-        // ACTIE 1: Wachtwoordloos inloggen vanaf login.html (Magic Link voor bedrijven)
+        // ACTIE 1: Wachtwoordloos inloggen vanaf login.html (voor werkgever én collega op werkvloer)
         // ============================================================================
         if (action === 'request-employer-magic-link') {
             if (!email) throw new Error('Vul een geldig e-mailadres in.')
             const cleanEmail = email.trim().toLowerCase()
 
-            const { data: companies } = await supabaseAdmin
+            const { data: allCompanies } = await supabaseAdmin
                 .from('Bedrijven')
                 .select('*')
-                .ilike('email', cleanEmail)
 
-            const company = companies?.[0]
+            const company = (allCompanies || []).find((c: any) => {
+                const primary = (c.email || '').trim().toLowerCase()
+                if (primary === cleanEmail) return true
+                const extras = String(c.extra_email || '')
+                    .split(/[,;\s]+/)
+                    .map(s => s.trim().toLowerCase())
+                    .filter(Boolean)
+                return extras.includes(cleanEmail)
+            })
+
             if (!company) {
                 return new Response(
                     JSON.stringify({
                         success: false,
-                        error: 'Dit e-mailadres is niet gevonden als geregistreerd stagebedrijf. Controleer het e-mailadres of neem contact op met de stagecoördinator.'
+                        error: 'Dit e-mailadres is niet gevonden als geregistreerd stagebedrijf of begeleider op de werkvloer. Controleer het e-mailadres of neem contact op met de stagecoördinator.'
                     }),
                     { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
                 )
             }
 
-            // Zorg dat auth user klaarstaat
-            await ensureEmployerAuthAndMagicHash(supabaseAdmin, cleanEmail, company)
+            const primaryCompanyEmail = (company.email || cleanEmail).trim().toLowerCase()
+            // Zorg dat auth user klaarstaat voor het bedrijf
+            await ensureEmployerAuthAndMagicHash(supabaseAdmin, primaryCompanyEmail, company)
 
-            const etoken = await signEmployerToken({ cid: company.id, email: cleanEmail }, SERVICE_KEY)
+            const etoken = await signEmployerToken({ cid: company.id, email: primaryCompanyEmail }, SERVICE_KEY)
             const portalUrl = (body.portalUrl || defaultPortalBase).split('?')[0]
             const directLoginLink = `${portalUrl}?etoken=${encodeURIComponent(etoken)}`
             const schoolTitle = body.schoolName || defaultSchoolName
+
+            const whatsappText = encodeURIComponent(
+                `Hoi! Via deze link kun je direct (zonder wachtwoord) de stage-uren goedkeuren voor ${company.company_name} (${schoolTitle}):\n\n${directLoginLink}`
+            )
+            const whatsappShareUrl = `https://wa.me/?text=${whatsappText}`
 
             const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY')
             if (!RESEND_API_KEY) throw new Error('E-mailservice (RESEND_API_KEY) is niet geconfigureerd.')
@@ -242,17 +256,21 @@ serve(async (req) => {
                     </div>
                     <h3 style="color: #1e293b; margin-top: 0;">Beste ${recipientName},</h3>
                     <p style="color: #334155; line-height: 1.6;">
-                        Klik op de onderstaande knop om direct (zonder wachtwoord) in te loggen op het Stagebedrijf Portaal voor <strong>${company.company_name}</strong>:
+                        Klik op de onderstaande knop om direct (zonder wachtwoord) in te loggen voor <strong>${company.company_name}</strong>:
                     </p>
                     <div style="text-align: center; margin: 28px 0;">
-                        <a href="${directLoginLink}" style="display: inline-block; background: #2563eb; color: #ffffff; padding: 16px 32px; border-radius: 10px; text-decoration: none; font-weight: bold; font-size: 16px; box-shadow: 0 4px 6px rgba(37, 99, 235, 0.2);">
-                            🚀 Direct Inloggen (Geen wachtwoord nodig)
+                        <a href="${directLoginLink}" style="display: inline-block; background: #16a34a; color: #ffffff; padding: 16px 32px; border-radius: 10px; text-decoration: none; font-weight: bold; font-size: 16px; box-shadow: 0 4px 6px rgba(22, 163, 74, 0.25);">
+                            ✅ Open Stageportaal (1 klik)
                         </a>
                     </div>
-                    <div style="background: #f0fdf4; border-left: 4px solid #16a34a; padding: 14px; border-radius: 8px; margin: 20px 0;">
-                        <p style="margin: 0; font-size: 13px; color: #166534; line-height: 1.5;">
-                            ✅ <strong>Handig:</strong> Na 1 klik bent u direct ingelogd en onthoudt uw telefoon of computer uw sessie automatisch. U hoeft geen wachtwoord meer te onthouden.
+                    <div style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 14px 16px; border-radius: 10px; margin: 20px 0; text-align: center;">
+                        <p style="margin: 0 0 10px 0; font-size: 13.5px; color: #334155;">
+                            👥 <strong>Begeleidt een collega op de werkvloer de stagiair?</strong><br>
+                            Stuur deze inloglink met 1 klik door via WhatsApp (werkt het hele schooljaar op de telefoon van uw collega):
                         </p>
+                        <a href="${whatsappShareUrl}" style="display: inline-block; background: #25D366; color: #ffffff; padding: 10px 18px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 13.5px;">
+                            📲 Deel via WhatsApp met collega
+                        </a>
                     </div>
                     <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 24px 0;">
                     <p style="font-size: 13px; color: #64748b; margin-bottom: 0;">
@@ -291,7 +309,116 @@ serve(async (req) => {
         }
 
         // ============================================================================
-        // ACTIE 2: Verifieer etoken vanuit e-mail + optioneel 1-klik week goedkeuren
+        // ACTIE 1B: Haal deelbare collega-inloglink (365 dagen) & extra_email op
+        // ============================================================================
+        if (action === 'get-colleague-access') {
+            const { companyId, portalUrl: reqPortalUrl } = body
+            if (!companyId) throw new Error('companyId ontbreekt')
+
+            const { data: company } = await supabaseAdmin
+                .from('Bedrijven')
+                .select('*')
+                .eq('id', companyId)
+                .maybeSingle()
+
+            if (!company) throw new Error('Stagebedrijf niet gevonden')
+
+            const cleanEmail = (company.email || '').trim().toLowerCase()
+            const etoken = await signEmployerToken({ cid: company.id, email: cleanEmail }, SERVICE_KEY)
+            const portalUrl = (reqPortalUrl || defaultPortalBase).split('?')[0]
+            const shareLink = `${portalUrl}?etoken=${encodeURIComponent(etoken)}`
+
+            return new Response(
+                JSON.stringify({
+                    success: true,
+                    shareLink,
+                    extraEmail: company.extra_email || '',
+                    companyName: company.company_name
+                }),
+                { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
+            )
+        }
+
+        // ============================================================================
+        // ACTIE 1C: Sla extra e-mailadres van collega op de werkvloer op (+ stuur direct link)
+        // ============================================================================
+        if (action === 'save-colleague-email') {
+            const { companyId, extraEmail, portalUrl: reqPortalUrl, sendInvite } = body
+            if (!companyId) throw new Error('companyId ontbreekt')
+
+            const cleanedExtra = (extraEmail || '').trim().toLowerCase()
+            const { data: company, error: updErr } = await supabaseAdmin
+                .from('Bedrijven')
+                .update({ extra_email: cleanedExtra || null })
+                .eq('id', companyId)
+                .select('*')
+                .maybeSingle()
+
+            if (updErr || !company) {
+                throw new Error(updErr?.message || 'Kon extra e-mailadres niet opslaan')
+            }
+
+            const primaryEmail = (company.email || cleanedExtra).trim().toLowerCase()
+            const etoken = await signEmployerToken({ cid: company.id, email: primaryEmail }, SERVICE_KEY)
+            const portalUrl = (reqPortalUrl || defaultPortalBase).split('?')[0]
+            const shareLink = `${portalUrl}?etoken=${encodeURIComponent(etoken)}`
+            const schoolTitle = body.schoolName || defaultSchoolName
+
+            let emailSent = false
+            const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY')
+            if (cleanedExtra && sendInvite !== false && RESEND_API_KEY) {
+                const extraList = cleanedExtra.split(/[,;\s]+/).map((s: string) => s.trim().toLowerCase()).filter(Boolean)
+                if (extraList.length > 0) {
+                    const htmlContent = `
+                        <div style="font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 24px; border: 1px solid #e2e8f0; border-radius: 14px; background: #ffffff;">
+                            <div style="text-align: center; margin-bottom: 18px;">
+                                <h2 style="color: #1e293b; margin: 0;">StageConnectie</h2>
+                                <p style="color: #64748b; font-size: 14px; margin-top: 4px;">${schoolTitle}</p>
+                            </div>
+                            <h3 style="color: #1e293b; margin-top: 0;">Directe toegang voor ${company.company_name}</h3>
+                            <p style="color: #334155; line-height: 1.6;">
+                                U bent toegevoegd als begeleider op de werkvloer voor <strong>${company.company_name}</strong>. Via onderstaande knop opent u direct het stageportaal op uw telefoon of computer (<strong>geen wachtwoord nodig</strong>):
+                            </p>
+                            <div style="text-align: center; margin: 26px 0;">
+                                <a href="${shareLink}" style="display: inline-block; background: #16a34a; color: #ffffff; padding: 16px 28px; border-radius: 10px; text-decoration: none; font-weight: bold; font-size: 16px;">
+                                    ✅ Open Stageportaal (1 klik)
+                                </a>
+                            </div>
+                            <p style="font-size: 13px; color: #64748b; text-align: center;">
+                                Tip: Uw telefoon of computer onthoudt uw toegang direct voor het hele schooljaar. U kunt ook altijd met uw eigen e-mailadres (${extraList[0]}) inloggen.
+                            </p>
+                        </div>
+                    `
+                    const mailRes = await fetch('https://api.resend.com/emails', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${RESEND_API_KEY}`
+                        },
+                        body: JSON.stringify({
+                            from: 'StageConnectie <no-reply@stageconnectie.nl>',
+                            to: extraList,
+                            subject: `Toegang StageConnectie (${company.company_name})`,
+                            html: htmlContent
+                        })
+                    })
+                    emailSent = mailRes.ok
+                }
+            }
+
+            return new Response(
+                JSON.stringify({
+                    success: true,
+                    extraEmail: company.extra_email || '',
+                    shareLink,
+                    emailSent
+                }),
+                { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
+            )
+        }
+
+        // ============================================================================
+        // ACTIE 2: Verifieer etoken vanuit e-mail/WhatsApp + optioneel 1-klik week goedkeuren
         // ============================================================================
         if (action === 'verify-employer-token') {
             const { etoken, autoApproveWeek } = body
@@ -413,10 +540,12 @@ serve(async (req) => {
                     company: {
                         id: company.id,
                         company_name: company.company_name,
-                        email: cleanEmail
+                        email: cleanEmail,
+                        extra_email: company.extra_email || ''
                     },
                     email: cleanEmail,
                     token_hash: tokenHash,
+                    share_etoken: etoken,
                     autoApproved: Boolean(autoApproveWeek),
                     approvedCount,
                     approvedDetails,
@@ -465,7 +594,7 @@ serve(async (req) => {
                 attMap.set(`${r.student_id}_${r.date}`, r)
             })
 
-            const portalUrl = (body.portalUrl || defaultPortalBase).split('?')[0]
+            const portalUrl = (body.portalUrl || (body.baseUrl ? `${body.baseUrl.replace(/\/$/, '')}/employer-portal.html` : defaultPortalBase)).split('?')[0]
             const schoolTitle = body.schoolName || defaultSchoolName
 
             const statusLabelsNl: Record<string, string> = {
@@ -564,6 +693,7 @@ serve(async (req) => {
                             id: t.company.id,
                             company_name: t.company.company_name,
                             email: t.email,
+                            extra_email: t.company.extra_email || '',
                             students: t.studentSummaries.map((s: any) => s.studentName)
                         })),
                         alreadyFilledCompanies: skippedAlreadyFilled
@@ -579,6 +709,11 @@ serve(async (req) => {
                 const approveOneClickLink = `${portalUrl}?etoken=${encodeURIComponent(etoken)}&autoApproveWeek=${mondayStr}`
                 const openPortalLink = `${portalUrl}?etoken=${encodeURIComponent(etoken)}`
                 const recipientName = company.contact_person || company.company_name || 'stagebegeleider / werkgever'
+
+                const whatsappText = encodeURIComponent(
+                    `Hoi! Kun jij de stage-uren van deze week voor ${company.company_name} met 1 klik goedkeuren of aanpassen? (Geen wachtwoord nodig):\n\n${openPortalLink}`
+                )
+                const whatsappShareUrl = `https://wa.me/?text=${whatsappText}`
 
                 const studentsBlocksHtml = studentSummaries.map((st: any) => `
                     <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px 16px; margin-bottom: 12px;">
@@ -611,23 +746,34 @@ serve(async (req) => {
                             </a>
                         </div>
 
-                        <div style="text-align: center; margin-bottom: 24px;">
+                        <div style="text-align: center; margin-bottom: 22px;">
                             <a href="${openPortalLink}" style="display: inline-block; background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; padding: 12px 22px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 14px;">
                                 ✏️ Was de stagiair ziek, te laat of afwezig? Pas aan in portaal
                             </a>
                         </div>
 
-                        <p style="font-size: 12.5px; color: #64748b; text-align: center; line-height: 1.5;">
-                            🔒 <em>Geen wachtwoord nodig: bovenstaande knoppen loggen u veilig en direct in voor <strong>${company.company_name}</strong>.</em>
-                        </p>
+                        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px 16px; margin-bottom: 18px; text-align: center;">
+                            <p style="margin: 0 0 8px 0; font-size: 12.5px; color: #475569;">
+                                👥 <strong>Begeleidt een collega op de werkvloer de stagiair?</strong> Stuur deze link met 1 klik door via WhatsApp:
+                            </p>
+                            <a href="${whatsappShareUrl}" style="display: inline-block; background: #25D366; color: #ffffff; padding: 8px 16px; border-radius: 7px; text-decoration: none; font-weight: bold; font-size: 12.5px;">
+                                📲 Stuur door naar collega via WhatsApp
+                            </a>
+                        </div>
 
-                        <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 22px 0;">
+                        <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 18px 0;">
                         <p style="font-size: 13px; color: #64748b; margin-bottom: 0;">
                             Hartelijk dank voor het begeleiden van onze stagiair(s)!<br>
                             <strong>het stageteam van ${schoolTitle}</strong>
                         </p>
                     </div>
                 `
+
+                const extraRecipients = String(company.extra_email || '')
+                    .split(/[,;\s]+/)
+                    .map((s: string) => s.trim().toLowerCase())
+                    .filter((s: string) => s && s !== cleanEmail)
+                const toList = [cleanEmail, ...extraRecipients]
 
                 try {
                     const sendRes = await fetch('https://api.resend.com/emails', {
@@ -638,15 +784,15 @@ serve(async (req) => {
                         },
                         body: JSON.stringify({
                             from: 'StageConnectie <no-reply@stageconnectie.nl>',
-                            to: cleanEmail,
+                            to: toList,
                             subject: `Stage-uren deze week met 1 klik goedkeuren - ${company.company_name}`,
                             html: htmlContent
                         })
                     })
                     const sendData = await sendRes.json()
-                    sendResults.push({ company: company.company_name, email: cleanEmail, success: sendRes.ok, data: sendData })
+                    sendResults.push({ company: company.company_name, email: toList.join(', '), success: sendRes.ok, data: sendData })
                 } catch (err: any) {
-                    sendResults.push({ company: company.company_name, email: cleanEmail, success: false, error: err.message })
+                    sendResults.push({ company: company.company_name, email: toList.join(', '), success: false, error: err.message })
                 }
             }
 

@@ -170,7 +170,10 @@ async function loadData() {
                     ${company.branche ? `<span class="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">${company.branche}</span>` : '-'}
                 </td>
                 <td class="px-6 py-4 text-sm text-gray-500">${company.contact_person || '-'}</td>
-                <td class="px-6 py-4 text-sm text-gray-500">${company.email || '-'}</td>
+                <td class="px-6 py-4 text-sm text-gray-500">
+                    <div>${company.email || '-'}</div>
+                    ${company.extra_email ? `<div class="text-xs text-emerald-700 font-medium mt-0.5">👥 Collega: ${company.extra_email}</div>` : ''}
+                </td>
                 <td class="px-6 py-4 text-sm">${statusBadge}</td>
                 <td class="px-6 py-4 text-right text-sm font-medium">
                     <button onclick='previewCompanyPortal(${compJson})' class="text-emerald-600 hover:text-emerald-900 font-semibold mr-3" title="Bekijk portaal als dit bedrijf zonder wachtwoord">
@@ -368,11 +371,15 @@ function openModal(company = null) {
         document.getElementById('branche').value = company.branche || '';
         document.getElementById('contact_person').value = company.contact_person || '';
         document.getElementById('email').value = company.email || '';
+        const extraEl = document.getElementById('extra_email');
+        if (extraEl) extraEl.value = company.extra_email || '';
         document.getElementById('phone_number').value = company.phone || '';
     } else {
         title.textContent = 'Stagebedrijf Toevoegen';
         form.reset();
         document.getElementById('company-id').value = '';
+        const extraEl = document.getElementById('extra_email');
+        if (extraEl) extraEl.value = '';
     }
 }
 
@@ -460,12 +467,15 @@ document.getElementById('company-form').addEventListener('submit', async (e) => 
     const id = document.getElementById('company-id').value;
     const companyName = document.getElementById('company_name').value;
     const email = document.getElementById('email').value;
+    const extraEmailEl = document.getElementById('extra_email');
+    const extraEmail = extraEmailEl ? extraEmailEl.value.trim().toLowerCase() : '';
 
     const companyData = {
         company_name: companyName,
         branche: document.getElementById('branche').value || null,
         contact_person: document.getElementById('contact_person').value || null,
         email: email || null,
+        extra_email: extraEmail || null,
         phone: document.getElementById('phone_number').value || null,
         address: null  // No address field in form yet
     };
