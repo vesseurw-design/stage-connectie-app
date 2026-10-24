@@ -851,7 +851,7 @@ serve(async (req) => {
             const supervisorsList = (allSupervisors || []).filter((sup: any) => {
                 if (!sup.email) return false
                 const cleanSup = sup.email.trim().toLowerCase()
-                return cleanSup && !cleanSup.includes('test@')
+                return cleanSup && !cleanSup.includes('test@') && cleanSup !== 'stage@begeleider.nl'
             })
 
             if (dryRun) {
