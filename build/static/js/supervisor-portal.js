@@ -556,6 +556,9 @@ function openStudentDetail(student) {
     document.getElementById('modal-company').innerHTML = companyHtml;
     document.getElementById('modal-scheduled-days').textContent = (student.scheduled_days || []).join(', ') || '-';
 
+    // Stagecontract status tonen in demo-modus
+    renderDemoContractBlock(student);
+
     // Support for V2 modal fields
     const classEl = document.getElementById('modal-student-class');
     const yearEl = document.getElementById('modal-school-year');
@@ -566,7 +569,8 @@ function openStudentDetail(student) {
     const filterDate = document.getElementById('filter-date').value || new Date().toISOString().split('T')[0];
     const dateObj = new Date(filterDate);
     const dateStrFormatted = dateObj.toLocaleDateString('nl-NL', { weekday: 'short', day: 'numeric', month: 'short' });
-    document.getElementById('modal-current-date-label').textContent = `Datum: ${dateStrFormatted}`;
+    const curDateLabelEl = document.getElementById('modal-current-date-label');
+    if (curDateLabelEl) curDateLabelEl.textContent = `Datum: ${dateStrFormatted}`;
 
     // Get all attendance for this student (support both ID and name fallback)
     const studentAttendance = allAttendance.filter(a => {
@@ -585,6 +589,52 @@ function openStudentDetail(student) {
 
     document.getElementById('student-modal').classList.remove('hidden');
 }
+
+function renderDemoContractBlock(student) {
+    const block = document.getElementById('modal-contract-block');
+    const statusText = document.getElementById('modal-contract-status-text');
+    const toggleBtn = document.getElementById('modal-contract-toggle-btn');
+    if (!block || !statusText || !toggleBtn || !student) return;
+
+    const supEmail = (localStorage.getItem('supervisor_email') || '').trim().toLowerCase();
+    const stuEmail = (student.email || '').trim().toLowerCase();
+    const isDemoContext = supEmail === 'stage@begeleider.nl' || stuEmail === 'fake@leerling.nl' || sessionStorage.getItem('demo_unlocked') === 'true';
+
+    if (!isDemoContext && typeof student.contract_submitted === 'undefined') {
+        block.classList.add('hidden');
+        return;
+    }
+
+    block.classList.remove('hidden');
+    const storageKey = 'demo_contract_submitted_' + (student.id || student.name);
+    const localVal = localStorage.getItem(storageKey);
+    const isSubmitted = localVal ? localVal === 'true' : (student.contract_submitted === true);
+
+    if (isSubmitted) {
+        block.className = 'mb-4 p-3 rounded-xl border border-green-200 bg-green-50 flex items-center justify-between gap-2';
+        statusText.className = 'text-xs font-semibold text-green-800 mt-0.5';
+        statusText.textContent = '✅ Ingeleverd (Geen melding in Stagiair Portaal)';
+        toggleBtn.className = 'px-3 py-1.5 rounded-lg text-xs font-bold bg-white border border-green-300 text-green-900 hover:bg-green-100 transition shrink-0 shadow-sm';
+        toggleBtn.textContent = 'Zet op niet-ingeleverd';
+    } else {
+        block.className = 'mb-4 p-3 rounded-xl border border-amber-200 bg-amber-50 flex items-center justify-between gap-2';
+        statusText.className = 'text-xs font-semibold text-amber-800 mt-0.5';
+        statusText.textContent = '⚠️ Nog niet ingeleverd (Melding actief in Stagiair Portaal)';
+        toggleBtn.className = 'px-3 py-1.5 rounded-lg text-xs font-bold bg-white border border-amber-300 text-amber-900 hover:bg-amber-100 transition shrink-0 shadow-sm';
+        toggleBtn.textContent = 'Markeer als ingeleverd';
+    }
+}
+
+function toggleDemoContractStatus() {
+    if (!currentStudent) return;
+    const storageKey = 'demo_contract_submitted_' + (currentStudent.id || currentStudent.name);
+    const currentVal = localStorage.getItem(storageKey) === 'true';
+    const nextVal = !currentVal;
+    localStorage.setItem(storageKey, nextVal ? 'true' : 'false');
+    renderDemoContractBlock(currentStudent);
+    showToast(nextVal ? 'Contract gemarkeerd als ingeleverd!' : 'Melding geactiveerd in Stagiair Portaal!');
+}
+window.toggleDemoContractStatus = toggleDemoContractStatus;
 
 function populateMonthFilter(attendance) {
     const monthFilter = document.getElementById('history-month-filter');

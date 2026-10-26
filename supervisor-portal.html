@@ -200,6 +200,17 @@
                     <p class="text-sm text-gray-500">Stagedagen</p>
                     <p class="font-medium" id="modal-scheduled-days">-</p>
                 </div>
+                <!-- Stagecontract Status (Demo / School optie) -->
+                <div id="modal-contract-block" class="hidden mb-4 p-3 rounded-xl border border-amber-200 bg-amber-50 flex items-center justify-between gap-2">
+                    <div>
+                        <p class="text-xs font-bold text-gray-700">📄 Stagecontract</p>
+                        <p id="modal-contract-status-text" class="text-xs font-semibold text-amber-800 mt-0.5">⚠️ Nog niet ingeleverd (Melding actief in Stagiair Portaal)</p>
+                    </div>
+                    <button type="button" id="modal-contract-toggle-btn" onclick="toggleDemoContractStatus()"
+                        class="px-3 py-1.5 rounded-lg text-xs font-bold bg-white border border-amber-300 text-amber-900 hover:bg-amber-100 transition shrink-0 shadow-sm">
+                        Markeer als ingeleverd
+                    </button>
+                </div>
                 <!-- Aanwezigheid corrigeren knop -->
                 <div class="mb-4">
                     <button onclick="openCorrectModal()" 
@@ -324,7 +335,7 @@
     <script src="./static/js/company-helper.js?v=20260916_1"></script>
     <script src="./static/js/terms-acceptance.js"></script>
     <script src="./static/js/supervisor-auth.js?v=4.3"></script>
-    <script src="./static/js/supervisor-portal.js?v=5.1"></script>
+    <script src="./static/js/supervisor-portal.js?v=5.2"></script>
     <script src="./static/js/info-modal-demo.js"></script>
 </body>
 

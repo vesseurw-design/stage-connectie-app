@@ -131,6 +131,20 @@ function renderHeader() {
 
     const classInfo = currentStudent.class ? ` • Klas: ${currentStudent.class}` : '';
     document.getElementById('student-info').textContent = `${companyStr}${classInfo}`;
+
+    // Toon melding 'Stagecontract nog niet ingeleverd' alleen bij demo-stagiair (of als contract_submitted expliciet false is)
+    const contractBanner = document.getElementById('contract-missing-banner');
+    if (contractBanner && currentStudent) {
+        const studentEmail = (currentStudent.email || '').trim().toLowerCase();
+        const isDemoStudent = studentEmail === 'fake@leerling.nl';
+        const localOverride = localStorage.getItem('demo_contract_submitted_' + (currentStudent.id || currentStudent.name));
+        const shouldShowContractWarning = (currentStudent.contract_submitted === false) || (isDemoStudent && localOverride !== 'true');
+        if (shouldShowContractWarning) {
+            contractBanner.classList.remove('hidden');
+        } else {
+            contractBanner.classList.add('hidden');
+        }
+    }
 }
 
 function getMonday(d) {
