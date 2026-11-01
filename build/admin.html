@@ -297,9 +297,13 @@
                 <input type="date" id="print-end-date" onchange="regeneratePrintContent()" style="border:1px solid #d1d5db; padding:4px 6px; border-radius:6px; font-size:12px; outline:none;">
                 
                 <span style="font-size:12px; font-weight:600; color:#4b5563; margin-left:8px;">Stagiair:</span>
-                <select id="print-student-select" onchange="regeneratePrintContent()" style="border:1px solid #d1d5db; padding:4px 6px; border-radius:6px; font-size:12px; outline:none; background:white; max-width:180px;">
+                <select id="print-student-select" onchange="onPrintStudentSelectChange()" style="border:1px solid #d1d5db; padding:4px 6px; border-radius:6px; font-size:12px; outline:none; background:white; max-width:180px;">
                     <option value="all">Alle stagiairs</option>
                 </select>
+
+                <button onclick="setPrintRangeToStudentStagePeriod()" title="Vul de start- en einddatum van de stageperiode in" style="background:#0d9488;color:white;border:none;padding:5px 10px;border-radius:6px;cursor:pointer;font-weight:600;font-size:12px;transition:background 0.2s;">
+                    📅 Stageperiode
+                </button>
 
                 <button onclick="regeneratePrintContent()" style="background:#0284c7;color:white;border:none;padding:5px 12px;border-radius:6px;cursor:pointer;font-weight:600;font-size:12px;transition:background 0.2s;">
                     Toepassen
@@ -836,7 +840,7 @@
             const days = [];
             let current = new Date(start);
             let count = 0;
-            while (current <= end && count < 200) {
+            while (current <= end && count < 400) {
                 const dayNum = current.getDay();
                 const d = new Date(current);
                 const dStr = formatDateLocal(d);
@@ -860,6 +864,105 @@
                 count++;
             }
             return days;
+        }
+
+        function getStudentStagePeriodRange(student) {
+            const todayStr = formatDateLocal(new Date());
+            const current = new Date();
+            const day = current.getDay();
+            const monday = new Date(current);
+            monday.setDate(current.getDate() - day + (day === 0 ? -6 : 1));
+            const friday = new Date(monday);
+            friday.setDate(monday.getDate() + 4);
+
+            if (!student) {
+                return { startDate: formatDateLocal(monday), endDate: formatDateLocal(friday) };
+            }
+
+            const assignments = typeof getStudentCompanyAssignments === 'function'
+                ? getStudentCompanyAssignments(student, companies)
+                : [];
+
+            const startDates = [];
+            const endDates = [];
+
+            if (student.stage_start_date) startDates.push(String(student.stage_start_date).slice(0, 10));
+            if (student.stage_end_date) endDates.push(String(student.stage_end_date).slice(0, 10));
+
+            assignments.forEach(a => {
+                if (a.start_date) startDates.push(String(a.start_date).slice(0, 10));
+                if (a.end_date) endDates.push(String(a.end_date).slice(0, 10));
+            });
+
+            const studentAtt = allAttendance.filter(a => String(a.student_id) === String(student.id));
+            const attDates = studentAtt.map(a => String(a.date).slice(0, 10)).filter(Boolean).sort();
+
+            let startDate = startDates.length > 0 ? startDates.sort()[0] : null;
+            if (!startDate) {
+                if (attDates.length > 0) {
+                    startDate = attDates[0];
+                } else {
+                    const now = new Date();
+                    const schoolYearStartYear = now.getMonth() >= 7 ? now.getFullYear() : now.getFullYear() - 1;
+                    startDate = `${schoolYearStartYear}-09-01`;
+                }
+            }
+
+            let endDate = endDates.length > 0 ? endDates.sort()[endDates.length - 1] : null;
+            if (!endDate) {
+                if (attDates.length > 0 && attDates[attDates.length - 1] > todayStr) {
+                    endDate = attDates[attDates.length - 1];
+                } else {
+                    endDate = todayStr;
+                }
+            }
+
+            if (endDate < startDate) endDate = startDate;
+            return { startDate, endDate };
+        }
+
+        function setPrintRangeToStudentStagePeriod() {
+            const selectEl = document.getElementById('print-student-select');
+            const selectedStudentId = selectEl ? selectEl.value : 'all';
+
+            if (selectedStudentId && selectedStudentId !== 'all') {
+                const st = students.find(s => String(s.id) === String(selectedStudentId));
+                if (st) {
+                    const { startDate, endDate } = getStudentStagePeriodRange(st);
+                    document.getElementById('print-start-date').value = startDate;
+                    document.getElementById('print-end-date').value = endDate;
+                    regeneratePrintContent();
+                    return;
+                }
+            }
+
+            const classFilter = document.getElementById('filter-class') ? document.getElementById('filter-class').value : '';
+            let pool = students;
+            if (classFilter) pool = pool.filter(s => s.class === classFilter);
+            if (pool.length > 0) {
+                const ranges = pool.map(s => getStudentStagePeriodRange(s));
+                const minStart = ranges.map(r => r.startDate).filter(Boolean).sort()[0];
+                const maxEnd = ranges.map(r => r.endDate).filter(Boolean).sort().reverse()[0];
+                if (minStart && maxEnd) {
+                    document.getElementById('print-start-date').value = minStart;
+                    document.getElementById('print-end-date').value = maxEnd;
+                    regeneratePrintContent();
+                }
+            }
+        }
+
+        function onPrintStudentSelectChange() {
+            const selectEl = document.getElementById('print-student-select');
+            const selectedStudentId = selectEl ? selectEl.value : 'all';
+            if (selectedStudentId && selectedStudentId !== 'all') {
+                const st = students.find(s => String(s.id) === String(selectedStudentId));
+                if (st) {
+                    const { startDate, endDate } = getStudentStagePeriodRange(st);
+                    document.getElementById('print-start-date').value = startDate;
+                    document.getElementById('print-end-date').value = endDate;
+                }
+            }
+            regeneratePrintContent();
         }
 
         function openPrintSection(mode) {
