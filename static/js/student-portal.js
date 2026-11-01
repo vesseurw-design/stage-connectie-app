@@ -71,17 +71,27 @@ async function continueStudentInit() {
                     ? getStudentCompanyAssignments(currentStudent, companiesData)
                     : companiesData.map(c => ({ company_id: c.id, company_name: c.company_name, company: c, days: currentStudent.scheduled_days || [] }));
                 
-                currentStudent.Bedrijven = companiesData[0];
+                const todayStr = new Date().toISOString().split('T')[0];
+                const activeTodayAssignments = (currentStudent.assignedCompanies || []).filter(a =>
+                    typeof isAssignmentActiveOnDate === 'function' ? isAssignmentActiveOnDate(a, todayStr, currentStudent) : true
+                );
+                const activeTodayCompanyIds = new Set(activeTodayAssignments.map(a => a.company_id));
+                const activeCompaniesToday = activeTodayCompanyIds.size > 0
+                    ? companiesData.filter(c => activeTodayCompanyIds.has(c.id))
+                    : companiesData;
 
-                const phoneCompanies = companiesData.filter(c => c.phone);
-                if (phoneCompanies.length > 0) {
-                    const primaryPhone = phoneCompanies[0].phone;
+                currentStudent.Bedrijven = activeCompaniesToday[0] || companiesData[0];
+
+                const phoneCompanies = activeCompaniesToday.filter(c => c.phone);
+                const fallbackPhoneCompanies = phoneCompanies.length > 0 ? phoneCompanies : companiesData.filter(c => c.phone);
+                if (fallbackPhoneCompanies.length > 0) {
+                    const primaryPhone = fallbackPhoneCompanies[0].phone;
                     const phoneBlock = document.getElementById('company-phone-block');
                     const phoneLink = document.getElementById('company-phone-link');
                     const phoneText = document.getElementById('company-phone-text');
                     if (phoneBlock && phoneLink && phoneText) {
-                        phoneText.textContent = phoneCompanies.length > 1 
-                            ? `Bel ${phoneCompanies[0].company_name}: ${primaryPhone}`
+                        phoneText.textContent = fallbackPhoneCompanies.length > 1 
+                            ? `Bel ${fallbackPhoneCompanies[0].company_name}: ${primaryPhone}`
                             : `Bel stagebedrijf: ${primaryPhone}`;
                         phoneLink.href = `tel:${primaryPhone}`;
                         phoneBlock.classList.remove('hidden');
@@ -334,7 +344,7 @@ function updateCellContent(cell, status, hours, minutes, notes = '', employerId 
         const dayMap = ['Zo', 'Ma', 'Di', 'Wo', 'Do', 'Vr', 'Za'];
         const dayCode = dayMap[dayIndex] || 'Ma';
         const dayCompanies = typeof getStudentCompaniesForDay === 'function'
-            ? getStudentCompaniesForDay(currentStudent, dayCode, currentStudent.companiesList)
+            ? getStudentCompaniesForDay(currentStudent, dayCode, currentStudent.companiesList, dateStr)
             : [];
         cell.dataset.employerId = dayCompanies[0] ? dayCompanies[0].company_id : currentStudent.company_id;
     }
@@ -421,7 +431,7 @@ function openActionSheet(dateStr, element, isUnscheduled) {
     const dayCode = dayMap[dayIndex] || 'Ma';
     
     const dayCompanies = typeof getStudentCompaniesForDay === 'function'
-        ? getStudentCompaniesForDay(currentStudent, dayCode, currentStudent.companiesList)
+        ? getStudentCompaniesForDay(currentStudent, dayCode, currentStudent.companiesList, dateStr)
         : [];
         
     const compContainer = document.getElementById('action-company-container');

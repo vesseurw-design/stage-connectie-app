@@ -99,8 +99,8 @@
     </footer>
 
     <!-- Modal -->
-    <div id="modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
-        <div class="bg-white rounded-xl max-w-md w-full p-6">
+    <div id="modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-xl max-w-md w-full p-6 max-h-[90vh] overflow-y-auto">
             <h2 id="modal-title" class="text-xl font-bold mb-4">Stagiair Toevoegen</h2>
             <form id="form" class="space-y-4">
                 <input type="hidden" id="student-id">
@@ -133,7 +133,7 @@
                 </div>
                 <div class="space-y-3 bg-gray-50 p-3 rounded-lg border border-gray-200">
                     <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-1">Stagebedrijf 1</label>
+                        <label class="block text-sm font-semibold text-gray-700 mb-1">Stagebedrijf 1 (Huidige stage)</label>
                         <select id="company_id" class="w-full px-3 py-2 border rounded-lg bg-white">
                             <option value="">Geen stagebedrijf</option>
                         </select>
@@ -148,11 +148,21 @@
                             <label class="cursor-pointer bg-white px-2.5 py-1 border rounded hover:bg-blue-50"><input type="checkbox" name="days_1" value="Vr" class="mr-1">Vr</label>
                         </div>
                     </div>
+                    <div class="grid grid-cols-2 gap-3 pt-1">
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Startdatum Bedrijf 1</label>
+                            <input type="date" id="stage_start_date" class="w-full px-2.5 py-1.5 text-sm border rounded-lg bg-white">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Einddatum Bedrijf 1</label>
+                            <input type="date" id="stage_end_date" class="w-full px-2.5 py-1.5 text-sm border rounded-lg bg-white">
+                        </div>
+                    </div>
                 </div>
 
                 <div class="space-y-3 bg-gray-50 p-3 rounded-lg border border-gray-200">
                     <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-1">2e Stagebedrijf (Optioneel)</label>
+                        <label class="block text-sm font-semibold text-gray-700 mb-1">2e Stagebedrijf / Vervolgstage (Optioneel)</label>
                         <select id="company_id_2" class="w-full px-3 py-2 border rounded-lg bg-white">
                             <option value="">Geen 2e stagebedrijf</option>
                         </select>
@@ -167,17 +177,29 @@
                             <label class="cursor-pointer bg-white px-2.5 py-1 border rounded hover:bg-blue-50"><input type="checkbox" name="days_2" value="Vr" class="mr-1">Vr</label>
                         </div>
                     </div>
+                    <div class="grid grid-cols-2 gap-3 pt-1">
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Startdatum Bedrijf 2</label>
+                            <input type="date" id="stage_start_date_2" class="w-full px-2.5 py-1.5 text-sm border rounded-lg bg-white">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Einddatum Bedrijf 2</label>
+                            <input type="date" id="stage_end_date_2" class="w-full px-2.5 py-1.5 text-sm border rounded-lg bg-white">
+                        </div>
+                    </div>
                 </div>
 
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm font-medium mb-1">Startdatum Stage</label>
-                        <input type="date" id="stage_start_date" class="w-full px-3 py-2 border rounded-lg">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium mb-1">Einddatum Stage</label>
-                        <input type="date" id="stage_end_date" class="w-full px-3 py-2 border rounded-lg">
-                    </div>
+                <div id="company-invite-box" class="bg-purple-50 border border-purple-200 rounded-lg p-3">
+                    <label class="flex items-start gap-2.5 cursor-pointer">
+                        <input type="checkbox" id="send_company_invite" checked
+                            class="mt-0.5 h-4 w-4 text-purple-600 rounded border-gray-300 focus:ring-purple-500">
+                        <div>
+                            <span class="block text-sm font-semibold text-purple-900">✉️ Stuur uitnodigingsmail naar gekoppeld stagebedrijf</span>
+                            <span id="company-invite-hint" class="block text-xs text-purple-700 mt-0.5">
+                                Standaard ontvangt een (nieuw) gekoppeld stagebedrijf direct een e-mail met de 1-klik inloglink.
+                            </span>
+                        </div>
+                    </label>
                 </div>
 
                 <div>
@@ -367,9 +389,23 @@
                 const assignments = getStudentCompanyAssignments(student, companies);
                 let compNames = '-';
                 if (assignments.length > 0) {
+                    const fmtShort = (d) => {
+                        if (!d) return '';
+                        try {
+                            return new Date(String(d).slice(0, 10) + 'T12:00:00').toLocaleDateString('nl-NL', { day: 'numeric', month: 'short' });
+                        } catch (_e) { return d; }
+                    };
                     compNames = assignments.map(a => {
                         const daysStr = (a.days && a.days.length > 0) ? ` (${a.days.join(', ')})` : '';
-                        return `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 mr-1 mb-1">${a.company_name}${daysStr}</span>`;
+                        let periodStr = '';
+                        if (a.start_date && a.end_date) {
+                            periodStr = ` <span class="text-[10px] text-blue-600 font-normal">[${fmtShort(a.start_date)} - ${fmtShort(a.end_date)}]</span>`;
+                        } else if (a.start_date) {
+                            periodStr = ` <span class="text-[10px] text-blue-600 font-normal">[vanaf ${fmtShort(a.start_date)}]</span>`;
+                        } else if (a.end_date) {
+                            periodStr = ` <span class="text-[10px] text-blue-600 font-normal">[t/m ${fmtShort(a.end_date)}]</span>`;
+                        }
+                        return `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 mr-1 mb-1">${a.company_name}${daysStr}${periodStr}</span>`;
                     }).join(' ');
                 }
 
@@ -439,6 +475,39 @@
             document.getElementById('search-input').addEventListener('input', renderTable);
         }
 
+        let initialLinkedCompanyIds = [];
+
+        function updateCompanyInviteUI(autoToggle = true) {
+            const cb = document.getElementById('send_company_invite');
+            const hint = document.getElementById('company-invite-hint');
+            if (!cb || !hint) return;
+
+            const c1 = document.getElementById('company_id')?.value || '';
+            const c2 = document.getElementById('company_id_2')?.value || '';
+            const selectedIds = [...new Set([c1, c2].filter(Boolean))];
+            const newlyLinkedIds = selectedIds.filter(cid => !initialLinkedCompanyIds.includes(String(cid)));
+
+            const formatCompanyList = (ids) => ids.map(cid => {
+                const comp = companies.find(c => String(c.id) === String(cid));
+                if (!comp) return 'Onbekend bedrijf';
+                return comp.email ? `${comp.company_name} (${comp.email})` : `${comp.company_name} (geen e-mail bekend)`;
+            }).join(' & ');
+
+            if (selectedIds.length === 0) {
+                if (autoToggle) cb.checked = true;
+                hint.textContent = 'Zodra je hierboven een stagebedrijf kiest, ontvangt dat bedrijf bij opslaan standaard direct de uitnodigingsmail.';
+            } else if (newlyLinkedIds.length > 0) {
+                if (autoToggle) cb.checked = true;
+                hint.innerHTML = `Standaard ingeschakeld voor nieuw gekoppeld bedrijf: <strong>${formatCompanyList(newlyLinkedIds)}</strong> ontvangt bij opslaan direct de uitnodigingsmail met 1-klik inloglink.`;
+            } else {
+                if (autoToggle) cb.checked = false;
+                hint.innerHTML = `Huidig bedrijf (<strong>${formatCompanyList(selectedIds)}</strong>) was al gekoppeld. Vink aan als je de uitnodigingsmail nu nogmaals wilt versturen.`;
+            }
+        }
+
+        document.getElementById('company_id')?.addEventListener('change', () => updateCompanyInviteUI(true));
+        document.getElementById('company_id_2')?.addEventListener('change', () => updateCompanyInviteUI(true));
+
         function openModal(student = null) {
             document.getElementById('modal').classList.remove('hidden');
             
@@ -454,14 +523,19 @@
                 document.getElementById('student_number').value = student.student_number || '';
                 
                 const assignments = getStudentCompanyAssignments(student, companies);
+                initialLinkedCompanyIds = assignments.map(a => String(a.company_id || '')).filter(Boolean);
                 if (assignments.length > 0) {
                     document.getElementById('company_id').value = assignments[0].company_id || '';
                     (assignments[0].days || []).forEach(day => {
                         const cb = document.querySelector(`input[name="days_1"][value="${day}"]`);
                         if (cb) cb.checked = true;
                     });
+                    document.getElementById('stage_start_date').value = assignments[0].start_date || student.stage_start_date || student.start_date || '';
+                    document.getElementById('stage_end_date').value = assignments[0].end_date || (assignments.length === 1 ? (student.stage_end_date || student.end_date || '') : '');
                 } else {
                     document.getElementById('company_id').value = '';
+                    document.getElementById('stage_start_date').value = student.stage_start_date || student.start_date || '';
+                    document.getElementById('stage_end_date').value = student.stage_end_date || student.end_date || '';
                 }
 
                 if (assignments.length > 1) {
@@ -472,34 +546,51 @@
                         const cb = document.querySelector(`input[name="days_2"][value="${day}"]`);
                         if (cb) cb.checked = true;
                     });
+                    if (document.getElementById('stage_start_date_2')) {
+                        document.getElementById('stage_start_date_2').value = assignments[1].start_date || '';
+                    }
+                    if (document.getElementById('stage_end_date_2')) {
+                        document.getElementById('stage_end_date_2').value = assignments[1].end_date || '';
+                    }
                 } else {
                     if (document.getElementById('company_id_2')) {
                         document.getElementById('company_id_2').value = '';
+                    }
+                    if (document.getElementById('stage_start_date_2')) {
+                        document.getElementById('stage_start_date_2').value = '';
+                    }
+                    if (document.getElementById('stage_end_date_2')) {
+                        document.getElementById('stage_end_date_2').value = '';
                     }
                 }
 
                 document.getElementById('supervisor_id').value = student.supervisor_id || '';
                 document.getElementById('class').value = student.class || '';
                 document.getElementById('school_year').value = student.school_year || '';
-                document.getElementById('stage_start_date').value = student.stage_start_date || student.start_date || '';
-                document.getElementById('stage_end_date').value = student.stage_end_date || student.end_date || '';
                 document.getElementById('unenrollment_date').value = student.unenrollment_date || '';
                 
-                // Hide password field during edit
-                document.getElementById('password-container').classList.add('hidden');
+                // Show password field during edit (optional reset)
+                document.getElementById('password-container').classList.remove('hidden');
                 document.getElementById('password').value = '';
+                document.getElementById('password').placeholder = 'Laat leeg om te behouden (min. 6 tekens)';
             } else {
                 document.getElementById('modal-title').textContent = 'Stagiair Toevoegen';
                 document.getElementById('form').reset();
+                initialLinkedCompanyIds = [];
                 document.getElementById('student-id').value = '';
                 document.getElementById('company_id').value = '';
                 if (document.getElementById('company_id_2')) document.getElementById('company_id_2').value = '';
                 document.getElementById('stage_start_date').value = '';
                 document.getElementById('stage_end_date').value = '';
+                if (document.getElementById('stage_start_date_2')) document.getElementById('stage_start_date_2').value = '';
+                if (document.getElementById('stage_end_date_2')) document.getElementById('stage_end_date_2').value = '';
                 
                 // Show password field during add
                 document.getElementById('password-container').classList.remove('hidden');
+                document.getElementById('password').placeholder = '••••••••';
             }
+
+            updateCompanyInviteUI(true);
         }
 
         function closeModal() {
@@ -591,11 +682,11 @@
 
                 let user_id = id || null;
 
-                // Als het een NIEUWE leerling betreft met e-mailadres, maak auth account aan
-                if (!id && email) {
-                    const password = document.getElementById('password').value;
+                // Als het een NIEUWE leerling betreft met e-mailadres, of als er bij bewerken een nieuw wachtwoord is ingevuld
+                const password = document.getElementById('password').value.trim();
+                if (email && (!id || password.length > 0)) {
                     if (!password || password.length < 6) {
-                        alert('Wachtwoord is verplicht bij het aanmaken van een nieuwe stagiair en moet minimaal 6 tekens bevatten.');
+                        alert('Wachtwoord moet minimaal 6 tekens bevatten.');
                         return;
                     }
 
@@ -618,30 +709,46 @@
 
                     const authResult = await authRes.json();
                     if (!authRes.ok || !authResult.success) {
-                        throw new Error(authResult?.error || 'Aanmaken inlogaccount mislukt');
+                        throw new Error(authResult?.error || 'Aanmaken/updaten inlogaccount mislukt');
                     }
-                    user_id = authResult.user_id;
+                    if (!id) {
+                        user_id = authResult.user_id;
+                    }
                 }
 
                 const c1 = document.getElementById('company_id').value || '';
                 const days1 = Array.from(document.querySelectorAll('input[name="days_1"]:checked')).map(cb => cb.value);
+                const start1 = document.getElementById('stage_start_date')?.value || null;
+                const end1 = document.getElementById('stage_end_date')?.value || null;
 
                 const c2 = document.getElementById('company_id_2') ? document.getElementById('company_id_2').value : '';
                 const days2 = Array.from(document.querySelectorAll('input[name="days_2"]:checked')).map(cb => cb.value);
+                const start2 = document.getElementById('stage_start_date_2')?.value || null;
+                const end2 = document.getElementById('stage_end_date_2')?.value || null;
 
                 const company_assignments = [];
                 if (c1) {
-                    company_assignments.push({ company_id: c1, days: days1 });
+                    company_assignments.push({
+                        company_id: c1,
+                        days: days1,
+                        start_date: start1,
+                        end_date: end1
+                    });
                 }
                 if (c2) {
-                    company_assignments.push({ company_id: c2, days: days2 });
+                    company_assignments.push({
+                        company_id: c2,
+                        days: days2,
+                        start_date: start2,
+                        end_date: end2
+                    });
                 }
 
                 const primary_company_id = c1 || c2 || null;
                 const all_scheduled_days = [...new Set([...days1, ...days2])];
 
-                const stage_start_date = document.getElementById('stage_start_date')?.value || null;
-                const stage_end_date = document.getElementById('stage_end_date')?.value || null;
+                const stage_start_date = start1 || start2 || null;
+                const stage_end_date = (c2 && end2) ? end2 : (end1 || null);
 
                 const studentPayload = {
                     name: name,
@@ -679,6 +786,54 @@
                 const dbResult = await dbRes.json();
                 if (!dbRes.ok || !dbResult.success) {
                     throw new Error(dbResult?.error || 'Opslaan van stagiair in database mislukt');
+                }
+
+                // Controleer of we automatisch een uitnodigingsmail naar gekoppelde bedrijven moeten sturen
+                const shouldSendCompanyInvite = document.getElementById('send_company_invite')?.checked || false;
+                const selectedCompanyIds = [...new Set([c1, c2].filter(Boolean))];
+                const newlyLinkedIds = selectedCompanyIds.filter(cid => !initialLinkedCompanyIds.includes(String(cid)));
+                const targetCompanyIds = newlyLinkedIds.length > 0 ? newlyLinkedIds : selectedCompanyIds;
+
+                if (shouldSendCompanyInvite && targetCompanyIds.length > 0) {
+                    const sentCompanies = [];
+                    const loginOrigin = (window.location.origin.includes('localhost') || window.location.origin.includes('127.0.0.1'))
+                        ? 'https://ghpc.stageconnectie.nl'
+                        : window.location.origin;
+
+                    for (const cid of targetCompanyIds) {
+                        const comp = companies.find(c => String(c.id) === String(cid));
+                        if (!comp || !comp.email) continue;
+                        try {
+                            const invRes = await fetch(functionUrl, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'Authorization': `Bearer ${SUPABASE_KEY}`
+                                },
+                                body: JSON.stringify({
+                                    email: comp.email.trim().toLowerCase(),
+                                    password: '',
+                                    role: 'employer',
+                                    sendEmail: true,
+                                    name: comp.contact_person || comp.company_name,
+                                    loginUrl: `${loginOrigin}/employer-portal.html`,
+                                    metadata: {
+                                        company_name: comp.company_name,
+                                        company_id: comp.id
+                                    }
+                                })
+                            });
+                            if (invRes.ok) {
+                                sentCompanies.push(`${comp.company_name} (${comp.email})`);
+                            }
+                        } catch (invErr) {
+                            console.warn('Fout bij verzenden bedrijfsuitnodiging:', invErr);
+                        }
+                    }
+
+                    if (sentCompanies.length > 0) {
+                        alert(`✅ Stagiair opgeslagen!\n\n✉️ Er is automatisch een uitnodigingsmail met 1-klik inloglink verstuurd naar:\n• ${sentCompanies.join('\n• ')}`);
+                    }
                 }
 
                 closeModal();

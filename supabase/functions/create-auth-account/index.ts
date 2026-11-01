@@ -87,21 +87,36 @@ function isStudentAssignedToCompanyHelper(student: any, companyId: string): bool
     return false
 }
 
-function isStudentScheduledForCompanyHelper(student: any, companyId: string, dayCode: string): boolean {
+function isStudentScheduledForCompanyHelper(student: any, companyId: string, dayCode: string, dateStr?: string): boolean {
     if (!student) return false
+    const cleanDate = dateStr ? String(dateStr).slice(0, 10) : ''
     if (student.company_assignments) {
         try {
             const arr = typeof student.company_assignments === 'string'
                 ? JSON.parse(student.company_assignments)
                 : student.company_assignments
             if (Array.isArray(arr) && arr.length > 0) {
-                const assignment = arr.find((a: any) => (a.company_id || a.companyId) === companyId)
-                if (assignment) {
-                    const days = Array.isArray(assignment.days) ? assignment.days : []
-                    return days.length === 0 || days.includes(dayCode)
+                const matching = arr.filter((a: any) => String(a.company_id || a.companyId) === String(companyId))
+                if (matching.length > 0) {
+                    return matching.some((assignment: any) => {
+                        if (cleanDate) {
+                            const sDate = assignment.start_date ? String(assignment.start_date).slice(0, 10) : ''
+                            const eDate = assignment.end_date ? String(assignment.end_date).slice(0, 10) : ''
+                            if (sDate && cleanDate < sDate) return false
+                            if (eDate && cleanDate > eDate) return false
+                        }
+                        const days = Array.isArray(assignment.days) ? assignment.days : []
+                        return days.length === 0 || days.includes(dayCode)
+                    })
                 }
             }
         } catch (_e) {}
+    }
+    if (cleanDate) {
+        const gStart = student.stage_start_date ? String(student.stage_start_date).slice(0, 10) : ''
+        const gEnd = student.stage_end_date ? String(student.stage_end_date).slice(0, 10) : ''
+        if (gStart && cleanDate < gStart) return false
+        if (gEnd && cleanDate > gEnd) return false
     }
     const days = Array.isArray(student.scheduled_days) ? student.scheduled_days : []
     return days.length === 0 || days.includes(dayCode)
@@ -491,7 +506,7 @@ serve(async (req) => {
                         for (let i = 0; i < 5; i++) {
                             const dateStr = weekDates[i]
                             const dayCode = dayCodes[i]
-                            if (!isStudentScheduledForCompanyHelper(student, company.id, dayCode)) continue
+                            if (!isStudentScheduledForCompanyHelper(student, company.id, dayCode, dateStr)) continue
 
                             const existing = attMap.get(`${student.id}_${dateStr}`)
                             const existingEmployerStatus = existing?.status && existing.status !== 'pending' && existing.status !== 'null' && existing.status !== 'undefined'
@@ -626,7 +641,7 @@ serve(async (req) => {
                     for (let i = 0; i < 5; i++) {
                         const dayCode = dayCodes[i]
                         const dateStr = weekDates[i]
-                        if (!isStudentScheduledForCompanyHelper(student, comp.id, dayCode)) continue
+                        if (!isStudentScheduledForCompanyHelper(student, comp.id, dayCode, dateStr)) continue
 
                         scheduledCount++
                         const rec = attMap.get(`${student.id}_${dateStr}`)

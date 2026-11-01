@@ -472,10 +472,28 @@ function renderGrid(existingAttendance) {
         const nameCell = document.createElement('div');
         nameCell.className = 'week-cell student-name pl-5 pr-3 py-2 bg-white rounded-xl shadow-sm border border-gray-200 justify-start';
         nameCell.dataset.studentRowId = student.id;
+
+        let periodBadgeHtml = '';
+        if (typeof getStudentCompanyAssignments === 'function' && currentCompany?.id) {
+            const compAssign = getStudentCompanyAssignments(student).find(a => String(a.company_id) === String(currentCompany.id));
+            if (compAssign && (compAssign.start_date || compAssign.end_date)) {
+                const fmtDate = (d) => {
+                    try {
+                        return new Date(String(d).slice(0, 10) + 'T12:00:00').toLocaleDateString('nl-NL', { day: 'numeric', month: 'short' });
+                    } catch (_e) { return d; }
+                };
+                const rangeTxt = compAssign.start_date && compAssign.end_date
+                    ? `${fmtDate(compAssign.start_date)} t/m ${fmtDate(compAssign.end_date)}`
+                    : (compAssign.start_date ? `vanaf ${fmtDate(compAssign.start_date)}` : `t/m ${fmtDate(compAssign.end_date)}`);
+                periodBadgeHtml = `<div class="text-[10px] text-gray-500 font-semibold mt-0.5">📅 ${rangeTxt}</div>`;
+            }
+        }
+
         nameCell.innerHTML = `
             <div class="w-full">
                 <div class="text-gray-900 font-black text-sm uppercase tracking-wide leading-tight">${student.name}</div>
                 <div class="text-xs text-blue-600 font-bold mt-0.5">${student.class || ''} ${student.student_number ? '• ' + student.student_number : ''}</div>
+                ${periodBadgeHtml}
                 <div class="student-quick-approve-slot mt-1.5" data-slot-student-id="${student.id}"></div>
             </div>
         `;
@@ -488,7 +506,7 @@ function renderGrid(existingAttendance) {
 
             const dayCode = dayMap[dayIndex];
             const isScheduled = typeof isStudentScheduledForCompany === 'function'
-                ? isStudentScheduledForCompany(student, currentCompany.id, dayCode)
+                ? isStudentScheduledForCompany(student, currentCompany.id, dayCode, dateStr)
                 : (!student.scheduled_days || student.scheduled_days.length === 0 || student.scheduled_days.includes(dayCode));
 
             const cell = document.createElement('div');

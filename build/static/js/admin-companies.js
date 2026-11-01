@@ -170,7 +170,10 @@ async function loadData() {
                     ${company.branche ? `<span class="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">${company.branche}</span>` : '-'}
                 </td>
                 <td class="px-6 py-4 text-sm text-gray-500">${company.contact_person || '-'}</td>
-                <td class="px-6 py-4 text-sm text-gray-500">${company.email || '-'}</td>
+                <td class="px-6 py-4 text-sm text-gray-500">
+                    <div>${company.email || '-'}</div>
+                    ${company.extra_email ? `<div class="text-xs text-emerald-700 font-medium mt-0.5">👥 Collega: ${company.extra_email}</div>` : ''}
+                </td>
                 <td class="px-6 py-4 text-sm">${statusBadge}</td>
                 <td class="px-6 py-4 text-right text-sm font-medium">
                     <button onclick='previewCompanyPortal(${compJson})' class="text-emerald-600 hover:text-emerald-900 font-semibold mr-3" title="Bekijk portaal als dit bedrijf zonder wachtwoord">
@@ -237,9 +240,9 @@ window.sendCompanyInvite = async function (company) {
                 email: company.email.trim().toLowerCase(),
                 password: '',
                 role: 'employer',
-                sendEmail: false,
+                sendEmail: true,
                 name: company.contact_person || company.company_name,
-                loginUrl: `${window.location.origin.includes('localhost') || window.location.origin.includes('127.0.0.1') ? 'https://ghpc.stageconnectie.nl' : window.location.origin}/reset-password.html`,
+                loginUrl: `${window.location.origin.includes('localhost') || window.location.origin.includes('127.0.0.1') ? 'https://ghpc.stageconnectie.nl' : window.location.origin}/employer-portal.html`,
                 metadata: {
                     company_name: company.company_name,
                     company_id: company.id
@@ -252,9 +255,106 @@ window.sendCompanyInvite = async function (company) {
             throw new Error(authResult?.error || 'Verzenden uitnodiging mislukt');
         }
 
-        alert(`✅ Uitnodigingsmail is succesvol verzonden naar ${company.email}!`);
+        authEmailsSet = null;
+        alert(`✅ Uitnodigingsmail met directe inloglink (zonder wachtwoord) is succesvol verzonden naar ${company.email}!`);
+        loadData();
     } catch (err) {
         alert('Fout bij verzenden van uitnodiging: ' + err.message);
+    }
+};
+
+// Verstuur de wekelijkse 1-klik goedkeuringsmail ALLEEN naar bedrijven die deze week nog niets hebben ingevuld
+window.sendWeeklyUnfilledReminders = async function () {
+    const btn = document.getElementById('weekly-reminder-btn');
+    const originalText = btn ? btn.innerHTML : '';
+    try {
+        if (btn) {
+            btn.disabled = true;
+            btn.innerHTML = '⏳ Controleren wie nog niets heeft ingevuld...';
+        }
+
+        const baseUrl = window.location.origin.includes('localhost') || window.location.origin.includes('127.0.0.1')
+            ? 'https://ghpc.stageconnectie.nl'
+            : window.location.origin;
+
+        const functionUrl = `${window.SUPABASE_URL}/functions/v1/create-auth-account`;
+        const previewRes = await fetch(functionUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${window.SUPABASE_KEY}`
+            },
+            body: JSON.stringify({
+                action: 'send-weekly-unfilled-reminders',
+                dryRun: true,
+                baseUrl
+            })
+        });
+
+        const preview = await previewRes.json();
+        if (!previewRes.ok || !preview.success) {
+            throw new Error(preview?.error || 'Kon overzicht niet ophalen.');
+        }
+
+        const unfilledCount = preview.toSendCount ?? preview.unfilledCount ?? 0;
+        const weekLabel = preview.weekMonday || preview.weekStart || 'deze week';
+
+        if (unfilledCount === 0) {
+            alert(
+                `🎉 Geweldig! Voor de week vanaf ${weekLabel} hebben alle ingeroosterde bedrijven hun uren al ingevuld (${preview.alreadyFilledCount} bedrijven).\n\nEr hoeft geen herinneringsmail verstuurd te worden.`
+            );
+            return;
+        }
+
+        const sampleList = (preview.companiesToSend || preview.companies || [])
+            .slice(0, 8)
+            .map(c => `• ${c.company_name} (${c.email})`)
+            .join('\n');
+        const moreText = unfilledCount > 8 ? `\n...en nog ${unfilledCount - 8} andere bedrijven.` : '';
+
+        const confirmed = confirm(
+            `📬 Vrijdag-herinnering (Week vanaf ${weekLabel})\n\n` +
+            `• Al ingevuld deze week (worden overgeslagen): ${preview.alreadyFilledCount} bedrijven\n` +
+            `• Nog NIETS ingevuld deze week: ${unfilledCount} bedrijven\n\n` +
+            `Bedrijven die de 1-klik goedkeuringsmail ontvangen:\n${sampleList}${moreText}\n\n` +
+            `Wil je nu de 1-klik goedkeuringsmail versturen naar deze ${unfilledCount} bedrijven?`
+        );
+
+        if (!confirmed) return;
+
+        if (btn) {
+            btn.innerHTML = `📨 Verzenden naar ${unfilledCount} bedrijven...`;
+        }
+
+        const sendRes = await fetch(functionUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${window.SUPABASE_KEY}`
+            },
+            body: JSON.stringify({
+                action: 'send-weekly-unfilled-reminders',
+                dryRun: false,
+                baseUrl
+            })
+        });
+
+        const sendResult = await sendRes.json();
+        if (!sendRes.ok || !sendResult.success) {
+            throw new Error(sendResult?.error || 'Verzenden mislukt');
+        }
+
+        alert(
+            `✅ Klaar! Er zijn ${sendResult.sentCount} herinneringsmails met 1-klik goedkeuring verzonden.\n` +
+            `(${sendResult.alreadyFilledCount} bedrijven hadden al ingevuld en zijn netjes overgeslagen.)`
+        );
+    } catch (err) {
+        alert('Fout bij wekelijkse herinnering: ' + err.message);
+    } finally {
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+        }
     }
 };
 
@@ -266,6 +366,11 @@ function openModal(company = null) {
 
     modal.classList.remove('hidden');
 
+    const sendInviteCheckbox = document.getElementById('send_invite_immediately');
+    if (sendInviteCheckbox) {
+        sendInviteCheckbox.checked = false;
+    }
+
     if (company) {
         title.textContent = 'Stagebedrijf Bewerken';
         document.getElementById('company-id').value = company.id;
@@ -273,11 +378,16 @@ function openModal(company = null) {
         document.getElementById('branche').value = company.branche || '';
         document.getElementById('contact_person').value = company.contact_person || '';
         document.getElementById('email').value = company.email || '';
+        const extraEl = document.getElementById('extra_email');
+        if (extraEl) extraEl.value = company.extra_email || '';
         document.getElementById('phone_number').value = company.phone || '';
     } else {
         title.textContent = 'Stagebedrijf Toevoegen';
         form.reset();
         document.getElementById('company-id').value = '';
+        const extraEl = document.getElementById('extra_email');
+        if (extraEl) extraEl.value = '';
+        if (sendInviteCheckbox) sendInviteCheckbox.checked = false;
     }
 }
 
@@ -365,15 +475,24 @@ document.getElementById('company-form').addEventListener('submit', async (e) => 
     const id = document.getElementById('company-id').value;
     const companyName = document.getElementById('company_name').value;
     const email = document.getElementById('email').value;
+    const extraEmailEl = document.getElementById('extra_email');
+    const extraEmail = extraEmailEl ? extraEmailEl.value.trim().toLowerCase() : '';
 
     const companyData = {
         company_name: companyName,
         branche: document.getElementById('branche').value || null,
         contact_person: document.getElementById('contact_person').value || null,
         email: email || null,
+        extra_email: extraEmail || null,
         phone: document.getElementById('phone_number').value || null,
         address: null  // No address field in form yet
     };
+
+    const sendInviteNow = document.getElementById('send_invite_immediately')?.checked || false;
+    const contactPerson = document.getElementById('contact_person').value || '';
+    const loginOrigin = (window.location.origin.includes('localhost') || window.location.origin.includes('127.0.0.1'))
+        ? 'https://ghpc.stageconnectie.nl'
+        : window.location.origin;
 
     if (id) {
         // Update existing company via Edge Function (to bypass RLS limitations)
@@ -397,6 +516,34 @@ document.getElementById('company-form').addEventListener('submit', async (e) => 
             const authResult = await authRes.json();
             if (!authRes.ok || !authResult.success) {
                 throw new Error(authResult?.error || 'Bijwerken mislukt');
+            }
+
+            if (sendInviteNow && email) {
+                try {
+                    await fetch(functionUrl, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${window.SUPABASE_KEY}`
+                        },
+                        body: JSON.stringify({
+                            email: email.trim().toLowerCase(),
+                            password: '',
+                            role: 'employer',
+                            sendEmail: true,
+                            name: contactPerson || companyName,
+                            loginUrl: `${loginOrigin}/employer-portal.html`,
+                            metadata: {
+                                company_name: companyName,
+                                company_id: id
+                            }
+                        })
+                    });
+                    authEmailsSet = null;
+                    alert(`✅ Stagebedrijf bijgewerkt én uitnodigingsmail direct verzonden naar:\n${email}`);
+                } catch (inviteErr) {
+                    console.warn('Could not send invite during update:', inviteErr);
+                }
             }
 
             closeModal();
@@ -456,32 +603,44 @@ document.getElementById('company-form').addEventListener('submit', async (e) => 
                 return;
             }
 
-            // Also create auth user / send invite
-            try {
-                const contactPerson = document.getElementById('contact_person').value || '';
-                await fetch(functionUrl, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${window.SUPABASE_KEY}`
-                    },
-                    body: JSON.stringify({
-                        email: email,
-                        password: '',
-                        role: 'employer',
-                        sendEmail: false,
-                        name: contactPerson || companyName,
-                        loginUrl: `${window.location.origin.includes('localhost') || window.location.origin.includes('127.0.0.1') ? 'https://ghpc.stageconnectie.nl' : window.location.origin}/reset-password.html`,
-                        metadata: {
-                            company_name: companyName
-                        }
-                    })
-                });
-            } catch (authErr) {
-                console.warn('Auth account invitation warning:', authErr);
-            }
+            const createdCompanyId = Array.isArray(authResult.company)
+                ? authResult.company[0]?.id
+                : authResult.company?.id;
 
-            alert('✅ Stagebedrijf aangemaakt!\n\nEr is automatisch een uitnodigingsmail verzonden naar:\n' + email);
+            // Alleen direct uitnodigingsmail versturen als het vinkje aan staat
+            if (sendInviteNow) {
+                try {
+                    await fetch(functionUrl, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${window.SUPABASE_KEY}`
+                        },
+                        body: JSON.stringify({
+                            email: email.trim().toLowerCase(),
+                            password: '',
+                            role: 'employer',
+                            sendEmail: true,
+                            name: contactPerson || companyName,
+                            loginUrl: `${loginOrigin}/employer-portal.html`,
+                            metadata: {
+                                company_name: companyName,
+                                company_id: createdCompanyId || ''
+                            }
+                        })
+                    });
+                    authEmailsSet = null;
+                } catch (authErr) {
+                    console.warn('Auth account invitation warning:', authErr);
+                }
+
+                alert('✅ Stagebedrijf aangemaakt!\n\nEr is direct een uitnodigingsmail verzonden naar:\n' + email);
+            } else {
+                alert(
+                    '✅ Stagebedrijf aangemaakt (nog geen mail verstuurd)!\n\n' +
+                    '💡 Zodra je bij Stagiairs Beheer een leerling aan dit bedrijf koppelt, krijgt het bedrijf standaard automatisch de uitnodigingsmail (of verstuur hem later handmatig via de knop "✉️ Mail").'
+                );
+            }
 
             closeModal();
             loadData();

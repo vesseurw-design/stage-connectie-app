@@ -581,10 +581,11 @@ function renderStudentCards(attendance) {
                 todayComp = companies.find(c => c.id === todayAttendance.employer_id);
             }
             if (!todayComp) {
-                const filterDateObj = new Date((filterDate || new Date().toISOString().split('T')[0]) + 'T00:00:00');
+                const activeDateStr = filterDate || new Date().toISOString().split('T')[0];
+                const filterDateObj = new Date(activeDateStr + 'T00:00:00');
                 const dayMap = ['Zo', 'Ma', 'Di', 'Wo', 'Do', 'Vr', 'Za'];
                 const dayCode = dayMap[filterDateObj.getDay()] || 'Ma';
-                const dayComp = typeof getStudentCompanyForDay === 'function' ? getStudentCompanyForDay(student, dayCode, companies) : null;
+                const dayComp = typeof getStudentCompanyForDay === 'function' ? getStudentCompanyForDay(student, dayCode, companies, activeDateStr) : null;
                 if (dayComp) todayComp = dayComp.company;
             }
 
@@ -671,10 +672,11 @@ function renderStudentCards(attendance) {
                 todayComp = companies.find(c => c.id === todayAttendance.employer_id);
             }
             if (!todayComp) {
-                const filterDateObj = new Date((filterDate || new Date().toISOString().split('T')[0]) + 'T00:00:00');
+                const activeDateStr = filterDate || new Date().toISOString().split('T')[0];
+                const filterDateObj = new Date(activeDateStr + 'T00:00:00');
                 const dayMap = ['Zo', 'Ma', 'Di', 'Wo', 'Do', 'Vr', 'Za'];
                 const dayCode = dayMap[filterDateObj.getDay()] || 'Ma';
-                const dayComp = typeof getStudentCompanyForDay === 'function' ? getStudentCompanyForDay(student, dayCode, companies) : null;
+                const dayComp = typeof getStudentCompanyForDay === 'function' ? getStudentCompanyForDay(student, dayCode, companies, activeDateStr) : null;
                 if (dayComp) todayComp = dayComp.company;
             }
 
@@ -741,13 +743,26 @@ function openStudentDetail(student) {
         : [];
     let companyHtml = '-';
     if (assignments.length > 0) {
+        const fmtPeriod = (a) => {
+            if (!a.start_date && !a.end_date) return '';
+            const fmt = (d) => {
+                try {
+                    return new Date(String(d).slice(0, 10) + 'T12:00:00').toLocaleDateString('nl-NL', { day: 'numeric', month: 'short' });
+                } catch (_e) { return d; }
+            };
+            const txt = a.start_date && a.end_date
+                ? `${fmt(a.start_date)} t/m ${fmt(a.end_date)}`
+                : (a.start_date ? `vanaf ${fmt(a.start_date)}` : `t/m ${fmt(a.end_date)}`);
+            return ` <span class="text-xs font-semibold text-indigo-700 bg-indigo-50 px-1.5 py-0.5 rounded">📅 ${txt}</span>`;
+        };
         companyHtml = assignments.map(a => {
             const daysStr = (a.days && a.days.length > 0) ? ` (${a.days.join(', ')})` : '';
+            const periodStr = fmtPeriod(a);
             const cObj = companies.find(c => c.id === a.company_id);
             const contactStr = cObj && cObj.contact_person ? ` • 👤 ${cObj.contact_person}` : '';
             const phoneStr = cObj && cObj.phone ? ` • 📞 <a href="tel:${cObj.phone}" class="text-blue-600 hover:underline">${cObj.phone}</a>` : '';
             const emailStr = cObj && cObj.email ? ` • ✉️ <a href="mailto:${cObj.email}" class="text-blue-600 hover:underline">${cObj.email}</a>` : '';
-            return `<div class="mb-1"><strong>📍 ${a.company_name}</strong>${daysStr}${contactStr}${phoneStr}${emailStr}</div>`;
+            return `<div class="mb-1"><strong>📍 ${a.company_name}</strong>${daysStr}${periodStr}${contactStr}${phoneStr}${emailStr}</div>`;
         }).join('');
     } else {
         const company = companies.find(c => c.id === student.company_id);
@@ -1090,7 +1105,7 @@ async function saveSupervisorAttendance(explicitStatus) {
     const dateObj = new Date(date + 'T00:00:00');
     const dayMap = ['Zo', 'Ma', 'Di', 'Wo', 'Do', 'Vr', 'Za'];
     const dayCode = dayMap[dateObj.getDay()] || 'Ma';
-    const dayComp = typeof getStudentCompanyForDay === 'function' ? getStudentCompanyForDay(student, dayCode, companies) : null;
+    const dayComp = typeof getStudentCompanyForDay === 'function' ? getStudentCompanyForDay(student, dayCode, companies, date) : null;
     const companyId = dayComp ? dayComp.company_id : (student ? student.company_id : null);
 
     const record = {

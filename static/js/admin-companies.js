@@ -255,7 +255,9 @@ window.sendCompanyInvite = async function (company) {
             throw new Error(authResult?.error || 'Verzenden uitnodiging mislukt');
         }
 
+        authEmailsSet = null;
         alert(`✅ Uitnodigingsmail met directe inloglink (zonder wachtwoord) is succesvol verzonden naar ${company.email}!`);
+        loadData();
     } catch (err) {
         alert('Fout bij verzenden van uitnodiging: ' + err.message);
     }
@@ -364,6 +366,11 @@ function openModal(company = null) {
 
     modal.classList.remove('hidden');
 
+    const sendInviteCheckbox = document.getElementById('send_invite_immediately');
+    if (sendInviteCheckbox) {
+        sendInviteCheckbox.checked = false;
+    }
+
     if (company) {
         title.textContent = 'Stagebedrijf Bewerken';
         document.getElementById('company-id').value = company.id;
@@ -380,6 +387,7 @@ function openModal(company = null) {
         document.getElementById('company-id').value = '';
         const extraEl = document.getElementById('extra_email');
         if (extraEl) extraEl.value = '';
+        if (sendInviteCheckbox) sendInviteCheckbox.checked = false;
     }
 }
 
@@ -480,6 +488,12 @@ document.getElementById('company-form').addEventListener('submit', async (e) => 
         address: null  // No address field in form yet
     };
 
+    const sendInviteNow = document.getElementById('send_invite_immediately')?.checked || false;
+    const contactPerson = document.getElementById('contact_person').value || '';
+    const loginOrigin = (window.location.origin.includes('localhost') || window.location.origin.includes('127.0.0.1'))
+        ? 'https://ghpc.stageconnectie.nl'
+        : window.location.origin;
+
     if (id) {
         // Update existing company via Edge Function (to bypass RLS limitations)
         try {
@@ -502,6 +516,34 @@ document.getElementById('company-form').addEventListener('submit', async (e) => 
             const authResult = await authRes.json();
             if (!authRes.ok || !authResult.success) {
                 throw new Error(authResult?.error || 'Bijwerken mislukt');
+            }
+
+            if (sendInviteNow && email) {
+                try {
+                    await fetch(functionUrl, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${window.SUPABASE_KEY}`
+                        },
+                        body: JSON.stringify({
+                            email: email.trim().toLowerCase(),
+                            password: '',
+                            role: 'employer',
+                            sendEmail: true,
+                            name: contactPerson || companyName,
+                            loginUrl: `${loginOrigin}/employer-portal.html`,
+                            metadata: {
+                                company_name: companyName,
+                                company_id: id
+                            }
+                        })
+                    });
+                    authEmailsSet = null;
+                    alert(`✅ Stagebedrijf bijgewerkt én uitnodigingsmail direct verzonden naar:\n${email}`);
+                } catch (inviteErr) {
+                    console.warn('Could not send invite during update:', inviteErr);
+                }
             }
 
             closeModal();
@@ -561,32 +603,44 @@ document.getElementById('company-form').addEventListener('submit', async (e) => 
                 return;
             }
 
-            // Also create auth user / send invite
-            try {
-                const contactPerson = document.getElementById('contact_person').value || '';
-                await fetch(functionUrl, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${window.SUPABASE_KEY}`
-                    },
-                    body: JSON.stringify({
-                        email: email,
-                        password: '',
-                        role: 'employer',
-                        sendEmail: true,
-                        name: contactPerson || companyName,
-                        loginUrl: `${window.location.origin.includes('localhost') || window.location.origin.includes('127.0.0.1') ? 'https://ghpc.stageconnectie.nl' : window.location.origin}/employer-portal.html`,
-                        metadata: {
-                            company_name: companyName
-                        }
-                    })
-                });
-            } catch (authErr) {
-                console.warn('Auth account invitation warning:', authErr);
-            }
+            const createdCompanyId = Array.isArray(authResult.company)
+                ? authResult.company[0]?.id
+                : authResult.company?.id;
 
-            alert('✅ Stagebedrijf aangemaakt!\n\nEr is automatisch een uitnodigingsmail verzonden naar:\n' + email);
+            // Alleen direct uitnodigingsmail versturen als het vinkje aan staat
+            if (sendInviteNow) {
+                try {
+                    await fetch(functionUrl, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${window.SUPABASE_KEY}`
+                        },
+                        body: JSON.stringify({
+                            email: email.trim().toLowerCase(),
+                            password: '',
+                            role: 'employer',
+                            sendEmail: true,
+                            name: contactPerson || companyName,
+                            loginUrl: `${loginOrigin}/employer-portal.html`,
+                            metadata: {
+                                company_name: companyName,
+                                company_id: createdCompanyId || ''
+                            }
+                        })
+                    });
+                    authEmailsSet = null;
+                } catch (authErr) {
+                    console.warn('Auth account invitation warning:', authErr);
+                }
+
+                alert('✅ Stagebedrijf aangemaakt!\n\nEr is direct een uitnodigingsmail verzonden naar:\n' + email);
+            } else {
+                alert(
+                    '✅ Stagebedrijf aangemaakt (nog geen mail verstuurd)!\n\n' +
+                    '💡 Zodra je bij Stagiairs Beheer een leerling aan dit bedrijf koppelt, krijgt het bedrijf standaard automatisch de uitnodigingsmail (of verstuur hem later handmatig via de knop "✉️ Mail").'
+                );
+            }
 
             closeModal();
             loadData();
