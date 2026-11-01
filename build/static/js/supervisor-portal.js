@@ -1191,9 +1191,9 @@ function renderAttendanceHistory(attendance, monthFilter) {
                         ${compName ? `<div class="bg-indigo-100 text-indigo-800 font-bold px-2 py-0.5 rounded-md">📍 ${compName}</div>` : ''}
                         ${a.student_hours ? `<div class="bg-blue-100 text-blue-800 px-2 py-0.5 rounded-md">Uren: ${a.student_hours}u</div>` : ''}
                         
-                        ${a.student_status ? `
+                        ${(a.student_status && a.student_status !== 'pending' && a.student_status !== 'undefined' && a.student_status !== 'null') ? `
                             <div class="bg-purple-100 text-purple-800 px-2 py-0.5 rounded-md flex items-center gap-1" title="Invoer stagiair">
-                                <span>Stagiair: ${a.student_status === 'late' ? `Te laat (${a.minutes_late || 0}m)` : (a.student_status === 'present' ? 'Aanwezig' : (a.student_status === 'absent' ? 'Afwezig' : (a.student_status === 'sick' ? 'Ziek' : '')))}</span>
+                                <span>Stagiair: ${a.student_status === 'late' ? `Te laat (${a.minutes_late || 0}m)` : (a.student_status === 'present' ? 'Aanwezig' : (a.student_status === 'absent' ? 'Afwezig' : (a.student_status === 'sick' ? 'Ziek' : a.student_status)))}</span>
                             </div>
                         ` : ''}
                     </div>
@@ -1253,7 +1253,7 @@ function updateActionSheetButtonsUI() {
 function editCurrentFilteredDateStatus() {
     if (!currentStudent) return;
     const filterDate = document.getElementById('filter-date')?.value || new Date().toISOString().split('T')[0];
-    openSupervisorActionSheet(currentStudent.id, filterDate);
+    openCorrectModal(filterDate);
 }
 window.editCurrentFilteredDateStatus = editCurrentFilteredDateStatus;
 
