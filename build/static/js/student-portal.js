@@ -155,6 +155,11 @@ function renderHeader() {
             contractBanner.classList.add('hidden');
         }
     }
+
+    // Toon digitale stageovereenkomst (PDF + ondertekenen door stagiair & ouder/verzorger)
+    if (window.StageAgreements && currentStudent) {
+        window.StageAgreements.renderStudentPortalCard(currentStudent);
+    }
 }
 
 function getMonday(d) {

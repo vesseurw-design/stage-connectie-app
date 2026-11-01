@@ -223,6 +223,10 @@ async function continueEmployerInit() {
         }
     }
     await loadStudents();
+    window.students = students;
+    if (window.StageAgreements) {
+        window.StageAgreements.renderEmployerPortalSection(students);
+    }
     await loadSupervisors(); // Load supervisors after students
     updateWeekDisplay();
     updateWeekButtons();

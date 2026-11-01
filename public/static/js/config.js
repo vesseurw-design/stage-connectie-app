@@ -87,18 +87,20 @@ const DB_CONFIGS = {
             "🏫 Ik heb me afgemeld via de school-app (Magister/SOM)."
         ]
     },
-    // Lokale ontwikkelomgeving fallback
+    // Lokale proef-/staging-omgeving (100% losgekoppeld van live databases)
     'localhost': {
-        url: 'https://vdeipnqyesduiohxvuvu.supabase.co',
-        key: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZkZWlwbnF5ZXNkdWlvaHh2dXZ1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc1MjY5NTEsImV4cCI6MjA4MzEwMjk1MX0.IknEZ-GQvspcppJxLR00ayBDq1DbL0HiUKy9RDb59DU',
+        url: window.location.origin || 'http://localhost:8080',
+        key: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxvY2FsLXN0YWdpbmciLCJyb2xlIjoiYW5vbiIsImlhdCI6MTc2NzUyNjk1MSwiZXhwIjoyMDgzMTAyOTUxfQ.local-staging-anon-key',
         maxStudents: 250,
-        schoolName: 'Groene Hart Pro College',
+        schoolName: 'Lokale Proefomgeving (Staging)',
         logo: 'logo-ghpc-v2.png',
         canManageDemos: true,
+        isLocalStaging: true,
         demoCredentials: {
             student: 'fake@leerling.nl',
             supervisor: 'stage@begeleider.nl',
             employer: 'test@testbedrijf.nl',
+            admin: 'admin@lokaal.nl'
         },
         absenceSteps: [
             "📞 Ik heb mijn stagebedrijf gebeld om mijn afwezigheid door te geven.",
@@ -116,9 +118,11 @@ const DB_CONFIGS = {
     
     // Als er geen exacte match is, controleer op subdomeinen of lokaal/file protocol
     if (!config) {
-        if (hostname.includes('depoort')) {
+        if (hostname === '127.0.0.1') {
+            config = DB_CONFIGS['localhost'];
+        } else if (hostname.includes('depoort')) {
             config = DB_CONFIGS['depoort.stageconnectie.nl'];
-        } else if (hostname.includes('ghpc') || hostname === '' || hostname === 'localhost' || hostname === '127.0.0.1') {
+        } else if (hostname.includes('ghpc') || hostname === '') {
             config = DB_CONFIGS['ghpc.stageconnectie.nl'];
         } else if (hostname.includes('prozoetermeer')) {
             config = DB_CONFIGS['prozoetermeer.stageconnectie.nl'];
@@ -155,6 +159,91 @@ const DB_CONFIGS = {
     window.DEMO_CREDENTIALS = config.demoCredentials || null;
     window.ABSENCE_STEPS = config.absenceSteps || [];
     window.CAN_MANAGE_DEMOS = !!config.canManageDemos;
+    window.IS_LOCAL_STAGING = !!config.isLocalStaging;
+
+    // Op localhost: toon een handige zwevende balk om met 1 klik tussen rollen te wisselen of proefdata te resetten
+    if (window.IS_LOCAL_STAGING) {
+        window.switchLocalStagingRole = async function(role) {
+            try {
+                const emailMap = {
+                    admin: 'admin@lokaal.nl',
+                    supervisor: 'stage@begeleider.nl',
+                    employer: 'test@testbedrijf.nl',
+                    student: 'fake@leerling.nl'
+                };
+                const targetPageMap = {
+                    admin: 'admin.html',
+                    supervisor: 'supervisor-portal-v2.html',
+                    employer: 'employer-portal.html',
+                    student: 'student-portal.html'
+                };
+                const email = emailMap[role];
+                if (!email) return;
+
+                if (window.supabase && window.supabase.createClient) {
+                    const sb = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_KEY);
+                    const { data } = await sb.auth.signInWithPassword({ email, password: 'WelkomGHPC2026!' });
+                    const user = data?.user;
+
+                    localStorage.removeItem('stageconnect_session');
+                    localStorage.removeItem('stageconnect_student_session');
+                    localStorage.removeItem('stageconnect_supervisor_session');
+                    localStorage.removeItem('stageconnect_admin_session');
+
+                    if (role === 'admin' && user) {
+                        localStorage.setItem('stageconnect_admin_session', 'true');
+                        localStorage.setItem('admin_email', user.email);
+                        localStorage.setItem('admin_name', user.user_metadata?.name || 'Willemien Vesseur');
+                        localStorage.setItem('auth_user_id', user.id);
+                    } else if (role === 'supervisor' && user) {
+                        localStorage.setItem('stageconnect_supervisor_session', 'true');
+                        localStorage.setItem('supervisor_email', user.email);
+                        localStorage.setItem('supervisor_id', user.user_metadata?.supervisor_id || user.id);
+                        localStorage.setItem('supervisor_name', user.user_metadata?.name || 'Willemien Vesseur');
+                        localStorage.setItem('auth_user_id', user.id);
+                    } else if (role === 'employer' && user) {
+                        localStorage.setItem('stageconnect_session', 'true');
+                        localStorage.setItem('user_email', user.email);
+                        localStorage.setItem('company_id', user.user_metadata?.company_id || user.id);
+                        localStorage.setItem('company_name', user.user_metadata?.company_name || 'Elysee Dental (Lokaal)');
+                        localStorage.setItem('auth_user_id', user.id);
+                    } else if (role === 'student' && user) {
+                        localStorage.setItem('stageconnect_student_session', 'true');
+                        localStorage.setItem('student_email', user.email);
+                        localStorage.setItem('student_id', user.user_metadata?.student_id || user.id);
+                        localStorage.setItem('student_name', user.user_metadata?.name || 'Sanne de Vries (Proefleerling)');
+                        localStorage.setItem('auth_user_id', user.id);
+                    }
+                }
+                window.location.href = targetPageMap[role];
+            } catch (err) {
+                console.error('Switch local role error:', err);
+            }
+        };
+
+        window.resetLocalStagingData = async function() {
+            if (!confirm('Wil je de lokale proefdatabase terugzetten naar de beginstand?')) return;
+            await fetch('/__local_staging/reset', { method: 'POST' });
+            window.location.reload();
+        };
+
+        window.addEventListener('DOMContentLoaded', () => {
+            if (document.getElementById('local-staging-bar')) return;
+            const bar = document.createElement('div');
+            bar.id = 'local-staging-bar';
+            bar.className = 'no-print';
+            bar.style.cssText = 'position:fixed;bottom:12px;right:12px;z-index:99999;background:#0f172a;color:#f8fafc;padding:8px 12px;border-radius:12px;box-shadow:0 10px 25px rgba(0,0,0,0.35);font-family:Inter,sans-serif;font-size:12px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;border:1px solid #334155;';
+            bar.innerHTML = `
+                <span style="background:#10b981;color:#052e16;font-weight:800;padding:2px 7px;border-radius:6px;font-size:11px;">🧪 LOKAAL</span>
+                <button onclick="switchLocalStagingRole('admin')" style="background:#1e293b;color:#e2e8f0;border:1px solid #475569;padding:4px 8px;border-radius:6px;cursor:pointer;font-weight:600;font-size:11px;">👑 Admin</button>
+                <button onclick="switchLocalStagingRole('supervisor')" style="background:#1e293b;color:#e2e8f0;border:1px solid #475569;padding:4px 8px;border-radius:6px;cursor:pointer;font-weight:600;font-size:11px;">👨‍🏫 Begeleider</button>
+                <button onclick="switchLocalStagingRole('employer')" style="background:#1e293b;color:#e2e8f0;border:1px solid #475569;padding:4px 8px;border-radius:6px;cursor:pointer;font-weight:600;font-size:11px;">🏢 Bedrijf</button>
+                <button onclick="switchLocalStagingRole('student')" style="background:#1e293b;color:#e2e8f0;border:1px solid #475569;padding:4px 8px;border-radius:6px;cursor:pointer;font-weight:600;font-size:11px;">🎓 Stagiair</button>
+                <button onclick="resetLocalStagingData()" title="Reset proefdatabase" style="background:#7f1d1d;color:#fecaca;border:1px solid #991b1b;padding:4px 8px;border-radius:6px;cursor:pointer;font-weight:600;font-size:11px;">🔄 Reset</button>
+            `;
+            document.body.appendChild(bar);
+        });
+    }
     
     // Optionele vaste fallback demo-codes met verloopdatum (YYYY-MM-DD)
     window.DEMO_TEMPORARY_CODES = [];

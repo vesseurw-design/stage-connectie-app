@@ -851,6 +851,10 @@ function openStudentDetail(student) {
 
 function renderDemoContractBlock(student) {
     const block = document.getElementById('modal-contract-block');
+    if (block && student && window.StageAgreements) {
+        window.StageAgreements.renderStudentAgreementManagerBlock(block, student, 'supervisor');
+        return;
+    }
     const statusText = document.getElementById('modal-contract-status-text');
     const toggleBtn = document.getElementById('modal-contract-toggle-btn');
     if (!block || !statusText || !toggleBtn || !student) return;

@@ -80,6 +80,10 @@
                 <p class="text-sm text-gray-600">StageConnectie</p>
             </div>
             <div class="flex gap-3 flex-wrap">
+                <button type="button" onclick="window.StageAgreements && window.StageAgreements.openAgreementsOverviewModal('admin')"
+                    class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition font-bold text-sm shadow-sm">
+                    📄 Stageovereenkomsten (PDF)
+                </button>
                 <a href="admin-students-v2.html"
                     class="px-4 py-2 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-lg transition font-medium text-sm">
                     Stagiairs Beheer
@@ -100,6 +104,19 @@
                     class="px-4 py-2 bg-pink-50 text-pink-600 hover:bg-pink-100 rounded-lg transition font-medium text-sm">
                     🏖️ Vakanties
                 </a>
+                <a id="nav-demo-codes" href="admin-demo-codes.html"
+                    style="display: none;"
+                    class="px-4 py-2 bg-amber-50 text-amber-700 hover:bg-amber-100 rounded-lg transition font-medium text-sm">
+                    🔑 Demo Toegang
+                </a>
+                <script>
+                    (function() {
+                        if (window.CAN_MANAGE_DEMOS === true) {
+                            const btn = document.getElementById('nav-demo-codes');
+                            if (btn) btn.style.display = 'inline-block';
+                        }
+                    })();
+                </script>
                 <a href="admin-import.html"
                     class="px-4 py-2 bg-indigo-50 text-indigo-600 hover:bg-indigo-100 rounded-lg transition font-medium text-sm">
                     📥 Importeer CSV
@@ -327,6 +344,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="./static/js/config.js"></script>
     <script src="./static/js/company-helper.js?v=20260916_2"></script>
+    <script src="./static/js/stage-agreement.js?v=20261101_1"></script>
     <script>
         const SUPABASE_URL = window.SUPABASE_URL || 'https://vdeipnqyesduiohxvuvu.supabase.co';
         const SUPABASE_KEY = window.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZkZWlwbnF5ZXNkdWlvaHh2dXZ1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc1MjY5NTEsImV4cCI6MjA4MzEwMjk1MX0.IknEZ-GQvspcppJxLR00ayBDq1DbL0HiUKy9RDb59DU';
@@ -385,6 +403,12 @@
         async function init() {
             const isAuthenticated = await checkAuth();
             if (!isAuthenticated) return;
+
+            // Toon Demo Toegang knop uitsluitend als school demos mag beheren (bijv. GHPC/hoofdbeheer)
+            const demoNav = document.getElementById('nav-demo-codes');
+            if (demoNav) {
+                demoNav.style.display = (window.CAN_MANAGE_DEMOS === true) ? 'inline-block' : 'none';
+            }
 
             await Promise.all([loadCompanies(), loadStudents(), loadAttendance(), loadSupervisors()]);
             setupRealtimeSubscription();

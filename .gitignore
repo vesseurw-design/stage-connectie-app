@@ -54,3 +54,6 @@ create-auth-users.sql
 cleanup-old-attendance.sql
 debug-attendance-*.sql
 fix-*.sql
+
+# Lokale staging / proefdatabase en lokale PDF-opslag
+local-staging/

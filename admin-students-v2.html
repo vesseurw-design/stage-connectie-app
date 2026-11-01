@@ -257,6 +257,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="./static/js/config.js"></script>
     <script src="./static/js/company-helper.js?v=2"></script>
+    <script src="./static/js/stage-agreement.js?v=20261101_1"></script>
     <script>
         // Use the 'Dashboard Method' - hardcoded and direct
         const SUPABASE_URL = window.SUPABASE_URL || 'https://vdeipnqyesduiohxvuvu.supabase.co';
@@ -423,6 +424,7 @@
                         <td class="px-6 py-4 text-sm">${supervisor?.name || '-'}</td>
                         <td class="px-6 py-4 text-sm">${days || '-'}</td>
                         <td class="px-6 py-4 text-sm text-right">
+                            <button onclick="window.StageAgreements && window.StageAgreements.openAgreementsOverviewModal('admin', '${student.id}')" class="text-indigo-600 hover:text-indigo-900 font-semibold mr-2">📄 Overeenkomst</button>
                             <button onclick='viewAttendance(${JSON.stringify(student)})' class="text-green-600 hover:text-green-900 mr-2">📊 Aanwezigheid</button>
                             <button onclick='editStudent(${JSON.stringify(student)})' class="text-blue-600 hover:text-blue-900 mr-2">Bewerk</button>
                             <button onclick="deleteStudent('${student.name}')" class="text-red-600 hover:text-red-900">Verwijder</button>
