@@ -328,7 +328,12 @@
             created_at: existingAgreement?.created_at || nowIso
         };
 
+        if (!sb) {
+            throw new Error('Geen verbinding met de database.');
+        }
+
         let savedInMainTable = false;
+        let mainErrorMsg = '';
         try {
             const { data, error } = await sb
                 .from('Stageovereenkomsten')
@@ -339,35 +344,50 @@
                 savedInMainTable = true;
                 return (data && data[0]) ? data[0] : record;
             }
+            mainErrorMsg = error.message || String(error);
             if (existingAgreement?.id && !existingAgreement._fb_row_id) {
                 const { error: updErr } = await sb.from('Stageovereenkomsten').update(record).eq('id', existingAgreement.id);
                 if (!updErr) savedInMainTable = true;
+                else mainErrorMsg = updErr.message || mainErrorMsg;
             }
-        } catch (e) {}
+        } catch (e) {
+            mainErrorMsg = e?.message || String(e);
+        }
 
         // Automatische fallback naar push_subscriptions als Stageovereenkomsten tabel nog niet in Supabase staat
         if (!savedInMainTable) {
+            let fbErrorMsg = '';
             try {
-                const { data: existingFb } = await sb
+                const { data: existingFb, error: selErr } = await sb
                     .from('push_subscriptions')
                     .select('id')
                     .eq('student_id', student.id)
                     .eq('user_agent', FALLBACK_USER_AGENT);
+                if (selErr) throw selErr;
 
+                let writeErr = null;
                 if (existingFb && existingFb.length > 0) {
-                    await sb.from('push_subscriptions')
+                    ({ error: writeErr } = await sb.from('push_subscriptions')
                         .update({ subscription: record, updated_at: nowIso })
-                        .eq('id', existingFb[0].id);
+                        .eq('id', existingFb[0].id));
                 } else {
-                    await sb.from('push_subscriptions')
+                    ({ error: writeErr } = await sb.from('push_subscriptions')
                         .insert({
                             student_id: student.id,
                             subscription: record,
                             user_agent: FALLBACK_USER_AGENT
-                        });
+                        }));
                 }
+                if (writeErr) throw writeErr;
             } catch (fbErr) {
+                fbErrorMsg = fbErr?.message || String(fbErr);
                 console.warn('Stageovereenkomsten fallback opslaan waarschuwing:', fbErr);
+            }
+
+            // Niets opgeslagen: geef een duidelijke fout door aan de gebruiker (i.p.v. stil falen)
+            if (fbErrorMsg) {
+                console.error('Stageovereenkomst kon niet worden opgeslagen:', { mainErrorMsg, fbErrorMsg });
+                throw new Error(`De stageovereenkomst kon niet worden opgeslagen in de database.\n\nTechnische melding: ${mainErrorMsg || fbErrorMsg}`);
             }
         }
 
@@ -980,40 +1000,54 @@
             alert('Selecteer een geldig PDF-bestand (.pdf).');
             return;
         }
-        const buf = await file.arrayBuffer();
-        const pdfBytes = new Uint8Array(buf);
-        const student = await resolveStudent(studentId);
-        const existing = await fetchSingleAgreement(studentId);
+        try {
+            const buf = await file.arrayBuffer();
+            const pdfBytes = new Uint8Array(buf);
+            const student = await resolveStudent(studentId);
+            if (!student) {
+                throw new Error('De stagiair kon niet worden gevonden.');
+            }
+            const existing = await fetchSingleAgreement(studentId);
 
-        await saveAgreementPdfAndRecord(student, pdfBytes, existing, {
-            status: 'pending_signatures',
-            signatures: {},
-            printed_by_admin_at: null,
-            printed_by_supervisor_at: null,
-            archived_at: null,
-            uploaded_by: roleLabel
-        });
+            await saveAgreementPdfAndRecord(student, pdfBytes, existing, {
+                status: 'pending_signatures',
+                signatures: {},
+                printed_by_admin_at: null,
+                printed_by_supervisor_at: null,
+                archived_at: null,
+                uploaded_by: roleLabel
+            });
 
-        await refreshAllAgreementViews();
+            await refreshAllAgreementViews();
+            alert(`✅ Stageovereenkomst voor ${student.name} is geüpload.`);
+        } catch (err) {
+            console.error('Fout bij uploaden stageovereenkomst:', err);
+            alert('❌ Uploaden mislukt: ' + (err?.message || err));
+        }
     }
 
     // Genereer een proef-PDF (zoals uit het LVS) om lokaal direct te testen
     async function createSamplePdfForStudent(studentId, roleLabel = 'School') {
-        const student = await resolveStudent(studentId);
-        if (!student) return;
-        const pdfBytes = await generateSampleLvsPdfBytes(student);
-        const existing = await fetchSingleAgreement(studentId);
+        try {
+            const student = await resolveStudent(studentId);
+            if (!student) return;
+            const pdfBytes = await generateSampleLvsPdfBytes(student);
+            const existing = await fetchSingleAgreement(studentId);
 
-        await saveAgreementPdfAndRecord(student, pdfBytes, existing, {
-            status: 'pending_signatures',
-            signatures: {},
-            printed_by_admin_at: null,
-            printed_by_supervisor_at: null,
-            archived_at: null,
-            uploaded_by: roleLabel
-        });
+            await saveAgreementPdfAndRecord(student, pdfBytes, existing, {
+                status: 'pending_signatures',
+                signatures: {},
+                printed_by_admin_at: null,
+                printed_by_supervisor_at: null,
+                archived_at: null,
+                uploaded_by: roleLabel
+            });
 
-        await refreshAllAgreementViews();
+            await refreshAllAgreementViews();
+        } catch (err) {
+            console.error('Fout bij aanmaken proef-PDF:', err);
+            alert('❌ Proef-PDF aanmaken mislukt: ' + (err?.message || err));
+        }
     }
 
     // Open de PDF viewer en registreer wanneer Admin of Begeleider op Print/Download klikt
@@ -1390,7 +1424,7 @@
                     </div>
                     <div class="flex flex-wrap items-center gap-2">
                         <input type="file" id="${fileInputId}" accept="application/pdf" class="hidden"
-                            onchange="window.StageAgreements.handleFileUpload('${student.id}', this.files[0], '${isAdmin ? 'Admin' : 'Stagebegeleider'}')" />
+                            onchange="window.StageAgreements.handleFileUpload('${student.id}', this.files[0], '${isAdmin ? 'Admin' : 'Stagebegeleider'}'); this.value = '';" />
                         <button type="button" onclick="document.getElementById('${fileInputId}').click()"
                             class="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow-sm transition">
                             📤 Upload PDF uit LVS
@@ -1420,7 +1454,7 @@
                     </div>
                     <div>
                         <input type="file" id="${fileInputId}" accept="application/pdf" class="hidden"
-                            onchange="window.StageAgreements.handleFileUpload('${student.id}', this.files[0], '${isAdmin ? 'Admin' : 'Stagebegeleider'}')" />
+                            onchange="window.StageAgreements.handleFileUpload('${student.id}', this.files[0], '${isAdmin ? 'Admin' : 'Stagebegeleider'}'); this.value = '';" />
                         <button type="button" onclick="document.getElementById('${fileInputId}').click()"
                             class="px-3 py-1.5 rounded-lg bg-white border border-emerald-300 text-emerald-800 hover:bg-emerald-100 text-[11px] font-bold">
                             📤 Nieuwe PDF uploaden
@@ -1460,7 +1494,7 @@
                         🖨️ Print / Download
                     </button>
                     <input type="file" id="${fileInputId}" accept="application/pdf" class="hidden"
-                        onchange="window.StageAgreements.handleFileUpload('${student.id}', this.files[0], '${isAdmin ? 'Admin' : 'Stagebegeleider'}')" />
+                        onchange="window.StageAgreements.handleFileUpload('${student.id}', this.files[0], '${isAdmin ? 'Admin' : 'Stagebegeleider'}'); this.value = '';" />
                     <button type="button" onclick="document.getElementById('${fileInputId}').click()"
                         class="px-2.5 py-1.5 rounded-lg bg-white hover:bg-slate-100 text-slate-600 border border-slate-200 font-semibold text-[11px]"
                         title="Vervang door een andere PDF">
