@@ -796,13 +796,21 @@
 
                 if (shouldSendCompanyInvite && targetCompanyIds.length > 0) {
                     const sentCompanies = [];
+                    const failedCompanies = [];
                     const loginOrigin = (window.location.origin.includes('localhost') || window.location.origin.includes('127.0.0.1'))
                         ? 'https://ghpc.stageconnectie.nl'
                         : window.location.origin;
 
                     for (const cid of targetCompanyIds) {
                         const comp = companies.find(c => String(c.id) === String(cid));
-                        if (!comp || !comp.email) continue;
+                        if (!comp) {
+                            failedCompanies.push(`Onbekend bedrijf (id ${cid}): niet gevonden in de geladen lijst — herlaad de pagina en probeer opnieuw`);
+                            continue;
+                        }
+                        if (!comp.email || !comp.email.trim()) {
+                            failedCompanies.push(`${comp.company_name}: geen e-mailadres bekend bij dit bedrijf`);
+                            continue;
+                        }
                         try {
                             const invRes = await fetch(functionUrl, {
                                 method: 'POST',
@@ -823,17 +831,26 @@
                                     }
                                 })
                             });
-                            if (invRes.ok) {
+                            const invResult = await invRes.json().catch(() => ({}));
+                            if (invRes.ok && invResult.success) {
                                 sentCompanies.push(`${comp.company_name} (${comp.email})`);
+                            } else {
+                                failedCompanies.push(`${comp.company_name} (${comp.email}): ${invResult?.error || 'onbekende fout (HTTP ' + invRes.status + ')'}`);
                             }
                         } catch (invErr) {
                             console.warn('Fout bij verzenden bedrijfsuitnodiging:', invErr);
+                            failedCompanies.push(`${comp.company_name} (${comp.email}): ${invErr.message || 'netwerkfout'}`);
                         }
                     }
 
+                    let msg = '✅ Stagiair opgeslagen!';
                     if (sentCompanies.length > 0) {
-                        alert(`✅ Stagiair opgeslagen!\n\n✉️ Er is automatisch een uitnodigingsmail met 1-klik inloglink verstuurd naar:\n• ${sentCompanies.join('\n• ')}`);
+                        msg += `\n\n✉️ Uitnodigingsmail met 1-klik inloglink verstuurd naar:\n• ${sentCompanies.join('\n• ')}`;
                     }
+                    if (failedCompanies.length > 0) {
+                        msg += `\n\n⚠️ Uitnodigingsmail NIET verstuurd naar:\n• ${failedCompanies.join('\n• ')}\n\nControleer het e-mailadres bij Stagebedrijven en verstuur de mail opnieuw via de knop "✉️ Mail".`;
+                    }
+                    alert(msg);
                 }
 
                 closeModal();

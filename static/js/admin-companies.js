@@ -520,7 +520,7 @@ document.getElementById('company-form').addEventListener('submit', async (e) => 
 
             if (sendInviteNow && email) {
                 try {
-                    await fetch(functionUrl, {
+                    const invRes = await fetch(functionUrl, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
@@ -539,10 +539,15 @@ document.getElementById('company-form').addEventListener('submit', async (e) => 
                             }
                         })
                     });
+                    const invResult = await invRes.json().catch(() => ({}));
                     authEmailsSet = null;
+                    if (!invRes.ok || !invResult.success) {
+                        throw new Error(invResult?.error || `onbekende fout (HTTP ${invRes.status})`);
+                    }
                     alert(`✅ Stagebedrijf bijgewerkt én uitnodigingsmail direct verzonden naar:\n${email}`);
                 } catch (inviteErr) {
                     console.warn('Could not send invite during update:', inviteErr);
+                    alert(`✅ Stagebedrijf bijgewerkt.\n\n⚠️ De uitnodigingsmail naar ${email} is NIET verzonden:\n${inviteErr.message}\n\nControleer het e-mailadres en probeer het opnieuw via de knop "✉️ Mail".`);
                 }
             }
 
@@ -610,7 +615,7 @@ document.getElementById('company-form').addEventListener('submit', async (e) => 
             // Alleen direct uitnodigingsmail versturen als het vinkje aan staat
             if (sendInviteNow) {
                 try {
-                    await fetch(functionUrl, {
+                    const invRes = await fetch(functionUrl, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
@@ -629,12 +634,16 @@ document.getElementById('company-form').addEventListener('submit', async (e) => 
                             }
                         })
                     });
+                    const invResult = await invRes.json().catch(() => ({}));
                     authEmailsSet = null;
+                    if (!invRes.ok || !invResult.success) {
+                        throw new Error(invResult?.error || `onbekende fout (HTTP ${invRes.status})`);
+                    }
+                    alert('✅ Stagebedrijf aangemaakt!\n\nEr is direct een uitnodigingsmail verzonden naar:\n' + email);
                 } catch (authErr) {
                     console.warn('Auth account invitation warning:', authErr);
+                    alert(`✅ Stagebedrijf aangemaakt.\n\n⚠️ De uitnodigingsmail naar ${email} is NIET verzonden:\n${authErr.message}\n\nControleer het e-mailadres en probeer het opnieuw via de knop "✉️ Mail".`);
                 }
-
-                alert('✅ Stagebedrijf aangemaakt!\n\nEr is direct een uitnodigingsmail verzonden naar:\n' + email);
             } else {
                 alert(
                     '✅ Stagebedrijf aangemaakt (nog geen mail verstuurd)!\n\n' +

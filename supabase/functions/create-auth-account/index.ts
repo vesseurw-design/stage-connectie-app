@@ -1660,10 +1660,18 @@ serve(async (req) => {
                     })
                 });
                 
-                const resData = await mailResponse.json();
-                console.log('Mail send response:', resData);
+                const resData = await mailResponse.json().catch(() => ({}));
+                console.log('Mail send response:', mailResponse.status, email, resData);
+
+                // Controleer of Resend de mail daadwerkelijk heeft geaccepteerd.
+                // Voorheen werd hier altijd 'success' teruggegeven, ook als het verzenden mislukte.
+                if (!mailResponse.ok || !resData?.id) {
+                    const reason = resData?.message || resData?.error || `HTTP ${mailResponse.status}`;
+                    throw new Error(`Account is aangemaakt, maar de e-mail naar ${email} kon niet worden verzonden: ${reason}`);
+                }
             } else {
                 console.warn('RESEND_API_KEY niet geconfigureerd, mail niet verzonden.');
+                throw new Error('E-mailservice (RESEND_API_KEY) is niet geconfigureerd. De e-mail is niet verzonden.');
             }
         }
 
@@ -1671,6 +1679,7 @@ serve(async (req) => {
             JSON.stringify({
                 success: true,
                 message: 'Auth account created' + (sendEmail ? ' and email sent' : ''),
+                emailSent: !!sendEmail,
                 user_id: authUser.user?.id
             }),
             {
