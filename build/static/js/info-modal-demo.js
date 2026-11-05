@@ -97,16 +97,16 @@
 
                 <!-- Topic 4: Stageovereenkomst & Verzekering -->
                 <div class="info-topic bg-emerald-50/60 border border-emerald-100 rounded-2xl p-4 transition hover:border-emerald-200" 
-                    data-keywords="stageovereenkomst verzekering aansprakelijkheid aansprakelijkheidsverzekering bedrijfsverzekering schade ondertekenen getekend contract regels">
+                    data-keywords="stageovereenkomst verzekering aansprakelijkheid aansprakelijkheidsverzekering bedrijfsverzekering schade ondertekenen digitaal tekenen getekend contract regels pdf">
                     <div class="flex items-center justify-between cursor-pointer" onclick="toggleTopic(this)">
                         <div>
                             <h4 class="font-bold text-gray-800 text-sm">Stageovereenkomst & Verzekering</h4>
-                            <p class="text-xs text-gray-500">Contracten, verplichte ondertekening & schoolverzekering</p>
+                            <p class="text-xs text-gray-500">Digitaal ondertekenen in het portaal, contracten & schoolverzekering</p>
                         </div>
                         <span class="text-gray-400 font-bold text-lg transform transition-transform duration-200 icon">▼</span>
                     </div>
                     <div class="topic-content hidden mt-3 pt-3 border-t border-emerald-100 text-xs text-gray-600 space-y-2 leading-relaxed">
-                        <p><strong>Stageovereenkomsten:</strong> Leerlingen krijgen allemaal 3 stageovereenkomsten mee. Deze worden getekend door het bedrijf, de school, de leerling en een ouder/verzorger. Het stagebedrijf ontvangt één getekend exemplaar.</p>
+                        <p><strong>Stageovereenkomsten (digitaal of op papier):</strong> De stageovereenkomst wordt getekend door 4 partijen: het stagebedrijf, de school, de leerling en een ouder/verzorger. Zodra school de overeenkomst digitaal klaarzet, verschijnt deze direct bovenaan uw Stagebedrijf Portaal en kunt u deze eenvoudig online bekijken en digitaal ondertekenen (met vinger/muis of door uw naam te typen).</p>
                         <p class="bg-red-50 text-red-800 border border-red-200 p-2 rounded-lg font-semibold">Belangrijk: Stageovereenkomsten moeten door alle partijen zijn ondertekend voordat de stage begint. Zonder deze overeenkomst mag een leerling niet beginnen.</p>
                         <p><strong>Verzekering:</strong> Leerlingen op stage zijn via deze overeenkomst via de school verzekerd. De aansprakelijkheidsverzekering van school treedt in werking als de aansprakelijkheids- en/of bedrijfsverzekering bij schade hier niet in voorziet.</p>
                     </div>
@@ -201,18 +201,19 @@
 
                 <!-- Topic 9: Praktische Informatie & StageConnectie App -->
                 <div class="info-topic bg-rose-50/60 border border-rose-100 rounded-2xl p-4 transition hover:border-rose-200" 
-                    data-keywords="praktische informatie stageconnectie aanwezigheid aanwezigheidsregistratie afmelden ziekte ziekmelden verslag stageverslag evaluatie stagecertificaat">
+                    data-keywords="praktische informatie stageconnectie aanwezigheid aanwezigheidsregistratie afmelden ziekte ziekmelden verslag stageverslag evaluatie stagecertificaat collega toegang whatsapp qr inloggen zonder wachtwoord">
                     <div class="flex items-center justify-between cursor-pointer" onclick="toggleTopic(this)">
                         <div>
                             <h4 class="font-bold text-gray-800 text-sm">Praktische Informatie & StageConnectie</h4>
-                            <p class="text-xs text-gray-500">Ziekmelden, wekelijkse urenregistratie & stagecertificaat</p>
+                            <p class="text-xs text-gray-500">Ziekmelden, 1-klik goedkeuren, collega-toegang & stagecertificaat</p>
                         </div>
                         <span class="text-gray-400 font-bold text-lg transform transition-transform duration-200 icon">▼</span>
                     </div>
                     <div class="topic-content hidden mt-3 pt-3 border-t border-rose-100 text-xs text-gray-600 space-y-2 leading-relaxed">
                         <p><strong>1. Ziekmelden:</strong> De leerling moet zichzelf telefonisch bij het stagebedrijf/praktijkbegeleider én bij school/coach afmelden.</p>
-                        <p><strong>2. StageConnectie App:</strong> Stagebedrijven geven wekelijks via deze website aan of de leerling aanwezig is geweest (Aanwezig, Afwezig, Te laat, Ziek). 3 klikken en klaar!</p>
-                        <p><strong>3. Stageverslag & Certificaat:</strong> Leerlingen maken een stageverslag dat door de praktijkbegeleider ondertekend wordt. Bij voldoende aanwezigheid, inzet en inlevering van het verslag ontvangt de leerling een <strong>Stagecertificaat</strong>.</p>
+                        <p><strong>2. StageConnectie (1 klik & zonder wachtwoord):</strong> U logt zonder wachtwoord in en keurt met de groene knop <em>"Keur hele week met 1 klik goed"</em> (of vanuit de vrijdagmail) de hele stageweek in één keer goed. Losse dagen aanpassen slaat direct automatisch op.</p>
+                        <p><strong>3. Collega op de werkvloer toegang geven:</strong> Via de groene knop <em>"Collega toegang"</em> rechtsboven in het portaal geeft u een collega via WhatsApp, QR-code of een eigen e-mailadres direct toegang.</p>
+                        <p><strong>4. Stageverslag & Certificaat:</strong> Leerlingen maken een stageverslag dat door de praktijkbegeleider ondertekend wordt. Bij voldoende aanwezigheid, inzet en inlevering van het verslag ontvangt de leerling een <strong>Stagecertificaat</strong>.</p>
                     </div>
                 </div>
 
