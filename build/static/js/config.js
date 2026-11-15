@@ -170,24 +170,29 @@ const DB_CONFIGS = {
         const isLegalPage = currentPath.includes('privacy') || currentPath.includes('terms') || currentPath.includes('cookie');
 
         if (!isAdminPage && !isLegalPage) {
-            const hideStyle = document.createElement('style');
-            hideStyle.id = 'sc-not-live-style';
-            hideStyle.textContent = `
-                body > *:not(#sc-not-live-overlay) { display: none !important; }
-                body { background: #f8fafc !important; margin: 0 !important; overflow: hidden !important; }
-            `;
-            (document.head || document.documentElement).appendChild(hideStyle);
-
             const renderNotLiveScreen = () => {
                 if (document.getElementById('sc-not-live-overlay')) return;
-                if (!document.body) return;
+                if (!document.body) {
+                    setTimeout(renderNotLiveScreen, 30);
+                    return;
+                }
+
+                if (!document.getElementById('sc-not-live-style')) {
+                    const hideStyle = document.createElement('style');
+                    hideStyle.id = 'sc-not-live-style';
+                    hideStyle.textContent = `
+                        body > *:not(#sc-not-live-overlay) { display: none !important; }
+                        html, body { background: #f8fafc !important; margin: 0 !important; padding: 0 !important; height: 100% !important; overflow: hidden !important; }
+                    `;
+                    (document.head || document.documentElement).appendChild(hideStyle);
+                }
 
                 const overlay = document.createElement('div');
                 overlay.id = 'sc-not-live-overlay';
-                overlay.style.cssText = 'position:fixed;inset:0;z-index:2147483647;background:linear-gradient(135deg,#f8fafc 0%,#eff6ff 100%);display:flex;align-items:center;justify-content:center;padding:24px;font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;';
+                overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;width:100vw;height:100vh;z-index:2147483647;background:linear-gradient(135deg,#f8fafc 0%,#eff6ff 100%);display:flex !important;align-items:center;justify-content:center;padding:24px;box-sizing:border-box;font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;';
                 overlay.innerHTML = `
-                    <div style="background:#ffffff;max-width:480px;width:100%;border-radius:20px;padding:40px 32px;box-shadow:0 20px 50px rgba(15,23,42,0.08);border:1px solid #e2e8f0;text-align:center;">
-                        <img src="${window.SCHOOL_LOGO}" alt="${window.SCHOOL_NAME}" onerror="this.style.display='none'" style="max-height:68px;max-width:260px;object-fit:contain;margin:0 auto 24px;display:block;">
+                    <div style="background:#ffffff;max-width:480px;width:100%;border-radius:20px;padding:40px 32px;box-shadow:0 20px 50px rgba(15,23,42,0.08);border:1px solid #e2e8f0;text-align:center;box-sizing:border-box;">
+                        <img src="/${window.SCHOOL_LOGO.replace(/^\//, '')}" alt="${window.SCHOOL_NAME}" onerror="this.style.display='none'" style="max-height:68px;max-width:260px;object-fit:contain;margin:0 auto 24px;display:block;">
                         <div style="display:inline-flex;align-items:center;gap:6px;background:#fef3c7;color:#92400e;border:1px solid #fde68a;padding:6px 14px;border-radius:999px;font-size:12px;font-weight:700;letter-spacing:0.3px;margin-bottom:18px;">
                             🔒 Nog niet live
                         </div>
@@ -201,7 +206,7 @@ const DB_CONFIGS = {
                             Zodra de omgeving live gaat, ontvang je via school bericht met je persoonlijke inloggegevens.
                         </div>
                         <div style="border-top:1px solid #f1f5f9;padding-top:18px;">
-                            <a href="admin-login.html" style="font-size:12.5px;font-weight:600;color:#94a3b8;text-decoration:none;">
+                            <a href="/admin-login.html" style="font-size:12.5px;font-weight:600;color:#64748b;text-decoration:none;">
                                 Systeembeheerder? Inloggen →
                             </a>
                         </div>
@@ -210,11 +215,9 @@ const DB_CONFIGS = {
                 document.body.appendChild(overlay);
             };
 
-            if (document.body) {
-                renderNotLiveScreen();
-            } else {
-                window.addEventListener('DOMContentLoaded', renderNotLiveScreen);
-            }
+            renderNotLiveScreen();
+            window.addEventListener('DOMContentLoaded', renderNotLiveScreen);
+            window.addEventListener('load', renderNotLiveScreen);
         } else if (isAdminPage) {
             window.addEventListener('DOMContentLoaded', () => {
                 if (document.getElementById('sc-not-live-admin-badge')) return;
