@@ -47,11 +47,13 @@ Klik in het hoofdmenu op Stagiairs Beheer om alle stagiairs te beheren.
 1. Klik rechtsboven op Nieuwe Stagiair (of op Bewerk bij een bestaande stagiair).
 2. Voer de basisgegevens in: naam, e-mailadres, stagiairnummer, klas en schooljaar (bijvoorbeeld 2026-2027).
 3. Wachtwoord instellen: vul een wachtwoord in van minimaal 6 tekens. De schooladministratie verstrekt dit wachtwoord aan de stagiair.
-4. Stagebedrijf 1 en optioneel Stagebedrijf 2 koppelen (gelijktijdig of opeenvolgend):
-   - Stagebedrijf 1 (Huidige stage): selecteer het bedrijf, vink de stagedagen aan (Ma, Di, Wo, Do, Vr) en vul de Startdatum Bedrijf 1 en Einddatum Bedrijf 1 in.
-   - Stagebedrijf 2 (Tweede of volgende stage): je kunt hier een tweede bedrijf koppelen met eigen stagedagen en een eigen Startdatum Bedrijf 2 en Einddatum Bedrijf 2.
-   - Toepassing A (Twee bedrijven tegelijk in de week): bijvoorbeeld maandag en dinsdag bij Bedrijf 1, en woensdag bij Bedrijf 2.
-   - Toepassing B (Opeenvolgende stages vooraf inplannen): bijvoorbeeld Bedrijf 1 tot en met 20 november en aansluitend Bedrijf 2 vanaf 21 november. Het bedrijvenportaal, stagiairportaal, begeleidersportaal en de vrijdag-herinneringsmail houden automatisch per datum rekening met de actieve stageperiode van elk bedrijf, terwijl alle historische uren bewaard blijven.
+4. Stagebedrijf 1, Stagebedrijf 2 en extra vervolgstages (3e, 4e stage, enz.) koppelen:
+   - Stagebedrijf 1 (1e stage): selecteer het bedrijf, vink de stagedagen aan (Ma, Di, Wo, Do, Vr) en vul de Startdatum Bedrijf 1 en Einddatum Bedrijf 1 in.
+   - 2e Stagebedrijf / Vervolgstage: je kunt hier een tweede bedrijf koppelen met eigen stagedagen en een eigen Startdatum Bedrijf 2 en Einddatum Bedrijf 2.
+   - 3e, 4e of meer vervolgstages toevoegen: klik op de knop "+ Extra vervolgstage / stagebedrijf toevoegen (3e, 4e stage...)" om een extra stageblok toe te voegen met een eigen bedrijf, stagedagen en start-/einddatum.
+   - Belangrijk: laat eerdere stages (zoals Stage 1 en Stage 2) gewoon op hun plek staan met hun oorspronkelijke start- en einddatum. Zo blijft de volledige aanwezigheidshistorie en bedrijfsnaam van eerdere stageperiodes altijd bewaard op uitdraaien en in overzichten.
+   - Toepassing A (Meerdere bedrijven tegelijk in de week): bijvoorbeeld maandag en dinsdag bij Bedrijf 1, en woensdag bij Bedrijf 2.
+   - Toepassing B (Opeenvolgende vervolgstages vooraf of gedurende het jaar inplannen): bijvoorbeeld Bedrijf 1 t/m 20 november, Bedrijf 2 van 21 november t/m 31 januari en Bedrijf 3 vanaf 1 februari. Het bedrijvenportaal, stagiairportaal, begeleidersportaal en de vrijdag-herinneringsmail houden automatisch per datum rekening met de actieve stageperiode van elk bedrijf, terwijl alle historische uren bewaard blijven.
 5. Automatische uitnodigingsmail naar nieuw gekoppeld stagebedrijf:
    - Onder de bedrijfskoppeling staat het paarse vak Direct uitnodigingsmail sturen naar gekoppeld stagebedrijf.
    - Zodra je een nieuw stagebedrijf aan de stagiair koppelt, staat dit vinkje standaard AAN. Bij het opslaan ontvangt dat bedrijf direct de uitnodigingsmail met de 1-klik inloglink (zonder wachtwoord).

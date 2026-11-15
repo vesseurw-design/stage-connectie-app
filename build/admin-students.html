@@ -189,6 +189,14 @@
                     </div>
                 </div>
 
+                <!-- Extra vervolgstages (3e, 4e stage, enz.) -->
+                <div id="extra-stages-container" class="space-y-3"></div>
+
+                <button type="button" onclick="addExtraStageSlot()"
+                    class="w-full py-2 px-3 border-2 border-dashed border-blue-300 text-blue-700 hover:bg-blue-50 hover:border-blue-400 rounded-lg text-sm font-semibold transition flex items-center justify-center gap-1.5">
+                    <span>➕ Extra vervolgstage / stagebedrijf toevoegen (3e, 4e stage...)</span>
+                </button>
+
                 <div id="company-invite-box" class="bg-purple-50 border border-purple-200 rounded-lg p-3">
                     <label class="flex items-start gap-2.5 cursor-pointer">
                         <input type="checkbox" id="send_company_invite" checked
@@ -355,6 +363,7 @@
             if (searchText) {
                 filteredStudents = filteredStudents.filter(s => {
                     const company = companies.find(c => c.id === s.company_id);
+                    const assignedNames = getStudentCompanyAssignments(s, companies).map(a => (a.company_name || '').toLowerCase()).join(' ');
                     const supervisor = supervisors.find(sup => sup.id === s.supervisor_id);
                     const normYr = normalizeSchoolYear(s.school_year);
                     const shortYr = normYr.includes('-') ? normYr.split('-').map(p => p.slice(-2)).join('') : '';
@@ -366,6 +375,7 @@
                         normYr.toLowerCase().includes(searchText) ||
                         shortYr.includes(searchText) ||
                         (company?.company_name || '').toLowerCase().includes(searchText) ||
+                        assignedNames.includes(searchText) ||
                         (supervisor?.name || '').toLowerCase().includes(searchText);
                 });
             }
@@ -477,6 +487,120 @@
 
         let initialLinkedCompanyIds = [];
 
+        function renumberExtraStageSlots() {
+            const container = document.getElementById('extra-stages-container');
+            if (!container) return;
+            const blocks = container.querySelectorAll('.extra-stage-block');
+            blocks.forEach((block, idx) => {
+                const stageNum = idx + 3; // Starts at 3 (since 1 and 2 are fixed above)
+                const titleEl = block.querySelector('.extra-stage-title');
+                const daysLabelEl = block.querySelector('.extra-stage-days-label');
+                const startLabelEl = block.querySelector('.extra-stage-start-label');
+                const endLabelEl = block.querySelector('.extra-stage-end-label');
+                const selectEl = block.querySelector('.extra-company-select');
+                if (titleEl) titleEl.textContent = `${stageNum}e Stagebedrijf / Vervolgstage (Optioneel)`;
+                if (daysLabelEl) daysLabelEl.textContent = `Stagedagen Bedrijf ${stageNum}`;
+                if (startLabelEl) startLabelEl.textContent = `Startdatum Bedrijf ${stageNum}`;
+                if (endLabelEl) endLabelEl.textContent = `Einddatum Bedrijf ${stageNum}`;
+                if (selectEl && selectEl.options.length > 0) {
+                    selectEl.options[0].textContent = `Geen ${stageNum}e stagebedrijf`;
+                }
+            });
+        }
+
+        window.addExtraStageSlot = function (assignment = null) {
+            const container = document.getElementById('extra-stages-container');
+            if (!container) return;
+            const stageNum = container.querySelectorAll('.extra-stage-block').length + 3;
+
+            const block = document.createElement('div');
+            block.className = 'extra-stage-block space-y-3 bg-gray-50 p-3 rounded-lg border border-gray-200 relative';
+
+            const optionsHtml = `<option value="">Geen ${stageNum}e stagebedrijf</option>` +
+                companies.map(c => `<option value="${c.id}">${c.company_name}</option>`).join('');
+
+            block.innerHTML = `
+                <div class="flex justify-between items-center">
+                    <label class="extra-stage-title block text-sm font-semibold text-gray-700">${stageNum}e Stagebedrijf / Vervolgstage (Optioneel)</label>
+                    <button type="button" class="remove-extra-stage text-xs text-red-600 hover:text-red-800 font-semibold px-2 py-0.5 rounded hover:bg-red-50">✕ Verwijder</button>
+                </div>
+                <div>
+                    <select class="extra-company-select w-full px-3 py-2 border rounded-lg bg-white">
+                        ${optionsHtml}
+                    </select>
+                </div>
+                <div>
+                    <label class="extra-stage-days-label block text-xs font-medium text-gray-600 mb-1">Stagedagen Bedrijf ${stageNum}</label>
+                    <div class="flex gap-2 text-sm">
+                        <label class="cursor-pointer bg-white px-2.5 py-1 border rounded hover:bg-blue-50"><input type="checkbox" value="Ma" class="extra-day-cb mr-1">Ma</label>
+                        <label class="cursor-pointer bg-white px-2.5 py-1 border rounded hover:bg-blue-50"><input type="checkbox" value="Di" class="extra-day-cb mr-1">Di</label>
+                        <label class="cursor-pointer bg-white px-2.5 py-1 border rounded hover:bg-blue-50"><input type="checkbox" value="Wo" class="extra-day-cb mr-1">Wo</label>
+                        <label class="cursor-pointer bg-white px-2.5 py-1 border rounded hover:bg-blue-50"><input type="checkbox" value="Do" class="extra-day-cb mr-1">Do</label>
+                        <label class="cursor-pointer bg-white px-2.5 py-1 border rounded hover:bg-blue-50"><input type="checkbox" value="Vr" class="extra-day-cb mr-1">Vr</label>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-3 pt-1">
+                    <div>
+                        <label class="extra-stage-start-label block text-xs font-medium text-gray-600 mb-1">Startdatum Bedrijf ${stageNum}</label>
+                        <input type="date" class="extra-start-date w-full px-2.5 py-1.5 text-sm border rounded-lg bg-white">
+                    </div>
+                    <div>
+                        <label class="extra-stage-end-label block text-xs font-medium text-gray-600 mb-1">Einddatum Bedrijf ${stageNum}</label>
+                        <input type="date" class="extra-end-date w-full px-2.5 py-1.5 text-sm border rounded-lg bg-white">
+                    </div>
+                </div>
+            `;
+
+            const selectEl = block.querySelector('.extra-company-select');
+            const startEl = block.querySelector('.extra-start-date');
+            const endEl = block.querySelector('.extra-end-date');
+            const removeBtn = block.querySelector('.remove-extra-stage');
+
+            if (assignment) {
+                if (selectEl) selectEl.value = assignment.company_id || '';
+                (assignment.days || []).forEach(day => {
+                    const cb = block.querySelector(`.extra-day-cb[value="${day}"]`);
+                    if (cb) cb.checked = true;
+                });
+                if (startEl) startEl.value = assignment.start_date || '';
+                if (endEl) endEl.value = assignment.end_date || '';
+            }
+
+            if (selectEl) {
+                selectEl.addEventListener('change', () => updateCompanyInviteUI(true));
+            }
+            if (removeBtn) {
+                removeBtn.addEventListener('click', () => {
+                    block.remove();
+                    renumberExtraStageSlots();
+                    updateCompanyInviteUI(true);
+                });
+            }
+
+            container.appendChild(block);
+        };
+
+        function getExtraStageAssignmentsFromForm() {
+            const container = document.getElementById('extra-stages-container');
+            if (!container) return [];
+            const result = [];
+            container.querySelectorAll('.extra-stage-block').forEach(block => {
+                const cid = block.querySelector('.extra-company-select')?.value || '';
+                const days = Array.from(block.querySelectorAll('.extra-day-cb:checked')).map(cb => cb.value);
+                const start = block.querySelector('.extra-start-date')?.value || null;
+                const end = block.querySelector('.extra-end-date')?.value || null;
+                if (cid) {
+                    result.push({
+                        company_id: cid,
+                        days: days,
+                        start_date: start,
+                        end_date: end
+                    });
+                }
+            });
+            return result;
+        }
+
         function updateCompanyInviteUI(autoToggle = true) {
             const cb = document.getElementById('send_company_invite');
             const hint = document.getElementById('company-invite-hint');
@@ -484,7 +608,10 @@
 
             const c1 = document.getElementById('company_id')?.value || '';
             const c2 = document.getElementById('company_id_2')?.value || '';
-            const selectedIds = [...new Set([c1, c2].filter(Boolean))];
+            const extraCids = Array.from(document.querySelectorAll('#extra-stages-container .extra-company-select'))
+                .map(sel => sel.value || '')
+                .filter(Boolean);
+            const selectedIds = [...new Set([c1, c2, ...extraCids].filter(Boolean))];
             const newlyLinkedIds = selectedIds.filter(cid => !initialLinkedCompanyIds.includes(String(cid)));
 
             const formatCompanyList = (ids) => ids.map(cid => {
@@ -511,9 +638,11 @@
         function openModal(student = null) {
             document.getElementById('modal').classList.remove('hidden');
             
-            // Clear all day checkboxes
+            // Clear all day checkboxes & extra stage blocks
             document.querySelectorAll('input[name="days_1"]').forEach(cb => cb.checked = false);
             document.querySelectorAll('input[name="days_2"]').forEach(cb => cb.checked = false);
+            const extraContainer = document.getElementById('extra-stages-container');
+            if (extraContainer) extraContainer.innerHTML = '';
 
             if (student) {
                 document.getElementById('modal-title').textContent = 'Stagiair Bewerken';
@@ -562,6 +691,12 @@
                     if (document.getElementById('stage_end_date_2')) {
                         document.getElementById('stage_end_date_2').value = '';
                     }
+                }
+
+                if (assignments.length > 2) {
+                    assignments.slice(2).forEach(extraAss => {
+                        addExtraStageSlot(extraAss);
+                    });
                 }
 
                 document.getElementById('supervisor_id').value = student.supervisor_id || '';
@@ -743,12 +878,16 @@
                         end_date: end2
                     });
                 }
+                const extraAssignments = getExtraStageAssignmentsFromForm();
+                extraAssignments.forEach(ea => company_assignments.push(ea));
 
-                const primary_company_id = c1 || c2 || null;
-                const all_scheduled_days = [...new Set([...days1, ...days2])];
+                const primary_company_id = company_assignments.length > 0 ? company_assignments[0].company_id : null;
+                const all_scheduled_days = [...new Set(company_assignments.flatMap(a => a.days || []))];
 
-                const stage_start_date = start1 || start2 || null;
-                const stage_end_date = (c2 && end2) ? end2 : (end1 || null);
+                const allStarts = company_assignments.map(a => a.start_date).filter(Boolean).sort();
+                const allEnds = company_assignments.map(a => a.end_date).filter(Boolean).sort();
+                const stage_start_date = allStarts.length > 0 ? allStarts[0] : (start1 || start2 || null);
+                const stage_end_date = allEnds.length > 0 ? allEnds[allEnds.length - 1] : (end1 || null);
 
                 const studentPayload = {
                     name: name,
@@ -790,7 +929,7 @@
 
                 // Controleer of we automatisch een uitnodigingsmail naar gekoppelde bedrijven moeten sturen
                 const shouldSendCompanyInvite = document.getElementById('send_company_invite')?.checked || false;
-                const selectedCompanyIds = [...new Set([c1, c2].filter(Boolean))];
+                const selectedCompanyIds = [...new Set(company_assignments.map(a => a.company_id).filter(Boolean))];
                 const newlyLinkedIds = selectedCompanyIds.filter(cid => !initialLinkedCompanyIds.includes(String(cid)));
                 const targetCompanyIds = newlyLinkedIds.length > 0 ? newlyLinkedIds : selectedCompanyIds;
 

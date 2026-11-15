@@ -23,7 +23,7 @@ StageConnectie is het digitale platform voor de registratie van stage-aanwezighe
 1.1 De vier rollen binnen het platform
 
 1. Schoolbeheerders (Admins): richten de schoolomgeving in, beheren accounts, plannen stageperiodes en opeenvolgende stages in, beheren digitale stageovereenkomsten (met AVG-veiligheidsslot), voeren CSV-bulkimporten uit, beheren vakanties en branches en bewaken de AVG-termijnen.
-2. Stagebegeleiders (Docenten en Coaches): volgen hun stagiairs en klassen real-time via een interactief dashboard met live meldingen, uploaden en ondertekenen stageovereenkomsten namens school, printen overzichten per stageperiode en kunnen aanwezigheid waar nodig zelf invullen of corrigeren.
+2. Stagebegeleiders (Docenten en Coaches): volgen hun stagiairs en klassen real-time via een interactief dashboard met live meldingen, uploaden en ondertekenen stageovereenkomsten namens school, kunnen overzichten per stageperiode inzien en kunnen aanwezigheid waar nodig zelf invullen of corrigeren.
 3. Stagebedrijven (Werkgevers en Praktijkbegeleiders): loggen met 1 klik zonder wachtwoord in, kunnen collega's op de werkvloer via WhatsApp, QR-code of e-mail toegang geven, ondertekenen digitaal de stageovereenkomst en keuren de stageweek met 1 klik goed (in het portaal of rechtstreeks vanuit de vrijdag-herinneringsmail).
 4. Stagiairs (en Ouders/Verzorgers): ondertekenen samen met hun ouder of verzorger digitaal de stageovereenkomst in het stagiairportaal, registreren hun gewerkte stage-uren en dagverslagen, doorlopen een verplichte checklist bij verzuim en kunnen hun urenhistorie als PDF downloaden.
 
@@ -95,12 +95,12 @@ Klik in de filterbalk op de paarse knop Stageovereenkomsten (of open een stagiai
 2. Klik bij School / Begeleider op Tekenen om namens de school digitaal te ondertekenen (tekenen met vinger/muis of naam typen).
 3. Volg live welke van de 4 partijen (School, Stagebedrijf, Stagiair en Ouder/Verzorger) al hebben getekend en print of download de PDF zodra deze compleet is.
 
-3.3 Printformulieren en rapportages (Totaaloverzicht en Formulier per stagiair)
+3.3 Overzichten inzien (Totaaloverzicht en Overzicht per stagiair)
 
-Klik in de filterbalk op Totaaloverzicht of Formulier per stagiair:
+Klik in de filterbalk op Totaaloverzicht of Overzicht per stagiair:
 1. Kies de gewenste datumreeks (Van / Tot) en selecteer alle stagiairs of een specifieke stagiair.
 2. Klik op de knop Stageperiode om automatisch de exacte start- en einddatum van de stage van de geselecteerde leerling in te vullen.
-3. Klik op Toepassen en vervolgens op Afdrukken om het overzicht te printen of als PDF op te slaan.
+3. Klik op Toepassen om het volledige overzicht en de dag-tot-dag specificatie op je scherm in te zien.
 
 3.4 Stagiairdetails, historie filteren en aanwezigheid corrigeren
 
@@ -137,7 +137,7 @@ Bovenaan je portaal zie je het blok Mijn Stageovereenkomst:
 5.1 Stagiairs beheer: opeenvolgende stages en auto-uitnodiging
 
 Onder Stagiairs Beheer voeg je stagiairs toe of bewerk je ze:
-1. Stagebedrijf 1 en Stagebedrijf 2 met eigen start- en einddatum: je kunt per gekoppeld stagebedrijf de stagedagen én een eigen Startdatum en Einddatum instellen. Zo kun je een vervolgstage (bijvoorbeeld vanaf 21 november bij een tweede bedrijf) alvast vooraf inplannen. Alle portalen en de vrijdagherinnering schakelen op de ingestelde datum automatisch over.
+1. Stagebedrijf 1, Stagebedrijf 2 en extra vervolgstages (3e, 4e stage, enz.) met eigen start- en einddatum: je kunt per gekoppeld stagebedrijf de stagedagen én een eigen Startdatum en Einddatum instellen. Met de knop "+ Extra vervolgstage / stagebedrijf toevoegen (3e, 4e stage...)" voeg je eenvoudig een 3e, 4e of volgende stage toe. Laat eerdere stages op hun plek staan met hun start- en einddatum zodat alle historie en printrapporten per stageperiode bewaard blijven. Alle portalen en de vrijdagherinnering schakelen op de ingestelde datum automatisch over.
 2. Uitnodigingsmail bij koppelen: zodra je een nieuw stagebedrijf aan een stagiair koppelt, staat het vinkje Direct uitnodigingsmail sturen naar gekoppeld stagebedrijf standaard aan. Als een mail niet verzonden kan worden (bijvoorbeeld omdat er geen geldig e-mailadres is), toont het systeem direct een duidelijke waarschuwing met de reden.
 
 5.2 Stagebedrijven beheer: optionele uitnodiging en extra collega-e-mail

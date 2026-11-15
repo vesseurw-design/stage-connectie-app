@@ -53,9 +53,10 @@ Maak docenten en stagecoaches aan met naam, e-mailadres, telefoonnummer en de op
 
 D. Stagiairs beheren, vervolgstages inplannen en auto-uitnodiging (knop Stagiairs Beheer)
 1. Klik op Nieuwe Stagiair (of Bewerk) en vul naam, e-mailadres, stagiairnummer, klas, schooljaar en wachtwoord (minimaal 6 tekens) in.
-2. Stagebedrijf 1 en optioneel Stagebedrijf 2 koppelen:
+2. Stagebedrijf 1, Stagebedrijf 2 en extra vervolgstages (3e, 4e stage, enz.) koppelen:
    - Per bedrijf kies je het bedrijf, vink je de stagedagen aan (Ma, Di, Wo, Do, Vr) en stel je een eigen Startdatum en Einddatum in.
-   - Hiermee ondersteun je zowel twee gelijktijdige stages in dezelfde week als opeenvolgende stages (bijvoorbeeld Bedrijf 1 t/m 20 november en vervolgstage bij Bedrijf 2 vanaf 21 november). Alle portalen en de vrijdag-herinneringsmail schakelen op basis van deze datums automatisch over naar het juiste bedrijf.
+   - Komt er na de 2e stage nog een 3e of 4e stage (of meer)? Klik dan op de knop "+ Extra vervolgstage / stagebedrijf toevoegen (3e, 4e stage...)" om een extra stageblok toe te voegen. Laat eerdere stages gewoon op plek 1 en 2 staan met hun einddatum, zodat de historie en uitdraaien van eerdere stages volledig bewaard blijven.
+   - Hiermee ondersteun je zowel gelijktijdige stages in dezelfde week als onbeperkt opeenvolgende stages gedurende de schoolloopbaan. Alle portalen en de vrijdag-herinneringsmail schakelen op basis van deze datums automatisch over naar het juiste bedrijf.
 3. Automatische uitnodigingsmail bij koppelen:
    - Wanneer je een nieuw stagebedrijf aan een stagiair koppelt, staat het vinkje Direct uitnodigingsmail sturen naar gekoppeld stagebedrijf standaard AAN. Bij opslaan ontvangt het bedrijf direct de uitnodigingsmail met 1-klik inloglink. Mocht het verzenden niet lukken, dan toont het systeem direct een duidelijke melding met de reden.
 4. Stel de stagebegeleider en de Uitschrijfdatum (AVG) in en klik op Opslaan.
@@ -80,9 +81,9 @@ Voeg officiële schoolvakanties toe met naam, startdatum en einddatum. Tijdens g
 2. Bovenaan het dashboard vind je knoppen voor Bedrijven (zoekbaar overzicht van alle stagebedrijven), Info (het digitale Informatieboekje) en Ververs.
 3. Filter direct op Datum, Klas en Status (Aanwezig, Afwezig, Ziek, Te laat of Niet ingevuld). Bij opeenvolgende stages toont het portaal automatisch het stagebedrijf dat op de gekozen datum actief is.
 
-3.2 Stageovereenkomsten en Printformulieren
-- Stageovereenkomsten: klik op de paarse knop Stageovereenkomsten om voor je eigen stagiairs de LVS-stageovereenkomst (PDF) te uploaden, namens school digitaal te ondertekenen, de voortgang van de 4 handtekeningen te volgen en de PDF te printen.
-- Totaaloverzicht en Formulier per stagiair: genereer printbare rapportages over elke gewenste periode (of klik op Stageperiode om automatisch de start- en einddatum van de stage van de leerling te gebruiken).
+3.2 Stageovereenkomsten en Overzichten inzien
+- Stageovereenkomsten: klik op de paarse knop Stageovereenkomsten om voor je eigen stagiairs de LVS-stageovereenkomst (PDF) te uploaden, namens school digitaal te ondertekenen en de voortgang van de 4 handtekeningen te volgen.
+- Totaaloverzicht en Overzicht per stagiair: bekijk overzichten en dag-tot-dag specificaties over elke gewenste periode (of klik op Stageperiode om automatisch de start- en einddatum van de stage van de leerling te gebruiken).
 
 3.3 Stagiairkaarten, historie filteren en aanwezigheid corrigeren
 1. Klik op een stagiairkaart om het detailvenster te openen.

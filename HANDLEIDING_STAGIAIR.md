@@ -97,9 +97,9 @@ Pas wanneer je alle stappen hebt uitgevoerd en aangevinkt, wordt de knop Alles g
 
 7. MEERDERE OF OPEENVOLGENDE STAGEBEDRIJVEN, SCHOOLDAGEN EN VAKANTIES
 
-7.1 Twee stagebedrijven tegelijk of na elkaar (vervolgstage)
-- Loop je in dezelfde week bij twee bedrijven stage, of wissel je na een periode naar een volgend stagebedrijf? StageConnectie houdt automatisch rekening met de start- en einddatum van elk bedrijf.
-- Op je scherm zie je per stagedag automatisch het juiste stagebedrijf en past ook de groene belknop bovenaan zich aan naar het bedrijf dat op dat moment actief is.
+7.1 Meerdere stagebedrijven tegelijk of na elkaar (vervolgstages)
+- Loop je in dezelfde week bij twee bedrijven stage, of ga je na je eerste stage door naar een 2e, 3e of 4e vervolgstage? StageConnectie houdt automatisch rekening met de start- en einddatum van elke stageperiode.
+- Op je scherm zie je per stagedag automatisch het juiste stagebedrijf en past ook de groene belknop bovenaan zich aan naar het bedrijf dat op dat moment actief is, terwijl al je eerdere uren en dagverslagen van vorige stages bewaard blijven.
 
 7.2 Schooldagen (dagen zonder stage)
 Dagen waarop je volgens je rooster naar school gaat, zijn grijs gemarkeerd met de vermelding School. Heb je bij uitzondering op een schooldag toch stage gelopen om uren in te halen? Klik dan op het schoolvakje om je stage-uren in te voeren.
