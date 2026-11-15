@@ -192,7 +192,7 @@ const DB_CONFIGS = {
                 overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;width:100vw;height:100vh;z-index:2147483647;background:linear-gradient(135deg,#f8fafc 0%,#eff6ff 100%);display:flex !important;flex-direction:column;align-items:center;justify-content:center;padding:24px;box-sizing:border-box;font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;';
                 overlay.innerHTML = `
                     <div style="background:#ffffff;max-width:480px;width:100%;border-radius:20px;padding:40px 32px;box-shadow:0 20px 50px rgba(15,23,42,0.08);border:1px solid #e2e8f0;text-align:center;box-sizing:border-box;">
-                        <img src="/${window.SCHOOL_LOGO.replace(/^\//, '')}" alt="${window.SCHOOL_NAME}" onerror="this.style.display='none'" style="max-height:68px;max-width:260px;object-fit:contain;margin:0 auto 24px;display:block;">
+                        <img src="/${window.SCHOOL_LOGO.replace(/^\//, '')}?v=20261115" alt="${window.SCHOOL_NAME}" onerror="this.style.display='none'" style="max-height:68px;max-width:260px;object-fit:contain;margin:0 auto 24px;display:block;">
                         <div style="display:inline-flex;align-items:center;gap:6px;background:#fef3c7;color:#92400e;border:1px solid #fde68a;padding:6px 14px;border-radius:999px;font-size:12px;font-weight:700;letter-spacing:0.3px;margin-bottom:18px;">
                             🔒 Nog niet live
                         </div>
