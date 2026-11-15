@@ -68,6 +68,7 @@ const DB_CONFIGS = {
         schoolName: 'De Poort praktijkonderwijs',
         logo: 'logo-depoort.png',
         canManageDemos: false,
+        isNotLiveYet: true,
         absenceSteps: [
             "📞 Ik heb mijn stagebedrijf gebeld om mijn afwezigheid te melden.",
             "💬 Ik heb mijn stagebegeleider een bericht gestuurd via WhatsApp/Teams.",
@@ -160,6 +161,72 @@ const DB_CONFIGS = {
     window.ABSENCE_STEPS = config.absenceSteps || [];
     window.CAN_MANAGE_DEMOS = !!config.canManageDemos;
     window.IS_LOCAL_STAGING = !!config.isLocalStaging;
+    window.IS_NOT_LIVE_YET = !!config.isNotLiveYet;
+
+    // Pre-launch / "Nog niet live" modus: blokkeer alle niet-admin pagina's tot het startsein wordt gegeven
+    if (window.IS_NOT_LIVE_YET) {
+        const currentPath = (window.location.pathname || '').toLowerCase();
+        const isAdminPage = currentPath.includes('admin');
+        const isLegalPage = currentPath.includes('privacy') || currentPath.includes('terms') || currentPath.includes('cookie');
+
+        if (!isAdminPage && !isLegalPage) {
+            const hideStyle = document.createElement('style');
+            hideStyle.id = 'sc-not-live-style';
+            hideStyle.textContent = `
+                body > *:not(#sc-not-live-overlay) { display: none !important; }
+                body { background: #f8fafc !important; margin: 0 !important; overflow: hidden !important; }
+            `;
+            (document.head || document.documentElement).appendChild(hideStyle);
+
+            const renderNotLiveScreen = () => {
+                if (document.getElementById('sc-not-live-overlay')) return;
+                if (!document.body) return;
+
+                const overlay = document.createElement('div');
+                overlay.id = 'sc-not-live-overlay';
+                overlay.style.cssText = 'position:fixed;inset:0;z-index:2147483647;background:linear-gradient(135deg,#f8fafc 0%,#eff6ff 100%);display:flex;align-items:center;justify-content:center;padding:24px;font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;';
+                overlay.innerHTML = `
+                    <div style="background:#ffffff;max-width:480px;width:100%;border-radius:20px;padding:40px 32px;box-shadow:0 20px 50px rgba(15,23,42,0.08);border:1px solid #e2e8f0;text-align:center;">
+                        <img src="${window.SCHOOL_LOGO}" alt="${window.SCHOOL_NAME}" onerror="this.style.display='none'" style="max-height:68px;max-width:260px;object-fit:contain;margin:0 auto 24px;display:block;">
+                        <div style="display:inline-flex;align-items:center;gap:6px;background:#fef3c7;color:#92400e;border:1px solid #fde68a;padding:6px 14px;border-radius:999px;font-size:12px;font-weight:700;letter-spacing:0.3px;margin-bottom:18px;">
+                            🔒 Nog niet live
+                        </div>
+                        <h1 style="font-size:24px;font-weight:800;color:#0f172a;margin:0 0 12px;line-height:1.25;">
+                            Deze omgeving is nog niet geopend
+                        </h1>
+                        <p style="font-size:15px;color:#475569;line-height:1.65;margin:0 0 24px;">
+                            De StageConnectie-omgeving voor <strong>${window.SCHOOL_NAME}</strong> wordt momenteel achter de schermen klaargemaakt.
+                        </p>
+                        <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:16px;font-size:13.5px;color:#64748b;line-height:1.55;margin-bottom:28px;">
+                            Zodra de omgeving live gaat, ontvang je via school bericht met je persoonlijke inloggegevens.
+                        </div>
+                        <div style="border-top:1px solid #f1f5f9;padding-top:18px;">
+                            <a href="admin-login.html" style="font-size:12.5px;font-weight:600;color:#94a3b8;text-decoration:none;">
+                                Systeembeheerder? Inloggen →
+                            </a>
+                        </div>
+                    </div>
+                `;
+                document.body.appendChild(overlay);
+            };
+
+            if (document.body) {
+                renderNotLiveScreen();
+            } else {
+                window.addEventListener('DOMContentLoaded', renderNotLiveScreen);
+            }
+        } else if (isAdminPage) {
+            window.addEventListener('DOMContentLoaded', () => {
+                if (document.getElementById('sc-not-live-admin-badge')) return;
+                const badge = document.createElement('div');
+                badge.id = 'sc-not-live-admin-badge';
+                badge.className = 'no-print';
+                badge.style.cssText = 'position:fixed;bottom:12px;left:12px;z-index:99998;background:#1e293b;color:#f8fafc;padding:8px 14px;border-radius:10px;box-shadow:0 8px 20px rgba(0,0,0,0.25);font-family:Inter,sans-serif;font-size:12px;display:flex;align-items:center;gap:8px;border:1px solid #334155;';
+                badge.innerHTML = `<span style="background:#f59e0b;color:#451a03;font-weight:800;padding:2px 7px;border-radius:5px;font-size:11px;">🔒 NOG NIET LIVE</span><span>Publieke portalen zijn vergrendeld voor ${window.SCHOOL_NAME}</span>`;
+                document.body.appendChild(badge);
+            });
+        }
+    }
 
     // Op localhost: toon een handige zwevende balk om met 1 klik tussen rollen te wisselen of proefdata te resetten
     if (window.IS_LOCAL_STAGING) {
