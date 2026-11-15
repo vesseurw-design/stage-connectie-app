@@ -172,6 +172,9 @@ function normalizeSchoolYear(val) {
 
 // Algemene Import Handlende Functie
 async function executeImportProcess(fileInput, type, sendEmailCheckbox, progressElements, resultsElement, button) {
+    if (button && button.disabled) {
+        return;
+    }
     // Forceer UI-elementen direct zichtbaar bij elke klik
     if (progressElements && progressElements.container) {
         progressElements.container.classList.remove('hidden');
@@ -925,21 +928,21 @@ function initAdminImport() {
     const btnImportCompanies = document.getElementById('btn-import-companies');
     const btnImportSupervisors = document.getElementById('btn-import-supervisors');
 
-    if (btnImportStudents) {
+    if (btnImportStudents && !btnImportStudents.getAttribute('onclick')) {
         btnImportStudents.addEventListener('click', (e) => {
             e.preventDefault();
             window.triggerStudentImport();
         });
     }
 
-    if (btnImportCompanies) {
+    if (btnImportCompanies && !btnImportCompanies.getAttribute('onclick')) {
         btnImportCompanies.addEventListener('click', (e) => {
             e.preventDefault();
             window.triggerCompanyImport();
         });
     }
 
-    if (btnImportSupervisors) {
+    if (btnImportSupervisors && !btnImportSupervisors.getAttribute('onclick')) {
         btnImportSupervisors.addEventListener('click', (e) => {
             e.preventDefault();
             window.triggerSupervisorImport();
