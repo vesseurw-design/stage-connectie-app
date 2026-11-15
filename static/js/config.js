@@ -189,7 +189,7 @@ const DB_CONFIGS = {
 
                 const overlay = document.createElement('div');
                 overlay.id = 'sc-not-live-overlay';
-                overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;width:100vw;height:100vh;z-index:2147483647;background:linear-gradient(135deg,#f8fafc 0%,#eff6ff 100%);display:flex !important;align-items:center;justify-content:center;padding:24px;box-sizing:border-box;font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;';
+                overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;width:100vw;height:100vh;z-index:2147483647;background:linear-gradient(135deg,#f8fafc 0%,#eff6ff 100%);display:flex !important;flex-direction:column;align-items:center;justify-content:center;padding:24px;box-sizing:border-box;font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;';
                 overlay.innerHTML = `
                     <div style="background:#ffffff;max-width:480px;width:100%;border-radius:20px;padding:40px 32px;box-shadow:0 20px 50px rgba(15,23,42,0.08);border:1px solid #e2e8f0;text-align:center;box-sizing:border-box;">
                         <img src="/${window.SCHOOL_LOGO.replace(/^\//, '')}" alt="${window.SCHOOL_NAME}" onerror="this.style.display='none'" style="max-height:68px;max-width:260px;object-fit:contain;margin:0 auto 24px;display:block;">
@@ -202,15 +202,15 @@ const DB_CONFIGS = {
                         <p style="font-size:15px;color:#475569;line-height:1.65;margin:0 0 24px;">
                             De StageConnectie-omgeving voor <strong>${window.SCHOOL_NAME}</strong> wordt momenteel achter de schermen klaargemaakt.
                         </p>
-                        <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:16px;font-size:13.5px;color:#64748b;line-height:1.55;margin-bottom:28px;">
+                        <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:16px;font-size:13.5px;color:#64748b;line-height:1.55;">
                             Zodra de omgeving live gaat, ontvang je via school bericht met je persoonlijke inloggegevens.
                         </div>
-                        <div style="border-top:1px solid #f1f5f9;padding-top:18px;">
-                            <a href="/admin-login.html" style="font-size:12.5px;font-weight:600;color:#64748b;text-decoration:none;">
-                                Systeembeheerder? Inloggen →
-                            </a>
-                        </div>
                     </div>
+                    <footer style="position:fixed;bottom:16px;left:0;right:0;text-align:center;font-size:11.5px;color:#94a3b8;">
+                        <span>© 2026 StageConnectie</span>
+                        <span style="margin:0 8px;">•</span>
+                        <a href="/admin-login.html" style="color:#94a3b8;text-decoration:none;font-weight:500;">Systeembeheerder inloggen</a>
+                    </footer>
                 `;
                 document.body.appendChild(overlay);
             };
