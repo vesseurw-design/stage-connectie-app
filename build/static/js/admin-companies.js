@@ -73,40 +73,73 @@ async function getAuthEmails() {
 }
 
 /// Load companies
+let allCompanies = [];
+let currentSearch = '';
 let companyStudentCountMap = {};
+let companyStudentNamesMap = {};
+
+function getFilteredCompanies() {
+    const q = (currentSearch || '').trim().toLowerCase();
+    return (allCompanies || []).filter(company => {
+        if (currentFilter && company.branche !== currentFilter) {
+            return false;
+        }
+        if (!q) return true;
+
+        const linkedStudentNames = (companyStudentNamesMap[company.id] || []).join(' ').toLowerCase();
+        const searchable = [
+            company.company_name || '',
+            company.contact_person || '',
+            company.email || '',
+            company.extra_email || '',
+            company.branche || '',
+            company.phone || '',
+            linkedStudentNames
+        ].join(' ').toLowerCase();
+
+        return searchable.includes(q);
+    });
+}
 
 async function loadData() {
-    let query = supabaseClient
+    const { data, error } = await supabaseClient
         .from('Bedrijven')
         .select('*')
         .order('company_name');
-
-    // Apply filter if selected
-    if (currentFilter) {
-        query = query.eq('branche', currentFilter);
-    }
-
-    const { data, error } = await query;
 
     if (error) {
         console.error('Error loading companies:', error);
         return;
     }
 
-    // Fetch active students to calculate student count per company
+    allCompanies = data || [];
+
+    // Fetch active students to calculate student count & names per company
     try {
         const { data: studentsData } = await supabaseClient
             .from('Students')
-            .select('company_id, unenrollment_date, stage_end_date, company_assignments');
+            .select('name, company_id, unenrollment_date, stage_end_date, company_assignments');
 
         const now = new Date();
         companyStudentCountMap = {};
+        companyStudentNamesMap = {};
+        const addStudentToCompany = (cId, sName) => {
+            if (!cId) return;
+            companyStudentCountMap[cId] = (companyStudentCountMap[cId] || 0) + 1;
+            if (sName) {
+                if (!companyStudentNamesMap[cId]) companyStudentNamesMap[cId] = [];
+                if (!companyStudentNamesMap[cId].includes(sName)) {
+                    companyStudentNamesMap[cId].push(sName);
+                }
+            }
+        };
+
         (studentsData || []).forEach(s => {
             const isUnenrolled = (s.unenrollment_date && new Date(s.unenrollment_date) <= now) ||
                                  (s.stage_end_date && new Date(s.stage_end_date) <= now);
             if (!isUnenrolled) {
                 if (s.company_id) {
-                    companyStudentCountMap[s.company_id] = (companyStudentCountMap[s.company_id] || 0) + 1;
+                    addStudentToCompany(s.company_id, s.name);
                 }
                 if (s.company_assignments) {
                     try {
@@ -117,7 +150,7 @@ async function loadData() {
                             assignments.forEach(a => {
                                 const cId = a.company_id || a.companyId || (a.company && a.company.id);
                                 if (cId && cId !== s.company_id) {
-                                    companyStudentCountMap[cId] = (companyStudentCountMap[cId] || 0) + 1;
+                                    addStudentToCompany(cId, s.name);
                                 }
                             });
                         }
@@ -128,16 +161,38 @@ async function loadData() {
     } catch (stErr) {
         console.warn('Could not fetch student counts:', stErr);
         companyStudentCountMap = {};
+        companyStudentNamesMap = {};
     }
 
+    await renderCompanies();
+}
+
+async function renderCompanies() {
     const tbody = document.getElementById('companies-table-body');
+    if (!tbody) return;
     tbody.innerHTML = '';
 
-    if (!data || data.length === 0) {
+    const filtered = getFilteredCompanies();
+    const countBadge = document.getElementById('companies-count-badge');
+    if (countBadge) {
+        if (currentFilter || (currentSearch && currentSearch.trim())) {
+            countBadge.textContent = `${filtered.length} van ${allCompanies.length} bedrijven`;
+        } else {
+            countBadge.textContent = `${allCompanies.length} bedrijven`;
+        }
+    }
+
+    if (!filtered || filtered.length === 0) {
+        let emptyMessage = 'Nog geen stagebedrijven toegevoegd';
+        if (currentSearch && currentSearch.trim()) {
+            emptyMessage = `Geen stagebedrijven gevonden voor "${currentSearch.trim()}"`;
+        } else if (currentFilter) {
+            emptyMessage = 'Geen stagebedrijven gevonden in deze branche';
+        }
         tbody.innerHTML = `
             <tr>
                 <td colspan="6" class="px-6 py-8 text-center text-gray-500">
-                    ${currentFilter ? 'Geen stagebedrijven gevonden in deze branche' : 'Nog geen stagebedrijven toegevoegd'}
+                    ${emptyMessage}
                 </td>
             </tr>
         `;
@@ -146,14 +201,15 @@ async function loadData() {
 
     const authSet = await getAuthEmails();
 
-    data.forEach(company => {
+    filtered.forEach(company => {
         const compJson = JSON.stringify(company).replace(/'/g, "&apos;");
         const cleanEmail = company.email ? company.email.trim().toLowerCase() : '';
         const isAuthActive = cleanEmail && authSet.has(cleanEmail);
         const activeStudentsCount = companyStudentCountMap[company.id] || 0;
+        const studentNames = companyStudentNamesMap[company.id] || [];
 
         const studentBadge = activeStudentsCount > 0
-            ? `<span class="px-2 py-0.5 bg-blue-50 text-blue-700 rounded-full text-xs font-medium">${activeStudentsCount} stagiair${activeStudentsCount > 1 ? 's' : ''}</span>`
+            ? `<span class="px-2 py-0.5 bg-blue-50 text-blue-700 rounded-full text-xs font-medium" title="${studentNames.join(', ')}">${activeStudentsCount} stagiair${activeStudentsCount > 1 ? 's' : ''}${studentNames.length > 0 ? `: ${studentNames.join(', ')}` : ''}</span>`
             : `<span class="px-2 py-0.5 bg-gray-100 text-gray-500 rounded-full text-xs font-medium">⚠️ 0 stagiairs</span>`;
 
         const statusBadge = isAuthActive
@@ -208,55 +264,113 @@ window.previewCompanyPortal = function (company) {
     window.open('employer-portal.html', '_blank');
 };
 
-// Send single company invitation email
+// Helper om alle e-mailontvangers (1e + eventuele 2e/extra e-mailadressen) van een bedrijf op te halen
+function getCompanyInviteRecipients(primaryEmail, extraEmail) {
+    const list = [];
+    const seen = new Set();
+    const addEmails = (raw) => {
+        String(raw || '')
+            .split(/[,;\s]+/)
+            .map(s => s.trim().toLowerCase())
+            .filter(s => s && s.includes('@'))
+            .forEach(addr => {
+                if (!seen.has(addr)) {
+                    seen.add(addr);
+                    list.push(addr);
+                }
+            });
+    };
+    addEmails(primaryEmail);
+    addEmails(extraEmail);
+    return list;
+}
+
+// Verstuur uitnodigingsmail naar alle opgegeven e-mailadressen van een stagebedrijf
+async function sendEmployerInviteToRecipients({ recipients, companyId, companyName, contactPerson, loginUrl }) {
+    const functionUrl = `${window.SUPABASE_URL}/functions/v1/create-auth-account`;
+    const sent = [];
+    const failed = [];
+
+    for (const targetEmail of recipients) {
+        try {
+            const authRes = await fetch(functionUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${window.SUPABASE_KEY}`
+                },
+                body: JSON.stringify({
+                    email: targetEmail,
+                    password: '',
+                    role: 'employer',
+                    sendEmail: true,
+                    name: contactPerson || companyName,
+                    loginUrl,
+                    metadata: {
+                        company_name: companyName,
+                        company_id: companyId
+                    }
+                })
+            });
+            const authResult = await authRes.json().catch(() => ({}));
+            if (!authRes.ok || !authResult.success) {
+                throw new Error(authResult?.error || `HTTP ${authRes.status}`);
+            }
+            sent.push(targetEmail);
+        } catch (err) {
+            failed.push(`${targetEmail} (${err.message})`);
+        }
+    }
+
+    return { sent, failed };
+}
+
+// Send single company invitation email (naar 1e én 2e e-mailadres indien ingevuld)
 window.sendCompanyInvite = async function (company) {
-    if (!company.email) {
+    const recipients = getCompanyInviteRecipients(company.email, company.extra_email);
+    if (recipients.length === 0) {
         alert('Dit stagebedrijf heeft geen e-mailadres geregistreerd.');
         return;
     }
 
+    const recipientsLabel = recipients.join(' & ');
     const studentCount = companyStudentCountMap[company.id] || 0;
     if (studentCount === 0) {
         const confirmSend = confirm(
             `⚠️ LET OP: ${company.company_name} heeft momenteel GEEN actieve stagiair gekoppeld in het systeem.\n\n` +
-            `Weet je zeker dat je toch een uitnodigingsmail met inloglink wilt versturen naar ${company.email}?`
+            `Weet je zeker dat je toch een uitnodigingsmail met inloglink wilt versturen naar:\n${recipients.join('\n')}?`
         );
         if (!confirmSend) return;
     } else {
-        if (!confirm(`Wil je een uitnodigingsmail sturen naar ${company.company_name} (${company.email})?`)) {
+        if (!confirm(`Wil je een uitnodigingsmail sturen naar ${company.company_name} (${recipientsLabel})?`)) {
             return;
         }
     }
 
     try {
-        const functionUrl = `${window.SUPABASE_URL}/functions/v1/create-auth-account`;
-        const authRes = await fetch(functionUrl, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${window.SUPABASE_KEY}`
-            },
-            body: JSON.stringify({
-                email: company.email.trim().toLowerCase(),
-                password: '',
-                role: 'employer',
-                sendEmail: true,
-                name: company.contact_person || company.company_name,
-                loginUrl: `${window.location.origin.includes('localhost') || window.location.origin.includes('127.0.0.1') ? 'https://ghpc.stageconnectie.nl' : window.location.origin}/employer-portal.html`,
-                metadata: {
-                    company_name: company.company_name,
-                    company_id: company.id
-                }
-            })
+        const loginOrigin = (window.location.origin.includes('localhost') || window.location.origin.includes('127.0.0.1'))
+            ? 'https://ghpc.stageconnectie.nl'
+            : window.location.origin;
+
+        const { sent, failed } = await sendEmployerInviteToRecipients({
+            recipients,
+            companyId: company.id,
+            companyName: company.company_name,
+            contactPerson: company.contact_person,
+            loginUrl: `${loginOrigin}/employer-portal.html`
         });
 
-        const authResult = await authRes.json();
-        if (!authRes.ok || !authResult.success) {
-            throw new Error(authResult?.error || 'Verzenden uitnodiging mislukt');
-        }
-
         authEmailsSet = null;
-        alert(`✅ Uitnodigingsmail met directe inloglink (zonder wachtwoord) is succesvol verzonden naar ${company.email}!`);
+        if (failed.length > 0 && sent.length === 0) {
+            throw new Error(failed.join(', '));
+        } else if (failed.length > 0) {
+            alert(
+                `✅ Uitnodigingsmail verzonden naar:\n• ${sent.join('\n• ')}\n\n` +
+                `⚠️ Niet verzonden naar:\n• ${failed.join('\n• ')}`
+            );
+        } else {
+            alert(`✅ Uitnodigingsmail met directe inloglink (zonder wachtwoord) is succesvol verzonden naar:\n• ${sent.join('\n• ')}`);
+        }
         loadData();
     } catch (err) {
         alert('Fout bij verzenden van uitnodiging: ' + err.message);
@@ -518,36 +632,22 @@ document.getElementById('company-form').addEventListener('submit', async (e) => 
                 throw new Error(authResult?.error || 'Bijwerken mislukt');
             }
 
-            if (sendInviteNow && email) {
-                try {
-                    const invRes = await fetch(functionUrl, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${window.SUPABASE_KEY}`
-                        },
-                        body: JSON.stringify({
-                            email: email.trim().toLowerCase(),
-                            password: '',
-                            role: 'employer',
-                            sendEmail: true,
-                            name: contactPerson || companyName,
-                            loginUrl: `${loginOrigin}/employer-portal.html`,
-                            metadata: {
-                                company_name: companyName,
-                                company_id: id
-                            }
-                        })
-                    });
-                    const invResult = await invRes.json().catch(() => ({}));
-                    authEmailsSet = null;
-                    if (!invRes.ok || !invResult.success) {
-                        throw new Error(invResult?.error || `onbekende fout (HTTP ${invRes.status})`);
-                    }
-                    alert(`✅ Stagebedrijf bijgewerkt én uitnodigingsmail direct verzonden naar:\n${email}`);
-                } catch (inviteErr) {
-                    console.warn('Could not send invite during update:', inviteErr);
-                    alert(`✅ Stagebedrijf bijgewerkt.\n\n⚠️ De uitnodigingsmail naar ${email} is NIET verzonden:\n${inviteErr.message}\n\nControleer het e-mailadres en probeer het opnieuw via de knop "✉️ Mail".`);
+            const inviteRecipients = getCompanyInviteRecipients(email, extraEmail);
+            if (sendInviteNow && inviteRecipients.length > 0) {
+                const { sent, failed } = await sendEmployerInviteToRecipients({
+                    recipients: inviteRecipients,
+                    companyId: id,
+                    companyName,
+                    contactPerson,
+                    loginUrl: `${loginOrigin}/employer-portal.html`
+                });
+                authEmailsSet = null;
+                if (failed.length > 0 && sent.length === 0) {
+                    alert(`✅ Stagebedrijf bijgewerkt.\n\n⚠️ De uitnodigingsmail is NIET verzonden:\n• ${failed.join('\n• ')}\n\nControleer het e-mailadres en probeer het opnieuw via de knop "✉️ Mail".`);
+                } else if (failed.length > 0) {
+                    alert(`✅ Stagebedrijf bijgewerkt én uitnodigingsmail direct verzonden naar:\n• ${sent.join('\n• ')}\n\n⚠️ Niet verzonden naar:\n• ${failed.join('\n• ')}`);
+                } else {
+                    alert(`✅ Stagebedrijf bijgewerkt én uitnodigingsmail direct verzonden naar:\n• ${sent.join('\n• ')}`);
                 }
             }
 
@@ -613,36 +713,22 @@ document.getElementById('company-form').addEventListener('submit', async (e) => 
                 : authResult.company?.id;
 
             // Alleen direct uitnodigingsmail versturen als het vinkje aan staat
-            if (sendInviteNow) {
-                try {
-                    const invRes = await fetch(functionUrl, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${window.SUPABASE_KEY}`
-                        },
-                        body: JSON.stringify({
-                            email: email.trim().toLowerCase(),
-                            password: '',
-                            role: 'employer',
-                            sendEmail: true,
-                            name: contactPerson || companyName,
-                            loginUrl: `${loginOrigin}/employer-portal.html`,
-                            metadata: {
-                                company_name: companyName,
-                                company_id: createdCompanyId || ''
-                            }
-                        })
-                    });
-                    const invResult = await invRes.json().catch(() => ({}));
-                    authEmailsSet = null;
-                    if (!invRes.ok || !invResult.success) {
-                        throw new Error(invResult?.error || `onbekende fout (HTTP ${invRes.status})`);
-                    }
-                    alert('✅ Stagebedrijf aangemaakt!\n\nEr is direct een uitnodigingsmail verzonden naar:\n' + email);
-                } catch (authErr) {
-                    console.warn('Auth account invitation warning:', authErr);
-                    alert(`✅ Stagebedrijf aangemaakt.\n\n⚠️ De uitnodigingsmail naar ${email} is NIET verzonden:\n${authErr.message}\n\nControleer het e-mailadres en probeer het opnieuw via de knop "✉️ Mail".`);
+            const inviteRecipients = getCompanyInviteRecipients(email, extraEmail);
+            if (sendInviteNow && inviteRecipients.length > 0) {
+                const { sent, failed } = await sendEmployerInviteToRecipients({
+                    recipients: inviteRecipients,
+                    companyId: createdCompanyId || '',
+                    companyName,
+                    contactPerson,
+                    loginUrl: `${loginOrigin}/employer-portal.html`
+                });
+                authEmailsSet = null;
+                if (failed.length > 0 && sent.length === 0) {
+                    alert(`✅ Stagebedrijf aangemaakt.\n\n⚠️ De uitnodigingsmail is NIET verzonden:\n• ${failed.join('\n• ')}\n\nControleer het e-mailadres en probeer het opnieuw via de knop "✉️ Mail".`);
+                } else if (failed.length > 0) {
+                    alert(`✅ Stagebedrijf aangemaakt!\n\nEr is direct een uitnodigingsmail verzonden naar:\n• ${sent.join('\n• ')}\n\n⚠️ Niet verzonden naar:\n• ${failed.join('\n• ')}`);
+                } else {
+                    alert(`✅ Stagebedrijf aangemaakt!\n\nEr is direct een uitnodigingsmail verzonden naar:\n• ${sent.join('\n• ')}`);
                 }
             } else {
                 alert(
@@ -659,11 +745,36 @@ document.getElementById('company-form').addEventListener('submit', async (e) => 
     }
 });
 
-// Filter change
+// Filter & Search change
 document.getElementById('branche-filter').addEventListener('change', (e) => {
     currentFilter = e.target.value;
-    loadData();
+    renderCompanies();
 });
+
+const searchInputEl = document.getElementById('search-input');
+const clearSearchBtnEl = document.getElementById('clear-search-btn');
+
+if (searchInputEl) {
+    searchInputEl.addEventListener('input', (e) => {
+        currentSearch = e.target.value;
+        if (clearSearchBtnEl) {
+            clearSearchBtnEl.classList.toggle('hidden', !currentSearch);
+        }
+        renderCompanies();
+    });
+}
+
+window.clearCompanySearch = function () {
+    currentSearch = '';
+    if (searchInputEl) {
+        searchInputEl.value = '';
+        searchInputEl.focus();
+    }
+    if (clearSearchBtnEl) {
+        clearSearchBtnEl.classList.add('hidden');
+    }
+    renderCompanies();
+};
 
 // Logout
 function logout() {
@@ -676,21 +787,10 @@ function logout() {
 // Export companies to CSV (Excel compatible)
 window.exportCompaniesToCSV = async function () {
     try {
-        let query = supabaseClient
-            .from('Bedrijven')
-            .select('*')
-            .order('company_name', { ascending: true });
-
-        if (currentFilter) {
-            query = query.eq('branche', currentFilter);
+        if (!allCompanies || allCompanies.length === 0) {
+            await loadData();
         }
-
-        const { data: bedrijven, error } = await query;
-
-        if (error) {
-            alert('Fout bij ophalen bedrijven: ' + error.message);
-            return;
-        }
+        const bedrijven = getFilteredCompanies();
 
         if (!bedrijven || bedrijven.length === 0) {
             alert('Geen bedrijven gevonden om te exporteren.');

@@ -134,6 +134,12 @@
                 <div class="space-y-3 bg-gray-50 p-3 rounded-lg border border-gray-200">
                     <div>
                         <label class="block text-sm font-semibold text-gray-700 mb-1">Stagebedrijf 1 (Huidige stage)</label>
+                        <div class="relative mb-1.5">
+                            <input type="text" id="company_search_1" autocomplete="off"
+                                placeholder="🔍 Typ om stagebedrijf te zoeken..."
+                                class="company-search-input w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500 outline-none">
+                            <div id="company_results_1" class="company-search-results hidden absolute left-0 right-0 top-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-48 overflow-y-auto z-30 divide-y divide-gray-100"></div>
+                        </div>
                         <select id="company_id" class="w-full px-3 py-2 border rounded-lg bg-white">
                             <option value="">Geen stagebedrijf</option>
                         </select>
@@ -163,6 +169,12 @@
                 <div class="space-y-3 bg-gray-50 p-3 rounded-lg border border-gray-200">
                     <div>
                         <label class="block text-sm font-semibold text-gray-700 mb-1">2e Stagebedrijf / Vervolgstage (Optioneel)</label>
+                        <div class="relative mb-1.5">
+                            <input type="text" id="company_search_2" autocomplete="off"
+                                placeholder="🔍 Typ om 2e stagebedrijf te zoeken..."
+                                class="company-search-input w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500 outline-none">
+                            <div id="company_results_2" class="company-search-results hidden absolute left-0 right-0 top-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-48 overflow-y-auto z-30 divide-y divide-gray-100"></div>
+                        </div>
                         <select id="company_id_2" class="w-full px-3 py-2 border rounded-lg bg-white">
                             <option value="">Geen 2e stagebedrijf</option>
                         </select>
@@ -265,6 +277,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="./static/js/config.js"></script>
     <script src="./static/js/company-helper.js?v=2"></script>
+    <script src="./static/js/stage-agreement.js?v=20261101_1"></script>
     <script>
         // Use the 'Dashboard Method' - hardcoded and direct
         const SUPABASE_URL = window.SUPABASE_URL || 'https://vdeipnqyesduiohxvuvu.supabase.co';
@@ -433,6 +446,7 @@
                         <td class="px-6 py-4 text-sm">${supervisor?.name || '-'}</td>
                         <td class="px-6 py-4 text-sm">${days || '-'}</td>
                         <td class="px-6 py-4 text-sm text-right">
+                            <button onclick="window.StageAgreements && window.StageAgreements.openAgreementsOverviewModal('admin', '${student.id}')" class="text-indigo-600 hover:text-indigo-900 font-semibold mr-2">📄 Overeenkomst</button>
                             <button onclick='viewAttendance(${JSON.stringify(student)})' class="text-green-600 hover:text-green-900 mr-2">📊 Aanwezigheid</button>
                             <button onclick='editStudent(${JSON.stringify(student)})' class="text-blue-600 hover:text-blue-900 mr-2">Bewerk</button>
                             <button onclick="deleteStudent('${student.name}')" class="text-red-600 hover:text-red-900">Verwijder</button>
@@ -487,6 +501,111 @@
 
         let initialLinkedCompanyIds = [];
 
+        function populateCompanySelectOptions(selectEl, emptyLabel, filterQuery = '') {
+            if (!selectEl) return [];
+            const currentVal = selectEl.value || '';
+            const q = (filterQuery || '').trim().toLowerCase();
+            const filtered = !q
+                ? companies
+                : companies.filter(c => {
+                    const haystack = [
+                        c.company_name || '',
+                        c.branche || '',
+                        c.contact_person || '',
+                        c.email || ''
+                    ].join(' ').toLowerCase();
+                    return haystack.includes(q);
+                });
+
+            let html = `<option value="">${emptyLabel}</option>`;
+            const currentInFiltered = filtered.some(c => String(c.id) === String(currentVal));
+            if (currentVal && !currentInFiltered) {
+                const currentObj = companies.find(c => String(c.id) === String(currentVal));
+                if (currentObj) {
+                    html += `<option value="${currentObj.id}">${currentObj.company_name}</option>`;
+                }
+            }
+            filtered.forEach(c => {
+                html += `<option value="${c.id}">${c.company_name}</option>`;
+            });
+            selectEl.innerHTML = html;
+            if (currentVal) selectEl.value = currentVal;
+            return filtered;
+        }
+
+        function attachCompanySearch(searchInputEl, resultsBoxEl, selectEl, getEmptyLabel) {
+            if (!searchInputEl || !resultsBoxEl || !selectEl) return;
+
+            const renderDropdown = () => {
+                const q = (searchInputEl.value || '').trim();
+                const filtered = populateCompanySelectOptions(selectEl, getEmptyLabel(), q);
+
+                if (!q) {
+                    resultsBoxEl.classList.add('hidden');
+                    resultsBoxEl.innerHTML = '';
+                    return;
+                }
+
+                resultsBoxEl.classList.remove('hidden');
+                if (filtered.length === 0) {
+                    resultsBoxEl.innerHTML = `<div class="px-3 py-2 text-xs text-gray-500 italic">Geen stagebedrijf gevonden voor "${q}"</div>`;
+                    return;
+                }
+
+                resultsBoxEl.innerHTML = filtered.map(c => {
+                    const subInfo = [c.branche, c.contact_person].filter(Boolean).join(' • ');
+                    const isSelected = String(selectEl.value) === String(c.id);
+                    return `
+                        <button type="button" data-cid="${c.id}"
+                            class="company-result-item w-full text-left px-3 py-2 text-sm hover:bg-blue-50 flex justify-between items-center transition ${isSelected ? 'bg-blue-50 font-semibold text-blue-700' : 'text-gray-800'}">
+                            <span>${c.company_name}</span>
+                            ${subInfo ? `<span class="text-xs text-gray-400 ml-2 truncate max-w-[45%]">${subInfo}</span>` : ''}
+                        </button>
+                    `;
+                }).join('');
+
+                resultsBoxEl.querySelectorAll('.company-result-item').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const cid = btn.getAttribute('data-cid') || '';
+                        populateCompanySelectOptions(selectEl, getEmptyLabel(), '');
+                        selectEl.value = cid;
+                        selectEl.dispatchEvent(new Event('change'));
+                        searchInputEl.value = '';
+                        resultsBoxEl.classList.add('hidden');
+                        resultsBoxEl.innerHTML = '';
+                    });
+                });
+            };
+
+            searchInputEl.addEventListener('input', renderDropdown);
+            searchInputEl.addEventListener('focus', () => {
+                if ((searchInputEl.value || '').trim()) renderDropdown();
+            });
+            searchInputEl.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    const firstBtn = resultsBoxEl.querySelector('.company-result-item');
+                    if (firstBtn) firstBtn.click();
+                } else if (e.key === 'Escape') {
+                    resultsBoxEl.classList.add('hidden');
+                }
+            });
+            selectEl.addEventListener('change', () => {
+                if ((searchInputEl.value || '').trim()) {
+                    searchInputEl.value = '';
+                    populateCompanySelectOptions(selectEl, getEmptyLabel(), '');
+                }
+                resultsBoxEl.classList.add('hidden');
+            });
+        }
+
+        // Close company search results when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.company-search-input') && !e.target.closest('.company-search-results')) {
+                document.querySelectorAll('.company-search-results').forEach(el => el.classList.add('hidden'));
+            }
+        });
+
         function renumberExtraStageSlots() {
             const container = document.getElementById('extra-stages-container');
             if (!container) return;
@@ -498,10 +617,12 @@
                 const startLabelEl = block.querySelector('.extra-stage-start-label');
                 const endLabelEl = block.querySelector('.extra-stage-end-label');
                 const selectEl = block.querySelector('.extra-company-select');
+                const searchInputEl = block.querySelector('.extra-company-search');
                 if (titleEl) titleEl.textContent = `${stageNum}e Stagebedrijf / Vervolgstage (Optioneel)`;
                 if (daysLabelEl) daysLabelEl.textContent = `Stagedagen Bedrijf ${stageNum}`;
                 if (startLabelEl) startLabelEl.textContent = `Startdatum Bedrijf ${stageNum}`;
                 if (endLabelEl) endLabelEl.textContent = `Einddatum Bedrijf ${stageNum}`;
+                if (searchInputEl) searchInputEl.placeholder = `🔍 Typ om ${stageNum}e stagebedrijf te zoeken...`;
                 if (selectEl && selectEl.options.length > 0) {
                     selectEl.options[0].textContent = `Geen ${stageNum}e stagebedrijf`;
                 }
@@ -525,6 +646,12 @@
                     <button type="button" class="remove-extra-stage text-xs text-red-600 hover:text-red-800 font-semibold px-2 py-0.5 rounded hover:bg-red-50">✕ Verwijder</button>
                 </div>
                 <div>
+                    <div class="relative mb-1.5">
+                        <input type="text" autocomplete="off"
+                            placeholder="🔍 Typ om ${stageNum}e stagebedrijf te zoeken..."
+                            class="extra-company-search company-search-input w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500 outline-none">
+                        <div class="extra-company-results company-search-results hidden absolute left-0 right-0 top-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-48 overflow-y-auto z-30 divide-y divide-gray-100"></div>
+                    </div>
                     <select class="extra-company-select w-full px-3 py-2 border rounded-lg bg-white">
                         ${optionsHtml}
                     </select>
@@ -552,9 +679,17 @@
             `;
 
             const selectEl = block.querySelector('.extra-company-select');
+            const searchInputEl = block.querySelector('.extra-company-search');
+            const resultsBoxEl = block.querySelector('.extra-company-results');
             const startEl = block.querySelector('.extra-start-date');
             const endEl = block.querySelector('.extra-end-date');
             const removeBtn = block.querySelector('.remove-extra-stage');
+
+            attachCompanySearch(searchInputEl, resultsBoxEl, selectEl, () => {
+                const idx = Array.from(container.querySelectorAll('.extra-stage-block')).indexOf(block);
+                const num = (idx >= 0 ? idx : 0) + 3;
+                return `Geen ${num}e stagebedrijf`;
+            });
 
             if (assignment) {
                 if (selectEl) selectEl.value = assignment.company_id || '';
@@ -635,8 +770,33 @@
         document.getElementById('company_id')?.addEventListener('change', () => updateCompanyInviteUI(true));
         document.getElementById('company_id_2')?.addEventListener('change', () => updateCompanyInviteUI(true));
 
+        attachCompanySearch(
+            document.getElementById('company_search_1'),
+            document.getElementById('company_results_1'),
+            document.getElementById('company_id'),
+            () => 'Geen stagebedrijf'
+        );
+        attachCompanySearch(
+            document.getElementById('company_search_2'),
+            document.getElementById('company_results_2'),
+            document.getElementById('company_id_2'),
+            () => 'Geen 2e stagebedrijf (Optioneel)'
+        );
+
         function openModal(student = null) {
             document.getElementById('modal').classList.remove('hidden');
+
+            // Reset company search inputs & restore full dropdown options
+            ['company_search_1', 'company_search_2'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.value = '';
+            });
+            ['company_results_1', 'company_results_2'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) { el.classList.add('hidden'); el.innerHTML = ''; }
+            });
+            populateCompanySelectOptions(document.getElementById('company_id'), 'Geen stagebedrijf', '');
+            populateCompanySelectOptions(document.getElementById('company_id_2'), 'Geen 2e stagebedrijf (Optioneel)', '');
             
             // Clear all day checkboxes & extra stage blocks
             document.querySelectorAll('input[name="days_1"]').forEach(cb => cb.checked = false);
