@@ -76,7 +76,7 @@ serve(async (req) => {
             }
 
             // Determine company assignments (supports multi-company JSON and single company_id)
-            const assignments: Array<{ company_id: string; days: string[] }> = [];
+            const assignments: Array<{ company_id: string; days: string[]; start_date?: string | null; end_date?: string | null }> = [];
 
             if (student.company_assignments) {
                 let ca = student.company_assignments;
@@ -89,7 +89,9 @@ serve(async (req) => {
                         if (cid) {
                             assignments.push({
                                 company_id: cid,
-                                days: Array.isArray(a.days) && a.days.length > 0 ? a.days : (student.scheduled_days || [])
+                                days: Array.isArray(a.days) && a.days.length > 0 ? a.days : (student.scheduled_days || []),
+                                start_date: a.start_date || null,
+                                end_date: a.end_date || null
                             });
                         }
                     }
@@ -103,7 +105,9 @@ serve(async (req) => {
                 for (const cid of ids) {
                     assignments.push({
                         company_id: cid,
-                        days: student.scheduled_days || []
+                        days: student.scheduled_days || [],
+                        start_date: student.stage_start_date || student.start_date || null,
+                        end_date: student.stage_end_date || student.end_date || null
                     });
                 }
             }
@@ -120,6 +124,10 @@ serve(async (req) => {
                 for (const dayCode of scheduled) {
                     const dateStr = weekDates[dayCode];
                     if (!dateStr || dateStr > todayStr) continue;
+
+                    // Skip days outside this company's stage period (start_date / end_date)
+                    if (assignment.start_date && dateStr < assignment.start_date) continue;
+                    if (assignment.end_date && dateStr > assignment.end_date) continue;
 
                     // Check if this date falls within a holiday
                     const isHoliday = holidays?.some(h => dateStr >= h.start_date && dateStr <= h.end_date);
@@ -156,16 +164,24 @@ serve(async (req) => {
                                      (student.end_date && new Date(student.end_date) <= now);
                 if (isUnenrolled) continue;
 
-                // Check if today is a scheduled day for this student
-                let isScheduledToday = (student.scheduled_days || []).includes(todayDayCode);
-                if (!isScheduledToday && student.company_assignments) {
+                // Check if today is a scheduled day for this student (respecting stage start/end dates)
+                let isScheduledToday = false;
+                if (student.company_assignments) {
                     let ca = student.company_assignments;
                     if (typeof ca === 'string') {
                         try { ca = JSON.parse(ca); } catch (e) { ca = []; }
                     }
-                    if (Array.isArray(ca)) {
-                        isScheduledToday = ca.some((a: any) => (a.days || []).includes(todayDayCode));
+                    if (Array.isArray(ca) && ca.length > 0) {
+                        isScheduledToday = ca.some((a: any) => {
+                            const days = Array.isArray(a.days) && a.days.length > 0 ? a.days : (student.scheduled_days || []);
+                            const inPeriod = (!a.start_date || todayStr >= a.start_date) && (!a.end_date || todayStr <= a.end_date);
+                            return inPeriod && days.includes(todayDayCode);
+                        });
                     }
+                }
+                if (!isScheduledToday && (!student.company_assignments || (Array.isArray(student.company_assignments) && student.company_assignments.length === 0))) {
+                    const startOk = (!student.stage_start_date || todayStr >= student.stage_start_date) && (!student.start_date || todayStr >= student.start_date);
+                    isScheduledToday = startOk && (student.scheduled_days || []).includes(todayDayCode);
                 }
 
                 if (!isScheduledToday) continue;
