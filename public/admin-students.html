@@ -220,6 +220,7 @@
                             </span>
                         </div>
                     </label>
+                    <div id="company-invite-targets" class="hidden mt-2.5 pt-2.5 border-t border-purple-200 space-y-1.5"></div>
                 </div>
 
                 <div>
@@ -736,18 +737,28 @@
             return result;
         }
 
-        function updateCompanyInviteUI(autoToggle = true) {
-            const cb = document.getElementById('send_company_invite');
-            const hint = document.getElementById('company-invite-hint');
-            if (!cb || !hint) return;
-
+        function getSelectedCompanyIdsForInvite() {
             const c1 = document.getElementById('company_id')?.value || '';
             const c2 = document.getElementById('company_id_2')?.value || '';
             const extraCids = Array.from(document.querySelectorAll('#extra-stages-container .extra-company-select'))
                 .map(sel => sel.value || '')
                 .filter(Boolean);
-            const selectedIds = [...new Set([c1, c2, ...extraCids].filter(Boolean))];
+            return [...new Set([c1, c2, ...extraCids].filter(Boolean).map(String))];
+        }
+
+        function updateCompanyInviteUI(autoToggle = true) {
+            const cb = document.getElementById('send_company_invite');
+            const hint = document.getElementById('company-invite-hint');
+            const targetsEl = document.getElementById('company-invite-targets');
+            if (!cb || !hint) return;
+
+            const selectedIds = getSelectedCompanyIdsForInvite();
             const newlyLinkedIds = selectedIds.filter(cid => !initialLinkedCompanyIds.includes(String(cid)));
+
+            const prevChecked = new Set(
+                Array.from(document.querySelectorAll('#company-invite-targets .company-invite-target-cb:checked'))
+                    .map(el => String(el.value))
+            );
 
             const formatCompanyList = (ids) => ids.map(cid => {
                 const comp = companies.find(c => String(c.id) === String(cid));
@@ -758,14 +769,96 @@
             if (selectedIds.length === 0) {
                 if (autoToggle) cb.checked = true;
                 hint.textContent = 'Zodra je hierboven een stagebedrijf kiest, ontvangt dat bedrijf bij opslaan standaard direct de uitnodigingsmail.';
-            } else if (newlyLinkedIds.length > 0) {
+                if (targetsEl) {
+                    targetsEl.innerHTML = '';
+                    targetsEl.classList.add('hidden');
+                }
+                return;
+            }
+
+            if (newlyLinkedIds.length > 0) {
                 if (autoToggle) cb.checked = true;
                 hint.innerHTML = `Standaard ingeschakeld voor nieuw gekoppeld bedrijf: <strong>${formatCompanyList(newlyLinkedIds)}</strong> ontvangt bij opslaan direct de uitnodigingsmail met 1-klik inloglink.`;
             } else {
                 if (autoToggle) cb.checked = false;
-                hint.innerHTML = `Huidig bedrijf (<strong>${formatCompanyList(selectedIds)}</strong>) was al gekoppeld. Vink aan als je de uitnodigingsmail nu nogmaals wilt versturen.`;
+                hint.innerHTML = selectedIds.length > 1
+                    ? 'Alle gekoppelde bedrijven waren al gekoppeld. Vink hieronder alleen het bedrijf (of de bedrijven) aan dat je nu wilt mailen.'
+                    : `Huidig bedrijf (<strong>${formatCompanyList(selectedIds)}</strong>) was al gekoppeld. Vink aan als je de uitnodigingsmail nu nogmaals wilt versturen.`;
+            }
+
+            if (targetsEl) {
+                targetsEl.innerHTML = '';
+                targetsEl.classList.remove('hidden');
+
+                const header = document.createElement('div');
+                header.className = 'text-xs font-medium text-purple-900 mb-1';
+                header.textContent = 'Kies per stagebedrijf wie een uitnodigingsmail krijgt:';
+                targetsEl.appendChild(header);
+
+                selectedIds.forEach(cid => {
+                    const comp = companies.find(c => String(c.id) === String(cid));
+                    const isNew = newlyLinkedIds.includes(String(cid));
+                    const shouldCheck = autoToggle
+                        ? isNew
+                        : prevChecked.has(String(cid));
+
+                    const row = document.createElement('label');
+                    row.className = 'flex items-center gap-2 text-xs text-gray-800 cursor-pointer bg-white/70 hover:bg-white px-2.5 py-1.5 rounded border border-purple-100';
+
+                    const targetCb = document.createElement('input');
+                    targetCb.type = 'checkbox';
+                    targetCb.value = String(cid);
+                    targetCb.checked = shouldCheck;
+                    targetCb.className = 'company-invite-target-cb h-3.5 w-3.5 text-purple-600 rounded border-gray-300 focus:ring-purple-500';
+                    targetCb.addEventListener('change', () => {
+                        const anyChecked = targetsEl.querySelectorAll('.company-invite-target-cb:checked').length > 0;
+                        cb.checked = anyChecked;
+                    });
+
+                    const labelText = document.createElement('span');
+                    labelText.className = 'flex-1';
+                    const nameStr = comp ? comp.company_name : 'Onbekend bedrijf';
+                    const emailStr = comp && comp.email ? ` (${comp.email})` : ' (geen e-mail bekend)';
+                    labelText.textContent = `${nameStr}${emailStr}`;
+
+                    const badge = document.createElement('span');
+                    badge.className = isNew
+                        ? 'text-[11px] font-medium px-1.5 py-0.5 rounded bg-green-100 text-green-800'
+                        : 'text-[11px] font-medium px-1.5 py-0.5 rounded bg-gray-100 text-gray-600';
+                    badge.textContent = isNew ? 'Nieuw gekoppeld' : 'Al gekoppeld';
+
+                    row.appendChild(targetCb);
+                    row.appendChild(labelText);
+                    row.appendChild(badge);
+                    targetsEl.appendChild(row);
+                });
             }
         }
+
+        document.getElementById('send_company_invite')?.addEventListener('change', (e) => {
+            const targetsEl = document.getElementById('company-invite-targets');
+            if (!targetsEl) return;
+            const targetCbs = Array.from(targetsEl.querySelectorAll('.company-invite-target-cb'));
+            if (targetCbs.length === 0) return;
+
+            if (!e.target.checked) {
+                targetCbs.forEach(tcb => { tcb.checked = false; });
+                return;
+            }
+
+            const anyChecked = targetCbs.some(tcb => tcb.checked);
+            if (!anyChecked) {
+                const selectedIds = getSelectedCompanyIdsForInvite();
+                const newlyLinkedIds = selectedIds.filter(cid => !initialLinkedCompanyIds.includes(String(cid)));
+                if (newlyLinkedIds.length > 0) {
+                    targetCbs.forEach(tcb => {
+                        tcb.checked = newlyLinkedIds.includes(String(tcb.value));
+                    });
+                } else if (targetCbs.length === 1) {
+                    targetCbs[0].checked = true;
+                }
+            }
+        });
 
         document.getElementById('company_id')?.addEventListener('change', () => updateCompanyInviteUI(true));
         document.getElementById('company_id_2')?.addEventListener('change', () => updateCompanyInviteUI(true));
@@ -1068,6 +1161,17 @@
                 if (studentPayload.supervisor_id === '') studentPayload.supervisor_id = null;
                 if (user_id) studentPayload.id = user_id;
 
+                const shouldSendCompanyInvite = document.getElementById('send_company_invite')?.checked || false;
+                const selectedCompanyIds = [...new Set(company_assignments.map(a => a.company_id).filter(Boolean).map(String))];
+                const checkedTargetIds = Array.from(document.querySelectorAll('#company-invite-targets .company-invite-target-cb:checked'))
+                    .map(el => String(el.value))
+                    .filter(cid => selectedCompanyIds.includes(cid));
+
+                if (shouldSendCompanyInvite && selectedCompanyIds.length > 0 && checkedTargetIds.length === 0) {
+                    alert('Vink hieronder minimaal één stagebedrijf aan dat de uitnodigingsmail moet ontvangen, of vink "Stuur uitnodigingsmail naar gekoppeld stagebedrijf" uit.');
+                    return;
+                }
+
                 // Opslaan/bijwerken in database via Admin Edge Function (omzeilt RLS en schema-fouten)
                 const functionUrl = `${SUPABASE_URL}/functions/v1/create-auth-account`;
                 const dbRes = await fetch(functionUrl, {
@@ -1087,11 +1191,8 @@
                     throw new Error(dbResult?.error || 'Opslaan van stagiair in database mislukt');
                 }
 
-                // Controleer of we automatisch een uitnodigingsmail naar gekoppelde bedrijven moeten sturen
-                const shouldSendCompanyInvite = document.getElementById('send_company_invite')?.checked || false;
-                const selectedCompanyIds = [...new Set(company_assignments.map(a => a.company_id).filter(Boolean))];
-                const newlyLinkedIds = selectedCompanyIds.filter(cid => !initialLinkedCompanyIds.includes(String(cid)));
-                const targetCompanyIds = newlyLinkedIds.length > 0 ? newlyLinkedIds : selectedCompanyIds;
+                // Controleer of we automatisch een uitnodigingsmail naar geselecteerde bedrijven moeten sturen
+                const targetCompanyIds = checkedTargetIds;
 
                 if (shouldSendCompanyInvite && targetCompanyIds.length > 0) {
                     const sentCompanies = [];
